@@ -1,0 +1,128 @@
+# GLaDOS Chat Library — Usage Guide
+
+Talk with GLaDOS (Portal 2 style) via **Ollama** + **Piper TTS** + **Whisper STT**, either in your terminal or in Python scripts.
+
+---
+
+## Features
+
+- **Interactive Chatting**
+  - One-shot answers or sentence-by-sentence streaming.
+- **Text-to-Speech (TTS)**
+  - Uses Piper with the GLaDOS voice model.
+- **Speech-to-Text (STT)**
+  - Uses Whisper to transcribe microphone input.
+- **Audio Device Control**
+  - Choose and persist your preferred output device.
+- **CLI with colors**
+  - Clean, color-coded output for user and GLaDOS lines.
+- **Sarcasm detection**
+  - Optional helper to flag user sarcasm.
+
+---
+
+## Command Line Usage
+
+Once installed, you have access to the `glados-cli` command.
+
+### 1. Select your audio output device
+```bash
+glados-cli audiosource
+```
+
+- Lists all available audio devices.
+- Prompts you to choose one.
+- Saves your selection for future sessions in `~/.glados-cli.json`.
+
+### 2. Start a chat session
+```bash
+glados-cli start
+```
+
+Plain text chat (no TTS/STT).  
+Type `exit` or `quit` to leave.
+
+### 3. Start with TTS
+```bash
+glados-cli start --tts
+```
+
+Replies are spoken in GLaDOS’s voice.
+
+### 4. Start with Streaming
+```bash
+glados-cli start --stream
+```
+
+Replies print sentence-by-sentence as they’re generated.
+
+### 5. Combine streaming + TTS
+```bash
+glados-cli start --stream --tts
+```
+
+Replies stream sentence-by-sentence and each is spoken aloud.
+
+### 6. Override audio device (session only)
+```bash
+glados-cli start --tts --audiosource 27
+```
+
+Plays on device index `27` (from the device list).  
+Does not affect your saved config.
+
+### 7. Enable Speech-to-Text
+```bash
+glados-cli start --stt
+```
+
+If integrated with a mic, transcriptions are fed into the chat.
+
+---
+
+## Python Usage
+
+Embed GLaDOS directly in your own scripts:
+
+```python
+from glados_chat_lib import GladosChat
+
+# Create a chat instance
+chat = GladosChat(enable_tts=True, enable_stt=False, model="llama2:7b")
+
+# One-shot conversation
+reply = chat.ask("Do you hate humans?")
+print("GLaDOS:", reply)
+chat.speak(reply)
+
+# Streaming mode
+for piece in chat.ask("Tell me about science.", stream=True):
+    print(piece, end="", flush=True)
+```
+
+## Audio Devices
+
+- Run `glados-cli audiosource` to choose and persist your output.
+- To override without saving:
+  ```bash
+  glados-cli start --audiosource <index>
+  ```
+- To reset to default, delete `~/.glados-cli.json`.
+
+---
+
+## Quick Examples
+
+**Hear GLaDOS out loud in two steps:**
+```bash
+glados-cli audiosource
+glados-cli start --stream --tts
+```
+
+**Embed in Python (minimal TTS only):**
+```python
+from glados_chat_lib import GladosChat
+
+chat = GladosChat(enable_tts=True)
+print("GLaDOS:", chat.ask("Sing me a song about testing."))
+```
