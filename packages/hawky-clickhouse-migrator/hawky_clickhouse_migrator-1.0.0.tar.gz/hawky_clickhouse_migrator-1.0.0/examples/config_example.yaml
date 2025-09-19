@@ -1,0 +1,72 @@
+# ClickHouse Migration Configuration Example
+# This file demonstrates all available configuration options
+
+# Source database connection
+source:
+  uri: "clickhouse://user:password@source-host:8123/source_database"
+  timeout: 30
+  max_retries: 3
+
+# Target database connection
+target:
+  uri: "clickhouse://user:password@target-host:8123/target_database"
+  timeout: 30
+  max_retries: 3
+
+# Tables to migrate with specific configurations
+tables:
+  # Basic table migration
+  - name: "users"
+    create_table: true
+    drop_target: false
+
+  # Table with custom WHERE clause
+  - name: "orders"
+    where_clause: "created_at > '2024-01-01' AND status = 'completed'"
+    create_table: true
+    drop_target: false
+    chunk_column: "id"
+
+  # Table with completely custom query
+  - name: "products"
+    query: |
+      SELECT
+        id,
+        name,
+        category,
+        price,
+        created_at
+      FROM products
+      WHERE active = 1
+        AND price > 0
+      ORDER BY id
+    create_table: true
+    drop_target: true
+
+# Tables to exclude from migration
+exclude_tables:
+  - "temp_logs"
+  - "backup_*"
+  - "test_*"
+
+# Migration behavior settings
+migrate_schema: true      # Migrate table structures
+migrate_data: true        # Migrate data
+verify_data: true         # Verify data integrity after migration
+dry_run: false           # Set to true to simulate migration
+
+# Batch processing configuration
+batch:
+  size: 100000            # Number of rows per batch
+  parallel_workers: 4     # Number of parallel workers
+  memory_limit_mb: 1024   # Memory limit per worker in MB
+
+# Progress tracking configuration
+progress:
+  update_interval: 1000     # Progress update every N rows
+  log_level: "INFO"         # Logging level: DEBUG, INFO, WARNING, ERROR
+  checkpoint_interval: 50000 # Create checkpoint every N rows
+
+# Resume configuration
+resume: false                           # Whether to resume from checkpoint
+checkpoint_file: "my_migration.json"    # Custom checkpoint file path

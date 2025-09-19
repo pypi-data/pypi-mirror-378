@@ -1,0 +1,432 @@
+Metadata-Version: 2.4
+Name: hawky-clickhouse-migrator
+Version: 1.0.0
+Summary: A reliable CLI tool for migrating data between ClickHouse instances
+Author-email: ClickHouse Migration Team <contact@clickhouse-migrator.dev>
+License: MIT License
+        
+        Copyright (c) 2024 ClickHouse Migration Team
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+Project-URL: Homepage, https://github.com/hawky-ai/clickhouse-migrator
+Project-URL: Documentation, https://github.com/hawky-ai/clickhouse-migrator#readme
+Project-URL: Repository, https://github.com/hawky-ai/clickhouse-migrator.git
+Project-URL: Bug Tracker, https://github.com/hawky-ai/clickhouse-migrator/issues
+Keywords: clickhouse,migration,database,cli,backup,transfer
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Database
+Classifier: Topic :: System :: Archiving :: Backup
+Classifier: Topic :: System :: Systems Administration
+Classifier: Topic :: Utilities
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: clickhouse-connect>=0.6.0
+Requires-Dist: click>=8.0.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: tqdm>=4.64.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: tenacity>=8.0.0
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: psutil>=5.9.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: isort>=5.12.0; extra == "dev"
+Requires-Dist: flake8>=6.0.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"
+Requires-Dist: pre-commit>=3.0.0; extra == "dev"
+Dynamic: license-file
+
+# ClickHouse Migrator 🚀
+
+A reliable, high-performance CLI tool for migrating data between ClickHouse instances with support for ClickHouse Cloud and self-hosted deployments.
+
+[![PyPI version](https://badge.fury.io/py/clickhouse-migrator.svg)](https://badge.fury.io/py/clickhouse-migrator)
+[![Python versions](https://img.shields.io/pypi/pyversions/clickhouse-migrator.svg)](https://pypi.org/project/clickhouse-migrator/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## ✨ Features
+
+- **🔄 Bidirectional Migration**: Migrate between ClickHouse Cloud ↔ Self-hosted, or between any ClickHouse instances
+- **🎯 Custom Query Support**: Use custom SQL queries to selectively migrate data
+- **📊 Real-time Progress Tracking**: Beautiful progress bars with speed, ETA, and statistics
+- **⚡ High Performance**: Parallel processing and configurable batch sizes for optimal speed
+- **🔄 Resume Capability**: Resume interrupted migrations from checkpoints
+- **🛡️ Reliable**: Built-in retry mechanisms and comprehensive error handling
+- **📋 Schema Migration**: Automatically migrate table structures
+- **✅ Data Verification**: Optional data integrity verification after migration
+- **🔧 Flexible Configuration**: CLI arguments or YAML configuration files
+- **📝 Comprehensive Logging**: Detailed logs for monitoring and troubleshooting
+
+## 🚀 Quick Start
+
+### Installation
+
+```bash
+# Install from PyPI
+pip install clickhouse-migrator
+
+# Or install from source
+git clone https://github.com/your-org/clickhouse-migrator.git
+cd clickhouse-migrator
+pip install -e .
+```
+
+### Basic Usage
+
+```bash
+# Migrate all tables between instances
+clickhouse-migrator migrate \\
+  clickhouse://user:password@source-host:8123/database \\
+  clickhouse://user:password@target-host:8123/database
+
+# Migrate specific tables with custom batch size
+clickhouse-migrator migrate \\
+  https://user:pass@cloud.clickhouse.com:8443/mydb \\
+  http://localhost:8123/mydb \\
+  --tables users orders products \\
+  --batch-size 50000 \\
+  --workers 8
+
+# Migrate with custom query
+clickhouse-migrator migrate \\
+  clickhouse://user:pass@source:8123/db \\
+  clickhouse://user:pass@target:8123/db \\
+  --query "SELECT * FROM users WHERE created_at > '2024-01-01'"
+```
+
+## 📖 Documentation
+
+### URI Format
+
+ClickHouse connection URIs support multiple formats:
+
+```
+clickhouse://username:password@host:port/database
+clickhouses://username:password@host:port/database  # Secure connection
+https://username:password@host:port/database         # HTTPS
+http://username:password@host:port/database          # HTTP
+```
+
+**Examples:**
+- ClickHouse Cloud: `https://user:pass@abc123.us-east-1.aws.clickhouse.cloud:8443/mydb`
+- Self-hosted: `clickhouse://default:password@localhost:8123/mydb`
+- Secure self-hosted: `clickhouses://user:pass@my-server:8443/production`
+
+### Command Reference
+
+#### `migrate` - Main Migration Command
+
+```bash
+clickhouse-migrator migrate [OPTIONS] SOURCE_URI TARGET_URI
+```
+
+**Options:**
+- `--tables, -t`: Specific tables to migrate (default: all tables)
+- `--exclude-tables`: Tables to exclude from migration
+- `--query, -q`: Custom SQL query for data selection
+- `--batch-size`: Rows per batch (default: 100,000)
+- `--workers, -w`: Number of parallel workers (default: 4)
+- `--no-schema`: Skip schema migration
+- `--no-data`: Skip data migration (schema only)
+- `--drop-target`: Drop target tables before migration
+- `--verify`: Verify data integrity after migration (default: true)
+- `--resume`: Resume from previous checkpoint
+- `--checkpoint-file`: Custom checkpoint file path
+- `--dry-run`: Perform dry run without actual migration
+- `--config, -c`: Use configuration file
+
+#### `list-tables` - List Available Tables
+
+```bash
+clickhouse-migrator list-tables [OPTIONS] URI
+```
+
+**Options:**
+- `--database, -d`: Specific database to list tables from
+
+#### `inspect-table` - Inspect Table Structure
+
+```bash
+clickhouse-migrator inspect-table [OPTIONS] URI TABLE
+```
+
+**Options:**
+- `--database, -d`: Database name (default: from URI)
+- `--limit, -l`: Number of sample rows to display (default: 10)
+
+#### `test-connection` - Test Connections
+
+```bash
+clickhouse-migrator test-connection SOURCE_URI TARGET_URI
+```
+
+#### `generate-config` - Generate Configuration Template
+
+```bash
+clickhouse-migrator generate-config [OPTIONS]
+```
+
+**Options:**
+- `--output, -o`: Output file path (default: migration-config.yaml)
+
+### Configuration File
+
+For complex migrations, use a YAML configuration file:
+
+```yaml
+# migration-config.yaml
+source:
+  uri: "clickhouse://user:password@source-host:8123/database"
+  timeout: 30
+  max_retries: 3
+
+target:
+  uri: "clickhouse://user:password@target-host:8123/database"
+  timeout: 30
+  max_retries: 3
+
+tables:
+  - name: "users"
+    where_clause: "created_at > '2024-01-01'"
+    create_table: true
+    drop_target: false
+  - name: "orders"
+    query: "SELECT * FROM orders WHERE status = 'completed'"
+
+exclude_tables:
+  - "temp_table"
+  - "backup_table"
+
+migrate_schema: true
+migrate_data: true
+verify_data: true
+
+batch:
+  size: 100000
+  parallel_workers: 4
+  memory_limit_mb: 1024
+
+progress:
+  update_interval: 1000
+  checkpoint_interval: 50000
+
+resume: false
+```
+
+Then run:
+
+```bash
+clickhouse-migrator migrate --config migration-config.yaml
+```
+
+## 🔧 Advanced Usage
+
+### Large Dataset Migration
+
+For very large datasets, optimize performance:
+
+```bash
+clickhouse-migrator migrate \\
+  source_uri target_uri \\
+  --batch-size 500000 \\
+  --workers 16 \\
+  --checkpoint-interval 100000
+```
+
+### Selective Migration with Custom Query
+
+```bash
+clickhouse-migrator migrate \\
+  source_uri target_uri \\
+  --query "SELECT id, name, email FROM users WHERE active = 1 AND created_at > '2024-01-01'"
+```
+
+### Resume Interrupted Migration
+
+```bash
+clickhouse-migrator migrate \\
+  source_uri target_uri \\
+  --resume \\
+  --checkpoint-file my_migration_checkpoint.json
+```
+
+### Schema-Only Migration
+
+```bash
+clickhouse-migrator migrate \\
+  source_uri target_uri \\
+  --no-data \\
+  --tables table1 table2 table3
+```
+
+## 🏗️ Architecture
+
+The tool is built with a modular architecture:
+
+- **Core Engine**: `ClickHouseMigrator` - Main migration orchestrator
+- **Connection Manager**: `ClickHouseConnection` - Handles database connections with retry logic
+- **Progress Tracker**: `MigrationProgress` - Real-time progress tracking and checkpointing
+- **Configuration**: `MigrationConfig` - Flexible configuration management
+- **CLI Interface**: Rich command-line interface with helpful commands
+
+## 🔍 Monitoring and Troubleshooting
+
+### Progress Tracking
+
+The tool provides real-time progress information:
+
+```
+Migration Plan:
+Source: clickhouse://user@source:8123/mydb
+Target: clickhouse://user@target:8123/mydb
+Migrate Schema: True
+Migrate Data: True
+Batch Size: 100,000
+Parallel Workers: 4
+
+┌─────────────────────────────────────────────────────────────┐
+│ Migrating users  ████████████████████████████████████  100% │
+│ 1,000,000/1,000,000 rows • 25.5K rows/s • 00:00:00       │
+└─────────────────────────────────────────────────────────────┘
+
+Migration Progress Summary
+┌─────────────┬──────────┬──────────┬─────────────┬──────────────┬──────────────┐
+│ Table       │ Status   │ Progress │ Rows        │ Rate (rows/s)│ Time Elapsed │
+├─────────────┼──────────┼──────────┼─────────────┼──────────────┼──────────────┤
+│ users       │ Completed│ 100.0%   │ 1,000,000/1,000,000│ 25,532      │ 0:00:39      │
+│ orders      │ Running  │ 45.2%    │ 452,000/1,000,000  │ 23,156      │ 0:00:19      │
+└─────────────┴──────────┴──────────┴─────────────┴──────────────┴──────────────┘
+```
+
+### Logging
+
+Enable detailed logging:
+
+```bash
+clickhouse-migrator --log-level DEBUG --log-file migration.log migrate ...
+```
+
+### Common Issues and Solutions
+
+**Connection Issues:**
+- Verify URI format and credentials
+- Check network connectivity: `clickhouse-migrator test-connection source_uri target_uri`
+- Ensure ClickHouse is running and accessible
+
+**Performance Issues:**
+- Adjust `--batch-size` based on available memory
+- Increase `--workers` for better parallelization
+- Use `--checkpoint-interval` to balance between performance and resume capability
+
+**Memory Issues:**
+- Reduce `--batch-size`
+- Decrease number of `--workers`
+- Monitor system resources during migration
+
+## 🧪 Development
+
+### Setup Development Environment
+
+```bash
+git clone https://github.com/your-org/clickhouse-migrator.git
+cd clickhouse-migrator
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\\Scripts\\activate
+
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Install pre-commit hooks
+pre-commit install
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=clickhouse_migrator --cov-report=html
+
+# Run specific test file
+pytest tests/test_connection.py
+```
+
+### Code Quality
+
+```bash
+# Format code
+black src/ tests/
+isort src/ tests/
+
+# Lint code
+flake8 src/ tests/
+mypy src/
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Run the test suite
+6. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [clickhouse-connect](https://github.com/ClickHouse/clickhouse-connect) for ClickHouse Python connectivity
+- [Rich](https://github.com/Textualize/rich) for beautiful terminal interfaces
+- [Click](https://github.com/pallets/click) for command-line interface framework
+
+## 🔗 Links
+
+- [PyPI Package](https://pypi.org/project/clickhouse-migrator/)
+- [Documentation](https://clickhouse-migrator.readthedocs.io/)
+- [GitHub Repository](https://github.com/your-org/clickhouse-migrator)
+- [Issue Tracker](https://github.com/your-org/clickhouse-migrator/issues)
+- [Discussions](https://github.com/your-org/clickhouse-migrator/discussions)
+
+---
+
+**Made with ❤️ for the ClickHouse community**
