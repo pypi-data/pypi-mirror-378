@@ -1,0 +1,207 @@
+stages:
+  - test
+  - build
+  - deploy
+  - release
+
+workflow:
+  rules:
+    # don't create a pipeline if its a commit pipeline, on a branch and that branch has open merge requests (bc we will get a MR build instead)
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - when: always
+
+variables:
+  PACKAGE_REGISTRY: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/brock"
+  TOOLCHAINS_PATH: $CI_REGISTRY/br/toolchains
+
+pre-commit:
+  stage: .pre
+  image:
+    name: $TOOLCHAINS_PATH/pre-commit:4.2.0
+  tags:
+    - docker
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - pre-commit run --all-files --show-diff-on-failure
+
+.code-quality:
+  stage: test
+  tags:
+    - docker
+  image: docker:stable
+  allow_failure: true
+  variables:
+    CI_DEBUG_TRACE: "false"
+    REPORT_FORMAT: "json"
+  script:
+    - echo $REPORT_FORMAT
+    - CONTAINER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=${CI_JOB_ID}")
+    - VOLUME_PATH=$(docker inspect $CONTAINER_ID --format '{{ range .Mounts }}{{ if eq .Destination "/builds" }}{{ .Source }}{{ end }}{{ end }}')
+    - VOLUME_CODE_PATH="${VOLUME_PATH}/${CI_PROJECT_DIR#$CI_BUILDS_DIR}"
+    - docker run
+        --rm
+        --env SOURCE_CODE=$VOLUME_CODE_PATH
+        --env REPORT_FORMAT=$REPORT_FORMAT
+        --env CODECLIMATE_DEV=1
+        --volume /var/run/docker.sock:/var/run/docker.sock
+        --volume $VOLUME_CODE_PATH:/code
+        registry.gitlab.com/gitlab-org/ci-cd/codequality:latest /code
+  artifacts:
+    expire_in: 1 week
+  dependencies: []
+
+code-quality-json:
+  extends: .code-quality
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    paths: [gl-code-quality-report.json]
+
+code-quality-html:
+  extends: .code-quality
+  variables:
+    REPORT_FORMAT: "html"
+  artifacts:
+    paths: [gl-code-quality-report.html]
+
+test-unit:
+  stage: test
+  image: python:3.9
+  tags:
+    - docker
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -e ./[test]
+    - pytest tests/
+    - sed -i 's|<source>.*</source>|<source></source>|g;s|filename="|filename="src/brock/|g' coverage.xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+test-brock-in-docker:
+  stage: test
+  image: python:3.9
+  tags:
+    - docker
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -e .
+    - exit_code=0
+    - brock -vvv test || exit_code=$?
+    - brock --stop all
+    - exit $exit_code
+
+build:
+  stage: build
+  image: python:3.9
+  tags:
+    - docker
+  artifacts:
+    paths:
+      - dist
+    expire_in: 30 days
+    reports:
+      dotenv: variables.env
+  before_script:
+    - pip install -U setuptools setuptools_scm build wheel
+  script:
+    - VERSION=$(python -c "import build.util; print(build.util.project_wheel_metadata('.').get('Version'))")
+    - python -m build --sdist --wheel --outdir $CI_PROJECT_DIR/dist .
+    - PACKAGE_NAME=$(cd dist && ls *.whl | head -1)
+    - ARCHIVE_NAME=$(cd dist && ls *.tar.gz | head -1)
+    - echo "PACKAGE_NAME=${PACKAGE_NAME}" >> variables.env
+    - echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> variables.env
+    - echo "VERSION=${VERSION}" >> variables.env
+  rules:
+    - if: $CI_COMMIT_TAG || $BUILD
+
+build-release-changelog:
+  image: python:3.9
+  stage: build
+  tags:
+    - docker
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+  before_script:
+    - pip install -i https://pypi.benderrobotics.com setuptools setuptools_scm gitlab_tools build
+  script:
+    - VERSION=$(python -c "import build.util; print(build.util.project_wheel_metadata('.').get('Version'))")
+    - gitlab-tools tag-changelog -t $API_TOKEN -u $CI_SERVER_URL -p $CI_PROJECT_PATH -o changes.md
+  artifacts:
+    paths:
+      - "changes.md"
+    expire_in: 1 days
+
+deploy-wheel:
+  stage: deploy
+  needs:
+    - build
+  tags:
+    - docker
+  image: chartedcode/alpine-sftp-client
+  before_script:
+    - echo "$PYPI_KEY" | tr -d '\r' > ./ssh_key
+    - chmod 600 ./ssh_key
+  script:
+    - TAG_VERSION=${CI_COMMIT_TAG#"v"}
+    - test $VERSION = $TAG_VERSION
+    - |
+      sftp -i ./ssh_key -oStrictHostKeyChecking=no $PYPI_USER@$PYPI_HOST:/brock/ << EOF
+        put dist/*
+        quit
+      EOF
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+.*$/ && $PYPI_USER && $PYPI_KEY
+
+deploy-pypi:
+  stage: deploy
+  needs:
+    - build
+  tags:
+    - docker
+  image: python:3.9
+  before_script:
+    - pip install twine
+  script:
+    - twine upload --repository-url $PYPI_INDEX dist/*
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]$/
+
+
+deploy-release:
+  stage: deploy
+  needs: [build]
+  image: curlimages/curl:latest
+  tags:
+    - docker
+  script:
+    - TAG_VERSION=${CI_COMMIT_TAG#"v"}
+    - test $VERSION = $TAG_VERSION
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "dist/${PACKAGE_NAME}" "${PACKAGE_REGISTRY}/${VERSION}/${PACKAGE_NAME}"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "dist/${ARCHIVE_NAME}" "${PACKAGE_REGISTRY}/${VERSION}/${ARCHIVE_NAME}"'
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  tags:
+    - docker
+  script:
+    - TAG_VERSION=${CI_COMMIT_TAG#"v"}
+    - test $VERSION = $TAG_VERSION
+    - DESCRIPTION=$(cat changes.md)
+    - |
+      release-cli create --name "Release of Brock $CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG --milestone "$CI_COMMIT_TAG" \
+        --description "$DESCRIPTION" \
+        --assets-link "{\"name\":\"${PACKAGE_NAME}\",\"url\":\"${PACKAGE_REGISTRY}/${VERSION}/${PACKAGE_NAME}\"}" \
+        --assets-link "{\"name\":\"${ARCHIVE_NAME}\",\"url\":\"${PACKAGE_REGISTRY}/${VERSION}/${ARCHIVE_NAME}\"}"
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
