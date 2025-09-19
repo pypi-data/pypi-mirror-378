@@ -1,0 +1,147 @@
+# PyDUCC
+
+PyDUCC是一个Python客户端库，用于与DUCC（分布式统一配置中心）服务通信，获取配置并管理配置更新。
+
+## 特性
+
+- 支持从DUCC服务获取配置
+- 支持配置自动更新（长轮询）
+- 支持配置变更回调
+- 支持大文件模式
+- 支持数据类映射（使用Python dataclass）
+
+## 安装
+
+```bash
+pip install pyducc
+```
+
+## 快速开始
+
+### 基本用法
+
+```python
+from pyducc import DuccClient
+
+# 创建配置客户端
+ducc_client = DuccClient(
+    application='your-app-name',
+    token='your-token',
+    ns_id='your-namespace',
+    config_id='your-config-id',
+    env='pro'  # 可选值：'dev', 'test', 'pre', 'pro'
+)
+
+# 获取配置
+config_value = ducc_client.get_config("your.config.key")
+print(f"配置值: {config_value}")
+
+# 获取所有配置
+all_configs = ducc_client.get_all_configs()
+print(f"所有配置: {all_configs}")
+```
+
+### 使用数据类
+
+```python
+from dataclasses import dataclass
+from typing import Dict, Any, List
+from pyducc import ducc_field, DuccClient
+
+@dataclass
+class ConfigItem:
+    """配置项示例类"""
+    model: str
+    timeout: int
+    top_p: float
+
+@dataclass
+class DuccConfig:
+    """DUCC配置示例类"""
+    # 系统支持模型配置
+    chat_llm_configs: Dict[str, Any] = ducc_field(
+        key="llmChatEmbeddingConfig",
+        default_value={}
+    )
+
+    # 测试配置列表
+    test_configs: List[ConfigItem] = ducc_field(
+        key="test_config",
+        default_value=[]
+    )
+
+    # 向量搜索模拟开关
+    vector_search_mock: bool = ducc_field(
+        key="vectorSearchMock",
+        default_value=False
+    )
+
+# 创建配置客户端
+ducc_client = DuccClient(
+    application='your-app-name',
+    token='your-token',
+    ns_id='your-namespace',
+    config_id='your-config-id',
+    env='test'
+)
+
+# 创建并注册配置实例
+config = DuccConfig()
+ducc_client.register_config(config)
+
+# 启动配置轮询
+ducc_client.start_polling('test', poll_as_daemon=True, polling_timeout_ms=6000)
+print(f"初始配置: {config.chat_llm_configs}")
+
+# 配置会自动更新
+```
+
+## API参考
+
+### DuccClient
+
+```python
+DuccClient(
+    application: str,
+    token: str,
+    ns_id: str,
+    config_id: str,
+    env: str = 'pro',
+    large_file: bool = False,
+    logger: Optional[logging.Logger] = None
+)
+```
+
+#### 参数
+
+- `application`: 应用名
+- `token`: 应用token
+- `ns_id`: 命名空间名
+- `config_id`: 配置名
+- `env`: 环境，默认为'pro' 可选值：'dev'、'test'、'pre'、'pro'
+- `large_file`: 是否启用大文件模式，默认值为False
+- `logger`: 自定义日志记录器，默认为None时会创建一个标准日志记录器
+
+#### 方法
+
+- `start_polling(profiles, poll_as_daemon=False, polling_timeout_ms=6000, name="ducc-config-monitor")`: 启动长轮询获取配置更新
+- `register_config(config_instance)`: 注册配置类实例
+- `get_config(key)`: 获取配置值
+- `get_all_configs()`: 获取所有配置
+
+### ducc_field
+
+```python
+ducc_field(key: str, default_value: Any = None)
+```
+
+用于在数据类中定义DUCC配置字段的装饰器。
+
+#### 参数
+
+- `key`: DUCC配置的key
+- `default_value`: 默认值
+
+## 许可证
+
+MIT
