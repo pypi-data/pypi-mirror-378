@@ -1,0 +1,9 @@
+from gyb_classification_model import predictor
+
+text = "*000804* LM General Insurance Company P.O. Box 5014 Scranton PA 18505-5014 - INJURY CARE CHIROPRACTIC 2167 E 21st St Ste 148 Brooklyn, NY, 11229-3607 Liberty Mutual® INSURANCE CONTACT US Melissa.Maldonado@LibertyMut ual.com Direct: (516) 479-0773 Fax: (888) 268-8840 LM General Insurance Company P.O. Box 5014 Scranton PA 18505-5014 United States (800) 225-2467 LibertyMutual.com July 29, 2025 Claim Number: Date of Incident: Claimant: 059251780-04 04/27/2025 ANNA SARIBEGOV Policy Number: AOS-221-630070-40 Dear Billing Department, We take our responsibility to our customers seriously, and part of that responsibility is keeping you informed. Recently we've had to delay the processing of your bill. The reason for this delay is we haven't yet received all necessary information to complete our investigation, which may include a recorded interview, signed statement, and/or Examination Under Oath from the driver and/or passenger(s) involved OR other parties involved or related to the occurrence. Additional documentation may also be requested at the time of the Examination Under Oath or thereafter which may impact the investigation of this claim. This is the second notice .. Billing Details Patient Account Number: 100884709 Date of Service: From: 05/21/2025 To: 05/21/2025 Bill Amount: $1,000.05 Bill ID: N2032570017 We're Here to Help If you have any questions, please contact me and I'll be happy to help. I can assist you more quickly if you reference the Claim No. 059251780-04 in all communications. *400000010001000001000804804* Sincerely, MELISSA MALDONADO Claims Department CWL0116 Status to Provider 059251780-04 Page 1 of 2 :"
+
+# processed_text = predictor.preprocess_text(text)
+category = predictor.predict_text(text)
+
+print(category)
+
