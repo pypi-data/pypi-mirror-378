@@ -1,0 +1,38 @@
+"""Tests for JPILibrary methods."""
+
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
+from pyjpi import jpiInit
+
+from .const import URL
+
+
+@pytest.mark.asyncio
+async def test_get_uses_session_and_returns_text():
+    """Test for a HTTP GET method."""
+
+    class FakeResp:
+        """Fake response context manager."""
+
+        status = 200
+
+        async def text(self):  # pylint: disable=C0116
+            return "OK"
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc):
+            pass
+
+    session = MagicMock()
+    session.get = AsyncMock(return_value=FakeResp())
+
+    lib = await jpiInit(session)
+    out = await lib.get(URL)
+    assert out["text"] == "OK"
+    assert out["resp"].status == 200
+
+    session.get.assert_awaited_once_with(URL)
