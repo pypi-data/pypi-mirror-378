@@ -1,0 +1,56 @@
+# @package _global_
+# configs/apps/ask-hougarden.yaml
+
+defaults:
+  - _self_
+  # Merge two agent configs under root cfg.agents.*
+  - /agents@agents.user_profiling: user_profiling
+  - /agents@agents.planner:       planner
+  - /agents@agents.property_search: property_search
+
+  - /memorys: sqlite
+  - /envs@env:    default
+
+select:
+  app_name: ask-hougarden
+
+app:
+  agents:
+    user_profiling:
+      chat:
+        provider: openai
+        id: gpt-4.1
+        api_key: ${oc.env:OPENAI_API_KEY, null}
+        temperature: 0.3
+        max_tokens: 1024
+      memory:
+        provider: deepseek
+        id: deepseek-chat
+        api_key: ${oc.env:DEEPSEEK_API_KEY, null}
+      memory_backend:
+        table_name: user_memories__user_profiling
+        db_file: tmp/mem/${select.app_name}/user_profiling.db
+        delete_memories: ${memorys.sqlite.delete_memories}
+        clear_memories:  ${memorys.sqlite.clear_memories}
+
+  team:
+    planner:
+      base:   ${agents.planner}
+      chat:
+        provider: openai
+        id: gpt-4.1
+        api_key: ${oc.env:OPENAI_API_KEY, null}
+        temperature: 0.3
+        max_tokens: 1024
+      memory:
+        provider: deepseek
+        id: deepseek-chat
+        api_key: ${oc.env:DEEPSEEK_API_KEY, null}
+      memory_backend:
+        table_name: user_memories__planner_team
+        db_file: tmp/mem/${select.app_name}/planner_team.db
+        delete_memories: ${memorys.sqlite.delete_memories}
+        clear_memories:  ${memorys.sqlite.clear_memories}
+      members:
+        - user_profiling
+        - property_search
