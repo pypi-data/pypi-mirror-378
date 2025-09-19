@@ -1,0 +1,265 @@
+name: Build and Deploy Jupyter Book
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  BASE_URL: /xopr
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+    
+    - name: Set up Python
+      run: uv python install 3.12
+    
+    - name: Install dependencies
+      run: |
+        uv sync --extra test --extra stac
+    
+    - name: Install package in development mode
+      run: |
+        uv pip install -e .
+    
+    - name: Run tests with pytest
+      run: |
+        uv run pytest --cov=xopr --cov-report=html --cov-report=xml --cov-report=term
+    
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: ./htmlcov
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+
+    - name: Set up Python
+      run: uv python install
+
+    - name: Install dependencies
+      run: uv sync --extra docs
+
+    - name: Build Jupyter Book
+      run: |
+        cd docs
+        BASE_URL=/xopr uv run --extra docs jupyter-book build --html --execute 2>&1 | tee jupyter-book-build.log
+        # Check for errors running the notebooks and fail if any are found
+        if grep -r "Error\\|Exception\\|Traceback" jupyter-book-build.log; then
+          echo "Found execution errors in build"
+          exit 1
+        fi
+
+    - name: Download coverage artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-report
+        path: ./coverage-temp
+
+    - name: Copy coverage to docs build
+      run: |
+        mkdir -p docs/_build/html/coverage
+        cp -r ./coverage-temp/* docs/_build/html/coverage/
+    
+    # Copy map assets for polar map functionality
+    - name: Copy map assets
+      run: |
+        if [ -d "src/xopr/map" ]; then
+          echo "Copying map assets from src/xopr/map..."
+          mkdir -p docs/_build/html/_static/maps
+          cp -f src/xopr/map/polar.html docs/_build/html/_static/maps/ 2>/dev/null || true
+          cp -f src/xopr/map/parquet_wasm.js docs/_build/html/_static/maps/ 2>/dev/null || true
+          cp -f src/xopr/map/parquet_wasm_bg.wasm docs/_build/html/_static/maps/ 2>/dev/null || true
+          cp -f src/xopr/map/*.parquet docs/_build/html/_static/maps/ 2>/dev/null || true
+          echo "Map assets copied successfully"
+        else
+          echo "Warning: src/xopr/map directory not found, skipping map assets"
+        fi
+    
+    # Upload artifact for all builds (PR and main)
+    - name: Upload docs artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: docs-html-${{ github.sha }}
+        path: docs/_build/html
+        retention-days: 7
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
+      if: github.ref == 'refs/heads/main'
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      if: github.ref == 'refs/heads/main'
+      with:
+        path: docs/_build/html
+
+  # Deploy PR Preview directly to Surge (no branch creation)
+  pr-preview:
+    # Only run if PR has 'preview-docs' label OR if manually triggered
+    if: |
+      github.event_name == 'pull_request' && 
+      (contains(github.event.pull_request.labels.*.name, 'preview-docs') || 
+       github.event.action == 'labeled' && github.event.label.name == 'preview-docs')
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pull-requests: write
+    steps:
+    - name: Download docs artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: docs-html-${{ github.sha }}
+        path: ./docs-html
+    
+    - name: Deploy to Surge.sh
+      id: surge_deploy
+      run: |
+        # Install Surge
+        npm install -g surge
+        
+        # Create deployment structure with /xopr/ subdirectory to match asset paths
+        mkdir -p surge-deploy/xopr
+        cp -r ./docs-html/* surge-deploy/xopr/
+        
+        # Remove JSON files that conflict with directory routes
+        # MyST generates both file.json and file/index.html, causing routing issues
+        for json in surge-deploy/xopr/*.json; do
+          if [ -f "$json" ]; then
+            base=$(basename "$json" .json)
+            if [ -d "surge-deploy/xopr/$base" ]; then
+              echo "Removing conflicting JSON file: $json"
+              rm "$json"
+            fi
+          fi
+        done
+        
+        # Create redirect index at root that adds trailing slash
+        cat > surge-deploy/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <script>
+            // Redirect to /xopr/ with trailing slash
+            window.location.href = '/xopr/';
+          </script>
+          <meta http-equiv="refresh" content="0; url=/xopr/">
+        </head>
+        <body>
+          Redirecting to <a href="/xopr/">documentation</a>...
+        </body>
+        </html>
+        EOF
+        
+        # Create 200.html for Surge SPA support (handles client-side routing)
+        # This ensures URLs without trailing slashes work correctly
+        # Need 200.html in both root and /xopr/ directory for proper routing
+        cp surge-deploy/xopr/index.html surge-deploy/200.html 2>/dev/null || true
+        cp surge-deploy/xopr/index.html surge-deploy/xopr/200.html 2>/dev/null || true
+        
+        # Deploy to Surge
+        SURGE_DOMAIN="xopr-pr-${{ github.event.pull_request.number }}.surge.sh"
+        
+        cd surge-deploy
+        surge . $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }} || {
+          echo "::warning::Surge deployment failed. Check if SURGE_TOKEN is configured."
+          echo "surge_url=" >> $GITHUB_OUTPUT
+          exit 0
+        }
+        
+        echo "surge_url=https://$SURGE_DOMAIN/xopr/" >> $GITHUB_OUTPUT
+        echo "Deployment successful to: https://$SURGE_DOMAIN/xopr/"
+    
+    - name: Comment on PR with preview link
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prNumber = context.issue.number;
+          const sha = context.sha.substring(0, 7);
+          const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${{ github.run_id }}`;
+          const surgeUrl = '${{ steps.surge_deploy.outputs.surge_url }}';
+          
+          let body = `## 📚 Documentation Preview Ready!\n\n`;
+          
+          // Add Surge preview URL if available
+          if (surgeUrl && surgeUrl !== '') {
+            body += `### 🌐 Live Preview\n`;
+            body += `**URL:** ${surgeUrl}\n\n`;
+            body += `*Preview updates automatically with new commits while the \`preview-docs\` label is present.*\n\n`;
+          } else {
+            body += `### ⚠️ Surge deployment not available\n`;
+            body += `Please check the [workflow logs](${artifactUrl}) or ensure SURGE_TOKEN secret is configured.\n\n`;
+          }
+          
+          body += `### 📦 Download Artifact\n`;
+          body += `You can also [download the docs](${artifactUrl}) for local viewing.\n\n`;
+          body += `**Commit:** \`${sha}\`\n\n`;
+          body += `---\n`;
+          body += `*To trigger a preview, add the \`preview-docs\` label or use the \`/preview\` command.*`;
+          
+          // Find and update existing comment or create new one
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.login === 'github-actions[bot]' && 
+            comment.body.includes('Documentation Preview Ready')
+          );
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+          }
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
