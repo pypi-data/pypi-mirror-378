@@ -1,0 +1,74 @@
+"""Configuration management for NTHU Complaints MCP server."""
+
+import os
+import json
+from pathlib import Path
+from typing import Dict, Any, Optional
+
+
+class Config:
+    """Configuration manager for the MCP server."""
+
+    def __init__(self, config_path: Optional[str] = None):
+        """Initialize configuration.
+
+        Args:
+            config_path: Path to configuration file. If None, uses hardcoded config.
+        """
+        self.config_path = config_path or self._find_config_file()
+        self._config: Dict[str, Any] = {}
+        self.load_config()
+
+    def _find_config_file(self) -> Optional[str]:
+        """Find configuration file in standard locations."""
+        # For simplicity, we'll just check the current working directory
+        # All other configurations are hardcoded
+        config_file = "firebase-service-account.json"
+        if os.path.exists(config_file):
+            return config_file
+        return None
+
+    def load_config(self) -> None:
+        """Load configuration from file or use hardcoded config."""
+        # Try to load from file first
+        if self.config_path and os.path.exists(self.config_path):
+            try:
+                with open(self.config_path, 'r', encoding='utf-8') as f:
+                    self._config = json.load(f)
+                    print(f"Loaded Firebase configuration from {self.config_path}")
+                    return
+            except (json.JSONDecodeError, IOError) as e:
+                print(f"Warning: Failed to load config from {self.config_path}: {e}")
+
+        # Fall back to hardcoded configuration
+        print("Using hardcoded Firebase configuration")
+        self._config = {
+            "type": "service_account",
+            "project_id": "nthu-student-association",
+            "private_key_id": "851b0b7f06f204c3402b51ec52659aeae2b04db4",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCcPNy47sBu0ach\noGUFuR3ODZJrnIA1xB1GIPompq69VhH1BM3OFViFWHm8zLDHcBBRTl6/5wyjtSBx\nMF5O/zWrDg2BzoHKcMclc1Yc4uLxAyLHKuf7oy9EfL5n40ggH5KmJfa6BGqOfXLf\n/ANNcEK11Vhyj/EYianrvbxe6NLaTCf0SfwKxIy8TP6l5qgUqxexvjKx44wcrDPv\nZgaG+rc2TFeBdfHf6oFjy7leIreG/cJZ1PDOAMKCiQw0ZwPFmyhZmTby3y0f4d2F\nIkfwx+L1Xgl7BRsDyjELC/AkP526kLLRpQeobFlvYBYUbKNDRU/9+BxNPUzpDazm\nZ6jwUpSzAgMBAAECggEAHQn+6GyP3ckf7FMYk8C9dm/1WAUFm3ixDDjS5d4zOkPG\nIKlc60Hyaw5vyhStgtQkZEhRug9ivQbMWd1omfw7aGi7P/Y3D354tVBDoCjXj35K\nt4QVDCNfhLY+2aZX4IidxD3oJtjtSUCt2k3H+1uzOoLF5r00TaBAse1ZFrblgec9\nZhNpW2Jqmw8qpj8Po95P5JBPA+UJraBgY1sNPKgyJm8dX/KUSqkxeapz04gUwtm9\nVL4AM4rRTni+fEZDB6zUZwfdWXQB7DRz/UYMK3GEKhsvN7bcT7SyPiBJ/BkbOxIQ\nLzl7/31LZb86EohOmPVzsT5Gzfa32C9TqgJ+yg37sQKBgQDL/LlbsDPxqwMnLnYm\nCHWEQysUUdVw/XA7SExVR1pHPr6oUehM1Fu/Fl9EKW6atqNI8f2o+JgV1BGA/z9B\n1Y80ANfdiUZP3JvgN5TFlFrf/XEcZrZfo8FhctC+8R71F45BR+j05jEJ6SGaQQP9\noKcXX3f4JX+iEjXRWfIRMYRzKwKBgQDEE0obg4fM0wA04CDA3fQNTut67UilOjfU\nratSuSJSh+i7KewAxsLQSADCgRmSwk3Rjx0OV7BSiU8b98A5hZ93bbP0MO34+pdM\nLtjdTzaRBpvL1Wds84bjlb14WleWqgB2bcTVGOr9E5DZu1utXRhP+YXgsBAY8iPK\n9a9Ozp1AmQKBgC8Jb5R85P1s+aUnSYcrnC2Lb3uYAyeyyRZibXecpGyZQ0181Zwh\nu6Ysens1MpPqWWyQoHU+HZOq+v5L3UJJBGRxbVVgOh5gOHFTX7LPqsTLpDFwXc1f\n7U+TMh9ValYJwHu9ITKXgedPIrh3FXx+dwkksn096Fhu6ooDu5XLXUdRAoGAaYWQ\nDnqc7QhpRguQ1PseSsM8S63DuNg6D8VfPGfSJuRpxcBr+Ib/dSQq9IKSBr93Ld59\nXqimheTLpFuTIeHdzmJFxJdImwQRxLg5kfD9htMtqWcyABqXb4e4rjrAhJ79HL86\nfQyp+oU7IVKJpiVB3liFSkS2hRZbWPEb5aegTZECgYEApjBOtujFiLE6IyE70hnr\nlmaz5TcDKlIwo1xwHSNF3qOyUhYG51FZNUuZgkEfAF/mMXBOGUSIzfq5m/LMMFa2\n5wYqgOTJXzjja85Ha6xABzWEPEmfNcwLvx0wfeMT2yQBbo3KzlwTc7aBq0Jdr7+p\nGfbaWBTnq9WfU+4qS7EliVI=\n-----END PRIVATE KEY-----\n",
+            "client_email": "firebase-adminsdk-fbsvc@nthu-student-association.iam.gserviceaccount.com",
+            "client_id": "108911002957360335881",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40nthu-student-association.iam.gserviceaccount.com",
+            "universe_domain": "googleapis.com"
+        }
+
+    def get_firebase_config(self) -> Dict[str, Any]:
+        """Get Firebase configuration."""
+        return self._config
+
+    def has_firebase_config(self) -> bool:
+        """Check if Firebase configuration is available."""
+        return bool(self._config and self._config.get('project_id'))
+
+    @property
+    def project_id(self) -> Optional[str]:
+        """Get Firebase project ID."""
+        return self._config.get('project_id')
+
+
+# Global configuration instance
+config = Config()
