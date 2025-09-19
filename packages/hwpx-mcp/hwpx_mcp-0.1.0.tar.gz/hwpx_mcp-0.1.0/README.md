@@ -1,0 +1,127 @@
+# HWPX MCP 서버
+
+`python-hwpx` 라이브러리를 기반으로 한글 HWPX 문서를 자동화하는 Model Context Protocol 서버입니다. 문서 로딩·탐색·편집·검증까지 일련의 작업을 FastMCP 툴로 제공하며, Claude Desktop과 Gemini CLI에서 바로 사용할 수 있는 CLI를 포함합니다.
+
+## 빠른 시작
+
+1. 패키지를 전역 설치합니다. `pipx` 또는 `uv tool`을 모두 지원합니다.
+   ```bash
+   pipx install hwpx-mcp
+   # 또는
+   uv tool install hwpx-mcp
+   ```
+2. `hwpx-mcp configure` 명령을 실행해 최초 허용 워크스페이스와 백업 정책을 지정합니다. 마법사는 입력한 경로가 없다면 자동으로 생성합니다.
+3. 사용 중인 MCP 클라이언트별 추천 설정은 아래 명령으로 출력할 수 있습니다.
+   ```bash
+   hwpx-mcp configure claude   # Claude Desktop 설정 스니펫
+   hwpx-mcp configure gemini   # Gemini CLI 설정 스니펫
+   ```
+4. 클라이언트에서 서버를 호출할 때는 STDIO 트랜스포트를 사용하는 단일 명령으로 충분합니다.
+   ```bash
+   hwpx-mcp serve --workspace "~/Documents/hwpx"
+   # 또는 번들 실행 파일/pyz를 사용할 경우
+   python hwpx-mcp.pyz serve --workspace "~/Documents/hwpx"
+   ./dist/hwpx-mcp serve --workspace "~/Documents/hwpx"
+   ```
+5. `hwpx-mcp doctor`로 Python 버전, 라이브러리 설치 상태, 워크스페이스 접근 권한을 한 번에 점검할 수 있습니다.
+
+> **참고**: CLI는 `~/.config/hwpx-mcp/config.toml`에 상태를 저장합니다. `--config` 옵션이나 `HWPX_MCP_CONFIG_PATH` 환경 변수로 경로를 변경할 수 있습니다.
+
+## 배포 & 번들 옵션
+
+설치 권한이 없는 장치에서도 사용할 수 있도록 여러 배포 방법을 제공합니다.
+
+- **zipapp**: 의존성을 포함한 단일 `.pyz` 파일을 생성합니다. Python 3.10+만 설치돼 있다면 추가 의존성 없이 실행할 수 있습니다.
+  ```bash
+  rm -rf build dist
+  uv pip install --target build/hwpx-mcp --upgrade hwpx-mcp
+  python -m zipapp build/hwpx-mcp \
+    --output hwpx-mcp.pyz \
+    --main hwpx_mcp.__main__:main
+  python hwpx-mcp.pyz doctor
+  ```
+- **PyInstaller**: 완전한 단일 실행 파일이 필요한 경우 `--onefile` 번들을 생성합니다.
+  ```bash
+  uv tool install pyinstaller
+  pyinstaller -F -n hwpx-mcp -p src --console -m hwpx_mcp.__main__
+  ./dist/hwpx-mcp doctor
+  ```
+
+두 방법 모두 `python -m hwpx_mcp`와 동일한 엔트리포인트를 사용하므로 기존 CLI 명령과 100% 호환됩니다.
+
+## CLI 개요
+
+### `hwpx-mcp serve`
+
+- 기본 트랜스포트는 STDIO JSON-RPC이며 Claude Desktop과 호환됩니다.
+- `--workspace/-w` 옵션을 여러 번 지정하면 실행 시점의 허용 경로를 덮어쓰고 설정 파일도 함께 갱신합니다.
+- `--transport`(`stdio`, `sse`, `streamable-http`)를 지정하면 TCP 기반 실행도 지원합니다. `--host`, `--port`는 SSE/HTTP 모드에서 사용됩니다.
+- 워크스페이스를 등록하지 않은 상태에서 `--workspace` 없이 실행하면 TTY 환경에 한해 마법사가 다시 표시되며, 비대화식 환경에서는 오류가 발생합니다.
+
+### `hwpx-mcp configure`
+
+- 인자가 없는 경우 인터랙티브 마법사가 실행돼 허용 디렉터리, 기본 언어 코드, 자동 백업 정책을 설정합니다.
+- `configure claude`는 `claude_desktop_config.json`에 붙여 넣을 수 있는 JSON 조각을, `configure gemini`는 `~/.gemini-cli/config.toml`에 추가할 TOML 스니펫을 출력합니다. 현재 설정에 등록된 첫 번째 워크스페이스가 자동으로 예시에 채워집니다.
+
+### `hwpx-mcp doctor`
+
+- Python 3.10+ 버전 여부, 설정 파일 존재 여부, `python-hwpx` 설치 상태, 워크스페이스 접근 가능 여부를 표 형식으로 출력합니다.
+- 하나라도 실패하면 종료 코드 1을 반환해 CI나 배포 스크립트에서 손쉽게 활용할 수 있습니다.
+
+## 워크스페이스 & 보안 모델
+
+- 설정 파일에 등록한 디렉터리만 접근이 허용되며, `load_document(path=...)`/`save_document(path=...)` 호출 시 디렉터리가 화이트리스트에 포함되지 않으면 즉시 거부됩니다.
+- 서버는 `listResources` 호출에 맞춰 워크스페이스를 즉시 스캔하여 다음 두 가지 리소스를 제공합니다.
+  - `hwpx-index://{workspace}/documents` : 워크스페이스별 HWPX 파일 목록(JSON)
+  - `hwpx-doc://{workspace}/{encoded_path}` : 실제 문서를 바이너리로 스트리밍하는 리소스(URI에는 상대 경로가 URL-safe Base64로 인코딩됩니다.)
+- 저장 시 기존 파일이 존재하고 `auto_backup`이 활성화되어 있으면 `<원본파일명>.<타임스탬프>.bak` 형식의 백업을 자동 생성합니다. 백업 위치는 설정에서 별도 디렉터리를 지정할 수 있으며, 미지정 시 원본 경로와 동일한 폴더를 사용합니다.
+
+## Claude Desktop 연동 요약
+
+1. `hwpx-mcp configure claude` 출력의 JSON 조각을 `claude_desktop_config.json` 또는 앱 설정 화면에 그대로 붙여 넣습니다.
+2. `command`는 `hwpx-mcp`, `args`에는 `serve`, `--workspace`, `<경로>` 순으로 입력합니다.
+3. Claude Desktop에서 MCP 서버를 활성화하면 STDIO 기반 서버가 자동으로 기동되며, 최초 연결 시 허용 디렉터리 승인을 요청합니다.
+
+## Gemini CLI 연동 요약
+
+1. `hwpx-mcp configure gemini` 명령으로 `.gemini-cli/config.toml`에 추가할 `[ [mcp_servers] ]` 블록을 확인합니다.
+2. `gemini` CLI 실행 시 `--mcp-server hwpx-mcp` 옵션을 추가하면 자동으로 MCP 서버를 실행합니다.
+3. 동일한 `serve` 명령을 사용하므로 Claude Desktop과 동일한 워크스페이스 구성을 공유할 수 있습니다.
+
+## 로컬 실행 전용 정책
+
+이 MCP 서버는 반드시 사용자의 로컬 머신에서만 실행해야 하며, 원격 서버나 터널링 도구로 노출하는 구성을 지원하지 않습니다.
+
+- STDIO 트랜스포트를 사용하는 기본 모드에서는 프로세스 표준 입출력으로만 통신하므로 외부 네트워크에 노출되지 않습니다.
+- SSE/HTTP 모드를 사용할 경우에도 `--host 127.0.0.1`을 유지해 루프백 인터페이스로만 바인딩해야 합니다.
+- 허용되지 않은 경로에 대한 모든 접근은 즉시 차단되며, 접근 실패 이벤트는 로거에 기록됩니다.
+
+## 세션 설정 (SessionConfig)
+
+| 필드 | 기본값 | 설명 |
+| --- | --- | --- |
+| `autosave_on_modify` | `false` | 문서 편집 후 원본 경로로 자동 저장 |
+| `include_nested_paragraphs` | `true` | 문단 순회 시 표/컨트롤 내부 포함 |
+| `object_placeholder` | `null` | 텍스트 추출 시 객체 대체 문자열 |
+| `annotation_mode` | `"summary"` | `ignore`/`summary`/`inline` 중 선택 |
+| `preserve_line_breaks` | `true` | 추출 시 줄바꿈 보존 |
+| `max_items` | `200` | 목록형 도구 응답의 최대 항목 수 |
+
+세션 설정은 MCP 클라이언트에서 전달하며, 모든 도구가 자동으로 참조합니다.
+
+## 제공 툴 요약
+
+| 분류 | 툴 | 기능 개요 |
+| --- | --- | --- |
+| 문서 관리 | `load_document`, `new_document`, `save_document`, `close_document` | 문서를 로딩·생성·저장·종료 |
+| 구조 탐색 | `inspect_package`, `list_sections`, `list_headers`, `list_memos`, `list_styles`, `list_char_properties`, `list_memo_shapes`, `list_bullets`, `list_track_changes`, `describe_numberings`, `iter_paragraphs`, `extract_text`, `find_objects`, `list_annotations` | 패키지 구조 점검과 스타일/서식/번호 매김 등 메타데이터 조회 |
+| 편집 | `add_paragraph`, `edit_paragraph`, `insert_paragraph_at`, `delete_paragraph`, `add_table`, `add_shape`, `add_control`, `add_memo_with_anchor`, `replace_text`, `set_header_text`, `set_footer_text`, `remove_header`, `remove_footer` | 문단·표·도형·컨트롤 추가와 텍스트/헤더·푸터 수정 |
+| 품질 검사 | `validate_document` | 기본 스키마를 이용한 문서 검증 |
+
+상세 인자와 로컬 환경 연동 팁은 `docs/mcp_server_prompt.md`에서 확인할 수 있습니다. 클라이언트별 예시 대화는 [`docs/client_examples.md`](docs/client_examples.md)에 정리했습니다.
+
+## 문제 해결 가이드
+
+- `hwpx-mcp doctor`가 `python-hwpx` 오류를 보고하면 `pipx runpip hwpx-mcp install python-hwpx`로 재설치할 수 있습니다.
+- 허용되지 않은 경로 오류가 발생하면 `hwpx-mcp configure` 또는 `hwpx-mcp serve --workspace`로 경로를 다시 등록합니다.
+- STDIO 모드에서 서버가 응답하지 않는다면 클라이언트 설정의 명령어와 인자를 다시 확인하고, 동일한 명령을 터미널에서 직접 실행해 로그를 확인하세요.
