@@ -1,0 +1,178 @@
+# DTP Security SDK
+
+[![PyPI version](https://badge.fury.io/py/dtp-security.svg)](https://badge.fury.io/py/dtp-security)
+[![Python Support](https://img.shields.io/pypi/pyversions/dtp-security.svg)](https://pypi.org/project/dtp-security/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+Advanced cryptographic SDK featuring steganography and active defense capabilities for next-generation cybersecurity applications.
+
+## 🚀 Key Features
+
+- **Advanced Encryption**: AES-256-GCM with PBKDF2 key derivation
+- **Steganographic Protection**: Hide data using zero-width Unicode characters
+- **Active Defense**: Decoy password system for attack detection
+- **Multi-layer Security**: Combined password and client secret protection
+- **Real-time Detection**: Instant alerts when decoy credentials are used
+- **Enterprise Ready**: Professional SDK for easy integration
+
+## 📦 Installation
+
+```bash
+pip install dtp-security
+```
+
+## 🔧 Quick Start
+
+### Basic Usage (Original DTP)
+
+```python
+import dtp
+
+password = "my-super-secret-password"
+plaintext = b"This is the actual secret data."
+
+# Encrypt the data
+encrypted_data = dtp.encrypt_dtp(plaintext, password)
+
+# Decrypt the data
+decrypted_data = dtp.decrypt_dtp(encrypted_data, password)
+
+print(f"Original:  {plaintext}")
+print(f"Decrypted: {decrypted_data}")
+
+# Generate a decoy string
+decoy = dtp.generate_decoy()
+print(f"Generated Decoy: {decoy}")
+```
+
+### Enhanced Security with Client Secret
+
+```python
+import dtp
+
+# Generate a unique client secret (store securely on user's device)
+client_secret = dtp.generate_client_secret()
+
+password = "user-password"
+plaintext = b"Sensitive user data"
+
+# Encrypt with both password and client secret
+encrypted_data = dtp.encrypt_dtp_with_client_secret(
+    plaintext, password, client_secret
+)
+
+# Decrypt requires both password and client secret
+decrypted_data = dtp.decrypt_dtp_with_client_secret(
+    encrypted_data, password, client_secret
+)
+```
+
+### Decoy Detection System
+
+```python
+import dtp
+
+# Generate and track decoy passwords
+decoys = []
+decoy_hashes = set()
+
+for _ in range(10):
+    decoy = dtp.generate_decoy()
+    decoy_hash = dtp.hash_password(decoy)
+    decoys.append(decoy)
+    decoy_hashes.add(decoy_hash)
+
+# During login, check if password is a decoy
+submitted_password = "some_password"
+if dtp.is_decoy_password(submitted_password, decoy_hashes):
+    print("🚨 ALERT: Decoy password detected! Possible attack!")
+    # Trigger security response
+else:
+    print("✅ Legitimate password")
+    # Proceed with normal login
+```
+
+## 🛡️ How It Works
+
+The DTP SDK uses a revolutionary multi-layered approach:
+
+1. **Inner Encryption**: Real data is encrypted using AES-256-GCM with a secondary key (`k2`)
+2. **Steganographic Embedding**: The encrypted real data is hidden within a plausible decoy string using zero-width Unicode characters
+3. **Outer Encryption**: The decoy (containing hidden real data) is encrypted again with the primary key (`k1`)
+4. **Decoy Detection**: Generated decoys are hashed and tracked for real-time attack detection
+
+### Attack Scenario Protection
+
+When an attacker breaks the outer encryption layer:
+- They get a plausible decoy password (e.g., "darknet42@!")
+- Attempting to use this decoy triggers an immediate alert
+- The real data remains safely hidden and encrypted
+- Users get notified to change their passwords
+- Attackers must start over, wasting time and resources
+
+## 📚 Complete API Reference
+
+### Core Functions
+
+- `encrypt_dtp(plaintext: bytes, password: str) -> bytes`
+- `decrypt_dtp(envelope: bytes, password: str) -> bytes`
+- `encrypt_dtp_with_client_secret(plaintext: bytes, password: str, client_secret: str) -> bytes`
+- `decrypt_dtp_with_client_secret(envelope: bytes, password: str, client_secret: str) -> bytes`
+
+### Decoy Management
+
+- `generate_decoy(decoy_data: Optional[Dict] = None) -> str`
+- `load_decoy_data(template_path: Optional[str] = None) -> Dict`
+- `is_decoy_password(submitted_password: str, known_decoy_hashes: set) -> bool`
+
+### Security Utilities
+
+- `hash_password(password: str) -> str`
+- `generate_client_secret() -> str`
+
+### Advanced Functions
+
+- `decrypt_decoy(envelope_bytes: bytes, password: str) -> str`
+- `extract_secret(decoy_with_zw: str, secret_key: bytes) -> bytes`
+
+### Exception Classes
+
+- `DTPError`: Base exception for DTP-related errors
+- `DTPDecryptionError`: Raised when decryption fails
+
+## 🎯 Customizing Decoy Generation
+
+Create your own `decoy_template.json` file to generate industry-specific decoys:
+
+```json
+{
+    "subjects": ["srv", "db", "api", "net"],
+    "verbs": ["run", "fail", "conn", "auth"],
+    "objects": ["err", "ok", "cfg", "tmp"],
+    "adjectives": ["fast", "dark", "red", "max"],
+    "symbols": "!@#$%^&*",
+    "templates": [
+        "{adj}{subj}{time}{sym}{sym}",
+        "{subj}_{obj}{sym}"
+    ]
+}
+```
+
+This customization makes it impossible for attackers to create universal DTP-breaking tools.
+
+## 💼 Enterprise Integration
+
+The DTP SDK is designed for easy integration into:
+- Web applications and APIs
+- Password managers
+- Secure communication systems
+- Database encryption layers
+- IoT and embedded systems
+
+## 📄 License
+
+Licensed under the Apache License, Version 2.0. See LICENSE file for details.
+
+## 🤝 Support
+
+For enterprise licensing, custom implementations, or technical support, please contact the development team.
