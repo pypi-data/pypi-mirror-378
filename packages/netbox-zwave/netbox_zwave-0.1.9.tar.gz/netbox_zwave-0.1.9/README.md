@@ -1,0 +1,170 @@
+# NetBox Z-Wave Plugin
+
+A NetBox plugin for tracking Z-Wave devices and networks. This plugin allows you to manage Z-Wave networks, devices, command classes, and associations within your NetBox instance.
+
+## Features
+
+- **Z-Wave Networks**: Track Z-Wave networks with Home ID, Network ID, and security settings
+- **Z-Wave Devices**: Manage individual Z-Wave devices with detailed product information
+- **Command Classes**: Track supported command classes for each device
+- **Associations**: Manage device associations and routing relationships
+- **REST API**: Full REST API support for all models
+- **Web Interface**: Integrated web interface with NetBox's UI
+
+## Installation
+
+1. Install the plugin package:
+   ```bash
+   pip install netbox-zwave
+   ```
+
+2. Add the plugin to your NetBox configuration:
+   ```python
+   PLUGINS = [
+       'netbox_zwave',
+   ]
+   ```
+
+3. Run database migrations:
+   ```bash
+   python manage.py migrate
+   ```
+
+4. Restart NetBox:
+   ```bash
+   sudo systemctl restart netbox
+   ```
+
+## Configuration
+
+The plugin supports the following configuration options in your NetBox configuration:
+
+```python
+PLUGINS_CONFIG = {
+    'netbox_zwave': {
+        'enable_auto_discovery': False,  # Enable automatic device discovery
+        'default_network_id': 1,         # Default network ID for new devices
+        'device_timeout': 30,            # Device timeout in seconds
+    }
+}
+```
+
+## Models
+
+### Z-Wave Network
+- Network ID (1-255)
+- Home ID (hexadecimal)
+- Status (Active, Inactive, Maintenance)
+- Security settings (S0, S2)
+- Controller node ID
+
+### Z-Wave Device
+- Node ID (1-232)
+- Device type (Controller, Router, End Device, Sleeping End Device)
+- Product information (Manufacturer ID, Product Type, Product ID)
+- Firmware and hardware versions
+- Capabilities (Security, Routing, Beaming, etc.)
+- Status information (Battery level, Signal strength, Last seen)
+
+### Command Class
+- Command Class ID and name
+- Version support
+- Security and control capabilities
+
+### Association
+- Source and target devices
+- Association group ID
+- Relationship descriptions
+
+## API Endpoints
+
+The plugin provides REST API endpoints for all models:
+
+- `/api/plugins/netbox-zwave/networks/`
+- `/api/plugins/netbox-zwave/devices/`
+- `/api/plugins/netbox-zwave/command-classes/`
+- `/api/plugins/netbox-zwave/associations/`
+
+## Development
+
+### Setup Development Environment
+
+1. Clone the repository:
+   ```bash
+   git clone https://gitlab.clockworx.org/dawsonra/netbox-zwave.git
+   cd netbox-zwave
+   ```
+
+2. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install development dependencies:
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+### Running Tests
+
+```bash
+pytest
+```
+
+### Code Style
+
+The project uses Black for code formatting and flake8 for linting:
+
+```bash
+black .
+flake8 .
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
+
+## Support
+
+For support and questions:
+- Create an issue on [GitLab](https://gitlab.clockworx.org/dawsonra/netbox-zwave/issues)
+- Check the NetBox documentation for plugin development
+- Review the Z-Wave specification for device details
+
+## Changelog
+
+### 0.1.5
+- Fixed ChoiceSet classes by adding missing CHOICES attributes
+- Resolved Django model import errors during NetBox startup
+- Fixed ZwaveNetworkStatusChoices, ZwaveDeviceStatusChoices, and ZwaveDeviceTypeChoices
+
+### 0.1.4
+- Removed NetBox dependency (NetBox is not distributed via PyPI)
+- Added Django dependency for plugin compatibility
+- Fixed installation issues by removing non-existent NetBox package dependency
+
+### 0.1.3
+- Fixed NetBox dependency constraint to be more specific (>=4.0.0,<5.0.0)
+- Resolved dependency conflicts during installation
+
+### 0.1.2
+- Fixed repository URLs to point to correct GitLab repository
+- Updated homepage, repository, documentation, and bug tracker links
+- Corrected development setup instructions
+
+### 0.1.0
+- Initial release
+- Basic Z-Wave network and device management
+- Command class and association tracking
+- REST API support
+- Web interface integration
