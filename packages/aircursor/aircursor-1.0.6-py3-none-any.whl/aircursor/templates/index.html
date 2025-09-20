@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AirCursor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <main class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-4xl">
+      <div class="w-full bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div id="pad" class="w-full h-[420px] border-2 border-dashed border-gray-300 rounded-xl grid place-items-center text-gray-500 select-none touch-none">
+          <div class="text-center text-sm leading-6">
+            <div class="font-medium text-gray-700">Touchpad</div>
+            <div>1-finger move • Tap / Double-tap • Long-press = Right click • 2-finger scroll</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function jsonFetch(url, options) {
+      const res = await fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, options || {}));
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
+
+    // Live touchpad controls
+    const pad = document.getElementById('pad');
+    const state = {
+      active: false,
+      lastX: 0, lastY: 0,
+      accumX: 0, accumY: 0,
+      sending: false,
+      moved: false,
+      downTime: 0,
+      longPressed: false,
+      lastTapTime: 0,
+      scrollMode: false,
+      lastAvgY: 0
+    };
+    let longPressTimer = null;
+
+    function clearLongPress() { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } }
+    function startLongPressTimer() {
+      clearLongPress();
+      longPressTimer = setTimeout(async () => {
+        if (state.active && !state.moved && !state.scrollMode) {
+          state.longPressed = true;
+          try { await jsonFetch('/api/v1/click', { method: 'POST', body: JSON.stringify({ button: 'right', count: 1 }) }); } catch (_) {}
+        }
+      }, 550);
+    }
+
+    async function pumpMove() {
+      if (state.sending) return;
+      const dx = state.accumX;
+      const dy = state.accumY;
+      if (dx === 0 && dy === 0) return;
+      state.accumX = 0; state.accumY = 0;
+      state.sending = true;
+      try {
+        await jsonFetch('/api/v1/cursor', { method: 'PATCH', body: JSON.stringify({ dx, dy }) });
+      } catch (_) { /* ignore */ }
+      finally {
+        state.sending = false;
+        if (state.accumX !== 0 || state.accumY !== 0) pumpMove();
+      }
+    }
+
+    pad.addEventListener('pointerdown', (e) => {
+      if (state.scrollMode) return;
+      pad.setPointerCapture(e.pointerId);
+      state.active = true;
+      state.moved = false;
+      state.longPressed = false;
+      state.downTime = performance.now();
+      state.lastX = e.clientX; state.lastY = e.clientY;
+      pad.classList.add('border-sky-500', 'bg-sky-50');
+      pad.classList.remove('border-gray-300');
+      startLongPressTimer();
+    });
+
+    pad.addEventListener('pointermove', (e) => {
+      if (!state.active || state.scrollMode) return;
+      const dx = e.clientX - state.lastX;
+      const dy = e.clientY - state.lastY;
+      if (dx !== 0 || dy !== 0) {
+        state.moved = true;
+        state.accumX += Math.round(dx);
+        state.accumY += Math.round(dy);
+        state.lastX = e.clientX; state.lastY = e.clientY;
+        pumpMove();
+      }
+    });
+
+    async function handlePointerUp(e) {
+      if (!state.active) return;
+      try { pad.releasePointerCapture(e.pointerId); } catch (_) {}
+      pad.classList.remove('border-sky-500', 'bg-sky-50');
+      pad.classList.add('border-gray-300');
+      clearLongPress();
+      const duration = performance.now() - state.downTime;
+      const wasTap = !state.moved && !state.longPressed && duration < 250;
+      state.active = false;
+      if (wasTap) {
+        const now = performance.now();
+        const isDouble = (now - state.lastTapTime) < 300;
+        state.lastTapTime = now;
+        try { await jsonFetch('/api/v1/click', { method: 'POST', body: JSON.stringify({ button: 'left', count: isDouble ? 2 : 1 }) }); } catch (_) {}
+      }
+    }
+    pad.addEventListener('pointerup', handlePointerUp);
+    pad.addEventListener('pointercancel', handlePointerUp);
+    pad.addEventListener('pointerleave', handlePointerUp);
+
+    // Two-finger scroll using touch events
+    pad.addEventListener('touchstart', (e) => {
+      if (e.touches.length >= 2) {
+        state.scrollMode = true;
+        state.active = false;
+        clearLongPress();
+        pad.classList.add('border-sky-500', 'bg-sky-50');
+        pad.classList.remove('border-gray-300');
+        const t0 = e.touches[0], t1 = e.touches[1];
+        state.lastAvgY = (t0.clientY + t1.clientY) / 2;
+      }
+    }, { passive: false });
+
+    pad.addEventListener('touchmove', async (e) => {
+      if (!state.scrollMode || e.touches.length < 2) return;
+      e.preventDefault();
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const avgY = (t0.clientY + t1.clientY) / 2;
+      const dy = avgY - state.lastAvgY;
+      state.lastAvgY = avgY;
+      const scrollY = Math.round(-dy * 2);
+      if (scrollY !== 0) {
+        try { await jsonFetch('/api/v1/scroll', { method: 'POST', body: JSON.stringify({ dx: 0, dy: scrollY }) }); } catch (_) {}
+      }
+    }, { passive: false });
+
+    pad.addEventListener('touchend', () => {
+      if (state.scrollMode && (window.event?.touches?.length || 0) < 2) {
+        state.scrollMode = false;
+        pad.classList.remove('border-sky-500', 'bg-sky-50');
+        pad.classList.add('border-gray-300');
+      }
+    });
+    pad.addEventListener('touchcancel', () => {
+      if (state.scrollMode) {
+        state.scrollMode = false;
+        pad.classList.remove('border-sky-500', 'bg-sky-50');
+        pad.classList.add('border-gray-300');
+      }
+    });
+  </script>
+</body>
+</html>
