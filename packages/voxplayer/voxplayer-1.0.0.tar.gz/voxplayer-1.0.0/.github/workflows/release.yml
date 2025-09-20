@@ -1,0 +1,103 @@
+name: 🚀 Release VoxPlayer
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+        
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install build twine
+        
+    - name: 🧪 Run tests
+      run: |
+        python -c "import app; print('✅ Import successful')"
+        
+    - name: 📝 Update version
+      run: |
+        # Extract version from tag
+        VERSION=${GITHUB_REF#refs/tags/}
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Releasing version: $VERSION"
+        
+    - name: 📦 Build package
+      run: |
+        python -m build
+        
+    - name: 🏷️ Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.VERSION }}
+        release_name: VoxPlayer ${{ env.VERSION }}
+        body: |
+          ## 🎬 VoxPlayer ${{ env.VERSION }}
+          
+          ### ✨ What's New
+          - Check the [CHANGELOG](CHANGELOG.md) for detailed changes
+          
+          ### 🚀 Quick Start
+          ```bash
+          git clone https://github.com/voxhash/voxplayer.git
+          cd voxplayer
+          pip install -r requirements.txt
+          python app.py
+          ```
+          
+          ### 📋 Features
+          - 🎬 Multi-format video/audio playback
+          - 🌐 Torrent streaming support
+          - 🔄 Auto-update system
+          - 🎨 VLC-like interface
+          - 📱 Cross-platform support
+          
+          ### 🛠️ Installation
+          - **Python 3.8+** required
+          - **PyQt6** for GUI
+          - **FFmpeg** for media playback
+          
+          ### 📞 Support
+          - [GitHub Issues](https://github.com/voxhash/voxplayer/issues)
+          - [Discussions](https://github.com/voxhash/voxplayer/discussions)
+          
+          **Made with ❤️ by VoxHash**
+        draft: false
+        prerelease: false
+        
+    - name: 📤 Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/
+        asset_name: voxplayer-${{ env.VERSION }}-source.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: 🎉 Release Complete
+      run: |
+        echo "🎉 VoxPlayer ${{ env.VERSION }} has been released!"
+        echo "📦 Package: voxplayer-${{ env.VERSION }}-source.tar.gz"
+        echo "🔗 Release: https://github.com/voxhash/voxplayer/releases/tag/${{ env.VERSION }}"
