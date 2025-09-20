@@ -1,0 +1,213 @@
+Metadata-Version: 2.4
+Name: LyGui
+Version: 0.1.0b2.post1
+Summary: LyGui (beta): zero-deps, pure-Python immediate-mode GUI with a software renderer.
+Author: DeathAmir
+License: MIT
+Keywords: gui,immediate,lygui,software renderer,zero deps
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Development Status :: 4 - Beta
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Dynamic: license-file
+
+# LyGui — Comprehensive Immediate‑Mode GUI (Beta, Zero‑Deps)
+
+**LyGui** is a **fully independent, zero‑dependency** Immediate‑Mode GUI toolkit written in **pure Python**.  
+No Tk, no PyQt, no SDL, no OpenGL, no Win32 — *nothing* outside the Python standard library.
+
+> Version: `0.1.0b2` • License: **MIT** • Author: **DeathAmir**
+
+---
+
+## 🚀 Overview
+
+- **Zero Dependencies:** Runs with the standard Python library only.
+- **Immediate‑Mode API:** Clean, fresh names under the `LyGui` namespace.
+- **Pure Software Renderer:** Internal rasterizer with a pixel framebuffer.
+- **Modular Output Drivers:** By default, headless preview and PNG frame dump (both zero‑deps).  
+  Future releases will add optional OS outputs via `ctypes` while keeping zero‑deps.
+
+---
+
+## 🌟 Features (Beta)
+
+- **API (namespace `LyGui`):**
+  - Layout/Windows: `Begin/End`, `BeginChild/EndChild`, `SameLine`, `Separator`, `SetNextWindowPos/Size`
+  - Widgets: `Text`, `Button`, `Checkbox`, `InputText`, `SliderFloat`
+  - Frame Control: `GetIO`, `GetStyle`, `NewFrame`, `Render`
+- **Renderer:**
+  - Rectangle/line fills, simple AA for lines, rounded corners (basic).
+  - Built‑in tiny bitmap font for `Text` (ASCII subset).
+- **Outputs (zero‑deps):**
+  - `outputs.preview.run(ui, frames, fps)`: runs frames in memory (good for testing/benchmarks).
+  - `outputs.framedump.run(..., make_gif=False)`: dumps frames as PNG via an internal encoder.
+
+> Note: In beta, live on‑screen windows are intentionally not used to maintain absolute zero‑deps.  
+> We will add optional cross‑platform OS outputs later (still packaged in‑tree).
+
+---
+
+## 📋 Requirements
+
+- **OS:** Any OS that runs CPython (Windows / Linux / macOS).
+- **Python:** 3.9 – 3.12
+- **Extra libs:** None.
+
+---
+
+## 🛠️ Development Setup
+
+```bash
+git clone https://github.com/deathamir/LyGui.git
+cd LyGui
+pip install -U .
+```
+
+### Run the example
+```bash
+python examples/hello.py
+```
+
+**Example (`examples/hello.py`):**
+```python
+from lygui import LyGui
+from lygui.outputs import preview, framedump
+
+flag = True
+val = 0.25
+text = "Type here"
+
+def ui():
+    global flag, val, text
+    LyGui.SetNextWindowPos(40, 40)
+    LyGui.SetNextWindowSize(420, 300)
+    LyGui.Begin("LyGui • Beta (Zero-Deps)")
+
+    LyGui.Text("Immediate-Mode • zero dependencies")
+    LyGui.Separator()
+
+    if LyGui.Button("Click Me"):
+        print("Clicked!")
+    LyGui.SameLine()
+    changed, flag = LyGui.Checkbox("Enable", flag)
+
+    changed, val = LyGui.SliderFloat("Value", val, 0.0, 1.0)
+    changed, text = LyGui.InputText("Name", text, width=240)
+
+    LyGui.End()
+
+# headless preview (no files written)
+preview.run(ui, frames=60, fps=60)
+
+# dump PNG frames
+# framedump.run(ui, frames=60, fps=60, out_dir="out_frames", make_gif=False)
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+pytest
+# with coverage if you install pytest-cov (optional)
+pytest --cov=lygui --cov-report=term-missing
+```
+
+---
+
+## 🔍 Dev Tools (Optional)
+
+Zero‑deps core doesn’t require them, but for contributors:
+
+- Formatting: **Black**
+- Lint: **Ruff** or **Flake8**
+- Types: **MyPy**
+- Tests: **Pytest**
+
+```bash
+pip install -r requirements-dev.txt
+black . && ruff check . && mypy lygui && pytest
+```
+
+---
+
+## 📦 Project Structure
+
+```
+LyGui/
+├── lygui/
+│   ├── core.py            # Immediate-mode core + API namespace (LyGui)
+│   ├── renderers/
+│   │   ├── software.py    # Software rasterizer + framebuffer
+│   │   └── text.py        # Tiny bitmap font renderer
+│   ├── outputs/
+│   │   ├── preview.py     # Headless frame runner
+│   │   └── framedump.py   # Zero-deps PNG encoder + frame dump
+│   └── utils/
+│       └── color.py       # Color helpers
+├── examples/
+│   └── hello.py
+├── tests/
+│   ├── test_core.py
+│   └── test_renderer.py
+├── docs/
+│   └── roadmap.md
+├── pyproject.toml
+├── LICENSE
+└── README.md
+```
+
+---
+
+## 🔒 Security
+
+- No external native libraries → small attack surface.
+- Input validation for widget values.
+- Minimal logging; can be disabled.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create a branch: `git checkout -b feat/your-feature`
+3. Commit: `git commit -m "feat: add your-feature"`
+4. Push: `git push origin feat/your-feature`
+5. Open a Pull Request
+
+**Guidelines:**
+- Keep API clean and consistent
+- Add tests for new features
+- Maintain ≥ 80% coverage (goal)
+- Update docs and examples
+
+---
+
+## 🧭 Roadmap
+
+- Widgets: Menu/MenuBar, Popup/Modal, Tree/CollapsingHeader, Tables/Columns
+- Drawing API: Path, Circles, ClipRect, Layers
+- Fonts: Better text, caching, Unicode & RTL
+- Outputs: Optional OS windows via `ctypes` (X11/Quartz/Wayland/DirectFrame)
+
+---
+
+## 📄 License
+
+**MIT** — © 2025 **DeathAmir**
+
+---
+
+## 📞 Contact
+
+- **Name:** Erton Miranda (DeathAmir)  
+- **Email:** erton.miranda@example.com  
+- **GitHub:** `@deathamir`
+
+---
+
+_Last updated: 2025-09-19_
