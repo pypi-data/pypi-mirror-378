@@ -1,0 +1,43 @@
+name: documentation
+
+# build the documentation whenever there are new commits on main
+on:
+  push:
+    branches:
+      - main
+    # Alternative: only build for tags.
+    # tags:
+    #   - '*'
+
+# permissions for mkdocs gh-deploy
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Git Credentials
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      # Extract Python version from pyproject.toml
+      - name: Get Python version from pyproject.toml
+        id: python-version
+        run: |
+          python_version=$(grep -E "requires-python.*=" pyproject.toml | sed -E 's/.*">=([0-9.]+)".*/\1/')
+          echo "version=$python_version" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ steps.python-version.outputs.version }}
+
+      # Install package and documentation dependencies
+      - run: pip install -e .
+      - run: pip install mkdocs-material mkdocstrings[python]
+
+      # Build and deploy documentation
+      - run: mkdocs gh-deploy --force
