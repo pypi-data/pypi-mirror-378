@@ -1,0 +1,206 @@
+Metadata-Version: 2.4
+Name: leksara
+Version: 0.1.0
+Summary: Library pemrosesan teks Bahasa Indonesia untuk domain e-commerce (cleaning, PII masking, review mining, pipeline).
+Author: Rhendy Saragih
+License: MIT
+Project-URL: Homepage, https://example.com/leksara
+Project-URL: Source, https://example.com/leksara/repo
+Project-URL: Issues, https://example.com/leksara/issues
+Project-URL: Documentation, https://example.com/leksara/docs
+Keywords: nlp,indonesian,text-cleaning,ecommerce,pii,preprocessing,review-mining,normalization
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: Indonesian
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Text Processing :: Linguistic
+Classifier: Topic :: Software Development :: Libraries
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pandas>=1.5
+Requires-Dist: regex>=2022.1.18
+Requires-Dist: emoji>=2.0.0
+Requires-Dist: Sastrawi>=1.0.1
+Provides-Extra: dev
+Requires-Dist: ruff>=0.4.0; extra == "dev"
+Requires-Dist: mypy>=1.8.0; extra == "dev"
+Requires-Dist: pytest>=7.4; extra == "dev"
+Requires-Dist: pytest-cov>=4.1; extra == "dev"
+Requires-Dist: build; extra == "dev"
+Requires-Dist: twine; extra == "dev"
+Requires-Dist: ipykernel; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: mkdocs; extra == "docs"
+Requires-Dist: mkdocs-material; extra == "docs"
+Provides-Extra: test
+Requires-Dist: pytest>=7.4; extra == "test"
+Requires-Dist: pytest-cov>=4.1; extra == "test"
+Provides-Extra: benchmark
+Requires-Dist: tqdm; extra == "benchmark"
+Requires-Dist: tabulate; extra == "benchmark"
+Dynamic: license-file
+
+# Leksara
+
+## Description
+**Leksara** is a Python toolkit designed to streamline the preprocessing and cleaning of Indonesian text data for Data Scientists and Machine Learning Engineers. It focuses on handling messy and noisy Indonesian text from various domains such as e-commerce reviews, social media posts, and chat conversations. The tool helps clean text by handling Indonesian-specific challenges like slang words, regional expressions, informal abbreviations, and mixed language content, while also providing standard cleaning features like punctuation and stopword removal. This makes it an essential tool for Indonesian text analysis and machine learning model preparation.
+
+## Key Features
+- **Basic Cleaning Pipeline**: A straightforward pipeline to clean raw text data by handling common tasks like punctuation removal, casing normalization, and stopword filtering.
+- **Advanced Customization**: Users can create custom cleaning pipelines tailored to specific datasets, including support for regex pattern matching, stemming, and custom dictionaries.
+- **Preset Options**: Includes predefined cleaning presets for various domains like e-commerce, allowing for one-click cleaning.
+- **Slang and Informal Text Handling**: Users can define their own custom dictionaries for slang terms and informal language, especially useful for Indonesian text.
+
+## Usage Examples
+
+### Basic Usage: Basic Cleaning Pipeline
+This example demonstrates how to clean e-commerce product reviews using a pre-built preset.
+
+```python
+from Leksara  import Leksara 
+
+df['cleaned_review'] = Leksara(df['review_text'], preset='ecommerce_review')
+print(df[['review_id', 'cleaned_review']])
+```
+
+**Input Data (df):**
+
+| review_id | review_text                            |
+|-----------|----------------------------------------|
+| 1         | `<p>brgnya ORI & pengiriman cepat. Mantulll 👍</p>` |
+| 2         | `Kualitasnya krg bgs, ga sesuai ekspektasi...` |
+
+**Output Data:**
+
+| review_id | cleaned_review                 |
+|-----------|---------------------------------|
+| 1         | `barang nya original pengiriman cepat mantap` |
+| 2         | `kualitasnya kurang bagus tidak sesuai ekspektasi` |
+
+### Advanced Usage: Custom Cleaning Pipeline
+Customize the pipeline to mask phone numbers and normalize whitespace in chat logs.
+
+```python
+from Leksara import Leksara
+from Leksara.functions import to_lowercase, normalize_whitespace
+from Leksara.patterns import MASK_PHONE_NUMBER
+
+custom_pipeline = {
+    'patterns': [MASK_PHONE_NUMBER],
+    'functions': [to_lowercase, normalize_whitespace]
+}
+
+df['safe_message'] = Leksara(df['chat_message'], pipeline=custom_pipeline)
+print(df[['chat_id', 'safe_message']])
+```
+
+**Input Data (df):**
+
+| chat_id | chat_message                           |
+|---------|----------------------------------------|
+| 101     | `Hi kak, pesanan saya INV/123 blm sampai. No HP saya 081234567890` |
+| 102     | `Tolong dibantu ya sis, thanks`        |
+
+**Output Data:**
+
+| chat_id | safe_message                           |
+|---------|----------------------------------------|
+| 101     | `hi kak, pesanan saya inv/123 blm sampai. no hp saya [PHONE_NUMBER]` |
+| 102     | `tolong dibantu ya sis, thanks`        |
+
+## Goals & Objectives
+- Provide an intuitive and adaptable cleaning tool for Indonesian text, focusing on domains like e-commerce.
+- Enable Data Scientists and ML Engineers to clean and preprocess text with minimal effort.
+- Allow for deep customization through configuration options and the use of custom dictionaries.
+
+## Success Metrics
+- **On-time Delivery**: Targeted release by October 15, 2025.
+- **Processing Speed**: Clean a 10,000-row Pandas Series in under 5 seconds.
+- **Cleaning Accuracy**: Achieve over 95% accuracy for core cleaning functions.
+
+## Folder Structure
+Below is the recommended folder structure for organizing the project:
+```
+[Leksara]/
+├── pyproject.toml                  # packaging & deps (nltk, dll)
+├── requirements.txt                # runtime deps (nltk, pandas, dll)
+├── README.md                       # overview & usage
+├── leksara/                        # package utama
+│   ├── __init__.py                 # public API surface
+│   ├── version.py                  # versi paket
+│   ├── core/
+│   │   ├── chain.py                # pipeline/CLI entry (sesuai pyproject scripts)
+│   │   ├── logging.py              # util logging/benchmark
+│   │   └── presets.py              # preset pipeline
+│   ├── frames/
+│   │   └── cartboard.py            # helpers untuk data frame
+│   ├── functions/                  # modul granular
+│   │   ├── __init__.py
+│   │   ├── cleaner/
+│   │   │   ├── __init__.py
+│   │   │   └── basic.py            # remove_tags, case_normal, remove_stopwords, dll.
+│   │   ├── patterns/
+│   │   │   ├── __init__.py
+│   │   │   └── pii.py              # masker PII (email/telepon, dll.)
+│   │   └── review/
+│   │       ├── __init__.py
+│   │       └── advanced.py         # fungsi review lanjutan
+│   ├── resources/                  # data pendukung (dibundel)
+│   │   ├── acronyms.csv
+│   │   ├── contractions.json
+│   │   ├── slang_dict.json
+│   │   └── stopwords/
+│   │       └── id.txt              # stopwords Indonesia (tambahan/abbr)
+│   ├── tests/
+│   │   ├── test_chain.py
+│   │   ├── test_cleaner_basic.py
+│   │   ├── test_patterns_pii.py
+│   │   └── test_review_advanced.py
+│   └── utils/
+│       ├── lang.py
+│       ├── regexes.py
+│       ├── text.py                 # text helpers
+│       └── whitelist.py
+└── notebooks/
+    └── leksara_quickstart.ipynb    # quickstart & demo
+```
+
+## Milestones
+
+| Sprint | Dates                | Goal                                           |
+|--------|----------------------|------------------------------------------------|
+| 1      | Aug 18 – Aug 22      | Project Kickoff, Discovery, Set up repository |
+| 2      | Aug 22 – Aug 29      | Build Core Cleaning Engine                    |
+| 3      | Aug 29 – Sep 5       | Develop Configurable Features                 |
+| 4      | Sep 5 – Sep 12       | Implement Advanced Customization              |
+| 5      | Sep 12 – Sep 19      | Refine API                                    |
+| 6      | Sep 19 – Sep 26      | Optimize System                               |
+| 7      | Sep 26 – Oct 3       | Finalize Documentation                        |
+| 8      | Oct 3 – Oct 10       | Prepare for Launch                            |
+
+## Requirements
+- Python 3.x
+- Pandas
+
+### Install
+```bash
+pip install Leksara
+```
+
+## Contributors
+- **Vivian & Zahra** – Document Owners
+- **Salsa** – UI/UX Designer
+- **Aufi, Althaf, Rhendy, Adit** – Data Science Team
+- **Alya, Vivin** – Data Analyst Team
+
+For more details on the features and usage, refer to the official documentation linked above.
+
+## Links
+- [UI Design](https://www.figma.com/proto/ATkL3Omdc2ZdT7ppldx2Br/Laplace-Project?node-id=41-19&t=OIOqDyu4cKp3Q90P-1)
+- [Product Design and Mockups](https://www.figma.com/proto/ATkL3Omdc2ZdT7ppldx2Br/Laplace-Project?node-id=41-19&t=OIOqDyu4cKp3Q90P-1)
