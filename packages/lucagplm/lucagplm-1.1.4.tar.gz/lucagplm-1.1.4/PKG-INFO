@@ -1,0 +1,142 @@
+Metadata-Version: 2.4
+Name: lucagplm
+Version: 1.1.4
+Summary: LucaGPLM - The LUCA general purpose language model.
+Author-email: Yuan-Fei Pan <yfpan16@gmail.com>, Yong He <sanyuan.hy@alibaba-inc.com>
+Project-URL: Homepage, https://github.com/LucaOne/LucaOne
+Project-URL: Issues, https://github.com/LucaOne/LucaOne/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: torch
+Requires-Dist: transformers
+Dynamic: license-file
+
+# LucaGPLM
+
+LucaGPLM - The LUCA general purpose language model.
+
+## Installation
+
+You can install the package from source using pip:
+
+```bash
+pip install .
+```
+
+## Usage
+
+### Basic Model Usage
+
+```python
+from lucagplm import LucaGPLMModel, LucaGPLMTokenizer
+
+# Load model
+model = LucaGPLMModel.from_pretrained("Yuanfei/lucavirus-large-step3.8M")
+tokenizer = LucaGPLMTokenizer.from_pretrained("Yuanfei/lucavirus-large-step3.8M")
+
+# Example usage
+seq = "ATCG"
+inputs = tokenizer(seq, seq_type="gene",return_tensors="pt")
+outputs = model(**inputs)
+
+seq = "NSQTA"
+inputs = tokenizer(seq, seq_type="prot",return_tensors="pt")
+outputs = model(**inputs)
+
+print(outputs.last_hidden_state.shape)
+```
+
+### Pretraining Model Usage
+
+The package also includes a pretraining model with multiple pretraining heads for different tasks:
+
+```python
+from lucagplm import LucaGPLMForPretraining, LucaGPLMTokenizer
+
+# Load pretraining model
+model = LucaGPLMForPretraining.from_pretrained("path/to/pretraining/model")
+tokenizer = LucaGPLMTokenizer.from_pretrained("path/to/pretraining/model")
+
+# Example usage with pretraining tasks
+seq = "ATCGATCGATCG"
+inputs = tokenizer(seq, seq_type="gene", return_tensors="pt")
+
+# Forward pass with pretraining heads
+outputs = model(**inputs)
+
+# Access logits for different pretraining tasks
+print("Available task logits:", list(outputs['logits'].keys()))
+
+# Token-level tasks (e.g., masked language modeling)
+if 'token_level' in outputs['logits']:
+    for task_name, logits in outputs['logits']['token_level'].items():
+        print(f"Token-level task '{task_name}' logits shape:", logits.shape)
+
+# Span-level tasks
+if 'span_level' in outputs['logits']:
+    for task_name, logits in outputs['logits']['span_level'].items():
+        print(f"Span-level task '{task_name}' logits shape:", logits.shape)
+
+# Sequence-level tasks
+if 'seq_level' in outputs['logits']:
+    for task_name, logits in outputs['logits']['seq_level'].items():
+        print(f"Sequence-level task '{task_name}' logits shape:", logits.shape)
+```
+
+### Converting Old Models
+
+The package includes a utility script to convert old LucaOneVirus checkpoints to the new LucaGPLM format:
+
+#### Using the command-line tool:
+
+```bash
+# Convert without pretraining heads
+lucagplm-convert --old-checkpoint /path/to/old/checkpoint --output-dir /path/to/new/model
+
+# Convert with pretraining heads
+lucagplm-convert --old-checkpoint /path/to/old/checkpoint --output-dir /path/to/new/model --with-pretraining-heads
+```
+
+#### Using the Python API:
+
+```python
+from lucagplm.convert_model import convert_old_weights
+
+# Convert without pretraining heads
+convert_old_weights(
+    old_checkpoint_path="/path/to/old/checkpoint",
+    output_dir="/path/to/new/model",
+    with_pretraining_heads=False
+)
+
+# Convert with pretraining heads
+convert_old_weights(
+    old_checkpoint_path="/path/to/old/checkpoint",
+    output_dir="/path/to/new/model",
+    with_pretraining_heads=True
+)
+```
+
+### Pretraining Tasks
+
+The LucaGPLMForPretraining model includes multiple pretraining tasks organized into three levels:
+
+1. **Token-level tasks**: Tasks that operate on individual tokens
+   - `mlm`: Masked Language Modeling
+   - `erc`: Entity Recognition and Classification
+   - `pos`: Part-of-Speech tagging
+
+2. **Span-level tasks**: Tasks that operate on spans of tokens
+   - `ner`: Named Entity Recognition
+   - `sbo`: Span Boundary Optimization
+   - `spr`: Span Prediction and Recovery
+
+3. **Sequence-level tasks**: Tasks that operate on entire sequences
+   - `cls`: Sequence Classification
+   - `sim`: Sequence Similarity
+   - `gen`: Sequence Generation
+
+Each task has its own prediction head (classifier) that can be fine-tuned for specific downstream applications.
