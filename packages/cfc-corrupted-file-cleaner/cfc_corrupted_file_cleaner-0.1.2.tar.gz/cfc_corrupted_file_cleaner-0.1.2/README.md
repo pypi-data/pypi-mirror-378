@@ -1,0 +1,148 @@
+# Corrupted File Cleaner (cfc)
+
+Scan, preview, quarantine, hash, and audit potentially corrupted or encrypted files. User-trust focused: safe defaults, reversible actions, transparent logging, and manifest-based auditing.
+
+## Key Features
+* Multi-format detectors: Images, Text, PDF, OOXML (docx/xlsx/pptx), MP3
+* Parallel scanning with progress + live counts
+* Action modes: Preview (safe) / Quarantine / Delete (recycle bin)
+* SHA-256 hashing & manifest snapshot (post-action)
+* Rich GUI preview: image thumbnail, text snippet, hex dump fallback
+* CLI headless mode for automation
+* JSONL logging (`scan.log`) + analytics tool
+* Externalized localization (English / Türkçe / Kurdî) with hot reload
+* Plugin architecture (drop in `detectors_plugins/*.py`)
+
+## Install
+Development (editable):
+```powershell
+pip install -e .
+```
+Standard (from a built distribution / PyPI once published):
+```powershell
+pip install cfc-corrupted-file-cleaner
+```
+
+## Launch
+GUI:
+```powershell
+cfc-gui
+```
+or:
+```powershell
+python -m cfc.gui
+```
+CLI:
+```powershell
+cfc-scan C:\data --mode preview --hash --manifest --jsonl scan.log
+```
+
+## Console Tools
+| Command | Purpose |
+|---------|---------|
+| `cfc-gui` | Launch desktop UI |
+| `cfc-scan` | Headless scan (see `--help`) |
+| `cfc-analyze` | Summarize JSONL log |
+| `cfc-manifest-diff` | Compare two manifests |
+| `cfc-restore` | Restore quarantined files from a manifest |
+| `cfc-locale-validate` | Report missing/extra translation keys |
+| `cfc-locale-template` | Generate union-of-keys template |
+
+## Typical GUI Workflow
+1. Select folder
+2. Choose file types & keep Action Mode = Preview initially
+3. (Optional) enable Hashes / Manifest
+4. Scan → inspect reasons (single click previews, double click opens)
+5. Switch to Quarantine or Delete only after review
+6. Export report / use manifest and logs for audit
+
+## Manifest
+Written after actions so paths reflect quarantine moves. Includes `schema_version`, counts, per-item path, kind, reason, size, hash (if enabled). `schema_version` (currently `"1.0"`) allows future evolution without breaking tooling.
+
+Example snippet:
+```json
+{
+	"schema_version": "1.0",
+	"generated": "2025-01-01T12:00:00Z",
+	"root": "C:/data",
+	"action_mode": "quarantine",
+	"counts": {"scanned": 1200, "corrupted": 4, "encrypted": 2},
+	"items": [
+		{"path": "C:/data/_quarantine/img/bad1.jpg", "kind": "corrupted", "reason": "image decode failed", "size": 10234, "hash": "...sha256..."}
+	]
+}
+```
+Diff two manifests:
+```powershell
+cfc-manifest-diff manifest_old.json manifest_new.json
+```
+
+## Quarantine & Restore
+Corrupted files move under `_quarantine/` preserving relative structure with collision-safe renaming. Restore:
+```powershell
+cfc-restore manifest_20250101_120000.json --quarantine-root C:\data\_quarantine
+```
+
+## Localization
+Packaged default locales are bundled (English / Türkçe / Kurdî). To override or add a language, create a `./locales/` directory alongside where you run the app and drop `xx.json` there—those files override packaged ones. Hot reload picks up changes within ~1.5s.
+Validate:
+```powershell
+cfc-locale-validate
+```
+Template:
+```powershell
+cfc-locale-template locales/template_all_keys.json
+```
+
+## Plugins
+Create a folder `detectors_plugins/` and add e.g. `mydet.py`:
+```python
+from pathlib import Path
+from cfc.detectors import DetectionResult
+
+class MyDetector:
+		name = 'xyz'
+		extensions = {'.xyz'}
+		def analyze(self, path: Path):
+				# simple heuristic
+				return DetectionResult(path, 'ok')
+
+DETECTORS = [MyDetector()]
+```
+Extensions auto-loaded at startup.
+
+## CLI Highlights
+```powershell
+cfc-scan C:\data --types .jpg .png .pdf --mode quarantine --hash --manifest --export report.txt --jsonl scan.log
+```
+Important flags: `--mode`, `--hash`, `--manifest`, `--export`, `--jsonl`, `--types`.
+
+## Logging & Analytics
+Each detection appended to `scan.log` (JSONL). Summarize:
+```powershell
+cfc-analyze scan.log
+```
+
+## Testing
+Run tests:
+```powershell
+python -m unittest -v
+```
+
+## Safety Guidelines
+* Always start in Preview
+* Review reasons before irreversible actions
+* Keep manifests + `_quarantine/` until confident
+* Encrypted files are never deleted automatically
+
+## Roadmap (Shortlist)
+* User home plugin directory (`~/.cfc/plugins` / `%APPDATA%/cfc/plugins`)
+* Additional detectors (archives, video containers)
+* Incremental cache (mtime/size/hash) for faster rescans
+* Extended preview (scrollable hex/text) & accessibility improvements
+
+## Contributing
+See `CONTRIBUTING.md`. PRs welcome.
+
+## License
+MIT (see `LICENSE`).
