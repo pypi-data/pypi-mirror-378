@@ -1,0 +1,254 @@
+Metadata-Version: 2.4
+Name: ragger-python-sdk
+Version: 0.1.0
+Summary: Python SDK for ragger.ai RAG API
+Home-page: https://github.com/RaggerAI/python-sdk
+Author: Ragger Team
+Author-email: support@ragger.ai
+License: MIT
+Project-URL: Bug Reports, https://github.com/RaggerAI/python-sdk/issues
+Project-URL: Source, https://github.com/RaggerAI/python-sdk
+Project-URL: Documentation, https://github.com/RaggerAI/python-sdk#readme
+Keywords: rag retrieval augmented generation ai llm nlp vector search
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Text Processing :: Indexing
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: requests>=2.25.0
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: pytest-cov>=2.0; extra == "dev"
+Requires-Dist: black>=21.0; extra == "dev"
+Requires-Dist: flake8>=3.8; extra == "dev"
+Requires-Dist: mypy>=0.910; extra == "dev"
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: license-file
+Dynamic: project-url
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# Ragger Python SDK
+
+Python SDK for the Ragger RAG (Retrieval Augmented Generation) API. Build powerful AI applications that can search and answer questions using your own documents.
+
+## Features
+
+- **Easy Integration**: Simple Python client. With a few lines of code, you can build a complete RAG application.
+- **Document Upload**: Support for PDF, Word, text, markdown, and other formats
+- **Vector Indexing**: Create searchable embeddings from your documents
+- **Natural Language Queries**: Ask questions and get AI-powered answers with advanced reasoning
+- **Conversation Memory**: Maintain context across multiple queries
+- **Multi-tenant**: Organization and project-based document isolation
+- **Async Processing**: Handle large documents with background processing
+
+## Installation
+
+```bash
+pip install ragger-python-sdk
+```
+
+## Quick Start
+
+1) Initialize the client
+
+```python
+from ragger_sdk import RaggerClient
+client = RaggerClient(
+    base_url="https://your-ragger-server.com/rag/api/v1",
+    token="your-api-token"
+)
+```
+
+2) Upload a document
+
+```python
+upload_result = client.documents.upload(
+    organization="my-company",
+    project="knowledge-base",
+    name="user-manual",
+    file_path="/path/to/manual.pdf"
+)
+```
+
+3) Create searchable index
+
+```python
+index_result = client.index.create_index(
+    organization="my-company",
+    project="knowledge-base"
+)
+```
+
+4) Ask questions
+
+```python
+answer = client.query.ask(
+    query="How do I reset my password?",
+    organization="my-company",
+    project="knowledge-base",
+    user="support@company.com"
+)
+
+print(f"Answer: {answer['answer']}")
+# Assistant: "To reset your password, go to the login page and click 'Forgot Password'..."
+
+print(f"Source: {answer['metadata']['sources']}")
+# "Source: {'https://intranet.company.com/policy', 'https://help.company.com/reset-password'}"
+
+print(f"Session ID: {answer['session_id']}")
+# 123456789abcdef
+```
+
+5) Maintain conversation context
+
+```python
+followup_answer = client.query.ask(
+    query="Sorry, I meant username recovery",
+    organization="my-company",
+    project="knowledge-base",
+    user="support@company.com",
+    session_id="123456789abcdef"
+)
+# Answer: "Unlike password resets, username recovery usually requires contacting support..."
+```
+
+## Core Concepts
+
+- **Organization**: Top-level container for your projects
+- **Project**: Collection of related documents and their index
+- **Document**: Individual files (PDF, Word, text, etc.) containing your data
+- **Index**: Searchable vector representation of your documents
+- **Query**: Natural language questions answered using your documents
+
+## API Reference
+
+### Client Initialization
+
+```python
+client = RaggerClient(
+    base_url="https://api.ragger.ai/v1",  # Your Ragger server URL
+    token="your-api-token",               # API authentication token
+    timeout=30,                           # Request timeout in seconds
+    verify_ssl=True                       # SSL certificate verification
+)
+```
+
+### Document Management
+
+```python
+# Upload from file
+response = client.documents.upload(
+    organization="org-name",
+    project="project-name",
+    name="document-name",
+    file_path="/path/to/file.pdf",
+    metadata={"author": "John Doe", "department": "Engineering", "url": "https://example.com"}
+)
+
+# Upload from text
+response = client.documents.upload_text(
+    organization="org-name",
+    project="project-name",
+    name="document-name",
+    text_content="Your text content here...",
+    metadata={"source": "manual_entry"}
+)
+
+# Check processing status
+status = client.documents.get_status(
+    task_id=response['task_id'],
+    organization="org-name"
+)
+```
+
+### Index Management
+
+```python
+# Create index
+response = client.index.create_index(
+    organization="org-name",
+    project="project-name",
+    force_overwrite=False
+)
+```
+
+### Querying
+
+```python
+# Basic query
+answer = client.query.ask(
+    query="What is the return policy?",
+    organization="org-name",
+    project="project-name",
+    user="user@example.com"
+)
+
+# Query with session (maintains conversation context)
+answer = client.query.ask(
+    query="Tell me more about that",
+    organization="org-name",
+    project="project-name",
+    user="user@example.com",
+    session_id="conversation-123"
+)
+```
+
+### Error Handling
+
+The SDK raises `RaggerAPIError` for API-related issues. You can inspect the error type:
+
+```python
+try:
+    result = client.some_operation()
+except RaggerAPIError as e:
+    if e.is_validation_error():
+        # Handle parameter validation
+    elif e.is_not_found():
+        # Handle missing resources
+    elif e.is_conflict():
+        # Handle resource conflicts
+```
+
+## Examples
+
+See the `examples/` directory for complete usage examples:
+
+- `documents_from_file_example.py` - File upload and processing
+- `index_example.py` - Vector index creation
+- `query_example.py` - Natural language querying
+- `chat_history_example.py` - Conversation management
+
+## Requirements
+
+- Python 3.8+
+- requests >= 2.25.0
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Support
+
+- Documentation: [GitHub README](https://github.com/RaggerAI/python-sdk/#readme)
+- Issues: [GitHub Issues](https://github.com/RaggerAI/python-sdk//issues)
+- Source: [GitHub Repository](https://github.com/RaggerAI/python-sdk/)
