@@ -1,0 +1,185 @@
+Metadata-Version: 2.4
+Name: aircheck_test_model
+Version: 1.1.2
+Summary: AI models based on AIRCHECK data
+Author: nabin bagale
+License: MIT License
+        
+        Copyright (c) 2025, nabin bagale
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: jinja2
+Requires-Dist: pydantic~=2.0
+Requires-Dist: pydantic-settings
+Requires-Dist: typer
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: pympler
+Requires-Dist: scikit-learn
+Requires-Dist: gdown
+Requires-Dist: catboost
+Requires-Dist: scikit-optimize
+Requires-Dist: lightgbm
+Requires-Dist: rdkit
+Requires-Dist: pyarrow
+Requires-Dist: greenlet
+Requires-Dist: pyyaml
+Requires-Dist: tqdm
+Provides-Extra: dev
+Requires-Dist: build; extra == "dev"
+Requires-Dist: dapperdata; extra == "dev"
+Requires-Dist: glom; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-asyncio; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: pytest-pretty; extra == "dev"
+Requires-Dist: ruamel.yaml; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
+Requires-Dist: toml-sort; extra == "dev"
+Requires-Dist: uv; extra == "dev"
+Requires-Dist: types-PyYAML; extra == "dev"
+Requires-Dist: pandas-stubs; extra == "dev"
+Requires-Dist: types-tqdm; extra == "dev"
+Dynamic: license-file
+
+# aircheck_test_model
+
+`aircheck_test_model` is a Python package for **training** and **screening** machine learning models on chemical compound datasets.  
+It provides a **Python API** (simple `train` and `screen` functions) and a **Command-Line Interface (CLI)** for easy integration in pipelines or local workflows.
+
+The package is designed to work with molecular fingerprints (e.g., ECFP) and chemical structure data in formats such as CSV or Parquet.
+
+---
+
+## ✨ Features
+
+- Train ML models with training and optional test datasets  
+- Save trained models to a specified directory  
+- Evaluate models on test datasets  
+- Screen new compounds using trained models  
+- Simple CLI powered by [Typer](https://typer.tiangolo.com/)  
+
+---
+
+## 📦 Installation
+
+Install from PyPI (once published):
+
+```bash
+pip install aircheck-model
+```
+Or install locally for development:
+
+`git clone <your-repo-url> cd aircheck_test_model
+pip install -e '.[dev]'`
+
+## 🐍 Python API Usage
+
+After installation, you can import the top-level functions `train` and `screen`:
+
+from pathlib import Path
+from aircheck_test_model import train, screen
+
+## --- Train models ---
+train_result, test_result = train(
+    train_file="location of parquet file",
+    train_column="ECFP6",
+    label="LABEL",
+    model_dir="aircheck_test_model/new_model",
+    # test_file is optional (default=None)
+)
+Accepts training and test datasets in **Parquet format**. Please provide the file path. Datasets can be downloaded from our website [AIRCHECK](https://www.aircheck.ai/datasets)
+
+## --- Screen compounds ---
+result_df = screen(
+    screen_file="data/ScreenData1.csv",
+    smile_column="SMILES",
+    fingerprint_type="ECFP6",
+    model_directory="aircheck_test_model/new_model"
+)
+
+print(result_df.head())
+
+## 💻 CLI Usage
+
+The package also provides a command-line tool:
+
+`aircheck_test_model --help` 
+
+### 🔹 Check Version
+
+`aircheck_test_model version` 
+
+----------
+
+### 🔹 Train Models
+
+`aircheck_test_model train \
+    --train-data data/WDR91.parquet \
+    --column ECFP6 \
+    --label LABEL \
+    --model-dir aircheck_test_model/new_model \
+    --test-data data/sampled_data_test_1.parquet` 
+
+**Arguments:**
+
+-   `--train-data, -t` (**required**): Path to training data (CSV/Parquet)
+    
+-   `--test-data, -e`: Optional path to test data
+    
+-   `--column, -c` (**required**): Feature column (e.g., fingerprint type such as ECFP4, ECFP6)
+    
+-   `--label, -l` (**required**): Label column name
+    
+-   `--model-dir, -m`: Directory to save trained models (default: `~/model`)
+    
+
+----------
+
+### 🔹 Screen Compounds
+
+`aircheck_test_model screen \
+    --screen-data data/ScreenData1.csv \
+    --column SMILES \
+    --fingerprints-column ECFP6 \
+    --model-dir aircheck_test_model/new_model` 
+
+**Arguments:**
+
+-   `--screen-data, -s` (**required**): Path to compound data file
+    
+-   `--column, -c` (**required**): Column containing SMILES strings
+    
+-   `--fingerprints-column, -l` (**required**): Fingerprint column name
+    
+-   `--model-dir, -m`: Directory where trained models are stored
+    
+
+----------
+
+## 🛠 Development
+
+Run tests and linting locally:
+
+`pytest
+ruff check .`
