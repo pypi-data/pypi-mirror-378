@@ -1,0 +1,29 @@
+{ parameter (bytes %write) ;
+  storage (big_map bytes bytes) ;
+  code { UNPAIR ;
+         DUP ;
+         KECCAK ;
+         DUP 3 ;
+         DUP 2 ;
+         MEM ;
+         IF { DROP 2 } { SWAP ; SOME ; SWAP ; UPDATE } ;
+         NIL operation ;
+         PAIR } ;
+  view "chunk_exists" bytes bool { UNPAIR ; MEM } ;
+  view "chunk_length" bytes nat
+        { UNPAIR ;
+          DUP 2 ;
+          DUP 2 ;
+          MEM ;
+          IF {} { PUSH string "ONCHFS_CHUNK_NOT_FOUND" ; FAILWITH } ;
+          GET ;
+          IF_NONE { PUSH int 64 ; FAILWITH } {} ;
+          SIZE } ;
+  view "read" bytes bytes
+        { UNPAIR ;
+          DUP 2 ;
+          DUP 2 ;
+          MEM ;
+          IF {} { PUSH string "ONCHFS_CHUNK_NOT_FOUND" ; FAILWITH } ;
+          GET ;
+          IF_NONE { PUSH int 56 ; FAILWITH } {} } }

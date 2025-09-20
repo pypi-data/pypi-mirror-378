@@ -1,0 +1,256 @@
+{ parameter (or (map %create_directory string bytes)
+                (or (pair %create_file (list %chunk_pointers bytes) (bytes %metadata))
+                    (bytes %write_chunk))) ;
+  storage (pair (address %content_store)
+                (big_map %inodes bytes
+                                 (or (map %directory string bytes)
+                                     (pair %file (list %chunk_pointers bytes)
+                                                 (bytes %metadata))))) ;
+  code { UNPAIR ;
+         IF_LEFT
+           { NIL bytes ;
+             PUSH (list string) { ":" ; "/" ; "?" ; "#" ; "[" ; "]" ; "@" ; "!" ; "$" ; "&" ; "'" ; "(" ; ")" ; "*" ; "+" ; "," ; ";" ; "=" } ;
+             NIL string ;
+             DUP 4 ;
+             ITER { CAR ; CONS } ;
+             NIL string ;
+             SWAP ;
+             ITER { CONS } ;
+             DUP ;
+             ITER { PUSH nat 0 ;
+                    DUP 2 ;
+                    SIZE ;
+                    COMPARE ;
+                    GT ;
+                    IF {} { PUSH string "ONCHFS_FILENAME_EMPTY" ; FAILWITH } ;
+                    DUP ;
+                    SIZE ;
+                    PUSH nat 0 ;
+                    DUP ;
+                    DUP 3 ;
+                    COMPARE ;
+                    GT ;
+                    LOOP { DUP 5 ;
+                           ITER { DUP 4 ;
+                                  PUSH nat 1 ;
+                                  DUP 4 ;
+                                  SLICE ;
+                                  IF_NONE { PUSH int 41 ; FAILWITH } {} ;
+                                  COMPARE ;
+                                  NEQ ;
+                                  IF
+                                    {}
+                                    { PUSH string "ONCHFS_FILENAME_RESERVED_CHAR" ;
+                                      FAILWITH } } ;
+                           PUSH nat 1 ;
+                           ADD ;
+                           DUP ;
+                           DUP 3 ;
+                           COMPARE ;
+                           GT } ;
+                    DROP 2 ;
+                    DUP 6 ;
+                    CDR ;
+                    DUP 6 ;
+                    DUP 3 ;
+                    GET ;
+                    IF_NONE { PUSH int 149 ; FAILWITH } {} ;
+                    MEM ;
+                    IF {} { PUSH string "ONCHFS_INODE_NOT_FOUND" ; FAILWITH } ;
+                    DUP ;
+                    PACK ;
+                    DUP ;
+                    PUSH nat 6 ;
+                    DIG 2 ;
+                    SIZE ;
+                    SUB ;
+                    ISNAT ;
+                    IF_NONE { PUSH int 34 ; FAILWITH } {} ;
+                    PUSH nat 6 ;
+                    SLICE ;
+                    IF_NONE { PUSH string "" ; FAILWITH } {} ;
+                    DIG 4 ;
+                    SWAP ;
+                    KECCAK ;
+                    CONS ;
+                    DUP 5 ;
+                    DIG 2 ;
+                    GET ;
+                    IF_NONE { PUSH int 154 ; FAILWITH } {} ;
+                    CONS ;
+                    DUG 2 } ;
+             DIG 2 ;
+             PUSH bytes 0x00 ;
+             CONS ;
+             DUG 2 ;
+             DUP 3 ;
+             CONCAT ;
+             KECCAK ;
+             DUP 6 ;
+             CDR ;
+             DUP 2 ;
+             MEM ;
+             IF
+               { DROP 5 }
+               { SWAP ;
+                 DROP ;
+                 SWAP ;
+                 DROP ;
+                 SWAP ;
+                 DROP ;
+                 DIG 2 ;
+                 DUP ;
+                 CDR ;
+                 DIG 3 ;
+                 LEFT (pair (list bytes) bytes) ;
+                 SOME ;
+                 DIG 3 ;
+                 UPDATE ;
+                 UPDATE 2 } ;
+             NIL operation }
+           { IF_LEFT
+               { NIL bytes ;
+                 DUP 2 ;
+                 CAR ;
+                 ITER { SWAP ;
+                        DUP 4 ;
+                        CAR ;
+                        DIG 2 ;
+                        VIEW "read" bytes ;
+                        IF_NONE { PUSH int 102 ; FAILWITH } {} ;
+                        CONS } ;
+                 NIL bytes ;
+                 SWAP ;
+                 ITER { CONS } ;
+                 NIL bytes ;
+                 DUP 3 ;
+                 CDR ;
+                 KECCAK ;
+                 CONS ;
+                 DUP 2 ;
+                 CONCAT ;
+                 KECCAK ;
+                 CONS ;
+                 PUSH bytes 0x01 ;
+                 CONS ;
+                 CONCAT ;
+                 KECCAK ;
+                 DUP 4 ;
+                 CDR ;
+                 DUP 2 ;
+                 MEM ;
+                 IF
+                   { DROP 3 }
+                   { SWAP ;
+                     DROP ;
+                     DIG 2 ;
+                     DUP ;
+                     CDR ;
+                     DIG 3 ;
+                     RIGHT (map string bytes) ;
+                     SOME ;
+                     DIG 3 ;
+                     UPDATE ;
+                     UPDATE 2 } ;
+                 NIL operation }
+               { NIL operation ;
+                 DUP 3 ;
+                 CAR ;
+                 CONTRACT %write bytes ;
+                 IF_NONE { PUSH int 175 ; FAILWITH } {} ;
+                 PUSH mutez 0 ;
+                 DIG 3 ;
+                 TRANSFER_TOKENS ;
+                 CONS } } ;
+         PAIR } ;
+  view "get_inode_at" (pair (bytes %cid) (list %path string))
+        (pair (bytes %cid)
+              (or %inode (map %directory string bytes)
+                         (pair %file (list %chunk_pointers bytes) (bytes %metadata))))
+        { UNPAIR ;
+          DUP 2 ;
+          CDR ;
+          DUP 2 ;
+          CAR ;
+          MEM ;
+          IF {} { PUSH string "ONCHFS_INODE_NOT_FOUND" ; FAILWITH } ;
+          DUP 2 ;
+          CDR ;
+          DUP 2 ;
+          CAR ;
+          GET ;
+          IF_NONE { PUSH int 227 ; FAILWITH } {} ;
+          DUP 2 ;
+          CAR ;
+          DUP 3 ;
+          CDR ;
+          ITER { SWAP ;
+                 DROP ;
+                 DUP 2 ;
+                 IF_LEFT { DROP } { PUSH string "ONCHFS_INODE_NOT_FOUND" ; FAILWITH } ;
+                 DUP 2 ;
+                 IF_LEFT {} { PUSH int 233 ; FAILWITH } ;
+                 DUP 2 ;
+                 MEM ;
+                 IF {} { PUSH string "ONCHFS_INODE_NOT_FOUND" ; FAILWITH } ;
+                 SWAP ;
+                 IF_LEFT {} { PUSH int 233 ; FAILWITH } ;
+                 SWAP ;
+                 GET ;
+                 IF_NONE { PUSH int 235 ; FAILWITH } {} ;
+                 DUP 3 ;
+                 CDR ;
+                 DUP 2 ;
+                 GET ;
+                 IF_NONE { PUSH int 236 ; FAILWITH } {} ;
+                 SWAP } ;
+          DIG 2 ;
+          DROP ;
+          DIG 2 ;
+          DROP ;
+          PAIR } ;
+  view "read_chunk" bytes bytes
+        { UNPAIR ; SWAP ; CAR ; SWAP ; VIEW "read" bytes ; IF_NONE { PUSH int 212 ; FAILWITH } {} } ;
+  view "read_directory" bytes (map string bytes)
+        { UNPAIR ;
+          DUP 2 ;
+          CDR ;
+          DUP 2 ;
+          MEM ;
+          IF {} { PUSH string "ONCHFS_INODE_NOT_FOUND" ; FAILWITH } ;
+          SWAP ;
+          CDR ;
+          SWAP ;
+          GET ;
+          IF_NONE { PUSH int 199 ; FAILWITH } {} ;
+          IF_LEFT {} { PUSH int 199 ; FAILWITH } } ;
+  view "read_file" bytes (pair (bytes %content) (bytes %metadata))
+        { UNPAIR ;
+          NIL bytes ;
+          DUP 3 ;
+          CDR ;
+          DUP 3 ;
+          GET ;
+          IF_NONE { PUSH int 184 ; FAILWITH } {} ;
+          IF_LEFT { PUSH int 184 ; FAILWITH } {} ;
+          CAR ;
+          NIL bytes ;
+          SWAP ;
+          ITER { CONS } ;
+          ITER { SWAP ;
+                 DUP 4 ;
+                 CAR ;
+                 DIG 2 ;
+                 VIEW "read" bytes ;
+                 IF_NONE { PUSH int 188 ; FAILWITH } {} ;
+                 CONS } ;
+          DIG 2 ;
+          CDR ;
+          DIG 2 ;
+          GET ;
+          IF_NONE { PUSH int 184 ; FAILWITH } {} ;
+          IF_LEFT { PUSH int 184 ; FAILWITH } {} ;
+          CDR ;
+          SWAP ;
+          CONCAT ;
+          PAIR } }
