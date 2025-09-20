@@ -1,0 +1,92 @@
+Metadata-Version: 2.4
+Name: dictnavigator
+Version: 1.0
+Summary: dictnavigator is a tool for working with nested dictionaries in Python. The DictNavigatorKey class allows easy retrieval, updating, and deletion of values by keys at any depth, even inside nested types (tuple, list, dictionary). It also provides a list of all keys at any nesting level. Especially useful for working with JSON data from APIs, simplifying access and modification of needed values.
+Home-page: https://gitlab.com/asurnovsurnov/dictnavigetor.git
+Author: Aleksei Surnov
+Author-email: asurnovsurnov@gmail.com
+License: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.5.2
+Description-Content-Type: text/markdown
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license
+Dynamic: requires-python
+Dynamic: summary
+
+# dictnavigator
+dictnavigator is a tool for working with nested dictionaries in Python. 
+The main DictNavigatorKey class provides convenience methods for retrieving, updating, and deleting values for given keys at any dictionary depth, even if the key:value pair is contained in another nested data type (tuple, list, dictionary). 
+In addition, it allows you to get a list of all keys in the dictionary at any nesting level.
+This library will come in handy if you work with data in JSON format, especially if you receive it from an API. 
+It simplifies working with this data, allowing you to quickly retrieve the values you need and update them.
+
+### Requirements
+
+Python >=3.5.2.
+
+### Install
+
+```pip install dictnavigator```
+
+### Usage example
+
+```
+>>> from dictnavigator.navigator import DictNavigatorKey
+
+>>> dictionary = {
+        "key1": "value1",
+        "key2": {
+            "nested_key1": "nested_value1",
+            "nested_key2": {
+                "deeply_nested_key1": "deeply_nested_value1",
+                "deeply_nested_key2": "deeply_nested_value2",
+                "deeply_nested_key3": [{"list_key1": "list_deeply_value1"}],
+                "deeply_nested_key4": ["deeply_nested_value4", "deeply_nested_value5"]
+            }
+        },
+        "key3": [
+            {"list_key1": "list_value1"},
+            {"list_key2": "list_value2"},
+            {"list_key3": "list_value3"}
+        ],
+        "key4": (
+            {"tuple_key1": "tuple_value1"},
+            {"tuple_key2": "tuple_value2"}
+        )
+    }
+
+>>> navigator_one = DictNavigatorKey(dictionary)
+>>> print(navigator_one.extract_keys_values("deeply_nested_key3"))
+>>> print(navigator_one.extract_keys_values("list_key1"))
+>>> print(navigator_one.extract_keys_values("key1"))
+>>> print(navigator_one.extract_keys_values("tuple_key2"))
+
+[{'deeply_nested_key3': [{'list_key1': 'list_deeply_value1'}]}]
+[{'list_key1': 'list_deeply_value1'}, {'list_key1': 'list_value1'}]
+[{'key1': 'value1'}]
+[{'tuple_key2': 'tuple_value2'}]
+
+>>> navigator_one.delete_key("key4", ({"tuple_key1": "tuple_value1"}, {"tuple_key2": "tuple_value2"}))
+>>> navigator_one.update_value("deeply_nested_key4", ["deeply_nested_value4", "deeply_nested_value5"], ['Liza', 'Peter'])
+>>> print(navigator_one.get_dict())
+
+{'key1': 'value1', 'key2': {'nested_key1': 'nested_value1', 
+                            'nested_key2': {'deeply_nested_key1': 'deeply_nested_value1', 'deeply_nested_key2': 'deeply_nested_value2', 
+                                            'deeply_nested_key3': [{'list_key1': 'list_deeply_value1'}], 
+                                            'deeply_nested_key4': ['Liza', 'Peter']}}, 
+                    'key3': [{'list_key1': 'list_value1'}, {'list_key2': 'list_value2'}, {'list_key3': 'list_value3'}]}
+
+>>> print(navigator_one.extract_keys_values("deeply_nested_key3"))
+>>> print(navigator_one.extract_keys_values("deeply"))
+>>> print(navigator_one.extract_all_keys())
+
+[{'deeply_nested_key3': [{'list_key1': 'list_deeply_value1'}]}]
+[]
+['deeply_nested_key1', 'deeply_nested_key3', 'deeply_nested_key4', 'key1', 'list_key1', 'nested_key2', 'key3', 'deeply_nested_key2', 'key2', 'nested_key1', 'list_key2', 'list_key3']
