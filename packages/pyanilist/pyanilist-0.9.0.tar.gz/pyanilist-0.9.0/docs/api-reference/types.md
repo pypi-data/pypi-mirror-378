@@ -1,0 +1,23 @@
+::: pyanilist.AiringSchedule
+::: pyanilist.Character
+::: pyanilist.CharacterImage
+::: pyanilist.CharacterName
+::: pyanilist.FuzzyDate
+::: pyanilist.Media
+::: pyanilist.MediaCoverImage
+::: pyanilist.MediaExternalLink
+::: pyanilist.MediaQueryParams
+::: pyanilist.MediaRank
+::: pyanilist.MediaStreamingEpisode
+::: pyanilist.MediaTag
+::: pyanilist.MediaTitle
+::: pyanilist.MediaTrailer
+::: pyanilist.RecommendedMedia
+::: pyanilist.RelatedMedia
+::: pyanilist.Staff
+::: pyanilist.StaffImage
+::: pyanilist.StaffName
+::: pyanilist.Studio
+::: pyanilist.YearsActive
+    options:
+        members: true
