@@ -1,0 +1,111 @@
+Metadata-Version: 2.3
+Name: starlette-dishka
+Version: 1.0.1
+Summary: Starlette integration for dishka
+Author: Andrey Tikhonov
+Author-email: Andrey Tikhonov <17@itishka.org>
+License: Apache-2.0
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: 3.14
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Typing :: Typed
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 5 - Production/Stable
+Requires-Dist: dishka>=1.7.1,<2.0.0
+Requires-Dist: starlette>=0.27.0
+Requires-Python: >=3.10
+Project-URL: Bug Tracker, https://github.com/reagento/starlette-dishka
+Project-URL: Download, https://github.com/reagento/starlette-dishka/#files
+Project-URL: Homepage, https://github.com/reagento/starlette-dishka
+Project-URL: Source, https://github.com/reagento/starlette-dishka
+Description-Content-Type: text/markdown
+
+# Starlette integration for Dishka
+
+This package provides integration of [Dishka](http://github.com/reagento/dishka/) dependency injection framework and [Starlette](https://github.com/encode/starlette), a lightweight ASGI framework.
+
+## Installation
+
+```sh
+pip install starlette-dishka
+```
+
+## Features
+
+* automatic *REQUEST* and *SESSION* scope management using middleware
+* passing ``Request`` object as a context data to providers for both **Websockets** and **HTTP** requests
+* automatic injection of dependencies into handler function.
+
+## How to use
+
+1. Import
+```python
+from starlette_dishka import (
+    FromDishka,
+    StarletteProvider,
+    inject,
+    setup_dishka,
+)
+from dishka import make_async_container, Provider, provide, Scope
+```
+
+2. Create provider. You can use ``starlette.requests.Request`` as a factory parameter to access on *REQUEST-scope*, and ``starlette.websockets.WebSocket`` on *SESSION*-scope
+
+```python
+class YourProvider(Provider):
+    @provide(scope=Scope.REQUEST)
+    def create_x(self, request: Request) -> X:
+         ...
+```
+
+3. Mark those of your handlers parameters which are to be injected with ``FromDishka[]`` and decorate them using ``@inject``
+
+```python
+@inject
+async def endpoint(
+    request: Request,
+    *,
+    gateway: FromDishka[Gateway],
+) -> ResponseModel:
+    ...
+```
+
+4. *(optional)* Use ``StarletteProvider()`` when creating container if you are going to use ``starlette.Request`` or ``starlette.WebSocket`` in providers
+
+```python
+container = make_async_container(YourProvider(), StarletteProvider())
+```
+
+5. Setup ``dishka`` integration.
+
+```python
+setup_dishka(container=container, app=app)
+```
+
+## Websockets
+
+In starlette your view function is called once per connection and then you retrieve messages in loop.
+So, ``inject`` decorator can be only used to retrieve *SESSION*-scoped objects.
+To achieve *REQUEST*-scope you can enter in manually:
+
+```python
+@inject
+async def get_with_request(
+    websocket: WebSocket,
+    a: FromDishka[A],  # object with Scope.SESSION
+    container: FromDishka[AsyncContainer],  # container for Scope.SESSION
+) -> None:
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        # enter the nested scope, which is Scope.REQUEST
+        async with container() as request_container:
+            b = await request_container.get(B)  # object with Scope.REQUEST
+```
