@@ -1,0 +1,1 @@
+"""Response formatting module using Rich for terminal output."""
