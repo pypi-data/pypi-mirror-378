@@ -1,0 +1,54 @@
+<div align="center">
+    <img src="https://raw.githubusercontent.com/j-faria/figo/main/logo.png" width="60%" />
+    <p>Get the <code>OBJECT</code> keyword from a <em>fits</em> file.</p>
+    <p>But like... fast.</p>
+</div>
+
+
+## Install and run
+
+```bash
+pip install figo
+```
+
+In the command line,
+```bash
+figo file.fits
+```
+
+or in the Python REPL,
+```python
+>>> import figo
+>>> figo('file.fits')
+```
+
+## Don't install, just run
+
+```bash
+uvx figo file.fits
+```
+
+
+## FAQ
+
+#### Is it fast?
+
+![comparison](https://raw.githubusercontent.com/j-faria/figo/main/timer.png)
+> _This is such an unfair comparison! `astropy` is amazing and does so much more!_
+
+#### Could it be faster?
+
+Try the function `figo.afap('file.fits')` to go as fast as possible.
+
+
+#### Can I get a keyword other than `OBJECT`?
+
+No. [_Do one thing and do it well_](https://wikipedia.org/wiki/Unix_philosophy).
+
+#### Is it standard compliant?
+
+Yes!
+
+#### Does it work on Windows?
+
+Why wouldn't it? 🤨
