@@ -1,0 +1,162 @@
+# Smart Money Concepts (SMC) Python Package
+
+A Python package for performing **Smart Money Concepts (SMC)** technical analysis using historical stock data from **yfinance**. This package provides a comprehensive framework for detecting market structures, order blocks, fair value gaps, and other SMC components, with visualization capabilities using **matplotlib**.
+
+---
+
+## 📌 Features
+- **Market Structure Analysis**: Detects Break of Structure (BOS) and Change of Character (CHoCH) for swing and internal structures.
+- **Order Blocks**: Identifies bullish and bearish order blocks for potential institutional trading zones.
+- **Fair Value Gaps (FVG)**: Detects price imbalances with mitigation logic.
+- **Equal Highs and Lows**: Marks potential reversal points with Equal Highs (EQH) and Equal Lows (EQL).
+- **Premium and Discount Zones**: Calculates dynamic zones based on trailing extremes.
+- **Visualization**: Plots candlestick charts with SMC indicators (BOS, CHoCH, order blocks, FVGs, etc.) using matplotlib.
+- **Real-time Data**: Fetches OHLCV data from yfinance for stocks and indices.
+- **Customizable Settings**: Configure analysis parameters like swing length, FVG thresholds, and visualization styles (colored or monochrome).
+
+---
+
+## ⚙️ Installation
+
+### From PyPI (when published)
+```bash
+pip install smart-money-concept
+```
+
+---
+
+## 📦 Requirements
+- Python 3.8+
+- yfinance>=0.2.40
+- pandas>=2.0.0
+- numpy>=1.24.0
+- matplotlib>=3.7.0
+
+---
+
+## 🚀 Usage
+
+The package provides a **SmartMoneyConcepts** class for analyzing market data and a **command-line interface (CLI)** for batch processing multiple stocks.
+
+### Python Script Example
+```python
+import asyncio
+from typing import List, Dict
+from smart_money_concepts import SmartMoneyConcepts
+
+async def main(stock_codes: List[str], period: str = "max", interval: str = "1d", batch_size: int = 10, delay: float = 2.0, visualize: bool = True):
+    if not stock_codes:
+        stock_codes = ["RELIANCE.NS"]  # Default to NSE-listed Reliance
+
+    for i, stock_code in enumerate(stock_codes):
+        print(f"\n==============================")
+        print(f"🔍 Analyzing stock: {stock_code}")
+        print(f"==============================")
+
+        smc = SmartMoneyConcepts(stock_code=stock_code, period=period, interval=interval)
+        
+        # Retry logic for fetching data
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                success = await smc.fetch_ohlcv()
+                if success:
+                    smc.prepare_data()
+                    smc.run_smc_analysis()
+                    if visualize:
+                        smc.visualize_smc(bars_to_show=250)
+                    else:
+                        smc.print_analysis_summary()  # Print summary even if visualization is skipped
+                    break
+                else:
+                    print(f"❌ Analysis failed for {stock_code}!")
+                    break
+            except Exception as e:
+                if "429" in str(e):  # Check for rate limit error
+                    print(f"Rate limit hit for {stock_code}. Retrying ({attempt + 1}/{max_retries}) after delay...")
+                    await asyncio.sleep(5)  # Wait longer for rate limit errors
+                else:
+                    print(f"Error for {stock_code}: {e}")
+                    break
+            if attempt == max_retries - 1:
+                print(f"❌ Failed to fetch data for {stock_code} after {max_retries} attempts.")
+
+        # Add delay after every batch_size stocks
+        if (i + 1) % batch_size == 0 and i + 1 < len(stock_codes):
+            print(f"Pausing for {delay} seconds after processing {batch_size} stocks...")
+            await asyncio.sleep(delay)
+
+if __name__ == "__main__":
+    # Example stock list (use .NS for NSE-listed stocks, .BO for BSE, or others as needed)
+
+    # Stocks
+    stock_codes = ["RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS"]
+    
+    # Index
+    # stock_codes = ["^NSEI"]
+    
+    asyncio.run(main(stock_codes, period="1y", interval="1d", batch_size=10, delay=2.0, visualize=True))
+```
+
+### CLI Example
+```bash
+python -m smart_money_concepts.cli --stocks ^NSEI RELIANCE.NS --period 1y --interval 1d
+```
+
+#### CLI Options:
+- `--stocks`: List of stock codes (e.g., ^NSEI, RELIANCE.NS). Default: RELIANCE.NS.
+- `--period`: Data period (e.g., 1d, 1mo, 1y, max). Default: 1y.
+- `--interval`: Data interval (e.g., 1m, 1h, 1d). Default: 1d.
+- `--batch-size`: Number of stocks to process before pausing. Default: 10.
+- `--delay`: Delay (seconds) between batches. Default: 2.0.
+- `--no-visualize`: Disable visualization and print analysis summary only.
+
+---
+
+## 📊 Example Output
+The package generates a detailed analysis summary and optional visualizations, including:
+- Candlestick charts with swing and internal structure breaks (BOS/CHoCH).
+- Order blocks, fair value gaps, and equal highs/lows.
+- Premium, equilibrium, and discount zones.
+
+---
+
+## 📂 Project Structure
+```
+smart_money_concepts/
+├── smart_money_concepts/
+│   ├── __init__.py
+│   ├── smc.py
+│   ├── cli.py
+├── README.md
+├── pyproject.toml
+├── requirements.txt
+```
+
+---
+
+## 🙌 Credits
+This project was inspired by and builds upon the following resources:
+
+- **[Code Tech (YouTube)](https://www.youtube.com/watch?v=s6YWq-W7V6g)** → This code is Take from YouTube tutorial by Code Tech, which provides a detailed walkthrough of building an SMC indicator in Python
+- **[LuxAlgo](https://www.luxalgo.com/library/indicator/smart-money-concepts-smc/)** → The conceptual framework and feature set are inspired by LuxAlgo's Smart Money Concepts indicator.
+
+---
+
+## 🤝 Contributing
+Contributions are welcome! Please submit a pull request or open an issue on the GitHub repository for bug reports, feature requests, or improvements.
+
+---
+
+## ⚠️ Notes
+- **Rate Limits**: The package uses yfinance for data fetching, which may be subject to rate limits. Built-in retry logic handles HTTP 429 errors.
+- **Internet Connection**: Ensure a stable internet connection for fetching market data.
+- **Disclaimer**: This package is for educational purposes and should not be used as financial advice. Trading involves risks, and past performance does not guarantee future results.
+
+---
+
+## 📬 Contact
+For questions or support, please open an issue on the GitHub repository.
+
+---
+
