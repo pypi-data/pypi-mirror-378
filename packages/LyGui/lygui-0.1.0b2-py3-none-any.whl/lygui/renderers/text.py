@@ -1,0 +1,1 @@
+# (Placeholder for future advanced text shaping; currently implemented in software.py)
