@@ -1,0 +1,59 @@
+stages:
+  - build
+  - publish
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+
+before_script:
+  - python --version
+  - pip install --upgrade pip
+  - pip install build twine
+
+# Test job - runs on all branches
+# test:
+#   stage: test
+#   image: python:3.9
+#   script:
+#     - pip install -e .
+#     - python -c "import curl_loop_runner; print(f'Version: {curl_loop_runner.__version__}')"
+#   only:
+#     - branches
+#     - tags
+
+# Build distribution packages
+build:
+  stage: build
+  image: python:3.9
+  script:
+    - python -m build
+    - ls -la dist/
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+  only:
+    - main
+    - tags
+
+
+# Publish to Production PyPI (manual, only on tags)
+publish:prod:
+  stage: publish
+  image: python:3.9
+  dependencies:
+    - build
+  script:
+    - echo "Uploading to Production PyPI..."
+    - python -m twine upload dist/*
+  environment:
+    name: pypi
+    url: https://pypi.org/project/curl-loop-runner/
+  variables:
+    TWINE_USERNAME: __token__
+    TWINE_PASSWORD: $PYPI_TOKEN
+  when: manual
