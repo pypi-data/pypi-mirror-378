@@ -1,0 +1,135 @@
+[workspace]
+name = "chiaro"
+authors = ["Rabeez Riaz <ruoter123@gmail.com>"]
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-arm64", "osx-64"]
+preview = ["pixi-build"]
+
+[environments]
+default = { features = [] }
+dev = { features = ["dev", "test"] }      # Good - dev includes test
+test = { features = ["test"] }
+ci = { features = ["ci", "dev", "test"] }
+build = { features = ["build"] }          # Used for conda+pypi builds
+
+# Basic tasks for development workflow
+[tasks]
+start = "chiaro-main"
+install-dev = "pip install -e ."
+clean = "rm -rf dist/ build/ src/*.egg-info .pytest_cache/ htmlcov/ .coverage __pycache__ .mypy_cache .ruff_cache"
+
+# Main dependencies (minimal for library)
+[dependencies]
+python = ">=3.11,<3.14" # Match pyproject.toml range
+chiaro = { path = "." }
+narwhals = "*"
+bokeh = "*"
+ipython = "*"
+jupyter = "*"
+jupyter_bokeh = "*"
+selenium = "*"
+pillow = "*"
+
+# Development feature - for active development
+[feature.dev.dependencies]
+# Development tools
+pip = "*"
+ruff = "*"
+# Documentation
+sphinx = "*"
+sphinxcontrib-apidoc = "*"
+sphinx-gallery = "*"
+sphinx-copybutton = "*"
+nbsphinx = "*"
+pydata-sphinx-theme = "*"
+myst-parser = "*"
+myst-nb = "*"
+playwright = "*"
+# Examples/prototyping
+nbconvert = "*"
+vega_datasets = "*"
+
+[feature.dev.pypi-dependencies]
+catppuccin = { extras = ["pygments"], version = "*" }
+
+[feature.dev.tasks]
+nvim = "nvim"
+code = "code ."
+lint = "ruff check src/ tests/"
+format = "ruff format src/ tests/"
+check = "ruff check src/ tests/ && ruff format --check src/ tests/"
+docs-serve = "open 'docs/_build/html/index.html'"
+docs-build = "sphinx-build -b html docs/ docs/_build/html"
+docs-gallery = "python tools/build_gallery.py"
+notebooks-move = "mkdir -p docs/tutorials/notebooks && cp -r notebooks/* docs/tutorials/notebooks"
+notebooks-execute = "jupyter nbconvert --to notebook --execute --inplace notebooks/**/*.ipynb"
+docs-clean = "rm -rf docs/_build && rm -rf docs/tutorials/notebooks"
+docs-build-with-examples = { depends-on = [
+  "docs-clean",
+  "notebooks-move",
+  "docs-gallery",
+  "docs-build",
+] }
+
+# Testing feature - separate from dev for CI
+[feature.test.dependencies]
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+# Data backends for testing compatibility
+pandas = "*"
+polars = "*"
+pyarrow = "*"
+# For generating/loading test data
+numpy = "*"
+nbval = "*"     # For testing notebooks
+nbconvert = "*" # For converting notebooks
+
+[feature.test.tasks]
+test = "pytest tests/ -v"
+test-cov = "pytest tests/ --cov=src/chiaro --cov-report=html --cov-report=term-missing"
+test-fast = "pytest tests/unit/ -v"
+test-integration = "pytest tests/integration/ -v"
+test-parallel = "pytest tests/ -n auto"
+test-notebooks = "pytest --nbval notebooks/"
+test-all = { depends-on = ["test", "test-notebooks"] }
+
+[feature.ci.tasks]
+ci-test = "pytest tests/ --cov=src/chiaro --cov-report=xml"
+ci-lint = "ruff check --exit-zero src/ tests/ && ruff format src/ tests/"
+ci-test-notebooks = "pytest --nbval-lax notebooks/"
+ci-convert-notebooks = "jupyter nbconvert --to html --output-dir docs/examples/ notebooks/**/*.ipynb"
+ci = { depends-on = [
+  "ci-lint",
+  "ci-test",
+  "ci-test-notebooks",
+  "ci-convert-notebooks",
+] }
+
+[feature.build.pypi-dependencies]
+hatch = "*"
+hatchling = "==1.26.3"
+hatch-vcs = "==0.4.0"
+
+[feature.build.tasks]
+build-pypi = "hatch build"
+build-conda = "pixi build && mkdir -p dist && mv *.conda dist/"
+build-all = { depends-on = ["build-pypi", "build-conda"] }
+
+# Package configuration
+[package]
+name = "chiaro"
+version = "0.0.0" # Placeholder, overridden by hatch-vcs
+
+[package.build]
+backend = { name = "pixi-build-python", version = "==0.3.2" }
+
+[package.host-dependencies]
+hatchling = "==1.26.3"
+hatch-vcs = "==0.4.0"
+
+[package.run-dependencies]
+ipython = "*"
+narwhals = "*"
+bokeh = "*"
+jupyter_bokeh = "*"
