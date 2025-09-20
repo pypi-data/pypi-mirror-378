@@ -1,0 +1,1 @@
+def rgba(r, g, b, a=255): return (int(r)&255, int(g)&255, int(b)&255, int(a)&255)
