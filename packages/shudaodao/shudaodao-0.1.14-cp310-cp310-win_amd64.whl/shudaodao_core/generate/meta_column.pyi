@@ -1,0 +1,16 @@
+from dataclasses import dataclass
+from typing import Any
+
+@dataclass
+class MetaColumn:
+    name: str
+    type: Any
+    sa_type: str | None
+    nullable: bool
+    is_primary: bool
+    comment: str = ...
+    max_length: int | None = ...
+    precision: int | None = ...
+    scale: int | None = ...
+    @property
+    def field_constraints(self) -> list[str]: ...
