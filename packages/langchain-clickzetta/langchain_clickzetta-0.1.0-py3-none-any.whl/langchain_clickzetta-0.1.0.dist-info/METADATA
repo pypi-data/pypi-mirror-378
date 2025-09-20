@@ -1,0 +1,170 @@
+Metadata-Version: 2.4
+Name: langchain-clickzetta
+Version: 0.1.0
+Summary: An integration package connecting ClickZetta and LangChain
+Author-email: ClickZetta LangChain Integration Team <support@clickzetta.com>
+License: MIT
+License-File: LICENSE
+Keywords: clickzetta,embeddings,full-text-search,langchain,llm,sql,vector-database
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Database
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.9
+Requires-Dist: clickzetta-connector-python>=0.8.92
+Requires-Dist: clickzetta-zettapark-python>=0.1.3
+Requires-Dist: langchain-core>=0.1.0
+Requires-Dist: numpy>=1.20.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: sqlalchemy>=2.0.0
+Requires-Dist: typing-extensions>=4.0.0
+Provides-Extra: dev
+Requires-Dist: black>=23.0.0; extra == 'dev'
+Requires-Dist: mypy>=1.0.0; extra == 'dev'
+Requires-Dist: pytest-asyncio>=0.21.0; extra == 'dev'
+Requires-Dist: pytest-cov>=4.0.0; extra == 'dev'
+Requires-Dist: pytest-mock>=3.10.0; extra == 'dev'
+Requires-Dist: pytest>=7.0.0; extra == 'dev'
+Requires-Dist: ruff>=0.1.0; extra == 'dev'
+Provides-Extra: lint
+Requires-Dist: black>=23.0.0; extra == 'lint'
+Requires-Dist: mypy>=1.0.0; extra == 'lint'
+Requires-Dist: ruff>=0.1.0; extra == 'lint'
+Provides-Extra: test
+Requires-Dist: pytest-asyncio>=0.21.0; extra == 'test'
+Requires-Dist: pytest-cov>=4.0.0; extra == 'test'
+Requires-Dist: pytest-mock>=3.10.0; extra == 'test'
+Requires-Dist: pytest>=7.0.0; extra == 'test'
+Description-Content-Type: text/markdown
+
+# LangChain ClickZetta Integration
+
+An integration package connecting ClickZetta and LangChain.
+
+LangChain integration for ClickZetta, providing SQL queries, vector storage, and full-text search capabilities.
+
+## Features
+
+- **SQL Queries**: Natural language to SQL conversion and execution
+- **Vector Storage**: Efficient vector storage and similarity search
+- **Full-text Search**: Advanced text search capabilities with inverted index
+- **Chat History**: Persistent conversation memory
+- **Hybrid Search**: Combine vector and full-text search
+- **True Hybrid Store**: Single table with both vector and inverted indexes (ClickZetta native)
+
+## Installation
+
+```bash
+pip install langchain-clickzetta
+```
+
+## Quick Start
+
+### Basic Setup
+
+```python
+from langchain_clickzetta import ClickZettaEngine
+
+# Create engine
+engine = ClickZettaEngine(
+    service="your-service",
+    instance="your-instance",
+    workspace="your-workspace",
+    schema="your-schema",
+    username="your-username",
+    password="your-password",
+    vcluster="your-vcluster"
+)
+```
+
+### Vector Storage
+
+```python
+from langchain_clickzetta import ClickZettaVectorStore
+from langchain_community.embeddings import DashScopeEmbeddings
+
+# Setup embeddings
+embeddings = DashScopeEmbeddings(
+    dashscope_api_key="your-api-key",
+    model="text-embedding-v4"
+)
+
+# Create vector store
+vector_store = ClickZettaVectorStore(
+    engine=engine,
+    embeddings=embeddings,
+    table_name="my_vectors"
+)
+
+# Add documents
+texts = ["Hello world", "LangChain is great"]
+vector_store.add_texts(texts)
+
+# Search
+results = vector_store.similarity_search("greeting", k=2)
+```
+
+### True Hybrid Search
+
+```python
+from langchain_clickzetta import ClickZettaHybridStore, ClickZettaUnifiedRetriever
+
+# Create hybrid store (single table with vector + full-text indexes)
+hybrid_store = ClickZettaHybridStore(
+    engine=engine,
+    embeddings=embeddings,
+    table_name="hybrid_docs"
+)
+
+# Add documents
+hybrid_store.add_texts([
+    "ClickZetta is a high-performance analytics database",
+    "LangChain enables building applications with LLMs"
+])
+
+# Create unified retriever
+retriever = ClickZettaUnifiedRetriever(
+    hybrid_store=hybrid_store,
+    search_type="hybrid",  # "vector", "fulltext", or "hybrid"
+    alpha=0.5  # Balance between vector and full-text search
+)
+
+# Search with hybrid approach
+results = retriever.get_relevant_documents("analytics database")
+```
+
+### SQL Chain
+
+```python
+from langchain_clickzetta import ClickZettaSQLChain
+from langchain_community.llms import Tongyi
+
+llm = Tongyi(dashscope_api_key="your-api-key")
+
+sql_chain = ClickZettaSQLChain.from_engine(
+    engine=engine,
+    llm=llm
+)
+
+result = sql_chain.invoke({"query": "How many tables are there?"})
+print(result["result"])
+```
+
+## Documentation
+
+For more detailed documentation, see the main repository README and examples.
+
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+## License
+
+This package is released under the MIT License.
