@@ -1,0 +1,641 @@
+import logging
+import os
+import socket
+import threading
+import typing as t
+from collections.abc import Iterator
+from contextlib import ExitStack, nullcontext
+from itertools import chain
+
+from flufl.lock import Lock
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+from tqdm import tqdm
+
+from laufband.db import (
+    Base,
+    TaskEntry,
+    TaskStatusEntry,
+    TaskStatusEnum,
+    WorkerEntry,
+    WorkerStatus,
+    WorkflowEntry,
+)
+from laufband.heartbeat import heartbeat
+from laufband.task import Task, TaskTypeVar
+
+log = logging.getLogger(__name__)
+
+
+class MultiLock:
+    """Context manager that acquires multiple locks at once."""
+
+    def __init__(self, *locks: t.Union[Lock, threading.Lock, nullcontext]):
+        self._locks = locks
+        self._stack = ExitStack()
+
+    def __enter__(self):
+        for lock in self._locks:
+            self._stack.enter_context(lock)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # ExitStack handles releasing in reverse order
+        return self._stack.__exit__(exc_type, exc_val, exc_tb)
+
+
+class GraphTraversalProtocol(t.Protocol[TaskTypeVar]):
+    """Protocol for iterating over a graph's nodes and their predecessors.
+
+    Yields
+    -------
+    Iterator[tuple[str, set[str]]]
+        An iterator over the graph's nodes and their predecessors.
+
+    Example
+    -------
+    >>> g = nx.DiGraph()
+    >>> g.add_edges_from([("A", "B"), ("A", "C"), ("B", "D"), ("C", "D")])
+    >>> for node in nx.topological_sort(g):
+    ...     yield Task(id=node, dependencies=set(g.predecessors(node)))
+    """
+
+    def __iter__(self) -> Iterator[Task[TaskTypeVar]]: ...
+
+
+class SizedGraphTraversalProtocol(GraphTraversalProtocol[TaskTypeVar]):
+    """
+    Protocol for graph traversal that also supports __len__.
+
+    Extends
+    -------
+    GraphTraversalProtocol
+
+    Methods
+    -------
+    __len__() -> int
+        Return the number of nodes in the graph.
+
+    Example
+    -------
+    >>> class MyGraph(SizedGraphTraversalProtocol):
+    ...     def __iter__(self):
+    ...         yield from [
+    ...             Task(id="A", dependencies=set()),
+    ...             Task(id="B", dependencies={"A"})
+    ...         ]
+    ...     def __len__(self):
+    ...         return 2
+    """
+
+    def __len__(self) -> int: ...
+
+
+def _identifier_default_fn() -> str:
+    if ident := os.getenv("LAUFBAND_IDENTIFIER"):
+        return str(ident)
+    return f"{socket.gethostname()}:{os.getpid()}"
+
+
+class Graphband(t.Generic[TaskTypeVar]):
+    def __init__(
+        self,
+        graph_fn: GraphTraversalProtocol[TaskTypeVar]
+        | SizedGraphTraversalProtocol[TaskTypeVar],
+        *,
+        lock: Lock | None = None,
+        db_lock: Lock | None = None,
+        db: str = "sqlite:///graphband.sqlite",
+        identifier: str | t.Callable[[], str] = _identifier_default_fn,
+        failure_policy: t.Literal["continue", "stop"] = os.getenv(
+            "LAUFBAND_FAILURE_POLICY", "continue"
+        ),
+        heartbeat_timeout: int = int(os.getenv("LAUFBAND_HEARTBEAT_TIMEOUT", 60)),
+        heartbeat_interval: int = int(os.getenv("LAUFBAND_HEARTBEAT_INTERVAL", 30)),
+        max_killed_retries: int = int(os.getenv("LAUFBAND_MAX_KILLED_RETRIES", 0)),
+        max_failed_retries: int = int(os.getenv("LAUFBAND_MAX_FAILED_RETRIES", 0)),
+        disabled: bool = bool(int(os.getenv("LAUFBAND_DISABLED", "0"))),
+        tqdm_kwargs: dict[str, t.Any] | None = None,
+        labels: set[str] | None = None,
+    ):
+        """Graphband generator for parallel processing of DAGs using file-based locking.
+
+        Arguments
+        ---------
+        graph_fn : GraphTraversalProtocol
+        lock : Lock
+            A lock object to ensure thread safety for user operations.
+        db_lock : Lock
+            A lock object to ensure thread safety for database operations.
+        db : str
+            The database connection string. Defaults to "sqlite:///graphband.sqlite".
+        identifier : str | callable, optional
+            A unique identifier for the worker. If not provided or empty/whitespace,
+            it defaults to "{hostname}:{pid}". If a zero-argument callable is provided,
+            it will be called and the result used. Must be unique across all
+            workers. Can be set via the environment variable ``LAUFBAND_IDENTIFIER``.
+        failure_policy : str
+            If an error occurs, the generator will always yield that error.
+            With the "continue" policy, other processes will continue,
+            while with the "stop" policy, other processes will stop
+            and raise an exception that one process failed.
+        heartbeat_timeout : int
+            The timeout in seconds to consider a worker as dead if it has not been seen
+            in the last `heartbeat_timeout` seconds. This is used to mark jobs
+            as "died" if the worker process is killed unexpectedly.
+            Defaults to 60 seconds or the value of the environment variable
+            ``LAUFBAND_HEARTBEAT_TIMEOUT`` if set.
+        max_killed_retries : int
+            The number of times to retry processing items that have been
+            marked as killed. If set to 0, no retries will be attempted.
+            Defaults to 0 or the value of the environment variable
+            ``LAUFBAND_MAX_KILLED_RETRIES`` if set.
+        disabled : bool
+            If True, disable Graphband features and return a simple iterator.
+            Can also be set via the environment variable
+            ``LAUFBAND_DISABLED``.
+        tqdm_kwargs : dict
+            Additional arguments to pass to tqdm.
+        """
+        if heartbeat_interval >= heartbeat_timeout:
+            raise ValueError(
+                "heartbeat_interval must be less than heartbeat_timeout "
+                f"({heartbeat_interval} >= {heartbeat_timeout})"
+            )
+        if heartbeat_interval < 1:
+            raise ValueError("heartbeat_interval must be at least 1 second")
+
+        self.disabled = disabled
+        self.graph_fn: GraphTraversalProtocol[TaskTypeVar] = graph_fn
+        if lock is None:
+            lock = Lock("graphband.lock", lifetime=int(heartbeat_interval * 1.5))
+        self._lock = lock if not disabled else nullcontext()
+
+        if db_lock is None:
+            db_lock = Lock("graphband_db.lock", lifetime=int(heartbeat_interval * 1.5))
+        self._db_lock_file = db_lock if not disabled else nullcontext()
+        self._close_trigger = False
+        self.failure_policy = failure_policy
+        self.tqdm_kwargs = tqdm_kwargs or {}
+        self._identifier = identifier() if callable(identifier) else identifier
+        self._max_failed_retries = max_failed_retries
+        self._max_killed_retries = max_killed_retries
+        self._db = db
+        # here we keep track of failed job data to be retried later
+        self._failed_job_cache = {}
+        self._iterator = None
+        self._iterator_completed = False
+        self._heartbeat_timeout = heartbeat_timeout
+        self._heartbeat_interval = heartbeat_interval
+        self._labels = frozenset(labels or [])
+        self._context_managed = False
+
+        if not self.disabled:
+            # User lock is just the file lock - no thread coordination needed
+            # since database operations use separate db_lock
+            self.lock = self._lock
+
+            # Database lock needs thread coordination for internal database operations
+            self._db_thread_lock = threading.Lock()
+            self.db_lock = MultiLock(self._db_thread_lock, self._db_lock_file)
+
+            self._engine = create_engine(self._db, echo=False)
+            self._register_worker()
+            self._thread_event = threading.Event()
+            self._heartbeat_thread = threading.Thread(
+                target=heartbeat,
+                args=(
+                    self.db_lock,
+                    self._lock,
+                    self._db,
+                    self._identifier,
+                    self._thread_event,
+                ),
+                daemon=True,
+            )
+            self._heartbeat_thread.start()
+        else:
+            self.lock = self._lock
+            self.db_lock = self._lock
+
+    def _register_worker(self):
+        """Register the worker with the database."""
+        with self.db_lock:
+            Base.metadata.create_all(self._engine)
+            with Session(self._engine) as session:
+                existing_worker = session.get(WorkerEntry, self._identifier)
+
+                if existing_worker is not None:
+                    # If identifier exists and state ≠ offline → raise ValueError
+                    if existing_worker.status != WorkerStatus.OFFLINE:
+                        raise ValueError(
+                            f"Worker with identifier '{self._identifier}' "
+                            f"already exists with status '{existing_worker.status}'. "
+                            f"Only offline workers can be reused."
+                        )
+                    # If identifier exists and state = offline → reuse but reset to idle
+                    existing_worker.status = WorkerStatus.IDLE
+                    existing_worker.hostname = socket.gethostname()
+                    existing_worker.pid = os.getpid()
+                    existing_worker.heartbeat_interval = self._heartbeat_interval
+                    existing_worker.heartbeat_timeout = self._heartbeat_timeout
+                    existing_worker.labels = list(self.labels)
+                    session.add(existing_worker)
+                    session.commit()
+                    return
+
+                # Else → new worker
+                workflow = (
+                    session.query(WorkflowEntry)
+                    .filter(WorkflowEntry.id == "main")
+                    .first()
+                )
+                if workflow is None:
+                    try:
+                        size = len(self.graph_fn)
+                    except TypeError:
+                        size = None
+                    workflow = WorkflowEntry(id="main", total_tasks=size)
+                    session.add(workflow)
+                worker_entry = WorkerEntry(
+                    id=self._identifier,
+                    status=WorkerStatus.IDLE,
+                    hostname=socket.gethostname(),
+                    pid=os.getpid(),
+                    heartbeat_interval=self._heartbeat_interval,
+                    heartbeat_timeout=self._heartbeat_timeout,
+                    labels=list(self.labels),
+                    workflow=workflow,
+                )
+                session.add(worker_entry)
+                session.commit()
+
+    def __del__(self):
+        if hasattr(self, "_thread_event") and hasattr(self, "_heartbeat_thread"):
+            self._thread_event.set()
+            if self._heartbeat_thread.is_alive():
+                self._heartbeat_thread.join()
+
+    def close(self):
+        """Exit out of the graphband generator.
+
+        If you use ``break`` inside a graphband loop,
+        it will be registered as a failed job.
+        Instead, you can use this function to exit
+        the graphband generator marking the job as completed.
+        """
+        self._close_trigger = True
+        if hasattr(self, "_thread_event") and hasattr(self, "_heartbeat_thread"):
+            self._thread_event.set()
+            if self._heartbeat_thread.is_alive():
+                self._heartbeat_thread.join()
+
+    def __enter__(self):
+        """Enter context manager and mark as context-managed."""
+        self._context_managed = True
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit context manager and set worker to offline."""
+        if not self.disabled:
+            with self.db_lock:
+                with Session(self._engine) as session:
+                    worker = session.get(WorkerEntry, self._identifier)
+                    if worker is not None:
+                        worker.status = WorkerStatus.OFFLINE
+                        session.add(worker)
+                        session.commit()
+        self.close()
+        return None
+
+    def __len__(self) -> int:
+        """Return the number of tasks in the graph."""
+        return len(self.graph_fn)
+
+    @property
+    def identifier(self) -> str:
+        """Unique identifier of this worker"""
+        return self._identifier
+
+    @property
+    def labels(self) -> frozenset[str]:
+        """Frozenset of labels associated with this worker"""
+        return self._labels
+
+    @property
+    def iterator(self) -> tqdm:
+        """Return the tqdm iterator for the graph."""
+        if self._iterator is None:
+            raise ValueError("Iterator not initialized. Call __iter__() first.")
+        return self._iterator
+
+    @property
+    def db(self) -> str:
+        """Return the database URL."""
+        return self._db
+
+    @property
+    def has_more_jobs(self) -> bool:
+        """Check if there are any more jobs that this worker could process.
+
+        Returns
+        -------
+        bool
+            True if there are jobs that this worker could potentially process,
+            False if all jobs are either completed or permanently failed/killed.
+
+        Notes
+        -----
+        Simple logic: Check if there are processable jobs in the failed cache
+        or incomplete tasks in the database that match our labels and haven't
+        exceeded retry limits.
+
+        Jobs with label mismatches are ignored since this worker would never
+        pick them up.
+
+        Examples
+        --------
+        >>> pbar = Graphband(tasks, labels={'worker-a'})
+        >>> list(pbar)  # Process all available jobs
+        >>> pbar.has_more_jobs  # Should be False if no more jobs for this worker
+        False
+        """
+        if self.disabled:
+            return False
+
+        # Simple logic - check failed cache and database
+        retryable_failed_jobs = 0
+        incomplete_jobs = 0
+
+        with self.db_lock:
+            with Session(self._engine) as session:
+                # Check failed job cache
+                for task in self._failed_job_cache.values():
+                    if not task.requirements.issubset(self.labels):
+                        continue
+
+                    task_entry = session.get(TaskEntry, task.id)
+                    if task_entry is None:
+                        retryable_failed_jobs += 1  # New task, can be processed
+                    elif (
+                        task_entry.failed_retries < self._max_failed_retries
+                        and task_entry.killed_retries < self._max_killed_retries
+                    ):
+                        retryable_failed_jobs += 1
+
+                # Check database for incomplete tasks
+                workflow = (
+                    session.query(WorkflowEntry)
+                    .filter(WorkflowEntry.id == "main")
+                    .first()
+                )
+                if workflow is not None:
+                    for task_entry in workflow.tasks:
+                        # Skip if labels don't match
+                        if not set(task_entry.requirements).issubset(self.labels):
+                            continue
+
+                        # Count incomplete tasks that can be retried
+                        if (
+                            not task_entry.completed
+                            and task_entry.failed_retries < self._max_failed_retries
+                            and task_entry.killed_retries < self._max_killed_retries
+                        ):
+                            incomplete_jobs += 1
+
+                    # If no incomplete jobs found but iterator hasn't completed,
+                    # check if we have any tasks matching our labels
+                    if incomplete_jobs == 0 and not self._iterator_completed:
+                        # Check if all tasks matching our labels are complete
+                        total_matching_tasks = len(
+                            [
+                                t
+                                for t in workflow.tasks
+                                if set(t.requirements).issubset(self.labels)
+                            ]
+                        )
+                        completed_matching_tasks = len(
+                            [
+                                t
+                                for t in workflow.tasks
+                                if set(t.requirements).issubset(self.labels)
+                                and t.completed
+                            ]
+                        )
+
+                        # If we have tasks in DB and all matching ones are complete,
+                        # and no retryable failed jobs, then no more jobs
+                        if (
+                            total_matching_tasks > 0
+                            and completed_matching_tasks == total_matching_tasks
+                            and retryable_failed_jobs == 0
+                        ):
+                            return False
+
+                        # Otherwise, there might be more tasks to process
+                        return True
+                else:
+                    # No workflow exists yet - if we haven't completed iteration,
+                    # assume there are jobs from the original graph
+                    if not self._iterator_completed:
+                        return True
+
+        return (retryable_failed_jobs + incomplete_jobs) > 0
+
+    def __iter__(self) -> Iterator[Task[TaskTypeVar]]:
+        """The generator that handles the iteration logic."""
+
+        self._close_trigger = False  # reset close_trigger on new iter call
+
+        # Set initial worker status based on context usage
+        if not self.disabled and self._context_managed:
+            with self.db_lock:
+                with Session(self._engine) as session:
+                    worker = session.get(WorkerEntry, self._identifier)
+                    if worker is not None:
+                        worker.status = WorkerStatus.BUSY
+                        session.add(worker)
+                        session.commit()
+
+        self._iterator = tqdm(
+            (
+                node
+                for node in chain(list(self._failed_job_cache.values()), self.graph_fn)
+            ),
+            **self.tqdm_kwargs,
+        )
+        try:
+            self._iterator.total = len(self.graph_fn) + len(self._failed_job_cache)
+        except TypeError:
+            pass
+        if self.disabled:
+            # If disabled, just iterate over the graph protocol
+            yield from self._iterator
+            return
+
+        completed_naturally = True
+        for task in self._iterator:
+            if not task.requirements.issubset(self.labels):
+                log.debug(
+                    f"Task {task.id} requires labels {task.requirements}, "
+                    f"skipping worker {self.identifier} with labels: {self.labels}"
+                )
+                continue
+            with self.db_lock:
+                with Session(self._engine) as session:
+                    if self.failure_policy == "stop":
+                        non_compliant_tasks = set()
+                        for task_entry in session.query(TaskEntry).all():
+                            if task_entry.current_status.status not in [
+                                TaskStatusEnum.RUNNING,
+                                TaskStatusEnum.COMPLETED,
+                            ]:
+                                non_compliant_tasks.add(task_entry.id)
+                        if len(non_compliant_tasks) > 0:
+                            raise RuntimeError(
+                                f"Tasks '{non_compliant_tasks}' have failed"
+                            )
+
+                    # check dependencies
+                    skip_task = False
+                    for dep in task.dependencies:
+                        dep_entry = (
+                            session.query(TaskEntry).filter(TaskEntry.id == dep).first()
+                        )
+                        if dep_entry is None:
+                            log.debug(
+                                f"Dependency {dep} not found, skipping task {task.id}."
+                            )
+                            skip_task = True
+                            break
+                        elif not dep_entry.completed:
+                            log.debug(
+                                f"Dependency {dep} not completed, "
+                                f"skipping task {task.id}."
+                            )
+                            skip_task = True
+                            break
+            if skip_task:
+                self._failed_job_cache[task.id] = task
+                continue
+
+            with self.db_lock:
+                with Session(self._engine) as session:
+                    task_entry = session.get(TaskEntry, task.id)
+                    if task_entry:
+                        if task_entry.completed:
+                            log.debug(f"Task {task.id} already completed, skipping.")
+                            continue
+                        if task_entry.failed_retries >= self._max_failed_retries:
+                            log.debug(
+                                f"Task {task.id} has failed too many times, skipping."
+                            )
+                            continue
+                        if task_entry.killed_retries >= self._max_killed_retries:
+                            log.debug(
+                                f"Task {task.id} has died too many times, skipping."
+                            )
+                            continue
+                        if not task_entry.worker_availability:
+                            log.debug(f"Task {task.id} has no free workers, skipping.")
+                            continue
+                    else:
+                        log.debug(f"Registering task {task.id} in database.")
+                        workflow = (
+                            session.query(WorkflowEntry)
+                            .filter(WorkflowEntry.id == "main")
+                            .first()
+                        )
+                        if workflow is None:
+                            raise ValueError("Workflow 'main' not found.")
+                        task_entry = TaskEntry(
+                            id=task.id,
+                            requirements=list(task.requirements),
+                            max_parallel_workers=task.max_parallel_workers,
+                            workflow=workflow,
+                        )
+                        session.add(task_entry)
+                    worker = session.get(WorkerEntry, self._identifier)
+                    if worker is None:
+                        raise ValueError(
+                            f"Worker with identifier {self._identifier} not found."
+                        )
+                    task_entry.statuses.append(
+                        TaskStatusEntry(status=TaskStatusEnum.RUNNING, worker=worker)
+                    )
+                    worker.status = WorkerStatus.BUSY
+                    session.add(task_entry)
+                    session.commit()
+            try:
+                yield task
+                self._failed_job_cache.pop(task.id, None)
+            except GeneratorExit:
+                self._failed_job_cache[task.id] = task
+                with self.db_lock:
+                    with Session(self._engine) as session:
+                        task_entry = session.get(TaskEntry, task.id)
+                        if task_entry is None:
+                            raise ValueError(f"Task with id {task.id} not found.")
+                        worker = session.get(WorkerEntry, self._identifier)
+                        if worker is None:
+                            raise ValueError(
+                                f"Worker with id {self._identifier} not found."
+                            )
+                        task_entry.statuses.append(
+                            TaskStatusEntry(status=TaskStatusEnum.FAILED, worker=worker)
+                        )
+
+                        worker.status = WorkerStatus.IDLE
+                        session.commit()
+                    completed_naturally = False
+                    break
+            with self.db_lock:
+                with Session(self._engine) as session:
+                    task_entry = session.get(TaskEntry, task.id)
+                    if task_entry is None:
+                        raise ValueError(f"Task with id {task.id} not found.")
+                    worker = session.get(WorkerEntry, self._identifier)
+                    if worker is None:
+                        raise ValueError(
+                            f"Worker with id {self._identifier} not found."
+                        )
+                    dependencies = []
+                    for dep_id in task.dependencies:
+                        dep_entry = session.get(TaskEntry, dep_id)
+                        if dep_entry is None:
+                            # should not happen
+                            raise ValueError(f"Dependency {dep_id} not found.")
+                        if dep_entry.current_status.status != TaskStatusEnum.COMPLETED:
+                            # should not happen
+                            raise ValueError(f"Dependency {dep_id} is not completed.")
+                        dependencies.append(dep_entry)
+
+                    task_entry.statuses.append(
+                        TaskStatusEntry(
+                            status=TaskStatusEnum.COMPLETED,
+                            worker=worker,
+                            dependencies=dependencies,
+                        )
+                    )
+                    worker.status = WorkerStatus.IDLE
+                    session.commit()
+            if self._close_trigger:
+                completed_naturally = False
+                break
+        if completed_naturally:
+            self._iterator_completed = True
+
+        # Handle final worker status based on context usage
+        if not self.disabled:
+            with self.db_lock:
+                with Session(self._engine) as session:
+                    worker = session.get(WorkerEntry, self._identifier)
+                    if worker is not None:
+                        if self._context_managed:
+                            # Context managed: set to idle at end
+                            worker.status = WorkerStatus.IDLE
+                        else:
+                            # Not context managed: set to offline at end
+                            worker.status = WorkerStatus.OFFLINE
+                        session.add(worker)
+                        session.commit()
