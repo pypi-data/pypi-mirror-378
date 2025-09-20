@@ -1,0 +1,335 @@
+# Forebit Python SDK
+
+Lightweight Python SDK for the Forebit API (customers, payments, wallets).
+
+## Installation
+
+```bash
+pip install forebit
+```
+
+or
+
+```bash
+poetry add forebit
+```
+
+## Setup
+
+Before using the SDK, you'll need to obtain your Business ID and generate an API key from your Forebit account.
+
+### Getting Your Business ID
+
+1. Log in to your [Forebit account](https://app.forebit.io)
+2. Navigate to [Business Settings > Developer](https://app.forebit.io/payments/settings/developer)
+3. Copy your Business ID from the developer settings
+
+### Generating an API Key
+
+1. Log in to your [Forebit account](https://app.forebit.io)
+2. Navigate to [Account Settings > Developer](https://app.forebit.io/account/settings/developer)
+3. Generate a new API key and copy it securely
+
+**⚠️ Important:** Keep your API key secure and never commit it to version control.
+
+## Usage
+
+```python
+import asyncio
+from forebit_py import ForebitClient
+
+async def main():
+    client = ForebitClient(
+        api_key='your-api-key-here',
+        business_id='your-business-id-here'
+    )
+
+    # Create a payment
+    request = CreatePaymentRequest(
+        amount=5.0,
+        currency='USD',
+        name='Subscription Test'
+    )
+    payment_response = await client.payments.create(request)
+
+    print(payment_response)
+
+    # List payments with pagination
+    payments = await client.payments.list(
+        search_string='test',
+        page_size=10,
+        page_number=1
+    )
+
+    print(payments)
+
+    # Get a single payment
+    single_payment = await client.payments.get('payment-id')
+    print(single_payment)
+
+    # List customers
+    customers = await client.customers.list(
+        search_string='email@example.com',
+        page_size=10,
+        page_number=1
+    )
+
+    print(customers)
+
+    # Get a single customer
+    customer = await client.customers.get(123)
+    print(customer)
+
+    # List wallets
+    wallets = await client.wallets.list()
+    print(wallets)
+
+    # List wallet accounts
+    accounts = await client.wallets.list_accounts('wallet-id')
+    print(accounts)
+
+    # List deposit addresses
+    addresses = await client.wallets.list_deposit_addresses('wallet-id', 'account-id')
+    print(addresses)
+
+    await client.close()
+
+asyncio.run(main())
+```
+
+## API Reference
+
+### ForebitClient
+
+Main client class for interacting with the Forebit API.
+
+#### Constructor Options
+
+- `api_key` (str): Your Forebit API key
+- `business_id` (str): Your business ID
+
+### Payments
+
+#### create(data: CreatePaymentRequest): Dict[str, Any]
+
+Creates a new payment.
+
+Parameters:
+
+- `data`: Payment creation data
+  - `paymentMethods` (Optional[Dict[str, List[CryptoCode]]]): Object specifying allowed payment methods. If not provided, all available payment methods will be used.
+
+#### list(search_string: Optional[str] = None, page_size: Optional[int] = None, page_number: Optional[int] = None) -> Dict[str, Any]
+
+Lists payments with optional search and pagination.
+
+Parameters:
+
+- `search_string`: Search string for filtering
+- `page_size`: Number of payments per page
+- `page_number`: Page number
+
+#### get(payment_id: str): PaymentResponse
+
+Gets a single payment by ID.
+
+Parameters:
+
+- `payment_id`: Payment ID
+
+### Customers
+
+#### list(search_string: Optional[str] = None, page_size: Optional[int] = None, page_number: Optional[int] = None) -> Dict[str, Any]
+
+Lists customers with optional search and pagination.
+
+Parameters:
+
+- `search_string`: Search string for filtering
+- `page_size`: Number of customers per page
+- `page_number`: Page number
+
+#### get(customer_id: int): Dict[str, Any]
+
+Gets a single customer by ID.
+
+Parameters:
+
+- `customer_id`: Customer ID
+
+### Wallets
+
+#### list(include_deleted: Optional[bool] = None) -> List[Wallet]
+
+Lists all wallets.
+
+Parameters:
+
+- `include_deleted`: Whether to include deleted wallets
+
+#### list_accounts(wallet_id: str, page_size: Optional[int] = None, page_number: Optional[int] = None) -> WalletAccountListResponse
+
+Lists wallet accounts for a wallet.
+
+Parameters:
+
+- `wallet_id`: Wallet ID
+- `page_size`: Number of accounts per page
+- `page_number`: Page number
+
+#### list_deposit_addresses(wallet_id: str, account_id: str, has_balance: Optional[bool] = None, is_used: Optional[bool] = None) -> List[DepositAddress]
+
+Lists deposit addresses for a wallet account.
+
+Parameters:
+
+- `wallet_id`: Wallet ID
+- `account_id`: Account ID
+- `has_balance`: Filter by addresses with balance
+- `is_used`: Filter by used addresses
+
+#### get_deposit_address(wallet_id: str, account_id: str) -> DepositAddress
+
+Gets the current deposit address for a wallet account.
+
+Parameters:
+
+- `wallet_id`: Wallet ID
+- `account_id`: Account ID
+
+#### create_deposit_address(wallet_id: str, account_id: str) -> DepositAddress
+
+Creates a new deposit address for a wallet account.
+
+Parameters:
+
+- `wallet_id`: Wallet ID
+- `account_id`: Account ID
+
+## Types
+
+### CreatePaymentRequest
+
+- `description: Optional[str]` - Optional description of the payment
+- `amount: float` - The amount of the payment
+- `currency: str` - The currency code for the payment (ISO 4217 format, e.g. USD)
+- `name: str` - The name associated with the payment
+- `redirectUrl: Optional[str]` - Optional URL to redirect after payment
+- `notifyUrl: Optional[str]` - Optional URL for payment notifications
+- `customerEmail: Optional[str]` - Optional email of the customer
+- `customerIp: Optional[str]` - Optional IP address of the customer
+- `customerUserAgent: Optional[str]` - Optional user agent of the customer
+
+### Payment
+
+- `id: str` - Payment ID
+- `name: Optional[str]` - Optional name
+- `description: Optional[str]` - Optional description
+- `endAmount: float` - Payment amount
+- `prePaymentAmount: Optional[float]` - Pre-payment amount
+- `currency: str` - Currency code
+- `status: str` - Payment status
+- `createdAt: str` - Creation timestamp
+- `expiresAt: Optional[str]` - Optional expiration timestamp
+- `timeline: Optional[List[TimelineEntry]]` - Optional status timeline
+- `customer: Optional[Customer]` - Optional customer info
+- `selectedPaymentMethod: str` - Selected payment method
+- `forebitCryptoCharge: Optional[ForebitCryptoCharge]` - Optional crypto charge details
+- `forebitFee: Optional[float]` - Optional fee
+- `onBehalfOfBusinessId: Optional[int]` - Optional business ID
+- `netAmountUsd: Optional[float]` - Optional net amount in USD
+- `customerEmail: Optional[str]` - Optional customer email
+
+### CustomerStat
+
+- `id: int` - Customer ID
+- `email: str` - Customer email
+- `totalPayments: int` - Total payments
+- `totalSpend: float` - Total spend
+- `firstSeen: str` - First seen timestamp
+- `lastPayment: Optional[str]` - Optional last payment timestamp
+- `ipAddresses: Optional[List[IpAddress]]` - Optional IP addresses
+
+### Wallet
+
+- `id: str` - Wallet ID
+- `name: str` - Wallet name
+- `isActivated: bool` - Activation status
+- `isDeleted: bool` - Deletion status
+- `dateCreated: str` - Creation date
+- `permissions: List[str]` - Permissions
+
+### WalletAccount
+
+- `id: str` - Account ID
+- `blockchainNetwork: str` - Blockchain network
+- `name: str` - Account name
+- `notes: Optional[str]` - Optional notes
+- `index: int` - Account index
+- `freshAddressIndex: int` - Fresh address index
+- `nativeBalance: float` - Native balance
+- `isFavorite: bool` - Favorite status
+- `createdAt: str` - Creation timestamp
+- `tokens: List[WalletToken]` - Tokens
+- `allocation: float` - Allocation
+- `isStale: bool` - Stale status
+
+### DepositAddress
+
+- `id: str` - Address ID
+- `addressValue: str` - Address value
+- `createdAt: str` - Creation timestamp
+- `walletName: Optional[str]` - Optional wallet name
+- `balance: Optional[float]` - Optional balance
+- `isUsed: Optional[bool]` - Optional used status
+- `reservedUntil: Optional[str]` - Optional reservation end
+- `hasBalance: Optional[bool]` - Optional has balance
+- `index: Optional[int]` - Optional index
+- `isStale: Optional[bool]` - Optional stale status
+- `tokens: Optional[List[Any]]` - Optional tokens
+
+## Supported Crypto Codes
+
+The following crypto codes are supported:
+
+- BITCOIN
+- LITECOIN
+- ETH_TETHER
+- ETH_USD_COIN
+- ETHEREUM
+- TRON
+- TRX_TETHER
+- TRX_USD_C
+- SOL_TETHER
+- SOL_USD_COIN
+- SOLANA
+
+## Development
+
+```bash
+# Install dependencies
+poetry install
+
+# Run tests
+poetry run pytest
+
+# Lint
+poetry run ruff check src/
+
+# Format
+poetry run ruff format src/
+
+# Type check
+poetry run mypy src/
+
+# Build
+poetry build
+```
+
+## Contributing
+
+Contributions are welcome. Please open an issue or submit a pull request.
+
+## License
+
+MIT
