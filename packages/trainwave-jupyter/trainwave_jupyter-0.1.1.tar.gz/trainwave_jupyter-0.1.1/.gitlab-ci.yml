@@ -1,0 +1,246 @@
+# GitLab CI configuration for Trainwave Jupyter Extension
+# This configuration runs tests on all commits and merges to main,
+# and provides a manual trigger for packaging and publishing
+
+stages:
+  - test
+  - build
+  - publish
+
+variables:
+  # Node.js version
+  NODE_VERSION: "18"
+  # Python version
+  PYTHON_VERSION: "3.11"
+  # Cache configuration
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  NPM_CACHE_DIR: "$CI_PROJECT_DIR/.cache/npm"
+
+# Cache configuration
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .cache/pip/
+    - .cache/npm/
+    - node_modules/
+    - .uv/
+
+# Test stage - runs on all commits and merges to main (excluding UI tests)
+test:python:
+  stage: test
+  image: python:${PYTHON_VERSION}-slim
+  before_script:
+    # Install system dependencies
+    - apt-get update && apt-get install -y curl build-essential
+    # Install Node.js
+    - curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+    - apt-get install -y nodejs
+    # Install uv
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    # Install JupyterLab to get jlpm command
+    - pip3 install --break-system-packages jupyterlab
+    # Install Node.js dependencies
+    - uv run jlpm install
+    # Build the JupyterLab extension
+    - npm run build:prod
+    # Install Python dependencies
+    - uv sync --extra test
+  script:
+    - uv run pytest --cov=trainwave_jupyter --cov-report=xml --cov-report=term-missing
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - htmlcov/
+    expire_in: 1 week
+  only:
+    - main
+    - merge_requests
+    - branches
+
+test:typescript:
+  stage: test
+  image: node:${NODE_VERSION}-slim
+  before_script:
+    # Install system dependencies
+    - apt-get update && apt-get install -y python3 python3-pip curl build-essential
+    # Install JupyterLab using system packages (safer for CI)
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    - pip3 install --break-system-packages jupyterlab
+    # Install Node.js dependencies
+    - uv run jlpm install
+  script:
+    - npm run test:ci
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/lcov.info
+    paths:
+      - coverage/
+    expire_in: 1 week
+  only:
+    - main
+    - merge_requests
+    - branches
+
+# Build stage - manual trigger for packaging or automatic on tags
+build:package:
+  stage: build
+  image: node:${NODE_VERSION}-slim
+  before_script:
+    # Install system dependencies
+    - apt-get update && apt-get install -y python3 python3-pip curl build-essential
+    # Install uv
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    # Install JupyterLab
+    - pip3 install --break-system-packages jupyterlab
+    # Install Node.js dependencies
+    - uv run jlpm install
+    # Install Python dependencies
+    - uv sync
+    # Update version from git tag if available
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        echo "Updating version to $CI_COMMIT_TAG from git tag"
+        # Remove 'v' prefix if present
+        VERSION=${CI_COMMIT_TAG#v}
+        # Update pyproject.toml version
+        sed -i "s/^version = .*/version = \"$VERSION\"/" pyproject.toml
+        # Update package.json version
+        sed -i "s/\"version\": .*/\"version\": \"$VERSION\",/" package.json
+        echo "Version updated to $VERSION"
+      fi
+  script:
+    # Build the extension
+    - npm run build:prod
+    # Build Python package
+    - uv build
+    # List built artifacts
+    - ls -la dist/
+    - ls -la trainwave_jupyter/labextension/
+  artifacts:
+    paths:
+      - dist/
+      - trainwave_jupyter/labextension/
+    expire_in: 1 week
+  only:
+    - main
+    - tags
+  when: on_success
+  allow_failure: false
+
+# Publish stage - manual trigger for publishing to PyPI or automatic on tags
+publish:pypi:
+  stage: publish
+  image: python:${PYTHON_VERSION}-slim
+  dependencies:
+    - build:package
+  before_script:
+    # Install system dependencies
+    - apt-get update && apt-get install -y curl build-essential
+    # Install uv
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    # Install publishing tools
+    - uv add twine
+  script:
+    - 'test -n "$PYPI_API_KEY" || (echo "❌ Error: PYPI_API_KEY environment variable is not set" && exit 1)'
+    - 'uv run twine upload dist/* --username __token__ --password "$PYPI_API_KEY"'
+  only:
+    - main
+    - tags
+  when: on_success
+  allow_failure: false
+  environment:
+    name: pypi
+    url: https://pypi.org/project/trainwave-jupyter/
+
+# Publish stage - manual trigger for publishing to npm or automatic on tags
+publish:npm:
+  stage: publish
+  image: node:${NODE_VERSION}-slim
+  dependencies:
+    - build:package
+  before_script:
+    # Install system dependencies
+    - apt-get update && apt-get install -y python3 python3-pip curl build-essential
+    # Install uv
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    # Install JupyterLab
+    - pip3 install --break-system-packages jupyterlab
+    # Install Node.js dependencies
+    - uv run jlpm install
+  script:
+    - 'test -n "$NPM_TOKEN" || (echo "❌ Error: NPM_TOKEN environment variable is not set" && exit 1)'
+    - 'npm config set registry https://registry.npmjs.org/'
+    - 'echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc'
+    - 'npm publish'
+  only:
+    - main
+    - tags
+  when: on_success
+  allow_failure: false
+  environment:
+    name: npm
+    url: https://www.npmjs.com/package/trainwave-jupyter
+
+# Auto-release job - automatically triggers build and publish on tags
+auto-release:
+  stage: build
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache git curl
+  script: |
+    - echo "🚀 Auto-release triggered for tag: ${CI_COMMIT_TAG}"
+    - echo "This job will trigger the build and publish pipelines"
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        echo "Tag detected: ${CI_COMMIT_TAG}"
+        echo "Version will be extracted from tag: ${CI_COMMIT_TAG#v}"
+      else
+        echo "No tag found, this should not happen"
+        exit 1
+      fi
+  only:
+    - tags
+  when: on_success
+  allow_failure: false
+
+# Job to run UI tests manually (optional)
+test:ui:
+  stage: test
+  image: node:${NODE_VERSION}-slim
+  before_script:
+    # Install system dependencies
+    - apt-get update && apt-get install -y python3 python3-pip curl build-essential
+    # Install uv
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    # Install JupyterLab
+    - pip3 install --break-system-packages jupyterlab
+    # Install Node.js dependencies
+    - uv run jlpm install
+    # Install Python dependencies
+    - uv sync
+    # Install Playwright browsers
+    - npx playwright install
+  script:
+    # Run UI tests
+    - npm run test:ui
+  artifacts:
+    paths:
+      - test-results/
+      - debug-screenshot.png
+    expire_in: 1 week
+  only:
+    - main
+  when: manual
+  allow_failure: true
