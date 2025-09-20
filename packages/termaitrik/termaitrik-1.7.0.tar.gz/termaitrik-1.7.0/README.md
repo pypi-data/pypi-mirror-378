@@ -1,0 +1,176 @@
+# TermAI — AI assistant for your terminal (Ollama + BYOK)
+
+> Version: 1.7.0
+
+**TermAI** is a terminal AI assistant (CLI + local server) inspired by Warp AI.
+It works *offline* with Ollama and supports **BYOK** (Bring Your Own Key) for cloud providers
+(OpenAI or compatible endpoints).
+
+## Features
+
+- `termai chat ["initial message"]` — interactive general chat with conversation history (optional streaming)
+- `termai suggest "...description..."` — generates **shell commands** with reasoning and risks
+- `termai explain --cmd "command"` — explains what a command does
+- `termai fix --cmd "command" --error "stderr"` — suggests a fix
+- `termai run "...description..."` — suggests a command and asks for confirmation before **executing** it
+- `termai agent "...goal..."` — experimental multi‑step iterative assistant (proposes & confirms each command)
+- `termai install-shell [--shell SHELL]` — install shell alias
+- `termai uninstall-shell` — uninstall shell alias
+- Local FastAPI server: `uvicorn termai.server:app --host 127.0.0.1 --port 8765`
+
+## Requirements
+
+- Python 3.10+
+- (Optional) **Ollama** at `http://127.0.0.1:11434`
+- (Optional) cloud provider key for BYOK (`OPENAI_API_KEY` etc.)
+
+## Installation & Quick Start
+
+Quick try (no install, always latest):
+
+```bash
+uvx --from termaitrik@latest python -m termai.cli --help
+```
+
+Install the `ai` shell alias (recommended):
+
+```bash
+uvx --from termaitrik@latest python -m termai.cli install-shell
+# then reopen your shell (or):
+#   Bash:  source ~/.bashrc
+#   Zsh:   source ~/.zshrc
+#   Fish:  source ~/.config/fish/config.fish
+ai info
+```
+
+The alias uses `uvx` to run the latest published version and avoids local/package conflicts.
+
+## Configuration
+
+Create `~/.termai/config.yaml` (see `examples/config.example.yaml`).
+
+Minimal example (Ollama):
+```yaml
+default_provider: ollama
+model: llama3.1:8b
+ollama:
+  host: http://127.0.0.1:11434
+```
+
+BYOK example (OpenAI):
+```yaml
+default_provider: openai
+model: gpt-4o-mini
+openai:
+  api_key: sk-...
+  base_url: https://api.openai.com/v1
+```
+
+> Useful environment variables: `TERMAI_PROVIDER`, `TERMAI_MODEL`,
+> `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OLLAMA_HOST`.
+
+## Shell Integration (alias `ai`)
+
+Install a robust alias that always runs the latest published CLI via `uvx`:
+
+### Option 1: Using uvx (Recommended)
+
+```bash
+uvx --from termaitrik@latest python -m termai.cli install-shell
+# then reopen your shell (or):
+#   Bash:  source ~/.bashrc
+#   Zsh:   source ~/.zshrc
+#   Fish:  source ~/.config/fish/config.fish
+ai suggest "create a tar archive of the current folder"
+```
+
+Uninstall:
+```bash
+uvx --from termaitrik@latest python -m termai.cli uninstall-shell
+```
+
+### Option 2: Using scripts directly
+
+```bash
+bash scripts/install-shell-integration.sh
+# then reopen your shell (or):
+#   Bash:  source ~/.bashrc
+#   Zsh:   source ~/.zshrc
+#   Fish:  source ~/.config/fish/config.fish
+ai suggest "create a tar archive of the current folder"
+```
+
+Uninstall:
+```bash
+bash scripts/uninstall-shell-integration.sh
+```
+
+### Shell Integration Details
+
+- The `ai` alias runs:
+  - `uvx --isolated --refresh --from termaitrik@latest python -m termai.cli ...`
+  - This ensures the latest published version is used and executes the CLI module directly to avoid collisions with any unrelated `termai` commands on your system.
+- No local repository or system fallbacks are used. If `uvx` is not installed, the alias prints a helpful message.
+- Prerequisite: install uv (Astral) — see https://docs.astral.sh/uv/getting-started/
+
+Tip: you can still run the CLI without the alias via:
+```bash
+uvx --from termaitrik@latest python -m termai.cli --help
+```
+
+Note on package name: our PyPI package is named `termaitrik`. The internal Python package is `termai` and exposes the `termai` CLI. Running with `python -m termai.cli` inside the `uvx --from termaitrik@latest` environment guarantees you are targeting the correct package and avoids conflicts with any third‑party package named `termai` on PyPI.
+
+## Local Server API
+
+Start (inside uvx):
+```bash
+uvx --from termaitrik@latest uvicorn termai.server:app --host 127.0.0.1 --port 8765
+```
+
+Endpoints:
+- `GET /health` → `{ "ok": true }`
+- `POST /v1/chat` → body:
+  ```json
+  {"messages":[{"role":"user","content":"hi"}],"provider":"ollama","model":"llama3.1:8b"}
+  ```
+  Response: `{ "content": "..." }`
+
+## Safety & Warnings
+
+- Always inspect and confirm suggested commands before executing.
+- Redact secrets before sending errors or stack traces to providers.
+- Local models (Ollama) keep data on your machine; cloud providers transmit prompts off‑device.
+
+## Changelog Highlights 1.0.0
+
+- Added robust shell integration with multi-fallback launcher.
+- Stabilized command set (`chat`, `suggest`, `explain`, `fix`, `run`, plus info/examples helpers).
+- Improved provider error handling & streaming.
+- Config merging & environment variable expansion.
+- Extended test coverage across core flows.
+
+MIT License.
+
+## Experimental Agent Mode
+
+You can try an early iterative "agent" loop that plans and executes several shell commands with your confirmation between steps:
+
+```bash
+termai agent "list the latest 5 created files, then show the first"
+```
+
+Workflow per step:
+1. Model emits JSON: `{ "thought", "command", "explanation", "done" }`.
+2. You confirm/modify/abort; if accepted the command runs locally.
+3. Stdout/stderr are summarized and appended to the conversation as an observation.
+4. Loop continues until `done=true`, command empty, or max steps reached (default 6).
+
+Options (current minimal POC):
+```
+--steps N          maximum steps (default 6)
+--dry-run          never execute commands (records hypothetical observations)
+--model / -m       override configured model
+--temperature / -t sampling temperature (default 0.1)
+```
+
+Roadmap ideas (not yet implemented): whitelist & yolo auto‑approval modes, danger pattern guard, transcript export, richer tool schema. Feedback welcome.
