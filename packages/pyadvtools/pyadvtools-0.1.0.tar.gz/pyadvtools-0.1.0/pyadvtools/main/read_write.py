@@ -1,0 +1,174 @@
+import os
+import re
+from typing import List, Optional, Union
+
+from pyadvtools.core.delete import delete_empty_lines_first_occur, delete_empty_lines_last_occur_add_new_line
+
+
+def is_valid_filename(filename):
+    """
+    Check if a filename is valid for common file systems.
+
+    Validates against illegal characters, reserved patterns, and problematic naming conventions.
+
+    Args:
+        filename (str): The filename to validate
+
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    # Empty filename check
+    if not filename:
+        return False
+
+    # Check for illegal characters: < > : " / \ | ? *
+    if any(char in filename for char in '<>:"/\\|?*'):
+        return False
+
+    # Check for hidden file without actual name (just '.')
+    if filename == '.':
+        return False
+
+    # Prevent directory traversal attacks
+    if '..' in filename:
+        return False
+
+    # Check for leading or trailing spaces
+    if filename.strip() != filename:
+        return False
+
+    # Check for consecutive spaces
+    if '  ' in filename:
+        return False
+
+    # Require file extension (at least one dot)
+    if '.' not in filename:
+        return False
+
+    return True
+
+
+def read_list(file_name: str, read_flag: str = "r", path_storage: Optional[str] = None) -> List[str]:
+    """
+    Read a text file and return its content as a list of lines.
+
+    Handles file path construction, existence checks, and post-processes the content
+    by removing empty lines and ensuring proper newline formatting.
+
+    Args:
+        file_name: Name of the file to read
+        read_flag: File open mode (default: "r" for read)
+        path_storage: Optional directory path to prepend to file_name
+
+    Returns:
+        List[str]: List of file lines with empty lines cleaned and formatting normalized
+                  Returns empty list if file doesn't exist
+    """
+    # Construct full path if storage directory is provided
+    if path_storage is not None:
+        file_name = os.path.join(path_storage, file_name)
+
+    # Return empty list if file doesn't exist
+    if not os.path.isfile(file_name) or not os.path.exists(file_name):
+        return []
+
+    # Read file with UTF-8 encoding
+    with open(file_name, read_flag, encoding="utf-8") as f:
+        # Read all lines preserving line endings
+        data_list = f.read().splitlines(keepends=True)
+
+    # Clean up empty lines and ensure proper formatting
+    return delete_empty_lines_last_occur_add_new_line(data_list)
+
+
+def write_list(
+    data_list: Union[List[str], List[bytes]],
+    file_name: str,
+    write_flag: str = "w",
+    path_storage: Optional[str] = None,
+    check: bool = True,
+    delete_first_empty: bool = True,
+    delete_last_empty: bool = True,
+    compulsory: bool = False,
+    delete_original_file: bool = False,
+) -> None:
+    """
+    Write data to a file with comprehensive file handling and validation.
+
+    Supports both text and binary data, with options for empty line handling,
+    file existence checks, and directory creation.
+
+    Args:
+        data_list: List of strings or bytes to write
+        file_name: Target file name
+        write_flag: File open mode ('w', 'a', 'wb', etc.)
+        path_storage: Optional directory path for the file
+        check: If True, checks if file exists before overwriting
+        delete_first_empty: Remove empty lines from start of data
+        delete_last_empty: Remove empty lines from end of data
+        compulsory: Write file even if data is empty
+        delete_original_file: Delete existing file if data is empty and not compulsory
+
+    Returns:
+        None: Writes to file or prints error messages
+    """
+    # Validate filename
+    name = os.path.basename(file_name)
+    if not is_valid_filename(name):
+        print(f"Invalid file name: {name}")
+        return None
+
+    # Construct full file path
+    full_file_name = os.path.join(path_storage, file_name) if path_storage else file_name
+    full_path = os.path.dirname(full_file_name)
+
+    # Handle binary data writing
+    if all(isinstance(i, bytes) for i in data_list) and write_flag == "wb":
+        # Create directory if needed
+        if full_path and not os.path.exists(full_path):
+            os.makedirs(full_path)
+
+        # Filter and write binary data
+        temp_data_list = [i for i in data_list if isinstance(i, bytes)]
+        with open(full_file_name, "wb") as f:
+            f.writelines(temp_data_list)
+
+    # Handle text data writing
+    else:
+        # Validate all items are strings
+        if not all(isinstance(i, str) for i in data_list):
+            return None
+
+        # Process text data
+        new_data_list = [i for i in data_list if isinstance(i, str)]
+
+        # Remove empty lines from start and end
+        if delete_last_empty:
+            new_data_list = delete_empty_lines_last_occur_add_new_line(new_data_list)
+        if delete_first_empty:
+            new_data_list = delete_empty_lines_first_occur(new_data_list)
+
+        # Write file if data exists or compulsory flag is set
+        if new_data_list or compulsory:
+            # Create directory if needed
+            if full_path and not os.path.exists(full_path):
+                os.makedirs(full_path)
+
+            # Check if file exists and not in append mode
+            if not re.search("a", write_flag) and check and os.path.isfile(full_file_name):
+                print(f"{full_file_name} already exists and do nothing.")
+            else:
+                # Write data to file
+                with open(full_file_name, write_flag, encoding="utf-8") as f:
+                    f.writelines(new_data_list)
+
+        # Delete original file if data is empty and flag is set
+        elif delete_original_file and os.path.exists(full_file_name):
+            os.remove(full_file_name)
+
+    return None
+
+
+if __name__ == "__main__":
+    print(is_valid_filename("test.md"))  # True
+    print(is_valid_filename("test"))  # False
