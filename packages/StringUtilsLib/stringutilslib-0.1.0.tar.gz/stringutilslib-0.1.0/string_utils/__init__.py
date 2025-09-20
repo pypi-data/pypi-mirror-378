@@ -1,0 +1,1 @@
+from .core import reverse_text, count_letters, count_words
