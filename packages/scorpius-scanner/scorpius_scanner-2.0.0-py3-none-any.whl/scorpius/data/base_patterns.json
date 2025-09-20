@@ -1,0 +1,201 @@
+{
+  "version": "2.0.0",
+  "description": "Advanced vulnerability patterns for Scorpius Scanner 10/10",
+  "patterns": [
+    {
+      "id": "reentrancy_001",
+      "name": "reentrancy",
+      "severity": "High",
+      "description": "Reentrancy vulnerability in external calls",
+      "confidence": 0.85,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "\\.call\\{value:\\s*\\w+\\}",
+          "description": "External call with value transfer"
+        },
+        {
+          "type": "regex", 
+          "pattern": "\\.transfer\\s*\\(",
+          "description": "Transfer call before state update"
+        },
+        {
+          "type": "regex",
+          "pattern": "msg\\.sender\\.call",
+          "description": "Direct call to msg.sender"
+        }
+      ]
+    },
+    {
+      "id": "access_control_001", 
+      "name": "access_control",
+      "severity": "High",
+      "description": "Missing access control in privileged functions",
+      "confidence": 0.80,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "function\\s+\\w+.*external.*\\{[^}]*(?!onlyOwner|require\\s*\\(\\s*msg\\.sender)",
+          "description": "External function without access control"
+        },
+        {
+          "type": "regex",
+          "pattern": "function.*setAdmin.*\\{[^}]*(?!require)",
+          "description": "Admin function without authorization"
+        }
+      ]
+    },
+    {
+      "id": "oracle_manipulation_001",
+      "name": "oracle_manipulation", 
+      "severity": "Critical",
+      "description": "Oracle price manipulation vulnerability",
+      "confidence": 0.90,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "\\.getPrice\\s*\\(\\)",
+          "description": "Price oracle usage without validation"
+        },
+        {
+          "type": "regex",
+          "pattern": "\\.latestAnswer\\s*\\(\\)",
+          "description": "Chainlink oracle without TWAP"
+        }
+      ]
+    },
+    {
+      "id": "flash_loan_attack_001",
+      "name": "flash_loan_attack",
+      "severity": "Critical", 
+      "description": "Flash loan attack vulnerability",
+      "confidence": 0.88,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "flashLoan",
+          "description": "Flash loan usage"
+        },
+        {
+          "type": "regex",
+          "pattern": "borrow.*repay",
+          "description": "Borrow-repay pattern"
+        }
+      ]
+    },
+    {
+      "id": "integer_overflow_001",
+      "name": "integer_overflow",
+      "severity": "High",
+      "description": "Integer overflow/underflow vulnerability", 
+      "confidence": 0.82,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "\\+\\s*\\w+(?!.*SafeMath)",
+          "description": "Addition without SafeMath"
+        },
+        {
+          "type": "regex",
+          "pattern": "\\-\\s*\\w+(?!.*SafeMath)",
+          "description": "Subtraction without SafeMath"
+        }
+      ]
+    },
+    {
+      "id": "governance_attack_001",
+      "name": "governance_attack",
+      "severity": "Critical",
+      "description": "Governance manipulation vulnerability",
+      "confidence": 0.90,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "vote.*token",
+          "description": "Token-based voting"
+        },
+        {
+          "type": "regex", 
+          "pattern": "proposal.*execute",
+          "description": "Proposal execution"
+        }
+      ]
+    },
+    {
+      "id": "dos_attack_001",
+      "name": "dos_attack",
+      "severity": "Medium",
+      "description": "Denial of Service attack vector",
+      "confidence": 0.75,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "while.*true",
+          "description": "Infinite loop pattern"
+        },
+        {
+          "type": "regex",
+          "pattern": "for.*uint.*i.*<.*length",
+          "description": "Unbounded loop"
+        }
+      ]
+    },
+    {
+      "id": "front_running_001",
+      "name": "front_running",
+      "severity": "Medium",
+      "description": "Front-running vulnerability",
+      "confidence": 0.70,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "tx\\.origin",
+          "description": "Use of tx.origin"
+        },
+        {
+          "type": "regex",
+          "pattern": "block\\.timestamp",
+          "description": "Dependency on block timestamp"
+        }
+      ]
+    },
+    {
+      "id": "signature_replay_001",
+      "name": "signature_replay",
+      "severity": "High",
+      "description": "Signature replay attack vulnerability",
+      "confidence": 0.85,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "ecrecover",
+          "description": "Signature verification"
+        },
+        {
+          "type": "regex",
+          "pattern": "nonce.*mapping",
+          "description": "Nonce usage"
+        }
+      ]
+    },
+    {
+      "id": "unchecked_call_001",
+      "name": "unchecked_call",
+      "severity": "Medium",
+      "description": "Unchecked external call return value",
+      "confidence": 0.78,
+      "detection_rules": [
+        {
+          "type": "regex",
+          "pattern": "\\.call\\(.*\\)(?!.*require)",
+          "description": "Unchecked call return"
+        },
+        {
+          "type": "regex",
+          "pattern": "\\.delegatecall\\(.*\\)(?!.*require)",
+          "description": "Unchecked delegatecall"
+        }
+      ]
+    }
+  ]
+}
