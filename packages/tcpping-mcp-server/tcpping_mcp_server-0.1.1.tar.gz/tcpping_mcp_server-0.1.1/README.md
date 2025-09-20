@@ -1,0 +1,73 @@
+## tcpping MCP Server (stdio)
+
+Minimal TCP latency probe server for MCP clients (e.g. GitHub Copilot Agents) using Playwright + FastMCP.
+
+### 1. Add to your MCP client config
+Example (`mcp.json` / Copilot Agents user settings):
+```jsonc
+"tcpping-mcp-server": {
+	"type": "stdio",
+	"command": "uvx",
+	"args": [
+		"tcpping-mcp-server"
+	]
+}
+```
+`uvx` will fetch & run the published script (or local cache) by name. You can also swap for `python -m tcpping_mcp_stdio.modern_server` if installed in a venv.
+
+### 2. Available tool
+Tool name: `tcpping_run`
+
+Parameters (all optional unless noted):
+- target (str, required) – domain or URL (scheme optional)
+- port (int, default 443)
+- timeout (float, default 120)
+- retries (int, default 1)
+- headless (bool, default true)
+- browser_channel (str, default "msedge")
+- debug (bool, default false) – dump HTML/screenshot if no rows
+- summary_only (bool, default false) – return compact summary
+
+### 3. Example call (conceptual JSON-RPC)
+```json
+{
+	"jsonrpc": "2.0",
+	"id": "1",
+	"method": "tools/call",
+	"params": {
+		"name": "tcpping_run",
+		"arguments": { "target": "example.com", "summary_only": true }
+	}
+}
+```
+
+### 4. Local install (optional)
+```bash
+pip install tcpping-mcp-server
+tcpping-mcp-server  # or: python -m tcpping_mcp_stdio.modern_server
+```
+
+### 5. Playwright browser dependency
+First run will auto-download browsers when using `uvx` or after pip install. If needed manually:
+```bash
+playwright install chromium
+```
+
+### 6. Output
+Returns a JSON string (you may need to parse once):
+```
+{
+	"host": "example.com:443",
+	"summary": { ... },
+	"probes": [ ... ],
+	"probe_count": 25,
+	"timeouts": 0,
+	"duration_sec": 12.34
+}
+```
+
+### 7. Debugging
+Set `debug=true` to dump HTML + screenshot into `tcpping/debug/` when no probe rows captured.
+
+---
+Concise goal: drop the snippet above into your MCP client config and start using `tcpping_run`.
