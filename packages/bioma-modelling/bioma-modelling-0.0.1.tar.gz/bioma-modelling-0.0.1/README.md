@@ -1,0 +1,50 @@
+# The BioMA services toolkit for Python Notebooks and beyond
+
+You can get BioMA and code your own models in C# *or* you can use the online ready-made ones hosted by [AnaEE](https://anaee.eu) and [CREA](https://www.crea.gov.it/), needless to say, if you are not planning to re-invent the wheel, but you just need some quick simulation, the second option is the most straightpforard, as it removes the need for a local installation, i.e. you don't need to download, install, and configure any additional software.
+
+## What does this do?
+
+
+## Why should I use it?
+Because it wraps the BioMA web APIs in a pythonic way, sparing you the hassle of writing a lot of network code.
+
+
+# Setup
+To use the online services, you will need an *API key*, which is free, but you'll have to register either [here](https://developer.anaee.eu) or [here](https://developer.progettoagridigit.it) to get one. 
+
+Then you need to install *this* package into your local environment with:
+```
+pip install bioma-modelling
+```
+
+The BioMAtools package expects a *service key* to work, each BioMA cloud distribution allows you to register a personal key, currently public accessible instances are hosted by [AnaEE](https://developer.anaee.eu/api-details#api=biomaazuremodelexecutornetframework20200226025441) and [CREA](https://developer.progettoagridigit.it/api-details#api=model-apis).
+
+By default, the package exptects you to store the key in a *environmental varliable* named `BIOMA_API_KEY`, however, you can hard code it into the `ModelClient` object instantiation and/or tell it to read it from a different environmental variable of your choice.
+
+You can, of course, avoid defining an actual environmental variable by using tools such as [dotenv](https://pypi.org/project/python-dotenv/).
+
+# Quickstart
+
+The `ModelClient` client object allows you to communicate with the BioMA Cloud instance, to create it, just pass it the base address of your BioMA instance of choice.
+```
+from biomatools.clients import ModelClient
+
+client = ModelClient('https://api.progettoagridigit.it/model/v1/')
+```
+The client allows you to interact with the BioMA cloud instance and to interactively build your model run request. See the attached notebooks for working examples.
+
+## Run a model
+Once you are happy with your model configuration, you can load it into the client like this:
+```
+client.add_model_run('test', model_run)
+```
+You can load as many as you like, as long as you assign them different labels, then you can run them all with the `run_all` method or one by one with the `run` method that expects the label of the model configuration you'd like to run.
+```
+result = client.run('test')
+```
+The returned object can easily be transformed into a data frame.
+```
+result.get_data_table('weather').to_df()
+```
+# Acknowledgements
+This project is funded by the [Agro-Serv project](https://agroserv.eu/). The project received funding from the European Union under grant agreement No 101058020.
