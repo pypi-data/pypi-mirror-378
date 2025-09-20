@@ -1,0 +1,194 @@
+{% extends 'base/layout.html' %}
+{% load render_table from django_tables2 %}
+{% load helpers %}
+
+{% block title %}{{ object.name }} - Z-Wave Device{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col col-md-12">
+      <div class="card">
+        <h5 class="card-header">
+          <div class="row">
+            <div class="col">
+              {{ object.name }}
+            </div>
+            <div class="col col-md-auto text-end">
+              <a href="{% url 'plugins:netbox_zwave:zwavedevice_edit' pk=object.pk %}" class="btn btn-warning">
+                <span class="mdi mdi-pencil" aria-hidden="true"></span> Edit
+              </a>
+              <a href="{% url 'plugins:netbox_zwave:zwavedevice_delete' pk=object.pk %}" class="btn btn-danger">
+                <span class="mdi mdi-trash-can-outline" aria-hidden="true"></span> Delete
+              </a>
+            </div>
+          </div>
+        </h5>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col col-md-6">
+              <table class="table table-hover attr-table">
+                <tr>
+                  <td>Network</td>
+                  <td><a href="{{ object.network.get_absolute_url }}">{{ object.network.name }}</a></td>
+                </tr>
+                <tr>
+                  <td>Node ID</td>
+                  <td>{{ object.node_id }}</td>
+                </tr>
+                <tr>
+                  <td>Device Type</td>
+                  <td>{% badge object.get_device_type_display object.device_type %}</td>
+                </tr>
+                <tr>
+                  <td>Status</td>
+                  <td>{% badge object.get_status_display object.status %}</td>
+                </tr>
+                <tr>
+                  <td>Manufacturer ID</td>
+                  <td><code>{{ object.manufacturer_id|default:"—" }}</code></td>
+                </tr>
+                <tr>
+                  <td>Product Type</td>
+                  <td><code>{{ object.product_type|default:"—" }}</code></td>
+                </tr>
+                <tr>
+                  <td>Product ID</td>
+                  <td><code>{{ object.product_id|default:"—" }}</code></td>
+                </tr>
+              </table>
+            </div>
+            <div class="col col-md-6">
+              <table class="table table-hover attr-table">
+                <tr>
+                  <td>Firmware Version</td>
+                  <td>{{ object.firmware_version|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td>Hardware Version</td>
+                  <td>{{ object.hardware_version|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td>Protocol Version</td>
+                  <td>{{ object.protocol_version|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td>Application Version</td>
+                  <td>{{ object.application_version|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td>Battery Level</td>
+                  <td>
+                    {% if object.battery_level is not None %}
+                      <div class="progress" style="width: 100px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ object.battery_level }}%">
+                          {{ object.battery_level }}%
+                        </div>
+                      </div>
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Signal Strength</td>
+                  <td>{{ object.signal_strength|default:"—" }} dBm</td>
+                </tr>
+                <tr>
+                  <td>Last Seen</td>
+                  <td>{{ object.last_seen|date:"M j, Y H:i"|default:"—" }}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col col-md-12">
+              <table class="table table-hover attr-table">
+                <tr>
+                  <td>Security</td>
+                  <td>{% checkmark object.is_secure %}</td>
+                </tr>
+                <tr>
+                  <td>Frequent Listener</td>
+                  <td>{% checkmark object.is_frequent_listener %}</td>
+                </tr>
+                <tr>
+                  <td>Beaming</td>
+                  <td>{% checkmark object.is_beaming %}</td>
+                </tr>
+                <tr>
+                  <td>Routing</td>
+                  <td>{% checkmark object.is_routing %}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+          
+          {% if object.description %}
+            <div class="row mb-3">
+              <div class="col col-md-12">
+                <h6>Description</h6>
+                <p>{{ object.description }}</p>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col col-md-6">
+      <div class="card">
+        <h5 class="card-header">
+          <div class="row">
+            <div class="col">
+              Command Classes
+            </div>
+            <div class="col col-md-auto text-end">
+              <a href="{% url 'plugins:netbox_zwave:zwavecommandclass_add' %}?device={{ object.pk }}" class="btn btn-primary">
+                <span class="mdi mdi-plus-thick" aria-hidden="true"></span> Add Command Class
+              </a>
+            </div>
+          </div>
+        </h5>
+        <div class="card-body">
+          {% render_table command_classes_table %}
+        </div>
+      </div>
+    </div>
+    
+    <div class="col col-md-6">
+      <div class="card">
+        <h5 class="card-header">
+          <div class="row">
+            <div class="col">
+              Source Associations
+            </div>
+            <div class="col col-md-auto text-end">
+              <a href="{% url 'plugins:netbox_zwave:zwaveassociation_add' %}?source_device={{ object.pk }}" class="btn btn-primary">
+                <span class="mdi mdi-plus-thick" aria-hidden="true"></span> Add Association
+              </a>
+            </div>
+          </div>
+        </h5>
+        <div class="card-body">
+          {% render_table source_associations_table %}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col col-md-12">
+      <div class="card">
+        <h5 class="card-header">
+          Target Associations
+        </h5>
+        <div class="card-body">
+          {% render_table target_associations_table %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
