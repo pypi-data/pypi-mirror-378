@@ -1,0 +1,262 @@
+# PlotX Enterprise Configuration
+# ============================
+# Production-ready configuration for enterprise deployment
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8443
+  ssl:
+    enabled: true
+    cert_file: "/etc/ssl/certs/plotx-enterprise.crt"
+    key_file: "/etc/ssl/private/plotx-enterprise.key"
+    cipher_suites: "ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20:!aNULL:!MD5:!DSS"
+
+  # Request limits
+  max_request_size: "100MB"
+  timeout: 300
+  workers: 4
+
+# Security Configuration
+security:
+  # Authentication
+  authentication:
+    method: "saml"  # Options: ldap, saml, oauth2, local
+    session_timeout: 28800  # 8 hours
+    max_concurrent_sessions: 5
+    password_policy:
+      min_length: 12
+      require_uppercase: true
+      require_lowercase: true
+      require_numbers: true
+      require_special: true
+
+  # SAML Configuration (for SSO)
+  saml:
+    entity_id: "plotx-enterprise"
+    sso_url: "https://sso.company.com/saml/sso"
+    x509_cert: "/etc/plotx/saml/cert.pem"
+    metadata_url: "https://sso.company.com/saml/metadata"
+
+  # Encryption
+  encryption:
+    algorithm: "AES-256-GCM"
+    key_rotation_days: 90
+    data_at_rest: true
+    data_in_transit: true
+
+  # Audit Logging
+  audit:
+    enabled: true
+    retention_days: 2555  # 7 years for SOX compliance
+    export_format: "json"
+    siem_integration: true
+    syslog_server: "syslog.company.com:514"
+
+# Database Configuration
+database:
+  # Primary database for application data
+  primary:
+    type: "postgresql"
+    host: "db-primary.company.com"
+    port: 5432
+    database: "plotx_enterprise"
+    username: "plotx_app"
+    password_env: "PLOTX_DB_PASSWORD"
+    ssl_mode: "require"
+    pool_size: 20
+    max_overflow: 30
+
+  # Redis for caching and sessions
+  cache:
+    type: "redis"
+    host: "redis-cluster.company.com"
+    port: 6379
+    password_env: "REDIS_PASSWORD"
+    ssl: true
+    cluster_mode: true
+    db: 0
+
+# Performance Configuration
+performance:
+  # Data Processing
+  max_dataset_size: 50_000_000  # Maximum points per visualization
+  default_sampling_threshold: 1_000_000
+  sampling_strategy: "adaptive"
+
+  # Caching
+  cache:
+    enabled: true
+    ttl: 3600  # 1 hour
+    max_size: "2GB"
+    compression: true
+
+  # GPU Acceleration
+  gpu:
+    enabled: true
+    memory_limit: "4GB"
+    device_ids: [0, 1]  # Use multiple GPUs if available
+
+  # Distributed Computing
+  cluster:
+    type: "dask"  # Options: dask, ray, local
+    scheduler: "dask-scheduler.company.com:8786"
+    workers: 8
+    memory_per_worker: "8GB"
+
+# Data Sources Configuration
+data_sources:
+  # Enterprise databases
+  databases:
+    - name: "data_warehouse"
+      type: "snowflake"
+      account: "company.snowflakecomputing.com"
+      warehouse: "ANALYTICS_WH"
+      database: "ENTERPRISE_DATA"
+      schema: "PUBLIC"
+      username_env: "SNOWFLAKE_USER"
+      password_env: "SNOWFLAKE_PASSWORD"
+
+    - name: "operational_db"
+      type: "oracle"
+      host: "oracle-prod.company.com"
+      port: 1521
+      service_name: "PROD"
+      username_env: "ORACLE_USER"
+      password_env: "ORACLE_PASSWORD"
+
+  # Cloud storage
+  storage:
+    - name: "data_lake"
+      type: "s3"
+      bucket: "company-data-lake"
+      region: "us-east-1"
+      access_key_env: "AWS_ACCESS_KEY"
+      secret_key_env: "AWS_SECRET_KEY"
+
+    - name: "azure_storage"
+      type: "azure_blob"
+      account: "companystorage"
+      container: "analytics"
+      key_env: "AZURE_STORAGE_KEY"
+
+# GIS Configuration
+gis:
+  # Map providers
+  providers:
+    - name: "mapbox"
+      api_key_env: "MAPBOX_API_KEY"
+      style: "mapbox://styles/mapbox/streets-v11"
+
+    - name: "esri"
+      api_key_env: "ESRI_API_KEY"
+      service_url: "https://services.arcgisonline.com/ArcGIS/rest/services"
+
+  # Default settings
+  default_provider: "mapbox"
+  max_zoom: 18
+  tile_cache_size: "1GB"
+
+# Collaboration Features
+collaboration:
+  # Shared workspaces
+  workspaces:
+    max_members: 100
+    max_charts_per_workspace: 1000
+    version_history: 50
+
+  # Commenting system
+  comments:
+    enabled: true
+    email_notifications: true
+    max_length: 2000
+
+  # Sharing
+  sharing:
+    public_links: false  # Disable for security
+    password_protection: true
+    expiration_days: 30
+
+# Monitoring & Alerting
+monitoring:
+  # Health checks
+  health_check:
+    enabled: true
+    interval: 30  # seconds
+    endpoints:
+      - "/health"
+      - "/metrics"
+
+  # Metrics collection
+  metrics:
+    enabled: true
+    provider: "prometheus"
+    endpoint: "http://prometheus.company.com:9090"
+    push_interval: 15
+
+  # Alerting
+  alerts:
+    enabled: true
+    slack_webhook_env: "SLACK_WEBHOOK_URL"
+    email_smtp: "smtp.company.com:587"
+    thresholds:
+      cpu_usage: 80
+      memory_usage: 85
+      error_rate: 5  # percentage
+      response_time: 5000  # milliseconds
+
+# Compliance & Governance
+compliance:
+  # Data governance
+  data_governance:
+    classification_required: true
+    retention_policies: true
+    data_lineage: true
+
+  # Regulatory compliance
+  regulations:
+    sox: true
+    hipaa: false  # Enable if handling healthcare data
+    gdpr: true
+    ccpa: true
+
+  # Export controls
+  export_controls:
+    watermarking: true
+    download_restrictions: true
+    ip_restrictions: []  # List of allowed IP ranges
+
+# License Configuration
+license:
+  type: "enterprise"
+  seats: 1000
+  features:
+    - "advanced_charts"
+    - "gis_mapping"
+    - "gpu_acceleration"
+    - "enterprise_security"
+    - "api_access"
+    - "custom_branding"
+  expires: "2025-12-31"
+  contact_sales_url: "https://plotx.com/enterprise/contact"
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "json"
+  handlers:
+    - type: "file"
+      filename: "/var/log/plotx/enterprise.log"
+      max_size: "100MB"
+      backup_count: 10
+    - type: "syslog"
+      host: "syslog.company.com"
+      port: 514
+      facility: "user"
+
+# Development/Testing Settings (disable in production)
+development:
+  debug: false
+  auto_reload: false
+  profiling: false
+  test_data_generation: false
