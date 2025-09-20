@@ -1,0 +1,175 @@
+# 🧠 leo-prompt-optimizer
+
+**leo-prompt-optimizer** is a Python library that helps developers **optimize raw LLM prompts** into structured, high-performance instructions using real LLM intelligence.
+
+It leverages **open-source models via [Groq API](https://console.groq.com/)** (like Mixtral or LLaMA 3), making it fast, affordable, and production-ready.
+
+---
+
+## 🚀 Features
+
+- 🛠️ Refines vague, messy, or unstructured prompts
+- 🧠 Follows a 9-step prompt engineering framework
+- 🧩 Supports contextual optimization (with user input & LLM output)
+- ⚡ Runs on blazing-fast open-source LLMs via Groq
+- 🔐 Secure API key management with `.env` or helper function
+
+---
+
+## 📦 Installation
+
+```bash
+pip install leo-prompt-optimizer
+````
+
+---
+
+## 🔧 Setup: API Key
+
+You can provide your [Groq API key](https://console.groq.com/) in two ways:
+
+### ✅ Option A: `.env` file (recommended)
+
+At the root of your project, create a `.env` file:
+
+```env
+GROQ_API_KEY=sk-your-api-key-here
+```
+
+Then, in your Python script **(before calling the optimizer)**, load the `.env` file:
+
+```python
+from dotenv import load_dotenv
+load_dotenv()  # 👈 Required to make the .env key visible
+
+from leo_prompt_optimizer import optimize_prompt
+
+optimized = optimize_prompt("Your draft prompt here")
+```
+
+> ⚠️ **Important**: `load_dotenv()` must be called **before** importing or using the optimizer, or the key won’t be found.
+
+---
+
+### ✅ Option B: Set programmatically
+
+Useful in notebooks, scripts, or cloud functions:
+
+```python
+from leo_prompt_optimizer import set_groq_api_key, optimize_prompt
+
+set_groq_api_key("sk-your-api-key")
+
+optimized = optimize_prompt("Your draft prompt here")
+```
+
+---
+
+## ✍️ Usage Example
+
+### 🔹 Minimal use (just the prompt draft)
+
+```python
+from dotenv import load_dotenv
+load_dotenv()
+
+from leo_prompt_optimizer import optimize_prompt
+
+draft = "I want to generate a structured planning for a GenAI course with communication adapted to enrolled members."
+
+optimized = optimize_prompt(draft)
+print(optimized)
+```
+
+---
+
+### 🔹 With optional `user_input` and `llm_output`
+
+You can provide additional context to help the optimizer refine the prompt even better:
+
+```python
+from leo_prompt_optimizer import set_groq_api_key, optimize_prompt
+
+set_groq_api_key("sk-your-api-key")
+
+draft = "Help me create a better prompt to extract user feedback from a UI test session."
+
+user_input = "The user said the interface was 'cluttered and confusing' but didn't explain why."
+llm_output = "You could ask: 'Which parts feel confusing?' or 'What would make it feel more intuitive?'"
+
+optimized = optimize_prompt(draft, user_input=user_input, llm_output=llm_output)
+print(optimized)
+```
+
+> 🧠 `user_input` and `llm_output` are **optional**, but highly recommended when refining an existing prompt flow.
+
+---
+
+## 📘 Output Format
+
+The returned optimized prompt follows a structured format:
+
+```text
+Role:
+[Define the LLM's persona]
+
+Task:
+[Clearly state the specific objective]
+
+Instructions:
+* Step-by-step subtasks
+
+Context:
+[Any relevant background, constraints, domain]
+
+Output Format:
+[e.g., bullet list, JSON, summary]
+
+User Input:
+[Original user input or example]
+```
+
+---
+
+## 🧪 Quick Test (Optional)
+
+You can run a built-in test script after installation to validate that everything works:
+
+```bash
+python3 test_import.py
+```
+
+This will check:
+
+* ✅ Import is working
+* ✅ API key is detected
+* ✅ LLM call returns a result
+
+---
+
+## 🧯 Common Errors & Fixes
+
+| Error                  | Solution                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| `Missing GROQ_API_KEY` | Ensure it's either in `.env` **and loaded with `load_dotenv()`**, or passed via `set_groq_api_key()`   |
+| `Invalid model` or 403 | The default model might be deprecated. Check Groq’s [model list](https://console.groq.com/docs/models) |
+| `ModuleNotFoundError`  | Ensure `leo-prompt-optimizer` is installed in the current environment                                  |
+
+---
+
+## 💡 Why Use It?
+
+Prompt quality is critical when building with LLMs.
+
+**leo-prompt-optimizer** helps you:
+
+* ✅ Make prompts explicit and structured
+* 🚫 Reduce hallucinations
+* 🔁 Increase consistency and repeatability
+* 🧱 Standardize prompt formats across your stack
+
+---
+
+## 📄 License
+
+MIT © 2025 \[Léonard Baesen-Wagner]
