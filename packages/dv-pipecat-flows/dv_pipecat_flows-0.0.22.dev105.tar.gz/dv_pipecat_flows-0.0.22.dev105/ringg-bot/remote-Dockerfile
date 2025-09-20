@@ -1,0 +1,65 @@
+# syntax=docker/dockerfile:1.7
+ARG PYTHON_VERSION=3.12
+
+# ---- Builder: compile & create wheels (fast rebuilds) ----
+FROM python:${PYTHON_VERSION}-bookworm AS builder
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+      git git-lfs cmake build-essential ffmpeg curl ca-certificates \
+    && git lfs install && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+
+# Copy only requirements first to maximize cache hits
+COPY remote-requirements.txt /src/remote-requirements.txt
+
+# Build wheels for Python deps - USE CPU INDEX FROM THE START
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip wheel --no-cache-dir \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    -r /src/remote-requirements.txt -w /wheels
+
+# Torch CPU wheels (if not already in remote-requirements.txt)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip wheel torch torchvision torchaudio \
+      --index-url https://download.pytorch.org/whl/cpu -w /wheels
+
+# Build pyrnnoise as a wheel to keep final image clean
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install numpy cython && \
+    git clone --recursive https://github.com/pengzhendong/pyrnnoise.git /tmp/pyrnnoise && \
+    cd /tmp/pyrnnoise && git submodule update --init --recursive && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build --target install && \
+    pip wheel . -w /wheels \
+      --extra-index-url https://download.pytorch.org/whl/cpu && \
+    rm -rf /tmp/pyrnnoise
+
+# ---- Final: runtime only ----
+FROM python:${PYTHON_VERSION}-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Runtime libs only - FIX: Add sharing=locked here too
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install from wheelhouse (no compiling)
+COPY --from=builder /wheels /wheels
+COPY remote-requirements.txt /tmp/remote-requirements.txt
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir --no-index --find-links=/wheels -r /tmp/remote-requirements.txt && \
+    pip install --no-cache-dir --no-index --find-links=/wheels pyrnnoise && \
+    pip install --no-cache-dir --no-index --find-links=/wheels torch torchvision torchaudio
+
+# Now copy application code (keeps deps cached)
+COPY . /app/
+
+EXPOSE 8765
+CMD ["python", "server.py"]
