@@ -1,0 +1,144 @@
+# =====================================================
+# استخدام كامل لكل دوال مكتبة geometry_zyrenk
+# =====================================================
+
+# استيراد كل الفئات من shapes2d و shapes3d
+from geometry_zyrenk import (
+    Square, Rectangle, Circle, Triangle,
+    IsoscelesTriangle, EquilateralTriangle,
+    Parallelogram, Rhombus, Trapezoid, RegularPolygon,
+    Cube, RectangularPrism, Cylinder, Cone,
+    Sphere, Pyramid, Prism
+)
+
+# =====================================================
+# الأشكال الثنائية الأبعاد (2D)
+# =====================================================
+
+print("=== الأشكال الثنائية الأبعاد ===\n")
+
+# 1️⃣ مربع
+side = 5
+print("مربع بطول ضلع =", side)
+print("مساحة:", Square.area(side))          # side^2
+print("محيط:", Square.perimeter(side))      # 4*side
+print()
+
+# 2️⃣ مستطيل
+length, width = 6, 3
+print("مستطيل طول={} عرض={}".format(length, width))
+print("مساحة:", Rectangle.area(length, width))          # length*width
+print("محيط:", Rectangle.perimeter(length, width))      # 2*(length+width)
+print()
+
+# 3️⃣ دائرة
+radius = 4
+print("دائرة نصف قطرها =", radius)
+print("مساحة:", Circle.area(radius))          # π*r^2
+print("محيط:", Circle.perimeter(radius))      # 2*π*r
+print()
+
+# 4️⃣ مثلث عام
+base, height = 3, 4
+a, b, c = 3, 4, 5
+print("مثلث عام base={} height={}".format(base, height))
+print("مساحة:", Triangle.area(base, height))           # 0.5*base*height
+print("محيط:", Triangle.perimeter(a, b, c))            # a+b+c
+print()
+
+# 5️⃣ مثلث متساوي الساقين
+equal_side, base = 5, 6
+print("مثلث متساوي الساقين equal_side={} base={}".format(equal_side, base))
+print("محيط:", IsoscelesTriangle.perimeter(equal_side, base)) # 2*equal_side + base
+print()
+
+# 6️⃣ مثلث متساوي الأضلاع
+side = 4
+print("مثلث متساوي الأضلاع side={}".format(side))
+print("محيط:", EquilateralTriangle.perimeter(side))  # 3*side
+print()
+
+# 7️⃣ متوازي أضلاع
+base, side, height = 6, 3, 4
+print("متوازي أضلاع base={} side={} height={}".format(base, side, height))
+print("مساحة:", Parallelogram.area(base, height))     # base*height
+print("محيط:", Parallelogram.perimeter(base, side))   # 2*(base+side)
+print()
+
+# 8️⃣ معين
+d1, d2, side = 5, 6, 4
+print("معين diagonals={}{} side={}".format(d1, d2, side))
+print("مساحة:", Rhombus.area(d1, d2))          # 0.5*d1*d2
+print("محيط:", Rhombus.perimeter(side))        # 4*side
+print()
+
+# 9️⃣ شبه منحرف
+a, b, c, d, height = 6, 4, 3, 3, 5
+print("شبه منحرف a={} b={} c={} d={} height={}".format(a,b,c,d,height))
+print("مساحة:", Trapezoid.area(a,b,height))       # 0.5*(a+b)*height
+print("محيط:", Trapezoid.perimeter(a,b,c,d))     # a+b+c+d
+print()
+
+# 10️⃣ مضلع منتظم (مثلاً خماسي)
+side, n = 3, 5
+print("مضلع منتظم عدد الأضلاع={} طول ضلع={}".format(n,side))
+print("مساحة:", RegularPolygon.area(side,n))      # (n*side^2)/(4*tan(pi/n))
+print("محيط:", RegularPolygon.perimeter(side,n))  # n*side
+print()
+
+# =====================================================
+# الأشكال الثلاثية الأبعاد (3D)
+# =====================================================
+
+print("=== الأشكال الثلاثية الأبعاد ===\n")
+
+# 1️⃣ مكعب
+side = 3
+print("مكعب طول ضلع={}".format(side))
+print("حجم:", Cube.volume(side))               # side^3
+print("مساحة سطح:", Cube.surface_area(side))  # 6*side^2
+print()
+
+# 2️⃣ متوازي مستطيلات
+l, w, h = 4, 3, 5
+print("متوازي مستطيلات l={} w={} h={}".format(l,w,h))
+print("حجم:", RectangularPrism.volume(l,w,h))         # l*w*h
+print("مساحة سطح:", RectangularPrism.surface_area(l,w,h)) # 2*(lw+lh+wh)
+print()
+
+# 3️⃣ اسطوانة
+radius, height = 3, 7
+print("اسطوانة radius={} height={}".format(radius,height))
+print("حجم:", Cylinder.volume(radius,height))         # π*r^2*h
+print("مساحة سطح:", Cylinder.surface_area(radius,height)) # 2πr(r+h)
+print()
+
+# 4️⃣ مخروط
+radius, height = 3, 5
+print("مخروط radius={} height={}".format(radius,height))
+print("حجم:", Cone.volume(radius,height))            # (1/3)*π*r^2*h
+print("مساحة سطح:", Cone.surface_area(radius,height)) # π*r*(r+l)
+print()
+
+# 5️⃣ كرة
+radius = 4
+print("كرة radius={}".format(radius))
+print("حجم:", Sphere.volume(radius))           # 4/3*π*r^3
+print("مساحة سطح:", Sphere.surface_area(radius)) # 4*π*r^2
+print()
+
+# 6️⃣ هرم
+base_area, perimeter_base, slant_height, height = 16, 16, 5, 6
+print("هرم base_area={} perimeter_base={} slant_height={} height={}".format(base_area, perimeter_base, slant_height, height))
+print("حجم:", Pyramid.volume(base_area,height))                        # (1/3)*base_area*height
+print("مساحة سطح:", Pyramid.surface_area(base_area, perimeter_base, slant_height)) # base_area + 0.5*perimeter_base*slant_height
+print()
+
+# 7️⃣ منشور
+base_area, perimeter_base, height = 10, 14, 6
+print("منشور base_area={} perimeter_base={} height={}".format(base_area, perimeter_base, height))
+print("حجم:", Prism.volume(base_area,height))                  # base_area*height
+print("مساحة سطح:", Prism.surface_area(base_area, perimeter_base, height)) # 2*base_area + perimeter_base*height
+print()
+
+print("✅ تم استخدام كل الدوال والفئات حرفيًا في المكتبة وطباعة النتائج بنجاح.")
