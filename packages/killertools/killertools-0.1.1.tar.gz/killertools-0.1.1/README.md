@@ -1,0 +1,233 @@
+
+# KillerTools
+
+<div align="center">
+
+![KillerTools Logo](assets/icons/killer.svg)
+
+**A modern, cross-platform Swiss-army toolkit for developers and makers**
+
+[![CI](https://github.com/VoxHash/KillerTools/workflows/CI/badge.svg)](https://github.com/VoxHash/KillerTools/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![PyPI version](https://badge.fury.io/py/killertools.svg)](https://badge.fury.io/py/killertools)
+
+[Documentation](https://voxhash.github.io/KillerTools) • [Installation](#installation) • [Quickstart](#quickstart) • [Plugins](#plugins)
+
+</div>
+
+## 🚀 Features
+
+- **Multiple Interfaces**: CLI, TUI, and GUI applications
+- **Plugin Architecture**: Extensible with custom plugins
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Theme Support**: System theme detection with manual switching
+- **Rich Output**: Beautiful terminal output with Rich
+- **Modern UI**: PyQt6 GUI with native look and feel
+- **Developer Tools**: JSON/YAML formatters, regex tester, and more
+
+## 📦 Installation
+
+### Using pipx (Recommended)
+
+```bash
+pipx install killertools
+```
+
+### Using Poetry
+
+```bash
+git clone https://github.com/VoxHash/KillerTools.git
+cd KillerTools
+poetry install
+poetry run killertools --help
+```
+
+### Using pip
+
+```bash
+pip install killertools
+```
+
+## 🏃 Quickstart
+
+### CLI Interface
+
+```bash
+# Show help
+killertools --help
+
+# List available plugins
+killertools list-plugins
+
+# Run a specific plugin
+killertools files --help
+killertools crypto --help
+```
+
+### TUI Interface
+
+```bash
+# Launch the TUI dashboard
+killertools tui
+```
+
+### GUI Interface
+
+```bash
+# Launch the GUI application
+killertools gui
+```
+
+## 🔌 Plugins
+
+KillerTools comes with several built-in plugins:
+
+### Files Plugin
+- File hashing (MD5, SHA256, BLAKE3)
+- Duplicate file detection
+- Bulk file operations
+- Directory tree with sizes
+
+### Crypto Plugin
+- Hash functions and HMAC
+- JWT token decoding
+- UUID and ULID generation
+- Base64 encoding/decoding
+
+### DevTools Plugin
+- JSON/YAML/TOML formatters
+- Regex pattern testing
+- .env file parsing
+- README badge generation
+
+### Media Plugin (Coming Soon)
+- Audio/video conversion
+- Thumbnail generation
+- Media metadata extraction
+
+### Network Plugin (Coming Soon)
+- Ping and DNS lookup
+- HTTP probing
+- Speed testing
+
+### AI Plugin (Optional)
+- Text summarization
+- Translation
+- Code generation
+
+## 🎨 Theming
+
+KillerTools supports automatic system theme detection and manual theme switching:
+
+- **System**: Automatically detects your OS theme preference
+- **Light**: Force light theme
+- **Dark**: Force dark theme
+
+Themes are consistent across CLI, TUI, and GUI interfaces.
+
+## 🛠️ Development
+
+### Setup Development Environment
+
+```bash
+# Clone the repository
+git clone https://github.com/VoxHash/KillerTools.git
+cd KillerTools
+
+# Install dependencies
+poetry install
+
+# Install development dependencies
+poetry install --with dev
+
+# Set up pre-commit hooks
+poetry run pre-commit install
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+poetry run pytest
+
+# Run with coverage
+poetry run pytest --cov=killer_tools --cov=apps
+
+# Run specific test file
+poetry run pytest tests/test_plugins.py
+```
+
+### Code Quality
+
+```bash
+# Run linters
+poetry run ruff check killer_tools/ apps/ tests/
+
+# Format code
+poetry run black killer_tools/ apps/ tests/
+poetry run isort killer_tools/ apps/ tests/
+
+# Type checking
+poetry run mypy killer_tools/ apps/
+```
+
+### Building
+
+```bash
+# Build wheels
+poetry build
+
+# Build binaries
+poetry run pyinstaller apps/cli/main.py --name killertools-cli --onefile
+poetry run pyinstaller apps/tui/main.py --name killertools-tui --onefile
+poetry run pyinstaller apps/gui/main.py --name killertools-gui --onefile --windowed
+```
+
+## 📚 Documentation
+
+- [Full Documentation](https://voxhash.github.io/KillerTools)
+- [API Reference](https://voxhash.github.io/KillerTools/development/api/)
+- [Creating Plugins](https://voxhash.github.io/KillerTools/development/plugins/)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Typer](https://typer.tiangolo.com/) for the CLI framework
+- [Textual](https://textual.textualize.io/) for the TUI framework
+- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) for the GUI framework
+- [Rich](https://rich.readthedocs.io/) for beautiful terminal output
+- [Poetry](https://python-poetry.org/) for dependency management
+
+## 📞 Contact
+
+- **Author**: Silas Renner (VoxHash)
+- **Email**: contact@voxhash.dev
+- **GitHub**: [@VoxHash](https://github.com/VoxHash)
+- **Twitter**: [@VoxHash](https://twitter.com/VoxHash)
+- **LinkedIn**: [VoxHash](https://linkedin.com/in/voxhash)
+- **Telegram**: [@VoxHash](https://t.me/VoxHash)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [VoxHash](https://github.com/VoxHash)**
+
+[⭐ Star this repo](https://github.com/VoxHash/KillerTools) • [🐛 Report a bug](https://github.com/VoxHash/KillerTools/issues) • [💡 Request a feature](https://github.com/VoxHash/KillerTools/issues)
+
+</div>
