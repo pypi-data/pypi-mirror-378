@@ -1,0 +1,128 @@
+<div align="center">
+  <img src="logo.png" alt="JRA Logo" width="200"/>
+</div>
+
+# JustRunAlready — Cross‑Platform App Bundler
+
+Minimal, predictable bundler that stages your built app into a runnable bundle
+across Linux, macOS, and Windows. It discovers dependencies, copies what you
+ship, patches load paths (RPATH/@rpath/PE), and places assets consistently.
+One CLI and one config on every platform.
+
+## Features
+- Single CLI and TOML config for Linux/macOS/Windows
+- Dependency closure for ELF/Mach‑O/PE (patchelf/install_name_tool aware)
+- Canonical layouts (AppDir on Linux, .app on macOS, flat on Windows)
+
+## Examples
+
+Basic example:
+```toml
+[app]
+name = "MyApp"
+staging_root = "install"
+
+[layout.linux]
+appdir = "AppDir"
+bin_dir = "usr/bin"
+lib_dir = "usr/lib"
+binary = "myapp"          # name inside bin_dir
+rpath = ["$ORIGIN", "$ORIGIN/../lib"]
+
+[layout.macos]
+app_bundle = "install/MyApp.app"
+lib_dir = "Contents/Frameworks"
+rpath = ["@executable_path/../Frameworks"]
+
+[layout.windows]
+bin_dir = "bin"
+binary = "myapp.exe"       # name inside bin_dir
+
+# Platform-specific include patterns
+[include.linux]
+patterns = ["lib/*.so"]
+
+[include.macos]
+patterns = ["lib/*.dylib"]
+
+[include.windows]
+patterns = ["bin/*.dll"]
+```
+
+## CLI
+
+Bundle up your built project:
+
+```
+jra bundle --config jra.toml [--platform auto|linux|macos|windows] [--dry-run] [--verbose]
+```
+
+(Optionally) verify nothing is missing:
+```
+jra verify --config jra.toml [--platform linux|macos|windows]
+```
+
+Check your environment and tooling:
+```
+jra doctor
+```
+
+## Configuration
+
+### Platform-Specific Binary
+
+Each platform specifies its own binary location. The `binary` value is the filename inside the platform’s `bin_dir`:
+
+```toml
+[layout.linux]
+bin_dir = "usr/bin"
+binary = "myapp"          # Linux executable name inside bin_dir
+
+[layout.windows]
+bin_dir = "bin"
+binary = "myapp.exe"      # Windows executable name inside bin_dir
+
+# macOS uses app_bundle instead
+[layout.macos]
+app_bundle = "install/MyApp.app"
+```
+
+### Include Patterns with Exclusions
+
+Use platform-specific include patterns to control which files are bundled. Patterns starting with `!` exclude previously matched files:
+
+```toml
+[include.linux]
+patterns = [
+    "lib/*.so",           # Include all .so files
+    "!lib/*_debug.so",    # But exclude debug libraries
+    "!lib/*_test.so"      # And test libraries
+]
+```
+
+### Copy Mappings
+
+Copy non-library files to specific locations in the bundle:
+
+```toml
+[copy.linux]
+files = [
+    # Simple pattern - copies to bundle root
+    "myapp.desktop",
+    "myapp.png",
+
+    # Pattern-based copy - copies multiple files to directory
+    { pattern = "share/icons/*.png", dest = "usr/share/icons" },
+    { pattern = "docs/*", dest = "usr/share/doc" },
+
+    # Exact source copy - copies and renames a single file
+    { source = "logo.png", dest = "index.png" },
+    { source = "readme.txt", dest = "docs/README" }
+]
+```
+
+Two types of copy specifications are supported:
+- **Pattern-based**: Use `pattern` for glob patterns that match multiple files. The `dest` is treated as a directory.
+- **Exact source**: Use `source` for copying a single file with optional renaming. The `dest` is the complete target path.
+
+This is particularly useful for Linux AppImage bundles that require `.desktop` files in the AppDir root.
