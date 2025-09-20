@@ -1,0 +1,50 @@
+name: Publish Python Package to PyPI
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for versioning
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine setuptools-scm
+    
+    - name: Get commit count for version
+      id: get_version
+      run: |
+        # Count commits on main branch for automatic versioning
+        COMMIT_COUNT=$(git rev-list --count HEAD)
+        VERSION="0.1.$COMMIT_COUNT"
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Using version: $VERSION"
+    
+    - name: Update version in setup.py
+      run: |
+        # Update version in setup.py
+        sed -i "s/version=\"[^\"]*\"/version=\"$VERSION\"/g" setup.py
+    
+    - name: Build package
+      run: |
+        python -m build
+    
+    - name: Publish package to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        skip_existing: true
