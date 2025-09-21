@@ -1,0 +1,305 @@
+Metadata-Version: 2.4
+Name: openide-client
+Version: 1.0.2
+Summary: Python client library for OpenIDE container system
+Home-page: https://github.com/artemjs/OpenIDE
+Author: OpenIDE Team
+Author-email: OpenIDE Team <openide@example.com>
+Maintainer-email: OpenIDE Team <openide@example.com>
+License: MIT
+Project-URL: Homepage, https://github.com/artemjs/OpenIDE
+Project-URL: Documentation, https://github.com/artemjs/OpenIDE/blob/main/README.md
+Project-URL: Repository, https://github.com/artemjs/OpenIDE
+Project-URL: Issues, https://github.com/artemjs/OpenIDE/issues
+Keywords: openide,container,docker,development,ide,python
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: System :: Systems Administration
+Classifier: Topic :: Software Development :: Build Tools
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: requests>=2.25.0
+Requires-Dist: click>=8.0.0
+Requires-Dist: psutil>=5.8.0
+Requires-Dist: pyyaml>=6.0.0
+Requires-Dist: colorama>=0.4.0
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: pytest-cov>=2.0; extra == "dev"
+Requires-Dist: black>=21.0; extra == "dev"
+Requires-Dist: flake8>=3.8; extra == "dev"
+Requires-Dist: mypy>=0.800; extra == "dev"
+Provides-Extra: api
+Requires-Dist: flask>=2.0.0; extra == "api"
+Requires-Dist: flask-cors>=3.0.0; extra == "api"
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
+# OpenIDE Client
+
+Python клиентская библиотека для работы с OpenIDE - изолированной контейнерной системой для разработки.
+
+## 🚀 Возможности
+
+- **Изолированная разработка** - создание контейнеров для изолированной работы
+- **HTTP API** - REST API для управления контейнерами
+- **Python/Node.js** - поддержка различных языков программирования
+- **Виртуальные окружения** - управление venv и npm окружениями
+- **Файловые операции** - работа с файлами и папками в контейнерах
+- **Simple команды** - упрощенные команды для работы внутри контейнеров
+
+## 📦 Установка
+
+```bash
+pip install openide-client
+```
+
+## 🔧 Быстрый старт
+
+### Базовое использование
+
+```python
+from openide_client import OpenIDEClient, OpenIDEConfig
+
+# Создаем конфигурацию
+config = OpenIDEConfig(
+    openide_directory="B:/Projects/Cursor/OpenIDE",
+    timeout=30
+)
+
+# Создаем клиент
+client = OpenIDEClient(config)
+
+# Запускаем контейнер
+result = client.run_container(
+    image="ubuntu:latest",
+    command="echo Hello World!",
+    detach=True
+)
+print(f"Container ID: {result['container_id']}")
+
+# Список контейнеров
+containers = client.list_containers()
+print(f"Active containers: {len(containers)}")
+
+# Остановка контейнера
+client.stop_container(result['container_id'])
+
+# Удаление контейнера
+client.remove_container(result['container_id'])
+```
+
+### HTTP API клиент
+
+```python
+import requests
+
+# Проверка здоровья API
+response = requests.get('http://localhost:5000/api/health')
+print(f"API Status: {response.json()}")
+
+# Создание контейнера
+response = requests.post('http://localhost:5000/api/containers', json={
+    'image': 'ubuntu:latest',
+    'command': 'echo Hello World!',
+    'detach': True
+})
+container = response.json()
+print(f"Container ID: {container['container_id']}")
+
+# Выполнение команды в контейнере
+response = requests.post(f'http://localhost:5000/api/containers/{container["container_id"]}/exec', json={
+    'command': 'ls -la'
+})
+result = response.json()
+print(f"Command result: {result['result']}")
+```
+
+### Simple команды
+
+```python
+# Создание venv
+client.exec_command(container_id, "venv myenv{3.13.5}")
+
+# Создание файлов
+client.exec_command(container_id, "file create pyfile{hello}")
+client.exec_command(container_id, "file create filename{test.txt}")
+
+# Создание папок
+client.exec_command(container_id, "folder create foldername{src}")
+
+# Установка пакетов
+client.exec_command(container_id, "localpip install requests")
+
+# Запуск Python скрипта
+client.exec_command(container_id, "run: python{hello.py}")
+```
+
+## 📚 API Reference
+
+### OpenIDEClient
+
+Основной класс для работы с OpenIDE.
+
+#### Методы
+
+- `run_container(image, command, **kwargs)` - запуск контейнера
+- `list_containers()` - список контейнеров
+- `stop_container(container_id)` - остановка контейнера
+- `remove_container(container_id)` - удаление контейнера
+- `inspect_container(container_id)` - информация о контейнере
+- `exec_command(container_id, command)` - выполнение команды
+
+### OpenIDEConfig
+
+Конфигурация клиента.
+
+#### Параметры
+
+- `openide_directory` - путь к директории OpenIDE
+- `timeout` - таймаут операций (по умолчанию 30 сек)
+- `api_key` - API ключ для аутентификации
+
+## 🌐 HTTP API
+
+### Эндпоинты
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| GET | `/api/health` | Проверка здоровья API |
+| GET | `/api/containers` | Список контейнеров |
+| POST | `/api/containers` | Создание контейнера |
+| GET | `/api/containers/{id}` | Информация о контейнере |
+| DELETE | `/api/containers/{id}` | Удаление контейнера |
+| POST | `/api/containers/{id}/exec` | Выполнение команды |
+| GET | `/api/system` | Информация о системе |
+
+### Запуск HTTP API сервера
+
+```bash
+# Установи зависимости
+pip install flask flask-cors
+
+# Запусти HTTP API сервер
+python openide_http_api.py --host 0.0.0.0 --port 5000
+```
+
+## 🔑 API ключи
+
+```bash
+# Создание API ключа
+openide api-generate "My API Key" --permissions "run,ps,inspect,exec"
+
+# Список API ключей
+openide api-keys
+```
+
+## 📖 Примеры
+
+### CI/CD Pipeline
+
+```python
+def deploy_application():
+    client = OpenIDEClient(config)
+    
+    # Собери образ
+    build_result = client.build_image("./Dockerfile", "myapp:latest")
+    print("✅ Образ собран")
+    
+    # Запусти контейнер
+    container = client.run_container(
+        image="myapp:latest",
+        command="python app.py",
+        detach=True,
+        ports={"8080": "8080"}
+    )
+    print(f"✅ Приложение запущено: {container['container_id']}")
+    
+    return container['container_id']
+```
+
+### Мониторинг контейнеров
+
+```python
+import time
+
+def monitor_containers():
+    client = OpenIDEClient(config)
+    
+    while True:
+        containers = client.list_containers()
+        print(f"Active containers: {len(containers)}")
+        
+        for container in containers:
+            print(f"ID: {container['id']}, Status: {container['status']}")
+        
+        time.sleep(5)
+
+# Запусти мониторинг
+monitor_containers()
+```
+
+## 🛠️ Разработка
+
+### Установка для разработки
+
+```bash
+git clone https://github.com/artemjs/OpenIDE.git
+cd OpenIDE
+pip install -e .
+```
+
+### Запуск тестов
+
+```bash
+pytest tests/
+```
+
+### Форматирование кода
+
+```bash
+black openide_client/
+flake8 openide_client/
+```
+
+## 📄 Лицензия
+
+MIT License
+
+## 🤝 Вклад в проект
+
+1. Форкните репозиторий
+2. Создайте ветку для новой функции (`git checkout -b feature/amazing-feature`)
+3. Зафиксируйте изменения (`git commit -m 'Add amazing feature'`)
+4. Отправьте в ветку (`git push origin feature/amazing-feature`)
+5. Откройте Pull Request
+
+## 📞 Поддержка
+
+- **GitHub Issues**: https://github.com/artemjs/OpenIDE/issues
+- **Документация**: https://github.com/artemjs/OpenIDE/blob/main/README.md
+
+## 🎯 Roadmap
+
+- [ ] Поддержка Docker образов
+- [ ] Web UI для управления контейнерами
+- [ ] Интеграция с популярными IDE
+- [ ] Поддержка Kubernetes
+- [ ] Мониторинг и логирование
+
+---
+
+**Удачного кодинга! 🚀**
