@@ -1,0 +1,198 @@
+Metadata-Version: 2.4
+Name: cerebrate-file
+Version: 1.0.22
+Project-URL: Documentation, https://github.com/twardoch/cerebrate-file#readme
+Project-URL: Issues, https://github.com/twardoch/cerebrate-file/issues
+Project-URL: Source, https://github.com/twardoch/cerebrate-file
+Author-email: Adam Twardoch <adam+github@twardoch.com>
+License: MIT
+License-File: LICENSE
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Requires-Python: >=3.10
+Requires-Dist: cerebras-cloud-sdk>=1.0.0
+Requires-Dist: fire>=0.6.0
+Requires-Dist: loguru>=0.7.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: python-frontmatter>=1.1.0
+Requires-Dist: qwen-tokenizer>=0.0.8
+Requires-Dist: rich>=13.0.0
+Requires-Dist: semantic-text-splitter>=0.13.0
+Requires-Dist: tenacity>=8.2.0
+Provides-Extra: all
+Provides-Extra: dev
+Requires-Dist: absolufy-imports>=0.3.1; extra == 'dev'
+Requires-Dist: isort>=6.0.1; extra == 'dev'
+Requires-Dist: mypy>=1.15.0; extra == 'dev'
+Requires-Dist: pre-commit>=4.1.0; extra == 'dev'
+Requires-Dist: pyupgrade>=3.19.1; extra == 'dev'
+Requires-Dist: ruff>=0.9.7; extra == 'dev'
+Provides-Extra: docs
+Requires-Dist: myst-parser>=3.0.0; extra == 'docs'
+Requires-Dist: sphinx-autodoc-typehints>=2.0.0; extra == 'docs'
+Requires-Dist: sphinx-rtd-theme>=2.0.0; extra == 'docs'
+Requires-Dist: sphinx>=7.2.6; extra == 'docs'
+Provides-Extra: test
+Requires-Dist: coverage[toml]>=7.6.12; extra == 'test'
+Requires-Dist: pytest-asyncio>=0.25.3; extra == 'test'
+Requires-Dist: pytest-benchmark[histogram]>=5.1.0; extra == 'test'
+Requires-Dist: pytest-cov>=6.0.0; extra == 'test'
+Requires-Dist: pytest-xdist>=3.6.1; extra == 'test'
+Requires-Dist: pytest>=8.3.4; extra == 'test'
+Description-Content-Type: text/markdown
+
+---
+this_file: README.md
+---
+# cereproc.py
+
+`old/cereproc.py` is a single-file utility that splits oversized documents into Cerebras-friendly chunks, calls the `qwen-3-coder-480b` chat completion model for each chunk, and stitches the results back together while keeping context intact.
+
+## Quick Start
+
+```bash
+export CEREBRAS_API_KEY="csk-..."
+uv run old/cereproc.py --input_data document.md --output_data document.out.md
+```
+
+Add optional guidance by supplying an inline prompt or a separate instructions file:
+
+```bash
+uv run old/cereproc.py \
+  --input_data huge.md \
+  --file_prompt prompts/style.md \
+  --prompt "Write concise technical summaries." \
+  --data_format code \
+  --chunk_size 28000 \
+  --sample_size 256 \
+  --verbose
+```
+
+## CLI
+
+```
+INFO: Showing help with the command 'cerebrate-file -- --help'.
+
+NAME
+    cerebrate-file - Process large documents by chunking for Cerebras qwen-3-coder-480b.
+
+SYNOPSIS
+    cerebrate-file INPUT_DATA <flags>
+
+DESCRIPTION
+    Process large documents by chunking for Cerebras qwen-3-coder-480b.
+
+POSITIONAL ARGUMENTS
+    INPUT_DATA
+        Type: str
+        Path to input file to process
+
+FLAGS
+    -o, --output_data=OUTPUT_DATA
+        Type: Optional[Optional]
+        Default: None
+        Output file path (default: overwrite input_data)
+    -f, --file_prompt=FILE_PROMPT
+        Type: Optional[Optional]
+        Default: None
+        Path to file containing initial instructions
+    -p, --prompt=PROMPT
+        Type: Optional[Optional]
+        Default: None
+        Freeform instruction text to append after file_prompt
+    -c, --chunk_size=CHUNK_SIZE
+        Type: int
+        Default: 32000
+        Target maximum input chunk size in tokens (default: 32000)
+    --max_tokens_ratio=MAX_TOKENS_RATIO
+        Type: int
+        Default: 100
+        Completion budget as % of chunk size (default: 100)
+    --data_format=DATA_FORMAT
+        Type: str
+        Default: 'markdown'
+        Chunking strategy - text|semantic|markdown|code (default: markdown)
+    -s, --sample_size=SAMPLE_SIZE
+        Type: int
+        Default: 200
+        Number of tokens for continuity examples (default: 200)
+    --temp=TEMP
+        Type: float
+        Default: 0.7
+        Model temperature (default: 0.7)
+    --top_p=TOP_P
+        Type: float
+        Default: 0.8
+        Model top-p (default: 0.8)
+    --model=MODEL
+        Type: str
+        Default: 'qwen-3-coder-480b'
+        Model name override (default: qwen-3-coder-480b)
+    -v, --verbose=VERBOSE
+        Type: bool
+        Default: False
+        Enable debug logging (default: False)
+    -e, --explain=EXPLAIN
+        Type: bool
+        Default: False
+        Enable metadata processing with frontmatter parsing (default: False)
+    --dry_run=DRY_RUN
+        Type: bool
+        Default: False
+        Perform chunking and display results without making API calls (default: False)
+
+NOTES
+    You can also use flags syntax for POSITIONAL ARGUMENTS
+```
+
+## Processing Pipeline
+
+1. Load `.env` values and validate `CEREBRAS_API_KEY` plus CLI arguments.
+2. Build a base prompt from `--file_prompt` and `--prompt` (always separated by two newlines) and count its tokens.
+3. Read the input file (frontmatter preserved) and optionally parse metadata when `--explain` is active.
+4. Chunk the body using the selected strategy:
+   - `text`: greedy line-based splitting.
+   - `semantic`: paragraph-aware via `semantic-text-splitter`.
+   - `markdown`: structure-aware Markdown splitter.
+   - `code`: regex-guided boundaries for source files.
+5. For each chunk, optionally blend in continuity examples drawn from the previous request/response pair (`--sample_size` tokens each way), truncated to stay within the 131K-token context budget.
+6. Stream completions from Cerebras with adaptive rate-limit backoff and retry (`tenacity`) on transient failures.
+7. Write the concatenated result atomically, preserving or updating frontmatter when `--explain` metadata is present.
+
+## Explain Mode Metadata
+
+When `--explain` is set, the script expects frontmatter containing `title`, `author`, `id`, `type`, and `date`. Missing keys trigger a structured JSON request to the model that fills only the absent values. Dry-run mode skips this network call while still showing parsed metadata.
+
+## Dry-Run Workflow
+
+Use `--dry_run` to sanity-check chunk sizes, token budgets, and message shapes without spending quota. The script prints the first two chunk envelopes, token counts, and previews, then exits before creating the Cerebras client.
+
+## Dependencies
+
+Install requirements with `uv` (or your preferred tool):
+
+- `fire`
+- `loguru`
+- `python-dotenv`
+- `tenacity`
+- `cerebras-cloud-sdk`
+- `semantic-text-splitter`
+- `qwen-tokenizer`
+- `tqdm`
+- `python-frontmatter`
+
+## Environment
+
+Set `CEREBRAS_API_KEY` before running. The utility warns on placeholder keys and gently validates formatting. Use `--verbose` to surface additional runtime information and rate-limit headers.
+
+## Testing Tips
+
+Run with `--dry_run` for fast validation, then process a short sample file in `--verbose` mode to observe continuity handling and output statistics before you launch against larger documents.
