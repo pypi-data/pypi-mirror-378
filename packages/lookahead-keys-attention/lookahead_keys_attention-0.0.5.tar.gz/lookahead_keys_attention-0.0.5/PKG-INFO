@@ -1,0 +1,102 @@
+Metadata-Version: 2.4
+Name: lookahead-keys-attention
+Version: 0.0.5
+Summary: Lookahead Keys Attention
+Project-URL: Homepage, https://pypi.org/project/lookahead-keys-attention/
+Project-URL: Repository, https://github.com/lucidrains/lookahead-keys-attention
+Author-email: Phil Wang <lucidrains@gmail.com>
+License: MIT License
+        
+        Copyright (c) 2025 Phil Wang
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+License-File: LICENSE
+Keywords: artificial intelligence,attention mechanism,deep learning,multi-modal transformer
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.9
+Requires-Dist: einops>=0.8.1
+Requires-Dist: rotary-embedding-torch>=0.8.9
+Requires-Dist: torch>=2.4
+Provides-Extra: examples
+Provides-Extra: test
+Requires-Dist: pytest; extra == 'test'
+Description-Content-Type: text/markdown
+
+<img src="./fig3.png" width="400px"></img>
+
+## Lookahead Keys Attention (wip)
+
+Causal Attention with [Lookahead Keys](https://arxiv.org/abs/2509.07301)
+
+## Installation
+
+```bash
+pip install lookahead-keys-attention
+```
+
+## Usage
+
+```python
+import torch
+from lookahead_keys_attention import Castle
+
+# Initialize the Castle attention module
+model = Castle(
+    dim=512,           # input dimension
+    heads=8,           # number of attention heads
+    dim_head=64,       # dimension per head
+    use_triton=None    # auto-detect CUDA for Triton optimization
+)
+
+# Example with CUDA sequence
+batch_size = 2
+seq_len = 128
+dim = 512
+
+# Move to CUDA if available
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = model.to(device)
+
+# Input sequence
+x = torch.randn(batch_size, seq_len, dim).to(device)
+
+# Forward pass
+output = model(x)  # Shape: [batch_size, seq_len, dim]
+
+# For inference with caching (single token generation)
+cache = None
+for i in range(seq_len):
+    token = x[:, i:i+1, :]  # Single token
+    output, cache = model(token, cache=cache, return_next_cache=True)
+```
+
+## Citations
+
+```bibtex
+@inproceedings{Song2025CausalAW,
+    title   = {Causal Attention with Lookahead Keys},
+    author  = {Zhuoqing Song and Peng Sun and Huizhuo Yuan and Quanquan Gu},
+    year    = {2025},
+    url     = {https://api.semanticscholar.org/CorpusID:281218151}
+}
+```
