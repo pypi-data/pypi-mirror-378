@@ -1,0 +1,15 @@
+# File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+
+from __future__ import annotations
+
+from typing_extensions import TypedDict
+
+__all__ = ["EnvironmentCreateParams"]
+
+
+class EnvironmentCreateParams(TypedDict, total=False):
+    display_name: str
+
+    region_code: int
+
+    type: int
