@@ -1,0 +1,248 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cost management with budgets and anomaly detection
+
+Parameters:
+  BudgetEmail:
+    Type: String
+    Description: Email address for budget and anomaly alerts
+    ConstraintDescription: Must be a valid email address
+
+  MonthlyBudget:
+    Type: Number
+    Default: 1000
+    MinValue: 1
+    MaxValue: 1000000
+    Description: Monthly budget limit in USD
+
+  BudgetThreshold:
+    Type: Number
+    Default: 80
+    MinValue: 1
+    MaxValue: 100
+    Description: Alert threshold percentage for actual spend
+
+  ForecastThreshold:
+    Type: Number
+    Default: 100
+    MinValue: 1
+    MaxValue: 200
+    Description: Alert threshold percentage for forecasted spend
+
+  AnomalyThreshold:
+    Type: Number
+    Default: 100
+    MinValue: 10
+    MaxValue: 10000
+    Description: Minimum anomaly amount in USD to trigger alerts
+
+Resources:
+  # Monthly Budget with multiple alert thresholds
+  MonthlyBudgetResource:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub '${AWS::AccountId}-Monthly-Budget'
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: !Ref MonthlyBudget
+          Unit: USD
+        CostTypes:
+          IncludeTax: true
+          IncludeSubscription: true
+          UseBlended: false
+          IncludeRefund: false
+          IncludeCredit: false
+          IncludeUpfront: true
+          IncludeRecurring: true
+          IncludeOtherSubscription: true
+          IncludeSupport: true
+          IncludeDiscount: false
+          UseAmortized: false
+      NotificationsWithSubscribers:
+        # Alert at 50% of budget
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 50
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+        # Alert at configured threshold (default 80%)
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: !Ref BudgetThreshold
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+        # Alert at 100% of budget
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+        # Forecast alert
+        - Notification:
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: !Ref ForecastThreshold
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+  # Daily Budget for more granular tracking
+  DailyBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub '${AWS::AccountId}-Daily-Budget'
+        BudgetType: COST
+        TimeUnit: DAILY
+        BudgetLimit:
+          Amount: !Ref MonthlyBudget
+          Unit: USD
+        CostTypes:
+          IncludeTax: true
+          IncludeSubscription: true
+          UseBlended: false
+      NotificationsWithSubscribers:
+        # Alert if daily spend exceeds monthly budget (runaway cost protection)
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+  # Service-specific anomaly detector
+  ServiceAnomalyDetector:
+    Type: AWS::CE::AnomalyMonitor
+    Properties:
+      MonitorName: !Sub '${AWS::AccountId}-Service-Anomaly-Monitor'
+      MonitorType: DIMENSIONAL
+      MonitorDimension: SERVICE
+      MonitorSpecification:
+        Dimensions:
+          Key: SERVICE
+          Values:
+            - Amazon Elastic Compute Cloud - Compute
+            - AWS Lambda
+            - Amazon Simple Storage Service
+            - Amazon DynamoDB
+            - Amazon API Gateway
+            - Amazon CloudFront
+            - Amazon Route 53
+            - AWS Key Management Service
+            - Amazon CloudWatch
+            - Amazon Simple Notification Service
+            - Amazon Simple Queue Service
+
+  # Linked account anomaly detector (for multi-account setups)
+  LinkedAccountAnomalyDetector:
+    Type: AWS::CE::AnomalyMonitor
+    Properties:
+      MonitorName: !Sub '${AWS::AccountId}-LinkedAccount-Anomaly-Monitor'
+      MonitorType: DIMENSIONAL
+      MonitorDimension: LINKED_ACCOUNT
+
+  # Anomaly subscription for email alerts
+  AnomalySubscription:
+    Type: AWS::CE::AnomalySubscription
+    Properties:
+      SubscriptionName: !Sub '${AWS::AccountId}-Anomaly-Alerts'
+      Threshold: !Ref AnomalyThreshold
+      Frequency: DAILY
+      MonitorArnList:
+        - !GetAtt ServiceAnomalyDetector.Arn
+        - !GetAtt LinkedAccountAnomalyDetector.Arn
+      Subscribers:
+        - Address: !Ref BudgetEmail
+          Type: EMAIL
+          Status: CONFIRMED
+      ThresholdExpression:
+        Dimensions:
+          Key: ANOMALY_TOTAL_IMPACT_ABSOLUTE
+          Values:
+            - !Ref AnomalyThreshold
+          MatchOptions:
+            - GREATER_THAN_OR_EQUAL
+
+  # SNS Topic for additional cost alerts (optional integration point)
+  CostAlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${AWS::AccountId}-Cost-Alerts'
+      DisplayName: Cost Management Alerts
+      Subscriptions:
+        - Endpoint: !Ref BudgetEmail
+          Protocol: email
+      Tags:
+        - Key: Purpose
+          Value: CostManagement
+        - Key: ManagedBy
+          Value: StackSet
+
+  # CloudWatch alarm for estimated charges (backup to budgets)
+  EstimatedChargesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::AccountId}-Estimated-Charges'
+      AlarmDescription: !Sub 'Estimated charges exceed ${MonthlyBudget} USD'
+      MetricName: EstimatedCharges
+      Namespace: AWS/Billing
+      Statistic: Maximum
+      Period: 86400  # 24 hours
+      EvaluationPeriods: 1
+      Threshold: !Ref MonthlyBudget
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref CostAlertTopic
+      Dimensions:
+        - Name: Currency
+          Value: USD
+
+Outputs:
+  BudgetId:
+    Description: Monthly budget ID
+    Value: !Ref MonthlyBudget
+
+  DailyBudgetId:
+    Description: Daily budget ID for runaway cost protection
+    Value: !Ref DailyBudget
+
+  ServiceAnomalyMonitorArn:
+    Description: Service anomaly detector ARN
+    Value: !GetAtt ServiceAnomalyDetector.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-ServiceAnomalyMonitorArn'
+
+  LinkedAccountAnomalyMonitorArn:
+    Description: Linked account anomaly detector ARN
+    Value: !GetAtt LinkedAccountAnomalyDetector.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LinkedAccountAnomalyMonitorArn'
+
+  CostAlertTopicArn:
+    Description: SNS topic for cost alerts
+    Value: !Ref CostAlertTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-CostAlertTopicArn'
+
+  MonthlyBudgetAmount:
+    Description: Monthly budget amount in USD
+    Value: !Ref MonthlyBudget
+    Export:
+      Name: !Sub '${AWS::StackName}-MonthlyBudgetAmount'
