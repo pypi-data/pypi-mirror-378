@@ -1,0 +1,66 @@
+llama_module
+
+llama_module is a lightweight Python wrapper for the Llama AI API, allowing you to easily send messages and receive AI-generated responses.
+
+⸻
+
+Installation
+
+Install via pip:
+
+`` pip install llama_module ``
+
+Requirements:
+	•	Python 3.9+
+	•	requests
+	•	python-dotenv
+
+Make sure you have an environment variable llama_ai set with your Llama AI API key, e.g., in a .env file:
+
+
+llama_ai = your_api_key_here
+
+
+⸻
+
+Usage
+
+from llama_module import call_ai
+
+# Single message
+response = call_ai("Hello, Llama!")
+
+print(response)
+
+# Multiple messages
+messages = [
+    {"role": "user", "content": "Hello!"},
+    {"role": "assistant", "content": "Hi there! How can I help?"}
+]
+
+response = call_ai(messages)
+
+print(response)
+
+
+⸻
+
+Features:
+
+	•	Supports single and multi-message inputs
+	•	Automatically reads API key from environment variables
+	•	Simple and easy-to-use interface
+	•	You can specify the model used with the variable 'model' which defualts to Llama-4-Maverick-17B-128E-Instruct-FP8
+
+⸻
+
+Dependencies
+
+	•	requests
+	•	python-dotenv
+
+⸻
+
+License
+
+MIT License – see LICENSE for details.
