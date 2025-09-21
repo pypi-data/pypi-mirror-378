@@ -1,0 +1,210 @@
+[project]
+name = "tattletail"
+version = "0.1.0"
+description = "Python tracebacks like structured, analyzable data with rich insights."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+keywords = ["traceback", "error", "debugging", "analysis", "python"]
+authors = [{ name = "Eric Miguel", email = "ericmiguel@example.com" }]
+license = { text = "AGPL-3.0-or-later" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Debuggers",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+
+[project.urls]
+Homepage = "https://github.com/ericmiguel/tattletail"
+Documentation = "https://github.com/ericmiguel/tattletail#readme"
+Repository = "https://github.com/ericmiguel/tattletail.git"
+"Bug Tracker" = "https://github.com/ericmiguel/tattletail/issues"
+Changelog = "https://github.com/ericmiguel/tattletail/blob/main/CHANGELOG.md"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[tool.ruff]
+
+# Enable automatic fixes by default when running ruff
+# Can be overridden with --fix or --no-fix command-line flags
+# Only applies safe fixes unless --unsafe-fixes is provided
+fix = true
+include = ["pyproject.toml", "src/**/*.py", "scripts/**/*.py", "*.py"]
+extend-include = ["*.ipynb"]
+
+respect-gitignore = true
+show-fixes = true
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "legacy/**",
+    "src/mv1/**",
+]
+
+# Same as Black.
+line-length = 88
+indent-width = 4
+
+# Target Python version for Ruff compatibility
+target-version = "py312"
+
+[tool.ruff.lint]
+# Allow removing unused imports in __init__ files
+extend-safe-fixes = ["F401"]
+
+# Enable comprehensive linting rules:
+# - Pyflakes (F): Basic Python errors
+# - pycodestyle (E, W): PEP 8 style violations  
+# - McCabe complexity (C901): Cyclomatic complexity
+# - flake8-bugbear (B): Common bug patterns
+# - pydocstyle (D, D401): Docstring conventions
+# - isort (I001): Import sorting
+select = ["F", "E", "W", "C901", "B", "D", "D401", "E", "I001"]
+
+# Ignore specific rules that are too restrictive for this project:
+# - D417: Missing argument descriptions in docstrings
+ignore = ["D417"]
+
+# Allow automatic fixing for all enabled rules when --fix is provided
+fixable = ["ALL"]
+
+# Do not automatically fix these rule categories (currently none)
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings
+# Supports Markdown, reStructuredText code blocks, and doctests
+docstring-code-format = true
+
+# Use dynamic line length for code snippets in docstrings
+# Adapts to the surrounding docstring indentation
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint.flake8-bugbear]
+# Allow default arguments for FastAPI dependency injection patterns
+extend-immutable-calls = ["typer.Argument", "typer.Option"]
+
+[tool.ruff.lint.pydocstyle]
+# Use NumPy docstring convention (supports: "google", "numpy", or "pep257")
+convention = "numpy"
+
+[tool.ruff.lint.flake8-bandit]
+check-typed-exception = true
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "single"
+
+[tool.ruff.lint.isort]
+# Force each from-import to appear on its own line
+force-single-line = true
+
+# Sort imports by module name regardless of import style
+# (don't separate 'import sys' from 'from itertools import groupby')
+force-sort-within-sections = true
+
+# Add a single blank line after each import block
+lines-after-imports = 2
+
+# No blank lines between direct imports and from-imports
+lines-between-types = 0
+
+[tool.ruff.lint.per-file-ignores]
+# Disable docstring requirements for test files and directories
+"tests/**" = ["D"]
+"*_test.py" = ["D"]
+
+
+[tool.pyright]
+# Configure separate execution environments for src and tests
+[[tool.pyright.executionEnvironments]]
+root = "src"
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+
+[[tool.pyright.executionEnvironments]]
+root = "tests"
+pythonVersion = "3.12"
+typeCheckingMode = "off"
+# Exclude cache directories from type checking
+exclude = ["**/__pycache__"]
+
+[tool.pytest.ini_options]
+# Directory containing test files
+testpaths = ["tests"]
+# Add current directory to Python path for imports
+pythonpath = ["src", "."]
+
+[tool.bump2version]
+current_version = "0.1.0"
+commit = false
+tag = true
+
+[tool.bump2version.part.release]
+optional_value = 0
+
+[tool.bump2version.part.minor]
+first_value = 0
+
+[tool.bump2version.part.patch]
+first_value = 0
+
+[tool.bump2version.file.pyproject]
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[tool.bump2version.file.src_datahood___init__]
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'
+
+[dependency-groups]
+dev = ["pyright>=1.1.405", "pytest>=8.4.2", "pytest-cov>=7.0.0", "ruff>=0.13.1"]
+test = ["pytest>=8.0.0", "pytest-cov>=6.0.0"]
