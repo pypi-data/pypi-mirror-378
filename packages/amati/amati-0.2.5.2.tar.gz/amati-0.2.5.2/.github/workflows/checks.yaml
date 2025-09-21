@@ -1,0 +1,89 @@
+name: Checks
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dorny/paths-filter@v3
+        id: check_changes
+        with:
+          filters: |
+            relevant:
+              - '**/*.py'
+              - '**/*.sh'
+              - '**/*.json'
+              - '**/*.html'
+              - '**/*.toml'
+              - '**/*.lock'
+              - 'tests/**/*.yaml'
+              - '.python-version'
+              - '.Dockerfile'
+      
+      - name: Skip message
+        if: ${{ !(steps.check_changes.outputs.relevant == 'true') }}
+        run: echo "Skipping Python checks - no relevant changes detected"
+
+
+      - name: Install uv
+        if: steps.check_changes.outputs.relevant == 'true'
+        uses: astral-sh/setup-uv@v6
+
+      - name: uv lock
+        if: steps.check_changes.outputs.relevant == 'true'
+        run: uv lock
+
+      - name: Set up Python
+        if: steps.check_changes.outputs.relevant == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install the project
+        if: steps.check_changes.outputs.relevant == 'true'
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run linting
+        if: steps.check_changes.outputs.relevant == 'true'
+        uses: astral-sh/ruff-action@v3
+        with: 
+          args: check --fix
+      
+      - name: Run formatting
+        if: steps.check_changes.outputs.relevant == 'true'
+        uses: astral-sh/ruff-action@v3
+        with: 
+          args: format
+
+      - name: Testing
+        if: steps.check_changes.outputs.relevant == 'true'
+        run: uv run pytest -m"not external" --cov
+
+      - name: Doctests
+        if: steps.check_changes.outputs.relevant == 'true'
+        run: uv run pytest --doctest-modules amati/
+
+      - name: Coverage comment
+        if: steps.check_changes.outputs.relevant == 'true'
+        id: coverage_comment
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Store Pull Request comment to be posted
+        if: steps.check_changes.outputs.relevant == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage-comment-action
+          path: python-coverage-comment-action.txt
