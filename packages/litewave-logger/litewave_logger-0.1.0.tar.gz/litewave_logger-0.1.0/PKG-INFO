@@ -1,0 +1,92 @@
+Metadata-Version: 2.4
+Name: litewave_logger
+Version: 0.1.0
+Summary: A lightweight logging library with context carry forward
+Author: Litewave
+Author-email: Sonu Sudhakaran <sonu@litewave.ai>
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: requests
+Requires-Dist: fastapi
+Dynamic: author
+Dynamic: requires-python
+
+# Litewave Logger
+
+This module provides a centralized and consistent logging solution for Litewave services. It ensures that a `request-id` is maintained across all services, including HTTP requests and Celery tasks, allowing for easy tracing of requests as they propagate through the system.
+
+## Features
+
+- **Centralized Logging**: A single module to configure and manage logging across all services.
+- **Request ID Propagation**: Automatically injects a `request-id` into all log messages.
+- **FastAPI Integration**: Middleware for FastAPI to handle `request-id` for incoming HTTP requests.
+- **Celery Integration**: Signal handlers to propagate the `request-id` to Celery tasks.
+- **Requests Library Patching**: Automatically injects the `request-id` into outgoing HTTP requests made with the `requests` library.
+
+## Installation
+
+1.  Add the `litewave_logger` directory to your Python project.
+2.  Ensure that the dependencies listed in the main `requirements.txt` (`fastapi`, `celery`, `requests`) are installed.
+
+## Usage
+
+To use the `litewave_logger` in your service, follow these steps:
+
+1.  **Initialize the logger**: In your main application file (e.g., `api.py`), import and call the `setup_logging` function. This should be done as early as possible.
+
+    ```python
+    from litewave_logger import setup_logging
+
+    setup_logging()
+    ```
+
+2.  **Add the FastAPI middleware**: If your service is a FastAPI application, add the `RequestIdMiddleware` to your FastAPI app.
+
+    ```python
+    from fastapi import FastAPI
+    from litewave_logger.middleware import RequestIdMiddleware
+
+    app = FastAPI()
+    app.add_middleware(RequestIdMiddleware)
+    ```
+
+3.  **Patch the `requests` library**: To ensure the `request-id` is propagated to other services, patch the `requests` library.
+
+    ```python
+    from litewave_logger.requests import patch_requests
+
+    patch_requests()
+    ```
+
+4.  **Connect Celery signals**: If your service uses Celery, you need to import the Celery signal handlers to ensure they are registered. You don't need to call them directly.
+
+    ```python
+    from litewave_logger.celery import propagate_request_id_to_celery, clear_request_id_after_celery
+    ```
+
+### Example
+
+Here's a complete example of how to integrate the `litewave_logger` into a FastAPI application:
+
+```python
+from fastapi import FastAPI
+from litewave_logger import setup_logging
+from litewave_logger.middleware import RequestIdMiddleware
+from litewave_logger.requests import patch_requests
+
+# These imports are needed to register the signal handlers
+from litewave_logger.celery import propagate_request_id_to_celery, clear_request_id_after_celery
+
+# 1. Initialize logging
+setup_logging()
+
+# 2. Patch requests library
+patch_requests()
+
+app = FastAPI()
+
+# 3. Add RequestIdMiddleware
+app.add_middleware(RequestIdMiddleware)
+
+# Your application code here...
+```
