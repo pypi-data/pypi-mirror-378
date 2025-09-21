@@ -1,0 +1,60 @@
+Metadata-Version: 2.4
+Name: Banz_domainfile_generator
+Version: 1.0.2
+Summary: Package to generate a base structure for given java objects.
+Author-Email: Sebastian Banz <sebanzian@gmail.com>
+License-Expression: MIT
+License-File: LICENSE
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Project-URL: Homepage, https://github.com/derbanz
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+
+# domain file generator
+
+Provided information about object names and fields, creates base java classes for the objects
+
+## Usage
+
+call domainfile_generator.run(objects: string, paths: dict).
+
+- objects: comma separated string of objects to be created. Contains:
+  - package
+  - objectName
+  - fields (name,type,required(optional))
+    - Possible data types:
+      - INTEGER
+      - STRING
+      - DECIMAL
+      - BOOLEAN
+      - DATE
+      - TIMESTAMP
+      - ENUM (with slash-separated list of name and values)
+      - REFERENCE and INCOMING_REFERENCE (both followed by /n for multiple targets, /1 or nothing for a to-1 relationship)
+    - An example object "Person" inside the package "company" could look like this: "company;Person;name,STRING,required;firstName,STRING;dateOfBirth,DATE;gender,ENUM(Gender/MALE/FEMALE/DIVERSE),required;employments,INCOMING_REFERENCE(company.Employment/n);manager,REFERENCE(company.Person)"
+- paths: dict with different paths to define the structure of the project. e.g.: <br>
+  paths = {<br>
+    'domain': '\\backend\\domain\\src\\main\\java\\org\\derbanz\\test\\domain\\',<br>
+    'schema': '\\backend\\domain\\src\\main\\resources\\schema\\',<br>
+    'logic': '\\backend\\logic\\src\\main\\java\\org\\derbanz\\test\\logic\\',<br>
+    'commonService': '\\backend\\service\\common\\src\\main\\java\\org\\derbanz\\test\\commonservice\\',<br>
+    'uiService': '\\backend\\service\\ui\\src\\main\\java\\org\\derbanz\\test\\uiservice\\'<br>
+}
+
+## Example
+
+```
+from Banz_domainfile_generator import domainfile_generator
+
+csv = "company;Person;name,STRING,required;firstName,STRING;dateOfBirth,DATE;gender,ENUM(Gender/MALE/FEMALE/DIVERSE),required;employments,INCOMING_REFERENCE(company.Employment/n);manager,REFERENCE(company.Person)"
+paths = {
+    'domain': '\\test\\backend\\domain\\src\\main\\java\\org\\derbanz\\test\\domain\\',
+    'schema': '\\test\\backend\\domain\\src\\main\\resources\\schema\\',
+    'logic': '\\test\\backend\\logic\\src\\main\\java\\org\\derbanz\\test\\logic\\',
+    'commonService': '\\test\\backend\\service\\common\\src\\main\\java\\org\\derbanz\\test\\commonservice\\',
+    'uiService': '\\test\\backend\\service\\ui\\src\\main\\java\\org\\derbanz\\test\\uiservice\\'
+}
+domainfile_generator.run(csv, paths)
+
+```
