@@ -1,0 +1,298 @@
+# Django-MG 🔥
+
+**Created by Mobin Hasanghasemi**
+*Email: [mobin.hasanghasemi.m@gmail.com](mailto:mobin.hasanghasemi.m@gmail.com)*
+
+Django Model Generator. Slash-separated fields. Zero config.
+
+## 🚀 Quick Start
+
+### **Step 1: Install**
+
+```bash
+pip install django-mg
+```
+
+### **Step 2: Add to Django**
+
+**`settings.py`:**
+
+```python
+INSTALLED_APPS = [
+    # Django apps
+    'django.contrib.admin',
+    'django.contrib.auth',
+    # ...
+    
+    # Add this
+    'django_mg',  # Django-MG
+]
+```
+
+### **Step 3: Generate Model**
+
+```bash
+python manage.py generate_model
+```
+
+### **Step 4: Follow Prompts**
+
+```
+👋 Hi! Type 'generate.model' to start:
+>>> generate.model
+
+🚀 DJANGO-MG - MODEL GENERATOR
+Created by Mobin Hasanghasemi
+Email: mobin.hasanghasemi.m@gmail.com
+======================================================================
+# List of available fields: 01-100 (see Field Codes Guide below)
+======================================================================
+💡 FORMAT: py filename.py ClassName 01/04/10/17
+   Example: py models.py Product 01/04/10/11/17
+   Means: Name + Rich + Price + Stock + Created
+======================================================================
+
+🎯 Enter your command:
+>>> py models.py Product 01/16/10/18
+
+🔨 Creating 'Product' with fields: 01/16/10/18
+✅ Model 'Product' created! (4 fields)
+```
+
+### **Step 5: Run Migrations**
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+---
+
+## 💡 **Field Codes Guide**
+
+| Code  | Field               | Description                                     | Package                         |
+| ----- | ------------------- | ----------------------------------------------- | ------------------------------- |
+| `01`  | **Name**            | `CharField(max_length=255)`                     | –                               |
+| `02`  | **Title**           | `CharField(max_length=200)`                     | –                               |
+| `03`  | **Slug**            | `SlugField(unique=True)`                        | –                               |
+| `04`  | **UUID**            | `UUIDField(auto=True)`                          | `django-extensions`             |
+| `05`  | **AutoSlug**        | Auto-slug from name                             | `django-autoslug`               |
+| `06`  | **ShortUUID**       | `ShortUUIDField()`                              | `shortuuidfield`                |
+| `07`  | **Text**            | `TextField(blank=True, null=True)`              | –                               |
+| `08`  | **ShortText**       | `CharField(max_length=500)`                     | –                               |
+| `09`  | **Integer**         | `IntegerField()`                                | –                               |
+| `10`  | **PosInt**          | `PositiveIntegerField()`                        | –                               |
+| `11`  | **SmallInt**        | `SmallIntegerField()`                           | –                               |
+| `12`  | **PosSmallInt**     | `PositiveSmallIntegerField()`                   | –                               |
+| `13`  | **BigInt**          | `BigIntegerField()`                             | –                               |
+| `14`  | **Decimal**         | `DecimalField(max_digits=12, decimal_places=2)` | –                               |
+| `15`  | **Float**           | `FloatField()`                                  | –                               |
+| `16`  | **Money**           | `MoneyField(USD)`                               | `django-money`                  |
+| `17`  | **Date**            | `DateField()`                                   | –                               |
+| `18`  | **DateTime**        | `DateTimeField(auto_now_add=True)`              | –                               |
+| `19`  | **Time**            | `TimeField()`                                   | –                               |
+| `20`  | **Duration**        | `DurationField()`                               | –                               |
+| `21`  | **Monitor**         | `MonitorField(monitor='status')`                | `django-model-utils`            |
+| `22`  | **AutoCreated**     | `AutoCreatedField()`                            | `django-model-utils`            |
+| `23`  | **AutoModified**    | `AutoLastModifiedField()`                       | `django-model-utils`            |
+| `24`  | **Boolean**         | `BooleanField(default=True)`                    | –                               |
+| `25`  | **NullBoolean**     | `BooleanField(null=True)`                       | –                               |
+| `26`  | **StatusField**     | `StatusField()`                                 | `django-model-utils`            |
+| `27`  | **FSM**             | `FSMField(default='new')`                       | `django-fsm`                    |
+| `28`  | **Email**           | `EmailField(blank=True, null=True)`             | –                               |
+| `29`  | **URL**             | `URLField(blank=True, null=True)`               | –                               |
+| `30`  | **IP Address**      | `GenericIPAddressField(blank=True, null=True)`  | –                               |
+| `31`  | **Phone**           | `PhoneNumberField`                              | `django-phonenumber-field`      |
+| `32`  | **Country**         | `CountryField`                                  | `django-countries`              |
+| `33`  | **Region**          | `RegionField`                                   | `django-countries-plus`         |
+| `34`  | **File**            | `FileField(upload_to='files/')`                 | –                               |
+| `35`  | **Image**           | `ImageField(upload_to='images/')`               | –                               |
+| `36`  | **Thumbnail**       | `ThumbnailerImageField`                         | `easy-thumbnails`               |
+| `37`  | **ProcessedImage**  | `ProcessedImageField`                           | `django-imagekit`               |
+| `38`  | **FilerFile**       | `FilerFileField`                                | `django-filer`                  |
+| `39`  | **FilerImage**      | `FilerImageField`                               | `django-filer`                  |
+| `40`  | **RichText**        | `RichTextField`                                 | `django-ckeditor`               |
+| `41`  | **Quill**           | `QuillField`                                    | `django-quill-editor`           |
+| `42`  | **Markdown**        | `MarkdownxField`                                | `django-markdownx`              |
+| `43`  | **Redactor**        | `RedactorField`                                 | `django-redactor`               |
+| `44`  | **Tags**            | `TaggableManager`                               | `django-taggit`                 |
+| `45`  | **Array**           | `ArrayField(CharField(100))`                    | –                               |
+| `46`  | **JSON**            | `JSONField`                                     | –                               |
+| `47`  | **HStore**          | `HStoreField`                                   | –                               |
+| `48`  | **PickledObject**   | `PickledObjectField`                            | `django-picklefield`            |
+| `49`  | **EncryptedChar**   | `EncryptedCharField`                            | `django-encrypted-model-fields` |
+| `50`  | **EncryptedText**   | `EncryptedTextField`                            | `django-encrypted-model-fields` |
+| `51`  | **O2O User**        | `OneToOneField(User)`                           | –                               |
+| `52`  | **FK User**         | `ForeignKey(User)`                              | –                               |
+| `53`  | **ForeignKey**      | `ForeignKey('OtherModel')`                      | –                               |
+| `54`  | **OneToOne**        | `OneToOneField('OtherModel')`                   | –                               |
+| `55`  | **ManyToMany**      | `ManyToManyField('OtherModel')`                 | –                               |
+| `56`  | **GenericFK**       | `GenericForeignKey()`                           | –                               |
+| `57`  | **GenericRelation** | `GenericRelation('OtherModel')`                 | –                               |
+| `58`  | **Point**           | `PointField`                                    | `django.contrib.gis`            |
+| `59`  | **Polygon**         | `PolygonField`                                  | `django.contrib.gis`            |
+| `60`  | **LineString**      | `LineStringField`                               | `django.contrib.gis`            |
+| `61`  | **Country**         | `CountryField`                                  | `django-countries`              |
+| `62`  | **Address**         | `AddressField`                                  | `django-address`                |
+| `63`  | **Location**        | `PlainLocationField`                            | `django-location-field`         |
+| `64`  | **Money**           | `MoneyField`                                    | `django-money`                  |
+| `65`  | **Currency**        | `CurrencyField`                                 | `django-money`                  |
+| `66`  | **DecimalPrice**    | `DecimalField(max_digits=14, decimal_places=2)` | –                               |
+| `67`  | **StockQty**        | `PositiveIntegerField(default=0)`               | –                               |
+| `68`  | **Tax**             | `DecimalField(max_digits=5, decimal_places=2)`  | –                               |
+| `69`  | **Color**           | `ColorField`                                    | `django-colorfield`             |
+| `70`  | **JSON\_API**       | `JSONField`                                     | –                               |
+| `71`  | **EncDateTime**     | `EncryptedDateTimeField`                        | `django-encrypted-model-fields` |
+| `72`  | **IP2**             | `GenericIPAddressField`                         | –                               |
+| `73`  | **MAC**             | `MACAddressField`                               | –                               |
+| `74`  | **Language**        | `LanguageField`                                 | `django-language-field`         |
+| `75`  | **MultiCountry**    | `CountryField(multiple=True)`                   | `django-countries`              |
+| `76`  | **History**         | `HistoricalRecords()`                           | `django-simple-history`         |
+| `77`  | **AuditLog**        | `auditlog.register(self)`                       | `django-auditlog`               |
+| `78`  | **Reversion**       | `reversion.register(self)`                      | `django-reversion`              |
+| `79`  | **StatusMeta**      | `StatusField`                                   | `django-model-utils`            |
+| `80`  | **MonitorMeta**     | `MonitorField`                                  | `django-model-utils`            |
+| `81`  | **CIChar**          | `CICharField`                                   | `django-citext`                 |
+| `82`  | **CINullChar**      | `CINullCharField`                               | `django-citext`                 |
+| `83`  | **JSON\_API2**      | `JSONField`                                     | –                               |
+| `84`  | **FirstName**       | `CharField(max_length=100)`                     | –                               |
+| `85`  | **LastName**        | `CharField(max_length=100)`                     | –                               |
+| `86`  | **Username**        | `CharField(max_length=150, unique=True)`        | –                               |
+| `87`  | **Bio**             | `TextField(blank=True, null=True)`              | –                               |
+| `88`  | **Avatar**          | `ImageField(upload_to='avatars/')`              | –                               |
+| `89`  | **Cover**           | `ImageField(upload_to='covers/')`               | –                               |
+| `90`  | **BirthDate**       | `DateField(blank=True, null=True)`              | –                               |
+| `91`  | **Gender**          | `CharField(choices=...)`                        | –                               |
+| `92`  | **LangPref**        | `CharField(max_length=20)`                      | –                               |
+| `93`  | **Timezone**        | `TimeZoneField`                                 | `django-timezone-field`         |
+| `94`  | **SubStatus**       | `CharField(choices=['free','paid'])`            | –                               |
+| `95`  | **NotifPref**       | `JSONField`                                     | –                               |
+| `96`  | **Agreement**       | `BooleanField(default=False)`                   | –                               |
+| `97`  | **TermsVer**        | `CharField(max_length=50)`                      | –                               |
+| `98`  | **LastIP**          | `GenericIPAddressField`                         | –                               |
+| `99`  | **LastSeen**        | `DateTimeField(blank=True, null=True)`          | –                               |
+| `100` | **ActivityLog**     | `JSONField`                                     | –                               |
+
+## 💎 **Real Examples**
+
+### **Product Model**
+```bash
+py models.py Product 01/10/11/12/17
+```
+**Fields:** Name + Price + Stock + Active + Created
+
+### **Blog Post**
+```bash
+py blog/models.py Post 02/04/06/15/17/22
+```
+**Fields:** Title + Rich + Short + Tags + Created + Status
+
+### **Image Gallery**
+```bash
+py gallery/models.py Photo 01/07/08/17
+```
+**Fields:** Name + Image + Gallery + Created
+
+### **Contact Form**
+```bash
+py contact/models.py Contact 01/27/28/05/17
+```
+**Fields:** Name + Email + Phone + Text + Created
+
+---
+
+## 📦 **Optional Features**
+
+### **Basic (No extras)**
+```bash
+pip install django-mg
+```
+
+### **E-commerce**
+```bash
+pip install "django-mg[money,filer]"
+```
+
+### **Content**
+```bash
+pip install "django-mg[ckeditor,taggit]"
+```
+
+### **Full Features**
+```bash
+pip install "django-mg[filer,money,ckeditor,taggit,autoslug]"
+```
+
+---
+
+## 🛠️ **Troubleshooting**
+
+### **"Unknown command: generate_model"**
+```python
+# settings.py
+INSTALLED_APPS += ['django_mg']  # این خط رو اضافه کن
+```
+
+### **"Module not found"**
+```bash
+pip install django-mg  # دوباره نصب کن
+```
+
+### **"Invalid field code"**
+```
+# فقط 01-28 استفاده کن
+# مثال: py models.py User 01/27/17  (Name + Email + Created)
+```
+
+### **Dependencies**
+```bash
+# pip requirements خودکار نشون میده
+python manage.py generate_model
+# 📦 Install packages:
+#    pip install django-money
+```
+
+---
+
+## 📊 **Generated Model Example**
+
+**Command:** `py models.py Product 01/10/11/17`
+
+**Output (`models.py`):**
+```python
+# Auto-generated: Product
+# Generated: 2025-01-20 14:30:25
+# Fields: name, price, stock, created
+# Created by Mobin Hasanghasemi (mobin.hasanghasemi.m@gmail.com)
+
+from django.db import models
+from djmoney.models.fields import MoneyField
+
+class Product(models.Model):
+    name = models.CharField(max_length=255)
+    price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
+    stock = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'product'
+        verbose_name_plural = 'products'
+```
+
+---
+
+## 🔗 **Links**
+
+- **PyPI**: https://pypi.org/project/django-mg/
+
+## 📄 **License**
+
+MIT License - see [LICENSE](LICENSE) file.
+
+**© 2025 Mobin Hasanghasemi**  
+📧 **mobin.hasanghasemi.m@gmail.com**
+
+---
