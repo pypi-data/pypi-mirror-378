@@ -1,0 +1,1051 @@
+```
+ ╔═══════════════════════════════════════════╗
+ ║                                           ║
+ ║    ███╗   ███╗ ██████╗ ██╗   ██╗ █████╗   ║
+ ║    ████╗ ████║██╔═══██╗██║   ██║██╔══██╗  ║
+ ║    ██╔████╔██║██║   ██║██║   ██║███████║  ║
+ ║    ██║╚██╔╝██║██║   ██║╚██╗ ██╔╝██╔══██║  ║
+ ║    ██║ ╚═╝ ██║╚██████╔╝ ╚████╔╝ ██║  ██║  ║
+ ║    ╚═╝     ╚═╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝  ║
+ ║                                           ║
+ ║   🌐 Uniwersalna Warstwa Komunikacji H2M  ║
+ ║                                           ║
+ ╚═══════════════════════════════════════════╝
+```
+
+**Mova ** to lekka, uniwersalna warstwa komunikacji łącząca frontend, backend, urządzenia IoT, systemy embedowane i modele LLM. Umożliwia wymianę komend shell, akcji formularzy, logów, metadanych audio/video oraz dowolnego kodu JavaScript w przeglądarce.
+
+## 🎯 Status Projektu
+```
+🟢 Serwer FastAPI      ✅ Funkcjonalny
+🟢 CLI Commands        ✅ Funkcjonalny  
+🟢 Docker Stack        ✅ Funkcjonalny
+🟢 WebSocket/MQTT       ✅ Funkcjonalny
+🟢 Static Files        ✅ Funkcjonalny
+🟢 SDK Integration     ✅ Funkcjonalny
+```
+
+## 🚀 Kluczowe Cechy
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  🌐 Universal Protocol   │  📱 Cross-Platform    │  🔧 Modular Design     │
+│  HTTP/WS/MQTT/gRPC       │  Web ↔ IoT ↔ LLM      │  Plugin Architecture   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  📦 SVG Containers       │  💾 Offline Buffer    │  🎛️ CLI Interface      │
+│  PWA + Metadata + JS     │  LocalStorage Sync    │  Shell Commands        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **🔗 Unified Protocol**: Zastępuje Socket.IO i WebRTC jednym spójnym protokołem
+- **🌍 Cross-Platform**: Od aplikacji webowych po mikrokontrolery (RPi, RP2040, Arduino)
+- **📄 SVG Apps**: Pliki SVG jako kontenery PWA z osadzonymi metadanymi i JS SDK
+- **💿 Offline-First**: Buffer w LocalStorage + synchronizacja z MQTT/DB
+- **🔌 Modular**: Adaptery HTTP, WebSocket, MQTT, SSH, gRPC
+- **⚙️ CLI Tool**: Komendy do shell, logów, filtrowania zdarzeń
+- **🖥️ Remote Execution**: `mova http` - zdalne wykonywanie JS w przeglądarce
+
+## 🏗️ Architektura Systemu
+
+```
+                    ┌─────────────────────────────────────────────────┐
+                    │                 MOVA                       │
+                    │            Communication Layer                   │
+                    └─────────────────────┬───────────────────────────┘
+                                          │
+              ┌───────────────────────────┼───────────────────────────┐
+              │                           │                           │
+    ┌─────────▼─────────┐       ┌─────────▼─────────┐       ┌─────────▼─────────┐
+    │    WEB CLIENT     │       │   MOVA SERVER     │       │    IoT DEVICE     │
+    │                   │       │                   │       │                   │
+    │  ┌─────────────┐  │       │  ┌─────────────┐  │       │  ┌─────────────┐  │
+    │  │ mova-sdk.js │◄─┼───────┼──┤  FastAPI    │  │       │  │   Python    │  │
+    │  │   (WebUI)   │  │       │  │   Server    │  │       │  │   Client    │  │
+    │  └─────────────┘  │       │  └─────────────┘  │       │  └─────────────┘  │
+    │                   │       │         │         │       │                   │
+    │  ┌─────────────┐  │       │  ┌─────────────┐  │       │  ┌─────────────┐  │
+    │  │ LocalStorage│  │       │  │    MQTT     │  │       │  │   Shell     │  │
+    │  │   Buffer    │  │       │  │   Broker    │  │       │  │  Commands   │  │
+    │  └─────────────┘  │       │  └─────────────┘  │       │  └─────────────┘  │
+    └───────────────────┘       └─────────────────────┘       └───────────────────┘
+              │                           │                           │
+              └─────────────┐   ┌─────────┴─────────┐   ┌─────────────┘
+                            │   │                   │   │
+                    ┌───────▼───▼─────┐     ┌───────▼───▼─────┐
+                    │   WebSocket     │     │      CLI        │
+                    │   Connection    │     │   Interface     │
+                    └─────────────────┘     └─────────────────┘
+
+                         ┌─────────────────────────────────────┐
+                         │           SERVICES STACK            │
+                         │                                     │
+                         │  🔘 Mosquitto MQTT (1883/9001)     │
+                         │  🤖 Ollama LLM (11437)             │
+                         │  🗄️ SQLite Database                 │
+                         │  🌐 Caddy Reverse Proxy (80/443)   │
+                         └─────────────────────────────────────┘
+```
+
+## 📁 Struktura Projektu
+
+```
+📦 mova/
+├── 🏗️  cli/
+│   └── 🐍 mova.py                 # Główny skrypt CLI w Pythonie
+├── 🖥️  server/
+│   ├── ⚡ app.py                  # Serwer FastAPI + WebSocket
+│   └── 📡 mqtt_adapter.py         # Adapter MQTT (pub/sub)
+├── 📚 sdk/
+│   └── 🌐 mova-sdk.js             # JavaScript SDK dla przeglądarek
+├── 🎨 examples/
+│   ├── 🌟 frontend/
+│   │   └── 🖼️  index.svg          # Przykład chatu SVG + SDK
+│   ├── 🔧 backend/
+│   │   └── 🔍 diagnostic.py       # Demo diagnostyki SQLite
+│   └── 🤖 iot/
+│       └── 🥧 rpi_demo.py         # Demo shell na Raspberry Pi
+├── ⚙️  config/
+│   ├── 📋 default.json            # Domyślna konfiguracja
+│   └── 🔍 filters.yaml           # DSL filtrowania logów
+├── 📖 docs/
+│   ├── 🏛️  architecture.md        # Opis architektury
+│   └── 🚀 getting_started.md     # Instrukcja uruchomienia
+├── 🧪 tests/
+│   ├── ✅ test_cli.py             # Testy CLI
+│   ├── ✅ test_server.py          # Testy serwera
+│   └── ✅ test_sdk.js             # Testy SDK
+├── 🐳 docker-compose.yml          # Stack Docker Compose
+├── 🐋 Dockerfile                  # Obraz kontenerowy
+├── 🔧 Makefile                    # Automatyzacja zadań
+├── 📄 requirements.txt            # Zależności Python
+└── 📦 pyproject.toml              # Konfiguracja pakietu
+```
+
+---
+
+## 🚀 Szybki Start
+
+### 📋 Wymagania
+```
+🐍 Python 3.11+
+🐳 Docker (opcjonalne)
+🔧 Make (zalecane)
+```
+
+### ⚡ Instalacja Express
+
+```bash
+# Sklonuj repozytorium
+git clone <repository-url>
+cd mova/
+
+# Automatyczna instalacja
+make install
+
+# Uruchom serwer
+make server
+```
+
+**🎉 Gotowe!** Serwer działa na `http://localhost:8094`
+
+---
+
+## 🛠️ Instrukcja Instalacji i Konfiguracji
+
+### 🏠 Środowisko Lokalne (Development)
+
+```bash
+┌─────────────────────────────────────────────────────────────────┐
+│                    LOKALNA INSTALACJA                           │
+└─────────────────────────────────────────────────────────────────┘
+
+# 1️⃣ Przygotowanie środowiska
+make venv                    # Utworzenie wirtualnego środowiska
+make install                 # Instalacja zależności
+
+# 2️⃣ Konfiguracja pakietu
+pip install -e .             # Instalacja w trybie edytowalnym
+
+# 3️⃣ Uruchomienie serwera
+make server                  # Start na porcie 8094
+
+# 4️⃣ Weryfikacja
+make test                    # Uruchomienie testów
+```
+
+### 🐳 Docker Deployment (Production)
+
+```bash
+┌─────────────────────────────────────────────────────────────────┐
+│                   DOCKER STACK DEPLOYMENT                      │
+└─────────────────────────────────────────────────────────────────┘
+
+# 🚀 Pełny stos produkcyjny
+make up                      # Start wszystkich usług
+
+# 🔍 Sprawdzenie statusu
+docker ps                    # Lista działających kontenerów
+
+# 🎛️ Dostępne serwisy:
+# 📡 Mova Server:      http://localhost:8095
+# 🔄 MQTT Broker:      mqtt://localhost:1883 
+# 🌐 MQTT WebSocket:   ws://localhost:9001
+# 🤖 Ollama LLM:       http://localhost:11437
+
+# 🛑 Zatrzymanie
+make down                    # Stop wszystkich usług
+```
+
+---
+
+## 🎛️ Interfejs CLI - Kompletny Przewodnik
+
+### 🔧 Instalacja CLI
+
+```bash
+# Lokalna instalacja (w projekcie)
+./venv/bin/mova --help
+
+# Globalna instalacja (systemowa)
+sudo make install-global
+mova --help                  # Dostępne wszędzie
+```
+
+### 📚 Dostępne Komendy CLI
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                         MOVA CLI COMMANDS                        ║
+╠══════════════════════════════════════════════════════════════════╣
+║  🐚 shell <cmd>              │ Wykonaj komendę shell             ║
+║  📄 list <level> [--last]    │ Lista logów (error/info/warning)  ║
+║  ℹ️  info <message>          │ Wyślij log informacyjny           ║
+║  ⚠️  warning <message>       │ Wyślij ostrzeżenie                 ║
+║  ❌ error <message>          │ Wyślij błąd                       ║
+║  🌐 http <address> <js_code>  │ Wykonaj JS zdalnie                ║
+║  👁️  watch <level> [options] │ Monitor logów w czasie rzeczyw.    ║
+║  🏥 health                   │ Sprawdź status serwera            ║
+║                              │                                   ║
+║  🆕 NOWE ROZSZERZONE FUNKCJE │                                   ║
+║  ⚙️  services <action>       │ 🔥 Zarządzaj usługami systemowymi ║
+║  📡 rss [--port] [--stop]    │ 🔥 Serwer RSS dla monitoringu    ║
+║  🗣️  talk <lang> [options]   │ 🔥 Interfejs głosowy + Whisper   ║
+║  🚀 on                       │ 🔥 Auto-start przy starcie OS    ║
+║  🛑 off                      │ 🔥 Wyłącz auto-start             ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+### 💡 Przykłady Użycia CLI
+
+```bash
+# 🐚 Wykonywanie komend shell
+mova shell "docker ps"                    # Lista kontenerów
+mova shell "ls -la"                       # Listing plików
+mova shell "systemctl status nginx"       # Status usługi
+
+# 📊 Zarządzanie logami
+mova info "Aplikacja uruchomiona"         # Log informacyjny
+mova warning "Niski poziom pamięci"       # Ostrzeżenie
+mova error "Błąd połączenia z bazą"       # Błąd krytyczny
+
+# 🔍 Filtrowanie logów
+mova list error --last 10m                # Błędy z ostatnich 10 minut
+mova list warning --last 1h               # Ostrzeżenia z ostatniej godziny
+mova list info --last 30s                 # Info z ostatnich 30 sekund
+
+# 🌐 Zdalne wykonywanie JavaScript
+mova http localhost "alert('Hello from CLI!')"
+mova http localhost "console.log('System status: OK')"
+mova http localhost "document.title = 'Updated by MOVA'"
+
+# 👁️ ⭐ NOWA FUNKCJA - Monitoring logów w czasie rzeczywistym
+mova watch all                                 # Monitor wszystkich logów
+mova watch error --interval 1                  # Błędy co sekundę
+mova watch warning --service database          # Ostrzeżenia z bazy danych
+mova watch info --follow --limit 20            # Tryb follow (jak tail -f)
+mova watch all --service webapp --interval 3   # Kompleksowy monitoring
+
+# 🏥 Status i diagnostyka serwera
+mova health                                    # Sprawdź status serwera
+mova health --server http://localhost:8095     # Niestandardowy serwer
+
+# ⚙️ 🔥 NOWE - Zarządzanie usługami systemowymi
+mova services list                             # Lista dostępnych usług
+mova services enable docker                    # Włącz monitoring Docker
+mova services disable systemd                  # Wyłącz monitoring SystemD
+mova services status                           # Status wszystkich usług
+mova services info docker                      # Szczegóły usługi Docker
+
+# 🎤 🔥 NOWE - Interfejs głosowy z AI (Whisper + TTS)
+mova talk en                                   # Pełna interakcja głosowa (English)
+mova talk pl --read-only 
+mova talk pl --listen-only                     # Tylko nasłuchiwanie (Polski)
+mova talk de --text-only                       # Tylko odpowiedzi tekstowe (Deutsch)
+mova talk en --continuous                      # Ciągłe nasłuchiwanie z słowami-kluczami
+
+# 🎯 Obsługiwane języki interfejsu głosowego:
+# - en (English) - pełne wsparcie Whisper + TTS
+# - pl (Polski) - wielojęzyczne rozpoznawanie + TTS  
+# - de (Deutsch) - międzynarodowa kompatybilność
+
+# 🛠️ Wymagania głosowe (automatycznie instalowane):
+# pip install openai-whisper SpeechRecognition pyttsx3 pyaudio
+# sudo apt-get install portaudio19-dev ffmpeg  # Ubuntu/Debian
+
+# 📡 🔥 NOWE - Serwer RSS dla monitoringu
+mova rss                                       # Uruchom serwer RSS (port 8011)
+mova rss --port 8012                          # Niestandardowy port
+mova rss --stop                               # Zatrzymaj serwer RSS
+mova rss --status                             # Status serwera RSS
+
+mova talk pl --continuous                      # Polski, tryb ciągły
+
+# 🚀 🔥 NOWE - Auto-start przy starcie systemu
+mova on                                        # Włącz auto-start
+mova off                                       # Wyłącz auto-start
+
+# 🎯 Zaawansowane przykłady
+mova http --port 8094 localhost "
+  fetch('/api/status')
+    .then(r => r.json())
+    .then(data => console.log('Status:', data))
+"
+```
+
+---
+
+## 🔥 NOWE ROZSZERZONE FUNKCJONALNOŚCI CLI
+
+### ⚙️ Zarządzanie Usługami Systemowymi
+
+**Mova ** teraz oferuje zaawansowane zarządzanie usługami systemowymi z poziomu CLI. Automatycznie wykrywa i monitoruje Docker, SystemD oraz inne usługi systemowe.
+
+```bash
+╔═══════════════════════════════════════════════════════════════╗
+║                    ZARZĄDZANIE USŁUGAMI                       ║
+╠═══════════════════════════════════════════════════════════════╣
+║  mova services list            │ Lista dostępnych usług       ║
+║  mova services enable <nazwa>  │ Włącz monitoring usługi      ║
+║  mova services disable <nazwa> │ Wyłącz monitoring usługi     ║
+║  mova services status          │ Status wszystkich usług      ║
+║  mova services info <nazwa>    │ Szczegółowe informacje       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+# 🔍 Przykład: Lista dostępnych usług
+$ mova services list
+🔧 Dostępne usługi systemowe:
+============================================================
+📋 DOCKER       | ❌ WYŁĄCZONA  | 🟢 DOSTĘPNA
+📋 SYSTEMD      | ❌ WYŁĄCZONA  | 🟢 DOSTĘPNA  
+📋 SYSTEM       | ✅ WŁĄCZONA   | 🟢 DOSTĘPNA
+============================================================
+💡 Użyj 'mova services enable/disable <nazwa>' do zarządzania
+
+# 🔄 Włączenie monitoringu Docker
+$ mova services enable docker
+✅ Usługa 'docker' została włączona do monitoringu
+
+# 📊 Status wszystkich usług
+$ mova services status
+📊 Status usług systemowych:
+- Docker: 🟢 Aktywna (25 kontenerów)
+- SystemD: 🟢 Aktywna (142 usługi) 
+- System: 🟢 Aktywna (CPU: 23%, RAM: 67%)
+```
+
+### 📡 Serwer RSS dla Monitoringu
+
+Wbudowany serwer RSS umożliwia monitorowanie logów Mova przez standardowe czytniki RSS/Atom:
+
+```bash
+╔═══════════════════════════════════════════════════════════════╗
+║                      SERWER RSS                               ║
+╠═══════════════════════════════════════════════════════════════╣
+║  mova rss                     │ Uruchom na porcie 8011        ║
+║  mova rss --port <port>       │ Niestandardowy port           ║
+║  mova rss --stop             │ Zatrzymaj serwer RSS          ║
+║  mova rss --status           │ Sprawdź status serwera        ║
+╚═══════════════════════════════════════════════════════════════╝
+
+# 🚀 Uruchomienie serwera RSS
+$ mova rss
+🚀 Serwer RSS uruchomiony na porcie 8011
+📡 Kanały dostępne:
+   • http://localhost:8011/feed/all    - Wszystkie logi
+   • http://localhost:8011/feed/error  - Tylko błędy
+   • http://localhost:8011/feed/info   - Informacje
+   
+# 📊 Status serwera RSS
+$ mova rss --status
+📊 Status serwera RSS:
+🟢 Aktywny na porcie 8011
+📈 Obsłużono 156 zapytań
+🔔 24 aktywne subskrypcje
+
+# 🛑 Zatrzymanie serwera
+$ mova rss --stop
+🛑 Serwer RSS zatrzymany
+```
+
+**🌐 Integracja z czytnikami RSS:**
+- Dodaj `http://localhost:8011/feed/all` do swojego czytnika RSS
+- Feedly, Inoreader, Thunderbird - wszystkie obsługiwane
+- Filtrowanie według poziomu logów (error, warning, info)
+- Real-time updates przez RSS
+
+### 🗣️ Interfejs Głosowy z AI (Whisper)
+
+Zaawansowany interfejs głosowy obsługujący 3 języki z integracją OpenAI Whisper:
+
+```bash
+╔═══════════════════════════════════════════════════════════════╗
+║                  INTERFEJS GŁOSOWY                            ║
+╠═══════════════════════════════════════════════════════════════╣
+║  mova talk pl                 │ Polski interfejs głosowy      ║
+║  mova talk en                 │ Angielski interfejs głosowy   ║
+║  mova talk de                 │ Niemiecki interfejs głosowy   ║
+║  --listen-only               │ Tylko nasłuchuj               ║
+║  --text-only                 │ Tylko odpowiedzi tekstowe     ║
+║  --continuous                │ Tryb ciągłego nasłuchiwania   ║
+╚═══════════════════════════════════════════════════════════════╝
+
+# 🇵🇱 Polski interfejs głosowy (pełny)
+$ mova talk pl
+🎤 Uruchamiam interfejs głosowy w języku polskim...
+🗣️ Powiedz komendę lub zadaj pytanie!
+
+# 🇬🇧 Angielski interfejs (tylko słuchanie)
+$ mova talk en --listen-only
+🎤 English voice interface (listen-only mode)
+🔇 Text responses only - no voice output
+
+# 🇩🇪 Niemiecki interfejs (tryb ciągły)
+$ mova talk de --continuous
+🎤 Deutsche Sprachschnittstelle (kontinuierlicher Modus)
+🔄 Kontinuierliches Hören aktiviert...
+
+# 🎯 Przykłady komend głosowych:
+"Sprawdź status serwera"          → mova health
+"Pokaż logi błędów"               → mova list error
+"Uruchom serwer RSS"              → mova rss
+"Lista usług systemowych"        → mova services list
+```
+
+**🔧 Wymagania dla interfejsu głosowego:**
+- OpenAI Whisper (auto-instalowany)
+- Mikrofon systemu
+- Głośniki/słuchawki dla odpowiedzi głosowych
+- Python 3.11+ z obsługą audio
+
+### 🚀 Auto-Start przy Starcie Systemu
+
+Automatyczne uruchamianie Mova przy starcie systemu operacyjnego:
+
+```bash
+╔═══════════════════════════════════════════════════════════════╗
+║                     AUTO-START SYSTEMU                        ║
+╠═══════════════════════════════════════════════════════════════╣
+║  mova on                      │ Włącz auto-start              ║
+║  mova off                     │ Wyłącz auto-start             ║
+╚═══════════════════════════════════════════════════════════════╝
+
+# ✅ Włączenie auto-start
+$ mova on
+🚀 Auto-start Mova włączony
+📋 Dodano do systemd/crontab
+🔄 Serwer uruchomi się automatycznie przy starcie systemu
+
+# ❌ Wyłączenie auto-start  
+$ mova off
+🛑 Auto-start Mova wyłączony
+📋 Usunięto z systemd/crontab
+```
+
+---
+
+## 🌐 Integracja JavaScript SDK
+
+### 📦 Podstawowa Integracja
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mova App</title>
+</head>
+<body>
+    <!-- 1️⃣ Włączenie SDK -->
+    <script src="http://localhost:8094/sdk/mova-sdk.js"></script>
+    
+    <script>
+    // 2️⃣ Inicjalizacja połączenia
+    Mova.init({
+        serverUrl: 'http://localhost:8094',
+        broker: { 
+            type: 'mqtt', 
+            url: 'ws://localhost:9001' 
+        }
+    });
+
+    // 3️⃣ Nasłuchiwanie zdarzeń
+    Mova.on('command', (cmd) => {
+        console.log('📨 Otrzymano komendę:', cmd);
+    });
+
+    // 4️⃣ Wysyłanie komend
+    Mova.send({ 
+        type: 'shell', 
+        payload: 'echo "Hello from browser!"' 
+    });
+    </script>
+</body>
+</html>
+```
+
+### 🖼️ Integracja SVG (PWA)
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Metadata aplikacji -->
+  <metadata>
+    <mova:app xmlns:mova="http://mova.dev/schema">
+      <mova:server>http://localhost:8094</mova:server>
+      <mova:mqtt>ws://localhost:9001</mova:mqtt>
+      <mova:version>1.0.0</mova:version>
+    </mova:app>
+  </metadata>
+
+  <!-- UI Elements -->
+  <rect width="800" height="600" fill="#1a1a1a"/>
+  <text x="400" y="50" text-anchor="middle" fill="white" font-size="24">
+    Mova Chat App
+  </text>
+  
+  <!-- Chat Interface -->
+  <foreignObject x="50" y="100" width="700" height="400">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <div id="chat-messages" style="height: 300px; overflow-y: auto;"></div>
+      <input id="message-input" type="text" placeholder="Wpisz wiadomość..."/>
+      <button onclick="sendMessage()">Wyślij</button>
+    </div>
+  </foreignObject>
+
+  <!-- Embedded JavaScript -->
+  <script type="text/javascript"><![CDATA[
+    // Auto-load Mova SDK
+    const script = document.createElement('script');
+    script.src = 'http://localhost:8094/sdk/mova-sdk.js';
+    document.head.appendChild(script);
+
+    script.onload = function() {
+        // Initialize Mova
+        Mova.init({
+            serverUrl: 'http://localhost:8094',
+            broker: { type: 'mqtt', url: 'ws://localhost:9001' }
+        });
+
+        // Handle incoming messages
+        Mova.on('message', (data) => {
+            addMessage(data.content, 'received');
+        });
+    };
+
+    function sendMessage() {
+        const input = document.getElementById('message-input');
+        const message = input.value.trim();
+        if (message) {
+            Mova.send({ type: 'chat', content: message });
+            addMessage(message, 'sent');
+            input.value = '';
+        }
+    }
+
+    function addMessage(content, type) {
+        const messages = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = type;
+        div.textContent = content;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+    }
+  ]]></script>
+</svg>
+```
+
+---
+
+## 🔧 API Endpoints
+
+### 🌐 HTTP REST API
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        MOVA REST API                            │
+├─────────────────────────────────────────────────────────────────┤
+│  GET    /                    │ Status serwera                   │
+│  GET    /examples/*          │ Pliki przykładów (SVG/HTML)     │
+│  GET    /sdk/*               │ JavaScript SDK                   │
+│  WS     /ws                  │ WebSocket connection             │
+├─────────────────────────────────────────────────────────────────┤
+│  POST   /api/command         │ Wykonaj komendę                  │
+│  POST   /api/log             │ Zapisz log                       │
+│  GET    /api/logs            │ Pobierz logi                     │
+│  GET    /api/status          │ Status systemu                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 🔌 WebSocket Protocol
+
+```javascript
+// 📤 Wysyłanie komend
+{
+  "type": "command",
+  "payload": {
+    "action": "shell",
+    "command": "ls -la",
+    "target": "localhost"
+  },
+  "timestamp": "2024-09-18T16:56:21Z",
+  "id": "cmd_123456"
+}
+
+// 📥 Odpowiedzi serwera
+{
+  "type": "response",
+  "payload": {
+    "result": "total 48\ndrwxr-xr-x 8 user user 4096 Sep 18 16:56 .",
+    "success": true,
+    "duration": 0.042
+  },
+  "correlationId": "cmd_123456",
+  "timestamp": "2024-09-18T16:56:21Z"
+}
+```
+
+---
+
+## 🔄 Protokoły Komunikacji
+
+### 📡 MQTT Topics
+
+```
+📊 Struktura tematów MQTT:
+
+mova/
+├── devices/
+│   ├── {device_id}/
+│   │   ├── commands        # Komendy do urządzenia
+│   │   ├── responses       # Odpowiedzi z urządzenia
+│   │   ├── logs           # Logi z urządzenia
+│   │   └── status         # Status urządzenia
+│   └── broadcast          # Broadcast do wszystkich
+├── logs/
+│   ├── info              # Logi informacyjne
+│   ├── warning           # Ostrzeżenia
+│   └── error             # Błędy
+└── system/
+    ├── heartbeat         # Heartbeat serwera
+    └── config            # Aktualizacje konfiguracji
+```
+
+### 🏃‍♂️ Flow Diagramy
+
+```
+🔄 Przepływ komend (Command Flow):
+
+┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│ Client  │───▶│  Mova   │───▶│  MQTT   │───▶│ Device  │
+│ (Web)   │    │ Server  │    │ Broker  │    │ (IoT)   │
+└─────────┘    └─────────┘    └─────────┘    └─────────┘
+     ▲                                            │
+     │         ┌─────────┐    ┌─────────┐        │
+     └─────────│Response │◄───│ Publish │◄───────┘
+              │Handler  │    │ Result  │
+              └─────────┘    └─────────┘
+
+🔍 Log Aggregation Flow:
+
+┌─────────┐    ┌─────────┐    ┌─────────┐
+│Multiple │───▶│  MQTT   │───▶│  Mova   │
+│Devices  │    │ Broker  │    │ Server  │
+└─────────┘    └─────────┘    └─────────┘
+                                   │
+               ┌─────────┐    ┌─────▼─────┐
+               │ Client  │◄───│   Log     │
+               │Dashboard│    │Aggregator │
+               └─────────┘    └───────────┘
+```
+
+---
+
+## 🧪 Testowanie i Weryfikacja
+
+### ✅ Uruchomienie Testów
+
+```bash
+# 🧪 Wszystkie testy
+make test
+
+# 🎯 Testy konkretnych komponentów  
+python -m pytest tests/test_cli.py -v        # CLI
+python -m pytest tests/test_server.py -v     # Server
+node tests/test_sdk.js                        # SDK
+
+# 📊 Coverage report
+python -m pytest --cov=. --cov-report=html
+```
+
+### 🔍 Weryfikacja Deploymentu
+
+```bash
+# ✅ Sprawdzenie serwera lokalnego
+curl http://localhost:8094/
+curl http://localhost:8094/examples/
+
+# ✅ Test WebSocket connection
+wscat -c ws://localhost:8094/ws
+
+# ✅ Test MQTT brokera
+mosquitto_pub -h localhost -p 1883 -t "test/topic" -m "Hello"
+mosquitto_sub -h localhost -p 1883 -t "test/topic"
+
+# ✅ Sprawdzenie Docker stack
+docker-compose ps
+docker logs mova-server
+docker logs mova-mqtt
+```
+
+---
+
+## 🤖 Autonomiczne Agenty AI - Human-LLM-OS Communication
+
+**Mova ** zawiera zaawansowane przykłady autonomicznej komunikacji między człowiekiem, sztuczną inteligencją (LLM) i systemem operacyjnym. Te przykłady demonstrują przyszłość interakcji human-computer z nadzorem człowieka.
+
+### 🚀 Dostępne Autonomiczne Agenty
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        AUTONOMICZNE AGENTY AI                               ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  🤖 autonomous-repair-agent.py      │ Agent napraw systemowych z nadzorem  ║
+║  👁️  interactive-supervisor.py      │ Real-time interface nadzoru AI-OS    ║
+║  🔧 multi-step-system-fixes.py      │ Wieloetapowe naprawy z rollbackiem   ║
+║  🛡️  autonomous-agent-safety-tests.py│ Framework testów bezpieczeństwa     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+### 🎯 Przykładowe Scenariusze Autonomiczne
+
+```bash
+# 🤖 Autonomiczna diagnoza i naprawa systemu
+python3 examples/autonomous-repair-agent.py
+# Cele: "Fix high CPU usage", "Clean disk space", "Optimize database"
+
+# 👁️ Real-time monitoring komunikacji AI-OS  
+python3 examples/interactive-supervisor.py
+# Monitor, zatwierdź/odrzuć, pełny audit trail
+
+# 🔧 Wieloetapowe naprawy systemowe
+python3 examples/multi-step-system-fixes.py
+# Wybierz: Web Server Optimization, Disk Space Recovery, Network Fix
+
+# 🛡️ Testowanie mechanizmów bezpieczeństwa
+python3 examples/autonomous-agent-safety-tests.py
+# Testy: Command Classification, Human Approval, Rate Limiting
+```
+
+### 🔒 Poziomy Nadzoru i Bezpieczeństwa
+
+```python
+# Konfigurowalny poziom nadzoru człowieka
+SupervisionLevel.FULL_AUTONOMOUS     # AI wykonuje bezpieczne komendy
+SupervisionLevel.REQUEST_APPROVAL    # Człowiek zatwierdza ryzykowne operacje
+SupervisionLevel.STEP_BY_STEP        # Człowiek zatwierdza każdy krok  
+SupervisionLevel.MONITOR_ONLY        # Tylko monitoring, bez wykonywania
+```
+
+### 📊 Real-time Monitoring Autonomous Workflows
+
+```bash
+# Terminal 1: Uruchom monitoring w trybie follow
+./venv/bin/mova watch all --follow --service autonomous-repair
+
+# Terminal 2: Uruchom autonomicznego agenta
+python3 examples/autonomous-repair-agent.py
+
+# Terminal 3: Monitoruj bezpieczeństwo
+./venv/bin/mova watch error --service safety --follow
+```
+
+**📖 Szczegółowa dokumentacja**: Zobacz [examples/README.md](examples/README.md) dla kompletnych instrukcji użycia i zaawansowanych scenariuszy.
+
+---
+
+## 🎯 Przykłady i Przypadki Użycia
+
+### 🏠 Smart Home Integration
+
+```bash
+# 🏡 Kontrola urządzeń domowych
+mova shell "gpio write 18 1"              # Włącz światło (RPi GPIO)
+mova shell "irsend SEND_ONCE tv POWER"     # Pilot TV (infrared)
+
+# 🌡️ Monitoring temperatury
+mova info "Temperatura: $(cat /sys/class/thermal/thermal_zone0/temp)"
+
+# 🔔 Powiadomienia
+mova http home-dashboard "
+  showNotification('Drzwi otwarte', 'warning');
+  updateSensorData('temperature', 23.5);
+"
+```
+
+### 🤖 IoT Device Management
+
+```bash
+# 📡 Zarządzanie flotą urządzeń
+mova shell "docker stats --no-stream"      # Status kontenerów
+mova shell "df -h"                         # Użycie dysku
+mova shell "free -h"                       # Użycie pamięci
+
+# 📊 Agregacja danych z sensorów
+mova info "sensor_data:temperature:23.5:celsius"
+mova info "sensor_data:humidity:65.2:percent"
+mova info "sensor_data:pressure:1013.25:hPa"
+```
+
+### 🔧 DevOps Automation
+
+```bash
+# 🚀 Deployment automation
+mova shell "git pull origin main"
+mova shell "docker-compose up -d --build"
+mova info "Deployment completed successfully"
+
+# 📋 Health monitoring  
+mova shell "curl -f http://localhost:8094/health || exit 1"
+mova warning "Service response time: $(curl -w '%{time_total}' http://localhost:8094/)"
+
+# 🔄 Log analysis
+mova list error --last 1h | grep "database"
+```
+
+---
+
+## ⚙️ Konfiguracja Zaawansowana
+
+### 📋 Config Files
+
+```json
+// config/default.json
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8094,
+    "cors": {
+      "origins": ["*"],
+      "methods": ["GET", "POST", "PUT", "DELETE"]
+    }
+  },
+  "mqtt": {
+    "broker": "localhost",
+    "port": 1883,
+    "websocket_port": 9001,
+    "topics": {
+      "commands": "mova/commands/{device_id}",
+      "responses": "mova/responses/{device_id}",
+      "logs": "mova/logs/{level}"
+    }
+  },
+  "shell": {
+    "allow": true,
+    "timeout": 30,
+    "allowed_commands": ["ls", "ps", "df", "free", "docker"]
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}
+```
+
+### 🔍 Log Filters (YAML DSL)
+
+```yaml
+# config/filters.yaml
+filters:
+  critical_errors:
+    level: error
+    keywords: ["database", "connection", "timeout"]
+    action: alert
+    
+  performance_warnings:
+    level: warning  
+    pattern: "response time > [0-9]+ms"
+    threshold: 1000
+    
+  device_status:
+    topics: ["mova/devices/+/status"]
+    transform: parse_json
+    store: sqlite
+    
+  security_events:
+    keywords: ["login", "auth", "failed"]
+    forward_to: "security@company.com"
+```
+
+---
+
+## 🔐 Bezpieczeństwo
+
+### 🛡️ Security Best Practices
+
+```bash
+# 🔒 Ograniczenie dostępu CLI
+export MOVA_ALLOWED_COMMANDS="ls,ps,df,free,docker"
+export MOVA_SHELL_TIMEOUT=30
+
+# 🌐 HTTPS w Docker (Caddy)
+# Dodaj domenę do Caddyfile:
+echo "yourdomain.com {
+    reverse_proxy mova-server:8094
+}" > caddy/Caddyfile
+
+# 🔐 MQTT Authentication
+echo "allow_anonymous false
+password_file /mosquitto/config/passwd" >> mosquitto.conf
+```
+
+### 🔑 Environment Variables
+
+```bash
+# .env file dla Docker Compose
+MOVA_SERVER_PORT=8094
+MOVA_MQTT_PORT=1883
+MOVA_MQTT_WS_PORT=9001
+OLLAMA_PORT=11437
+MOVA_LOG_LEVEL=INFO
+MOVA_ALLOW_SHELL=true
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### ❓ Często Spotykane Problemy
+
+```
+🔴 Problem: ⚠️ Service management modules not available
+💡 Rozwiązanie: 
+   make install                    # Zainstaluj wszystkie zależności
+   ./venv/bin/pip install psutil docker PyYAML feedgen aiohttp
+   # Sprawdź czy venv jest aktywne i moduły zainstalowane
+
+🔴 Problem: Import error podczas używania CLI
+💡 Rozwiązanie:
+   cd /path/to/mova/         # Przejdź do katalogu projektu
+   ./venv/bin/python cli/mova.py --help  # Użyj pełnej ścieżki
+   # CLI automatycznie doda katalog cli/ do sys.path
+
+🔴 Problem: Port 8094 already in use
+💡 Rozwiązanie: 
+   lsof -i :8094
+   kill -9 <PID>
+   # lub zmień port w config/default.json
+
+🔴 Problem: MQTT connection failed  
+💡 Rozwiązanie:
+   docker logs mova-mqtt
+   # Sprawdź mosquitto.conf
+   # Verify port 1883 is not blocked
+
+🔴 Problem: Examples directory not found
+💡 Rozwiązanie:
+   make up  # Rebuild Docker images
+   # Verify Dockerfile copies examples/ correctly
+
+🔴 Problem: CLI command not found
+💡 Rozwiązanie:
+   ./venv/bin/mova --help  # Use local installation
+   sudo make install-global  # Or install globally
+
+🔴 Problem: Voice interface nie działa (mova talk)
+💡 Rozwiązanie:
+   # Sprawdź mikrofon i audio system
+   pip install --upgrade openai-whisper pyaudio
+   # Na Ubuntu/Debian: sudo apt install portaudio19-dev
+   
+🔴 Problem: RSS server nie startuje
+💡 Rozwiązanie:
+   pip install aiohttp feedgen     # Zainstaluj zależności RSS
+   lsof -i :8011                  # Sprawdź czy port jest wolny
+   mova rss --port 8012           # Użyj innego portu
+```
+
+### 📊 Debugging Commands
+
+```bash
+# 🔍 Status diagnostics
+curl -s http://localhost:8094/ | jq
+docker-compose ps
+docker logs mova-server --tail 50
+
+# 🌐 Network connectivity
+nc -zv localhost 8094    # HTTP server
+nc -zv localhost 1883    # MQTT broker  
+nc -zv localhost 9001    # MQTT WebSocket
+
+# 📡 MQTT testing
+mosquitto_pub -h localhost -t "test" -m "hello"
+mosquitto_sub -h localhost -t "test" -v
+```
+
+---
+
+## 📚 Dodatkowa Dokumentacja
+
+```
+📖 Szczegółowe przewodniki:
+├── 🏗️  docs/architecture.md     # Architektura systemu
+├── 🚀 docs/getting_started.md  # Pierwsze kroki
+├── 🔧 docs/api_reference.md    # Dokumentacja API
+├── 🤖 docs/iot_integration.md  # Integracja IoT
+└── 🔒 docs/security.md         # Bezpieczeństwo
+```
+
+---
+
+## 🤝 Wsparcie i Społeczność
+
+```
+📧 Kontakt:        team@mova.dev
+🐛 Bug Reports:    GitHub Issues
+💬 Dyskusje:       GitHub Discussions  
+📋 Roadmap:        GitHub Projects
+🏷️ Releases:       GitHub Releases
+```
+
+---
+
+## 📄 Licencja
+
+```
+Apache Software License - Open Source
+© 2024 Mova Team
+
+Projekt rozwijany jest na zasadach open source.
+Szczegóły licencji w pliku LICENSE.
+```
+
+---
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  🎉 Dziękujemy za korzystanie z Mova !                                 ║
+║                                                                              ║
+║  🚀 Happy coding! 🌟 Star us on GitHub! 🤝 Contribute!                     ║
+║                                                                              ║
+║  📖 Dokumentacja: ./docs/     🧪 Testy: make test                          ║
+║  🐳 Docker: make up            ⚙️ CLI: mova --help                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
