@@ -1,0 +1,189 @@
+[project]
+name = "django-for-runners"
+dynamic = ["version"]
+description = "Store your GPX tracks of your running (or other sports activity) in django."
+license = {text = "GPL-3.0-or-later"}
+readme = "README.md"
+authors = [
+    {name = 'Jens Diemer', email = 'django-for-runners@jensdiemer.de'}
+]
+requires-python = ">=3.11"
+dependencies = [
+    "django>=5.1",  # https://docs.djangoproject.com
+
+    "colorlog",  # https://github.com/borntyping/python-colorlog
+    "gunicorn",  # https://github.com/benoimyproject.wsgitc/gunicorn
+
+    "django-processinfo",  # https://github.com/jedie/django-processinfo/
+    "django-debug-toolbar",  # http://django-debug-toolbar.readthedocs.io/en/stable/changes.html
+    "django-tools>=0.56.2",  # https://github.com/jedie/django-tools/
+    "django-import-export",  # https://github.com/django-import-export/django-import-export
+    "django-admin-sortable2",  # https://github.com/jrief/django-admin-sortable2
+    "autotask",  # https://github.com/kbr/autotask
+    "gpxpy", # https://github.com/tkrajina/gpxpy
+    "matplotlib",  # http://matplotlib.org/
+    "svgwrite",  # http://github.com/mozman/svgwrite.git
+    "geopy",  # https://github.com/geopy/geopy
+    "lxml",
+    "django-dbbackup",  # https://github.com/django-dbbackup/django-dbbackup
+
+    "requests",  # https://github.com/psf/requests
+    "requests-cache",  # https://github.com/requests-cache/requests-cache
+    "retry-requests",  # https://github.com/bustawin/retry-requests
+
+    "bx_py_utils",  # https://github.com/boxine/bx_py_utils
+    "bx_django_utils",  # https://github.com/boxine/bx_django_utils
+    "django-axes",  # https://github.com/jazzband/django-axes
+]
+[dependency-groups]
+dev = [
+    "django-debug-toolbar",  # http://django-debug-toolbar.readthedocs.io/en/stable/changes.html
+    "manage_django_project>=0.10.0",  # https://github.com/jedie/manage_django_project
+    "uv",  # https://github.com/astral-sh/uv
+    "hatchling",  # https://github.com/pypa/hatch/tree/master/backend
+    "playwright",  # https://github.com/microsoft/playwright-python
+    "tblib",   # https://github.com/ionelmc/python-tblib
+    "nox",  # https://github.com/wntrblm/nox
+    "coverage",  # https://github.com/nedbat/coveragepy
+    "ruff", # https://github.com/astral-sh/ruff
+    "codespell",  # https://github.com/codespell-project/codespell
+    "EditorConfig",  # https://github.com/editorconfig/editorconfig-core-py
+    "pip-audit",  # https://github.com/pypa/pip-audit
+    "mypy",  # https://github.com/python/mypy
+    "twine",  # https://github.com/pypa/twine
+    "pre-commit",  # https://github.com/pre-commit/pre-commit
+    "typeguard",  # https://github.com/agronholm/typeguard/
+    #
+    "model_bakery",  # https://github.com/model-bakers/model_bakery
+    "requests-mock",
+    "django-override-storage",  # https://github.com/danifus/django-override-storage
+]
+
+[project.urls]
+Documentation = "https://github.com/jedie/django-for-runners"
+Source = "https://github.com/jedie/django-for-runners"
+
+
+[project.scripts]
+# Must be set in ./manage.py and PROJECT_SHELL_SCRIPT:
+for_runners_project = "for_runners_project.__main__:main"
+
+[manage_django_project]
+module_name="for_runners_project"
+
+# Django settings used for all commands except test/coverage/tox:
+local_settings='for_runners_project.settings.local'
+
+# Django settings used for test/coverage/tox commands:
+test_settings='for_runners_project.settings.tests'
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["for_runners", "for_runners_project"]
+
+[tool.hatch.version]
+path = "for_runners/__init__.py"
+
+
+[tool.cli_base]
+version_module_name = "for_runners" # Used by "update-readme-history" pre-commit hook
+
+
+[tool.cli_base.pip_audit]
+# https://github.com/jedie/cli-base-utilities/blob/main/docs/pip_audit.md
+requirements=["requirements.dev.txt"]
+strict=true
+require_hashes=true
+ignore-vuln=[
+#    "CVE-2019-8341", # Jinja2: Side Template Injection (SSTI)
+]
+
+
+[tool.ruff]
+# https://docs.astral.sh/ruff/configuration/
+line-length = 120
+exclude = [
+  ".*/",
+  "*/migrations/*",
+]
+
+[tool.ruff.lint]
+preview = true  # Needed for some of the rules
+extend-select = [
+    "E", # pycodestyle: https://docs.astral.sh/ruff/rules/#error-e
+    "I", # isort: https://docs.astral.sh/ruff/rules/#isort-i
+]
+ignore = [
+    "E402", # https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file/
+    "E731", # https://docs.astral.sh/ruff/rules/lambda-assignment/
+]
+
+[tool.ruff.lint.isort]
+# https://docs.astral.sh/ruff/settings/#lintisort
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "single"
+
+
+[tool.coverage.run]  # https://coverage.readthedocs.io/en/latest/config.html#run
+branch = true
+parallel = true
+concurrency = ["multiprocessing"]
+source = ['.']
+command_line = '-m for_runners_project test --shuffle --parallel --buffer'
+
+[tool.coverage.report]
+omit = ['.*', '*/tests/*', '*/migrations/*']
+skip_empty = true
+fail_under = 30
+show_missing = true
+exclude_lines = [
+    'if self.debug:',
+    'pragma: no cover',
+    'raise NotImplementedError',
+    'if __name__ == .__main__.:',
+]
+
+[tool.mypy]
+warn_unused_configs = true
+ignore_missing_imports = true
+allow_redefinition = true  # https://github.com/python/mypy/issues/7165
+show_error_codes = true
+plugins = []
+exclude = ['.venv', 'tests', 'migrations']
+
+
+[manageprojects] # https://github.com/jedie/manageprojects
+initial_revision = "01611af"
+initial_date = 2023-01-25T09:47:16+01:00
+cookiecutter_template = "https://github.com/jedie/cookiecutter_templates/"
+cookiecutter_directory = "managed-django-project"
+applied_migrations = [
+    "89aadc0", # 2023-03-17T09:44:50+01:00
+    "2281f4b", # 2023-04-02T17:40:58+02:00
+    "10c547a", # 2023-04-04T20:37:52+02:00
+    "d65b082", # 2023-12-17T12:51:22+01:00
+    "a66e5ae", # 2024-01-16T19:13:13+01:00
+    "f8be3e0", # 2024-07-16T19:35:26+02:00
+    "52669d0", # 2024-08-02T15:47:04+02:00
+    "3dac094", # 2024-08-25T15:13:50+02:00
+    "fa64a73", # 2025-09-20T13:41:28+02:00
+]
+
+[manageprojects.cookiecutter_context.cookiecutter]
+full_name = "Jens Diemer"
+github_username = "jedie"
+author_email = "django-for-runners@jensdiemer.de"
+package_name = "for_runners"
+project_name = "django-for-runners"
+package_version = "0.16.0rc2"
+package_description = "Store your GPX tracks of your running (or other sports activity) in django."
+package_url = "https://github.com/jedie/django-for-runners"
+issues_url = "https://github.com/jedie/django-for-runners/issues"
+license = "GPL-3.0-or-later"
+_template = "https://github.com/jedie/cookiecutter_templates/"
