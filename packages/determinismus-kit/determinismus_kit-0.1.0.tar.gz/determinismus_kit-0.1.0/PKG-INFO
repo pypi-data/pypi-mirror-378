@@ -1,0 +1,64 @@
+Metadata-Version: 2.4
+Name: determinismus-kit
+Version: 0.1.0
+Summary: Kleines Determinismus-Kit für reproduzierbare Python-Läufe (Seeds, Threads, Snapshots, optional PyTorch/NumPy).
+Author: Dein Name
+License-Expression: MIT
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Provides-Extra: torch
+Requires-Dist: torch; extra == "torch"
+Provides-Extra: numpy
+Requires-Dist: numpy; extra == "numpy"
+Dynamic: license-file
+
+# Determinismus-Kit für Python
+
+Ein kleines Toolkit, das Python-Läufe reproduzierbarer macht:
+- Seeds setzen (`random`, optional `numpy`, optional `torch`)
+- Threads bändigen (OMP/BLAS/MKL)
+- Umgebungs-Snapshot (Versionen/ENV)
+- CLI: `python -m determinismus_kit run ...` oder `determinismus-kit`
+
+## Installation (lokal)
+```bash
+pip install .
+```
+oder für Entwicklung:
+```bash
+pip install -e .
+```
+
+## Nutzung
+### Als Bibliothek
+```python
+from determinismus_kit import deterministic
+
+with deterministic(seed=123, threads=1):
+    import random
+    print([random.random() for _ in range(3)])
+```
+
+### Als CLI
+```bash
+python -m determinismus_kit run --seed 123 --threads 1 your_script.py
+# oder
+determinismus-kit run --seed 123 --threads 1 your_script.py
+```
+
+Optionen:
+- `--seed` Seed für RNGs (Default: 123)
+- `--threads` Anzahl Threads für BLAS/OMP (Default: 1)
+- `--snapshot PATH` Umgebungssnapshot schreiben
+- `--no-cuda-determinism` CUDA-Deterministik nicht erzwingen
+
+Argumente für das Zielskript kommen **nach `--`**:
+```bash
+determinismus-kit run --seed 123 your_script.py -- --foo bar
+```
+
+## Hinweise
+- NumPy/PyTorch werden automatisch unterstützt, wenn installiert.
+- Kleine Abweichungen auf verschiedener Hardware/OS sind möglich (Floating-Point).
+- Das Toolkit ist „best effort“ – für viele Praxisfälle ausreichend.
