@@ -1,0 +1,93 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # For version checking
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+
+      - name: Install dependencies
+        run: |
+          uv sync --group test
+          uv pip install -e .
+
+      - name: Lint with flake8
+        run: |
+          uv run --group test flake8 sicko _tests --count --select=E9,F63,F7,F82 --show-source --statistics
+          uv run --group test flake8 sicko _tests --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+      - name: Type check with mypy
+        run: uv run --group test mypy sicko
+
+      - name: Format check with black
+        run: uv run --group test black --check sicko _tests
+
+      - name: Test with pytest
+        run: uv run --group test pytest --cov=sicko --cov-report=xml --cov-fail-under=95
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+
+  version-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install packaging
+        run: pip install packaging
+
+      - name: Check version bump
+        run: |
+          # Get the version from main branch
+          git fetch origin main
+          MAIN_VERSION=$(git show origin/main:pyproject.toml | grep '^version = ' | cut -d '"' -f 2)
+
+          # Get current version
+          CURRENT_VERSION=$(grep '^version = ' pyproject.toml | cut -d '"' -f 2)
+
+          echo "Main branch version: $MAIN_VERSION"
+          echo "PR version: $CURRENT_VERSION"
+
+          # Compare versions using python
+          python3 -c "
+          import sys
+          from packaging import version
+          main_ver = version.parse('$MAIN_VERSION')
+          current_ver = version.parse('$CURRENT_VERSION')
+          if current_ver <= main_ver:
+              print(f'❌ Version must be bumped! Current: {current_ver}, Main: {main_ver}')
+              sys.exit(1)
+          else:
+              print(f'✅ Version properly bumped from {main_ver} to {current_ver}')
+          "
