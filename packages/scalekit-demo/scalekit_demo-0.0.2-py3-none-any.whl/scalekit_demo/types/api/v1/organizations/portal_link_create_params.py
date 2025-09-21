@@ -1,0 +1,18 @@
+# File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+
+from __future__ import annotations
+
+from typing import Iterable
+from typing_extensions import TypedDict
+
+__all__ = ["PortalLinkCreateParams"]
+
+
+class PortalLinkCreateParams(TypedDict, total=False):
+    directory_sync: bool
+    """Deprecated: Use features"""
+
+    features: Iterable[int]
+
+    sso: bool
+    """Deprecated: Use features"""
