@@ -1,0 +1,16 @@
+## ftpleasant
+
+A wrapper built on top of python's built-in FTPlib to simplify operations such as uploading or download files from a server.
+
+This module is meant as a replacement to codebynumber's [_ftpretty_](https://github.com/codebynumbers/ftpretty) as that project includes functionality which I deemed unnecessary and does not include other functionality. 
+
+On top of what ftpretty can do, ftpleasant:
+- Drops support for Python 2
+- Separates the content putting/getting functions into their own functions, for more explicit programming
+- Adds a function for the welcome message, as well as retrieving server functionality
+- Adds support for usage with the "with" keyword
+- Has prettier returns (e.g. get() returns a dict containing some info about the operation)
+
+Unrecognised commands are not passed to the underlying FTP or FTP_TLS object. This was done on purpose to encourage more explicit and safer programming.
+
+Supports Python 3.7+
