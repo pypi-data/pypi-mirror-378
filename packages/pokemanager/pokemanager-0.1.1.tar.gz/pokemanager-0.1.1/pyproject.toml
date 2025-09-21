@@ -1,0 +1,94 @@
+[project]
+name = "pokemanager"
+dynamic = ["version"]
+description = "A suite of tools for analysing Pokémon teams."
+urls = { Documentation = "http://pokemanager.readthedocs.io/en/latest/", Source = "https://github.com/ethan-shanahan/pokemanager" }
+authors = [{ name = "Ethan Shanahan", email = "ethan.shanahan@gmail.com" }]
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+classifiers = [
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Operating System :: OS Independent",
+    "Intended Audience :: End Users/Desktop",
+    "Development Status :: 3 - Alpha"
+]
+keywords = ["pokemon", "analysis"]
+requires-python = ">=3.11"
+dependencies = [
+    "gspread"
+]
+
+[project.scripts]
+pokemanager = "pokemanager.cli:main"
+pkm = "pokemanager.cli:main"
+
+# Build System
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+[tool.setuptools_scm]
+version_file = "src/pokemanager/_version.py"
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64"]
+
+# Dependencies
+[tool.pixi.pypi-dependencies]
+pokemanager = { path = ".", editable = true }
+[tool.pixi.dependencies]
+ruff = "*"
+pyright = "*"
+pre-commit = "*"
+
+[tool.pixi.tasks]
+
+# Features
+[tool.pixi.feature.py3]
+dependencies = { python = "3.*"}
+[tool.pixi.feature.build]
+pypi-dependencies = { build = "*" }
+tasks = { build-dist = "python -m build" }
+[tool.pixi.feature.mkdocs]
+dependencies = { mkdocs = "*", mkdocs-material = "*" }
+tasks = { build-docs = "mkdocs gh-deploy" }
+
+# Extra Environments
+[tool.pixi.environments]
+dist = { no-default-feature = true, features = ["py3", "build"] } # CI env
+docs = { no-default-feature = true, features = ["py3", "mkdocs"] } # CI env
+
+# Tool Config
+
+[tool.ruff]
+extend-exclude = [
+    "_version.py",
+    "__init__.py"
+]
+line-length = 120
+[tool.ruff.lint]
+ignore = [
+    'PLR2004',  # Magic value used in comparison
+    "D417"      # Documentation for every function parameter
+]
+select = [
+    'E',    # pydocstyle
+    'W',    # pydocstyle
+    "D",    # pydocstyle
+    'F',    # pyflakes
+    'I',    # isort
+    'N',    # pep8-naming
+    'PLC',  # pylint-convention
+    'PLE',  # pylint-error
+    'PLR',  # pylint-refactor
+    'PLW',  # pylint-warning
+    'RUF'   # ruff
+]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"  # Allow unused variables when underscore-prefixed.
+pydocstyle = { convention = "google" }
+
+[tool.pyright]
+strict = ["src"]
+pythonVersion = "3.11"
