@@ -1,0 +1,423 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Timbal Platform API",
+    "description": "API documentation for the Timbal platform",
+    "license": {
+      "name": ""
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://dev.timbal.ai"
+    }
+  ],
+  "paths": {
+    "/orgs/{org_id}/embedding-models": {
+      "get": {
+        "tags": [
+          "embeddings"
+        ],
+        "description": "List all available embedding models for the organization",
+        "operationId": "handler",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of embedding models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEmbeddingModelsResBody"
+                },
+                "example": {
+                  "embedding_models": [
+                    "text-embedding-ada-002",
+                    "text-embedding-3-small",
+                    "text-embedding-3-large"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/orgs/{org_id}/kbs/{kb_id}/embeddings": {
+      "post": {
+        "tags": [
+          "embeddings"
+        ],
+        "description": "Create a new embedding",
+        "operationId": "handler",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "kb_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmbeddingReqBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Embedding created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/orgs/{org_id}/kbs/{kb_id}/indexes": {
+      "post": {
+        "tags": [
+          "indexes"
+        ],
+        "description": "Create a new index on a table",
+        "operationId": "handler",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "kb_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIndexReqBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Index created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/orgs/{org_id}/kbs/{kb_id}/tables/{table_name}/search": {
+      "post": {
+        "tags": [
+          "tables"
+        ],
+        "description": "Search for records in a table",
+        "operationId": "handler",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "kb_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "table_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchTableReqBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Array of records matching the search query. Structure depends on the table schema and selected columns.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+
+                  }
+                },
+                "example": [
+                  {
+                    "id": 1,
+                    "name": "Alice Johnson",
+                    "email": "alice@example.com"
+                  },
+                  {
+                    "id": 2,
+                    "name": null,
+                    "email": "bob@example.com"
+                  },
+                  {
+                    "id": 3,
+                    "name": "Carol",
+                    "email": "carol@example.com"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateEmbeddingReqBody": {
+        "type": "object",
+        "required": [
+          "name",
+          "table_name",
+          "column_name",
+          "model",
+          "with_gin_index"
+        ],
+        "properties": {
+          "column_name": {
+            "type": "string",
+            "description": "Name of the source column"
+          },
+          "model": {
+            "$ref": "#/components/schemas/EmbeddingModel",
+            "description": "Embedding model to use. See the list embedding models endpoint for available options."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the embedding"
+          },
+          "table_name": {
+            "type": "string",
+            "description": "Name of the source table"
+          },
+          "with_gin_index": {
+            "type": "boolean",
+            "description": "Whether to create a GIN index for the source column for faster hybrid search"
+          }
+        }
+      },
+      "CreateIndexReqBody": {
+        "type": "object",
+        "required": [
+          "table_name",
+          "name",
+          "column_names",
+          "type",
+          "is_unique"
+        ],
+        "properties": {
+          "column_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of column names to index"
+          },
+          "is_unique": {
+            "type": "boolean",
+            "description": "Whether the index should enforce uniqueness"
+          },
+          "name": {
+            "type": "string",
+            "description": "Index name. This must be unique in the entire Knowledge Base."
+          },
+          "table_name": {
+            "type": "string",
+            "description": "Table name"
+          },
+          "type": {
+            "$ref": "#/components/schemas/IndexType",
+            "description": "Index type"
+          }
+        }
+      },
+      "EmbeddingModel": {
+        "type": "string"
+      },
+      "IndexType": {
+        "type": "string",
+        "enum": [
+          "btree",
+          "hash",
+          "gin",
+          "gist",
+          "brin",
+          "hnsw"
+        ]
+      },
+      "ListEmbeddingModelsResBody": {
+        "type": "object",
+        "required": [
+          "embedding_models"
+        ],
+        "properties": {
+          "embedding_models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmbeddingModel"
+            }
+          }
+        }
+      },
+      "SearchTableReqBody": {
+        "type": "object",
+        "required": [
+          "query",
+          "embedding_names"
+        ],
+        "properties": {
+          "embedding_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of embedding names to use for semantic search."
+          },
+          "fts_columns": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "List of column names to use for full-text search. When specified together with embedding_names, search will be hybrid (both semantic and full-text)."
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Maximum number of results to return.",
+            "default": 10
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of results to skip before returning.",
+            "default": 0
+          },
+          "query": {
+            "type": "string",
+            "description": "Semantic search query."
+          },
+          "select_columns": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "List of column names to return in the search results. When not specified, all columns will be returned."
+          },
+          "where_clause": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "SQL WHERE clause to apply to the search."
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer_auth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Timbal API key. Obtain your API key from the Timbal platform settings. See [Authentication](/api-reference/authentication) for more information."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "embeddings",
+      "description": "KB Embeddings operations"
+    },
+    {
+      "name": "indexes",
+      "description": "KB Indexes operations"
+    },
+    {
+      "name": "tables",
+      "description": "KB Tables operations"
+    }
+  ]
+}
