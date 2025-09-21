@@ -1,0 +1,207 @@
+# ServerIP
+
+A Python library to get your server's public IP address directly from system network interfaces - **no external API calls required**.
+
+## Features
+
+- 🚀 **Zero external requests** - Works completely offline
+- 🔍 **Multi-platform support** - Linux, Windows, macOS
+- 📡 **All network interfaces** - Discover all public IPs on the server
+- 🛡️ **Private IP detection** - Automatically filters out private/local IPs
+- 💻 **CLI included** - Use from command line
+- 📊 **Comprehensive info** - Get interface details, MAC addresses, status
+- 🔄 **Multiple fallback methods** - Uses different techniques for reliability
+
+## Installation
+
+```bash
+pip install serverip
+```
+
+## Quick Start
+
+```python
+from serverip import get_server_public_ip, get_all_server_ips
+
+# Get the primary public IP of this server
+public_ip = get_server_public_ip()
+print(f"Server public IP: {public_ip}")
+
+# Get all public IPs assigned to this server
+all_ips = get_all_server_ips()
+print(f"All public IPs: {all_ips}")
+```
+
+## Full API Usage
+
+```python
+from serverip import ServerIPLocator
+
+# Create locator instance
+locator = ServerIPLocator()
+
+# Get primary public IP
+public_ip = locator.get_public_ip()
+print(f"Primary public IP: {public_ip}")
+
+# Get all public IPs
+all_public_ips = locator.get_all_public_ips()
+print(f"All public IPs: {all_public_ips}")
+
+# Get comprehensive server info
+info = locator.get_server_info()
+print(f"Hostname: {info.hostname}")
+print(f"Platform: {info.platform}")
+print(f"Public IPs: {info.public_ips}")
+print(f"Private IPs: {info.private_ips}")
+
+# Examine network interfaces
+for interface in info.interfaces:
+    print(f"Interface {interface.name}:")
+    print(f"  IP: {interface.ip_address}")
+    print(f"  Public: {interface.is_public}")
+    print(f"  Status: {'UP' if interface.is_up else 'DOWN'}")
+    print(f"  MAC: {interface.mac_address}")
+
+# Get specific interface info
+eth0 = locator.get_interface_by_name('eth0')
+if eth0:
+    print(f"eth0 IP: {eth0.ip_address}")
+
+# Get default route interface IP
+default_ip = locator.get_default_route_ip()
+print(f"Default route IP: {default_ip}")
+```
+
+## Command Line Usage
+
+```bash
+# Get primary public IP
+serverip
+
+# Get all public IPs
+serverip --all
+
+# Show all network interfaces
+serverip --interfaces
+
+# Get comprehensive server information
+serverip --info
+
+# Output as JSON
+serverip --info --json
+```
+
+## Example Output
+
+```bash
+$ serverip --info
+Hostname: web-server-01
+Platform: linux
+Public IPs: 203.0.113.45, 198.51.100.30
+Private IPs: 192.168.1.100, 10.0.0.50
+
+Interfaces:
+  eth0: 203.0.113.45 (PUBLIC, UP)
+  eth1: 198.51.100.30 (PUBLIC, UP)
+  eth2: 192.168.1.100 (PRIVATE, UP)
+  lo: 127.0.0.1 (PRIVATE, UP)
+```
+
+## How It Works
+
+The library uses multiple methods to discover your server's IP addresses:
+
+1. **Primary method**: Uses the `netifaces` library to enumerate network interfaces
+2. **Linux fallback**: Parses `ip addr` or `ifconfig` command output
+3. **Windows fallback**: Parses `ipconfig` command output  
+4. **macOS fallback**: Parses `ifconfig` command output
+5. **Socket fallback**: Uses Python's socket library as last resort
+
+All methods automatically filter out:
+- Private IP ranges (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+- Loopback addresses (127.x.x.x)
+- Link-local addresses (169.254.x.x)
+- Multicast and reserved ranges
+
+## Use Cases
+
+Perfect for:
+
+- **Web servers** - Determine your server's public IP for configuration
+- **Load balancers** - Identify which IPs are available for binding
+- **Monitoring systems** - Track server network configuration
+- **Auto-configuration** - Set up services that need to know their public IP
+- **Security applications** - Audit network interfaces
+- **Docker containers** - Discover container's public network access
+- **Cloud instances** - Get public IP without cloud provider APIs
+
+## Platform Support
+
+- ✅ **Linux** - Full support with multiple detection methods
+- ✅ **Windows** - Full support via ipconfig parsing
+- ✅ **macOS** - Full support via ifconfig parsing  
+- ✅ **Other Unix-like** - Basic support via socket methods
+
+## Data Classes
+
+### ServerIPInfo
+- `public_ips`: List of public IP addresses
+- `private_ips`: List of private IP addresses
+- `interfaces`: List of NetworkInterface objects
+- `hostname`: Server hostname
+- `platform`: Operating system platform
+
+### NetworkInterface  
+- `name`: Interface name (e.g., 'eth0', 'wlan0')
+- `ip_address`: IP address assigned to interface
+- `netmask`: Network mask
+- `is_public`: Whether IP is public (not private/local)
+- `is_up`: Whether interface is active
+- `mac_address`: MAC address (if available)
+
+## Error Handling
+
+The library is designed to be robust:
+
+```python
+try:
+    ip = get_server_public_ip()
+    if ip:
+        print(f"Public IP: {ip}")
+    else:
+        print("No public IP found - server may be behind NAT")
+except Exception as e:
+    print(f"Error getting IP: {e}")
+```
+
+## Requirements
+
+- Python 3.6+
+- netifaces library (automatically installed)
+
+## Security Note
+
+This library only reads network interface information that's already available to your application. It doesn't make any network requests or access sensitive system resources.
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if needed  
+5. Submit a pull request
+
+## Changelog
+
+### v1.0.0
+- Initial release
+- Multi-platform support (Linux, Windows, macOS)
+- Network interface enumeration
+- Public/private IP detection
+- CLI interface
+- Comprehensive server information
