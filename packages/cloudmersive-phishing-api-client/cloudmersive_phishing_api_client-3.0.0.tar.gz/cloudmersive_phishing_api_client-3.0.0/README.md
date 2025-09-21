@@ -1,0 +1,107 @@
+# cloudmersive_phishing_api_client
+Easily and directly scan and block phishing security threats in input.
+
+This Python package provides a native API client for [Cloudmersive Phishing Detection API](https://cloudmersive.com/phishing-detection-api)
+
+- API version: v1
+- Package version: 3.0.0
+- Build package: io.swagger.codegen.languages.PythonClientCodegen
+
+## Requirements.
+
+Python 2.7 and 3.4+
+
+## Installation & Usage
+### pip install
+
+If the python package is hosted on Github, you can install directly from Github
+
+```sh
+pip install git+https://github.com/GIT_USER_ID/GIT_REPO_ID.git
+```
+(you may need to run `pip` with root permission: `sudo pip install git+https://github.com/GIT_USER_ID/GIT_REPO_ID.git`)
+
+Then import the package:
+```python
+import cloudmersive_phishing_api_client 
+```
+
+### Setuptools
+
+Install via [Setuptools](http://pypi.python.org/pypi/setuptools).
+
+```sh
+python setup.py install --user
+```
+(or `sudo python setup.py install` to install the package for all users)
+
+Then import the package:
+```python
+import cloudmersive_phishing_api_client
+```
+
+## Getting Started
+
+Please follow the [installation procedure](#installation--usage) and then run the following:
+
+```python
+from __future__ import print_function
+import time
+import cloudmersive_phishing_api_client
+from cloudmersive_phishing_api_client.rest import ApiException
+from pprint import pprint
+
+# Configure API key authorization: Apikey
+configuration = cloudmersive_phishing_api_client.Configuration()
+configuration.api_key['Apikey'] = 'YOUR_API_KEY'
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['Apikey'] = 'Bearer'
+
+# create an instance of the API class
+api_instance = cloudmersive_phishing_api_client.PhishingDetectionApi(cloudmersive_phishing_api_client.ApiClient(configuration))
+body = cloudmersive_phishing_api_client.AdvancedEmailDetectionRequest() # AdvancedEmailDetectionRequest | Phishing detection request (optional)
+
+try:
+    # Perform advanced AI phishing detection and classification against input email.  Analyzes input email as well as embedded URLs with AI deep learning to detect phishing, phishing and other unsafe content.  Uses 25-100 API calls depending on model selected.
+    api_response = api_instance.phishing_detect_email_advanced_post(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling PhishingDetectionApi->phishing_detect_email_advanced_post: %s\n" % e)
+
+```
+
+## Documentation for API Endpoints
+
+All URIs are relative to *https://localhost*
+
+Class | Method | HTTP request | Description
+------------ | ------------- | ------------- | -------------
+*PhishingDetectionApi* | [**phishing_detect_email_advanced_post**](docs/PhishingDetectionApi.md#phishing_detect_email_advanced_post) | **POST** /phishing/detect/email/advanced | Perform advanced AI phishing detection and classification against input email.  Analyzes input email as well as embedded URLs with AI deep learning to detect phishing, phishing and other unsafe content.  Uses 25-100 API calls depending on model selected.
+*PhishingDetectionApi* | [**phishing_detect_file_advanced_post**](docs/PhishingDetectionApi.md#phishing_detect_file_advanced_post) | **POST** /phishing/detect/file/advanced | Perform advanced AI phishing detection and classification against input text string.  Analyzes input content as well as embedded URLs with AI deep learning to detect phishing, phishing and other unsafe content.  Uses 25-100 API calls depending on model selected.
+*PhishingDetectionApi* | [**phishing_detect_file_post**](docs/PhishingDetectionApi.md#phishing_detect_file_post) | **POST** /phishing/detect/file | Perform AI phishing detection and classification on an input image or document (PDF or DOCX).  Analyzes input content as well as embedded URLs with AI deep learnign to detect phishing and other unsafe content.  Uses 100-125 API calls depending on model selected.
+*PhishingDetectionApi* | [**phishing_detect_text_string_advanced_post**](docs/PhishingDetectionApi.md#phishing_detect_text_string_advanced_post) | **POST** /phishing/detect/text-string/advanced | Perform advanced AI phishing detection and classification against input text string.  Analyzes input content as well as embedded URLs with AI deep learnign to detect spam, phishing and other unsafe content.  Uses 25-100 API calls depending on model selected.
+
+
+## Documentation For Models
+
+ - [AdvancedEmailDetectionRequest](docs/AdvancedEmailDetectionRequest.md)
+ - [PhishingDetectionAdvancedRequest](docs/PhishingDetectionAdvancedRequest.md)
+ - [PhishingDetectionAdvancedResponse](docs/PhishingDetectionAdvancedResponse.md)
+ - [PhishingDetectionEmailAdvancedResponse](docs/PhishingDetectionEmailAdvancedResponse.md)
+ - [PhishingDetectionResponse](docs/PhishingDetectionResponse.md)
+
+
+## Documentation For Authorization
+
+
+## Apikey
+
+- **Type**: API key
+- **API key parameter name**: Apikey
+- **Location**: HTTP header
+
+
+## Author
+
+
+
