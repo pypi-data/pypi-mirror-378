@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Cap URL Pattern Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        .error {
+            color: #d32f2f;
+        }
+        .success {
+            color: #388e3c;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .test-cases {
+            margin-top: 20px;
+        }
+        .test-case {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #ccc;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chrome Cap URL Pattern Test</h1>
+    <p>This utility tests URL conversion to Chrome Tab API compatible patterns.</p>
+    
+    <div class="input-group">
+        <label for="urlInput">Enter a URL to convert:</label>
+        <input type="text" id="urlInput" placeholder="https://example.com/page" value="https://web.whatsapp.com">
+    </div>
+    
+    <button id="convertBtn">Convert URL</button>
+    <button id="runTestsBtn">Run Test Cases</button>
+    
+    <div class="result" id="resultContainer">
+        <h3>Result:</h3>
+        <p id="resultText">Enter a URL and click Convert URL to see the result.</p>
+    </div>
+    
+    <div class="test-cases">
+        <h2>Test Cases</h2>
+        <table id="testResults">
+            <thead>
+                <tr>
+                    <th>Input URL</th>
+                    <th>Expected Pattern</th>
+                    <th>Actual Pattern</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Test results will be displayed here -->
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        // Function to convert URL to Chrome tabs.query pattern
+        function urlToPattern(url) {
+            if (!url) return "";
+            
+            try {
+                if (url.includes("*")) {
+                    return url; // Already a pattern
+                }
+                
+                const urlObj = new URL(url);
+                return `*://${urlObj.hostname}/*`;
+            } catch (e) {
+                console.error(`Failed to convert URL "${url}" to pattern:`, e);
+                return url; // Return original as fallback
+            }
+        }
+        
+        // Function to display conversion result
+        function displayResult(inputUrl, pattern, isError = false) {
+            const resultText = document.getElementById('resultText');
+            
+            if (isError) {
+                resultText.innerHTML = `<span class="error">Error: ${pattern}</span>`;
+                return;
+            }
+            
+            resultText.innerHTML = `
+                <p><strong>Input URL:</strong> <code>${inputUrl}</code></p>
+                <p><strong>Pattern:</strong> <code>${pattern}</code></p>
+                <p class="success">This pattern can be used with chrome.tabs.query({ url: pattern })</p>
+            `;
+        }
+        
+        // Test cases
+        const testCases = [
+            { input: "https://web.whatsapp.com", expected: "*://web.whatsapp.com/*" },
+            { input: "http://example.com/page?query=123", expected: "*://example.com/*" },
+            { input: "https://mail.google.com/mail/u/0/", expected: "*://mail.google.com/*" },
+            { input: "chrome://extensions/", expected: "chrome://extensions/" }, // Invalid URL, should remain as is
+            { input: "*://example.org/*", expected: "*://example.org/*" }, // Already a pattern
+            { input: "https://sub.domain.example.net/path", expected: "*://sub.domain.example.net/*" },
+            { input: "about:blank", expected: "about:blank" }, // Special URL, should remain as is
+            { input: "file:///Users/user/file.txt", expected: "*:///*" }, // File URL will result in unusual pattern
+            { input: "", expected: "" } // Empty input
+        ];
+        
+        // Function to run test cases
+        function runTests() {
+            const tbody = document.querySelector('#testResults tbody');
+            tbody.innerHTML = ''; // Clear previous results
+            
+            testCases.forEach(test => {
+                const actualPattern = urlToPattern(test.input);
+                const passed = actualPattern === test.expected;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><code>${test.input || "(empty)"}</code></td>
+                    <td><code>${test.expected}</code></td>
+                    <td><code>${actualPattern}</code></td>
+                    <td class="${passed ? 'success' : 'error'}">${passed ? '✓ PASS' : '✗ FAIL'}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Event listeners
+        document.getElementById('convertBtn').addEventListener('click', () => {
+            const urlInput = document.getElementById('urlInput').value.trim();
+            
+            try {
+                const pattern = urlToPattern(urlInput);
+                displayResult(urlInput, pattern);
+            } catch (error) {
+                displayResult(urlInput, error.message, true);
+            }
+        });
+        
+        document.getElementById('runTestsBtn').addEventListener('click', runTests);
+        
+        // Run initial conversion on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('convertBtn').click();
+        });
+    </script>
+</body>
+</html> 

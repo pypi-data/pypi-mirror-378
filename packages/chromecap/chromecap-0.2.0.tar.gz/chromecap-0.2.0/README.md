@@ -1,0 +1,535 @@
+# ChromeCap
+
+ChromeCap is a powerful Python package for capturing high-quality screenshots of Chrome tabs programmatically. It combines a FastAPI server, a web client, and Chrome extension integration to enable seamless screenshot capture for automation, testing, and analysis.
+
+[![PyPI version](https://badge.fury.io/py/chromecap.svg)](https://badge.fury.io/py/chromecap)
+[![Tests](https://github.com/civai-technologies/chrome-cap/actions/workflows/test.yml/badge.svg)](https://github.com/civai-technologies/chrome-cap/actions/workflows/test.yml)
+[![License](https://img.shields.io/github/license/civai-technologies/chrome-cap)](https://github.com/civai-technologies/chrome-cap/blob/main/LICENSE)
+
+## Key Features
+
+- **AI-Powered Image Analysis:** Analyze screenshots with natural language queries using `--query`
+- **Interactive Page Actions:** Perform actions on pages before capturing with `--perform`
+- **Console Log Extraction:** Capture console logs from any tab for debugging and analysis
+- **Versatile Capture:** Screenshot any URL, including localhost development servers
+- **Chrome Extension Integration:** Works with the BrowserGPT extension for advanced capture capabilities
+- **Programmable API:** Both HTTP REST API and Python interface
+- **Socket.IO Support:** Real-time communication between server and extension
+- **Flexible Output:** Save to custom locations or get raw binary/base64 data
+- **Post-Capture Actions:** Redirect to URLs or desktop apps after capture
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Performance Features](#performance-features)
+  - [AI-Powered Image Analysis](#-ai-powered-image-analysis)
+  - [Interactive Page Actions](#-interactive-page-actions)
+  - [Combined Workflows](#-combined-workflows)
+- [Usage Examples](#usage-examples)
+  - [Command Line Interface](#command-line-interface)
+  - [Python API](#python-api)
+  - [HTTP REST API](#http-rest-api)
+- [Architecture](#architecture)
+- [Extension Integration](#extension-integration)
+- [Configuration](#configuration)
+- [Image Analysis with AI](#image-analysis-with-ai)
+- [Development](#development)
+  - [Contributing](#contributing)
+  - [Testing](#testing)
+  - [Building](#building)
+- [Security Considerations](#security-considerations)
+- [License](#license)
+
+## Installation
+
+### From PyPI
+
+```bash
+pip install chromecap
+```
+
+### Prerequisites
+
+- **Python 3.9+**
+- **Chrome Browser**
+- **BrowserGPT Chrome Extension** (for best experience) [Download Here](https://chromewebstore.google.com/detail/browsergpt-operator/hipciehccffmaaoghpleiffkcgbefjhf)
+
+### For Image Analysis
+
+```bash
+pip install chromecap cursor-agent-tools
+```
+
+### Development Installation
+
+```bash
+git clone https://github.com/civai-technologies/chrome-cap.git
+cd chrome-cap
+pip install -e ".[dev]"
+```
+
+## Quick Start
+
+1. **Start the server**:
+   ```bash
+   chromecap start
+   ```
+
+2. **Capture and analyze with AI** (requires cursor-agent-tools):
+   ```bash
+   chromecap capture https://example.com --query "What UI elements are present?"
+   ```
+
+3. **Perform actions and capture**:
+   ```bash
+   chromecap capture https://example.com --perform "click the login button" --output screenshot.png
+   ```
+
+4. **Capture console logs**:
+   ```bash
+   chromecap capture https://example.com --log console_logs.txt
+   ```
+
+5. **Basic screenshot capture**:
+   ```bash
+   chromecap capture https://example.com --output screenshot.png
+   ```
+
+## Performance Features
+
+ChromeCap's most powerful features for automation and analysis:
+
+### 🤖 AI-Powered Image Analysis
+
+Analyze screenshots with natural language queries using the `--query` option:
+
+```bash
+# UI/UX Analysis
+chromecap capture https://example.com --query "What usability issues do you see?"
+chromecap capture https://example.com --query "Are there any accessibility problems?"
+
+# Content Analysis
+chromecap capture https://example.com --query "What is the main content of this page?"
+chromecap capture https://example.com --query "Identify all interactive elements"
+
+# Design Analysis
+chromecap capture https://example.com --query "Describe the visual hierarchy and layout"
+chromecap capture https://example.com --query "What design patterns are used?"
+```
+
+### 🎯 Interactive Page Actions
+
+Perform actions on pages before capturing using the `--perform` option:
+
+```bash
+# Form Interactions
+chromecap capture https://example.com --perform "fill in the login form and submit"
+chromecap capture https://example.com --perform "click the signup button"
+
+# Navigation Actions
+chromecap capture https://example.com --perform "click the menu and select 'About'"
+chromecap capture https://example.com --perform "scroll down to the footer"
+
+# Complex Workflows
+chromecap capture https://example.com --perform "search for 'python' and click the first result"
+chromecap capture https://example.com --perform "add item to cart and proceed to checkout"
+```
+
+### 🔄 Combined Workflows
+
+Combine actions with analysis for powerful automation:
+
+```bash
+# Action + Analysis
+chromecap capture https://example.com --perform "click the menu" --query "What menu items are visible?"
+
+# Multi-step Analysis
+chromecap capture https://example.com --perform "login" --query "What dashboard elements are present?"
+chromecap capture https://example.com --perform "fill form" --query "Are there any validation errors?"
+```
+
+## Usage Examples
+
+### Command Line Interface
+
+ChromeCap provides an intuitive CLI for most common tasks:
+
+```bash
+# AI-powered image analysis (requires cursor-agent-tools)
+chromecap capture https://example.com --query "What UI elements are present?"
+chromecap capture https://example.com --query "Are there any accessibility issues?"
+
+# Perform actions before capturing
+chromecap capture https://example.com --perform "click the login button"
+chromecap capture https://example.com --perform "fill in the form and submit"
+
+# Combine actions with analysis
+chromecap capture https://example.com --perform "click the menu" --query "What menu items are visible?"
+
+# Basic capture
+chromecap capture https://example.com --output screenshot.png
+
+# Capture console logs
+chromecap capture https://example.com --log console_logs.txt
+
+# Capture logs with custom timeout (2 minutes)
+chromecap capture https://example.com --log logs.txt --timeout 120
+
+# Combine screenshot and log capture
+chromecap capture https://example.com --output screenshot.png --log logs.txt
+
+# With redirect after capture
+chromecap capture https://example.com --redirect "https://next-site.com"
+
+# Debug mode with detailed logs
+chromecap capture https://example.com --debug
+
+# Force HTTP mode (bypass Socket.IO)
+chromecap capture https://example.com --force-http
+
+# List available screenshots
+chromecap list
+
+# Get a specific screenshot by ID
+chromecap get abc123 --output my_screenshot.png
+
+# Analyze existing image
+chromecap analyze path/to/image.png "Describe the UI layout in detail"
+```
+
+### Python API
+
+Import and use ChromeCap directly in your Python code:
+
+```python
+import os
+import requests
+from pathlib import Path
+
+# API endpoint
+API_URL = "http://localhost:8000"
+
+# Ensure server is running
+def ensure_server_running():
+    try:
+        response = requests.get(f"{API_URL}/status", timeout=2)
+        return response.status_code == 200
+    except:
+        # Start server if not running
+        import subprocess
+        subprocess.Popen(["chromecap", "start"])
+        # Wait for server to start...
+
+# Capture screenshot
+def capture_screenshot(url, output_path):
+    # Create request with unique ID
+    import uuid
+    request_id = str(uuid.uuid4())
+    
+    # Initiate capture
+    response = requests.get(
+        f"{API_URL}/api/capture",
+        params={
+            'url': url,
+            'request_id': request_id,
+        }
+    )
+    
+    if response.status_code != 200:
+        return None
+    
+    # Poll for the screenshot
+    import time
+    start_time = time.time()
+    timeout = 30
+    
+    while time.time() - start_time < timeout:
+        # Check for screenshot
+        response = requests.get(f"{API_URL}/api/screenshots")
+        screenshots = response.json().get("screenshots", [])
+        
+        # Find matching screenshot
+        matching = [s for s in screenshots if s.get("request_id") == request_id]
+        
+        if matching:
+            screenshot_id = matching[0].get("id")
+            
+            # Get the raw image
+            img_response = requests.get(
+                f"{API_URL}/api/raw-screenshot/{screenshot_id}"
+            )
+            
+            if img_response.status_code == 200:
+                # Save to file
+                with open(output_path, "wb") as f:
+                    f.write(img_response.content)
+                return output_path
+        
+        time.sleep(0.5)
+    
+    return None
+
+# Example usage
+output_file = "example.png"
+result = capture_screenshot("https://example.com", output_file)
+if result:
+    print(f"Screenshot saved to {result}")
+```
+
+For more complete Python examples, check the [examples](examples/) directory:
+- [Basic Capture](examples/basic_capture.py)
+- [Image Analysis](examples/image_analysis.py)
+- [API Server Integration](examples/api_server.py)
+
+### Console Log Extraction
+
+ChromeCap can capture console logs from any tab for debugging and analysis:
+
+```bash
+# Basic log capture (5 minutes default)
+chromecap capture https://example.com --log logs.txt
+
+# Custom timeout (2 minutes)
+chromecap capture https://example.com --log logs.txt --timeout 120
+
+# Debug mode to see detailed progress
+chromecap capture https://example.com --log logs.txt --debug
+```
+
+#### Log File Format
+
+Log files are saved in JSON format with the following structure:
+
+```json
+{
+  "metadata": {
+    "request_id": "uuid-string",
+    "target_url": "https://example.com",
+    "log_file": "logs.txt",
+    "capture_time": "2025-01-20T11:30:00.000Z",
+    "duration_ms": 30000,
+    "global_logs": false,
+    "total_logs": 15,
+    "extension_type": "BGPT"
+  },
+  "logs": [
+    {
+      "level": "log",
+      "message": "Page loaded successfully",
+      "timestamp": "2025-01-20T11:30:05.123Z",
+      "url": "https://example.com"
+    },
+    {
+      "level": "error",
+      "message": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "timestamp": "2025-01-20T11:30:10.456Z",
+      "url": "https://example.com"
+    }
+  ]
+}
+```
+
+#### Log Capture Features
+
+- **Automatic Tab Detection**: Finds and switches to the target tab automatically
+- **Global Log Capture**: Captures all console logs, not just debugger-specific ones
+- **Structured Output**: JSON format with timestamps, levels, and metadata
+- **Error Handling**: Proper error reporting when tabs are not found or capture fails
+- **Timeout Support**: Configurable capture duration with `--timeout` parameter
+
+### HTTP REST API
+
+ChromeCap exposes a comprehensive REST API for integration with any language:
+
+#### Capture a Screenshot
+```
+GET /api/capture?url=https://example.com&request_id=my-request-id
+```
+
+#### List Screenshots
+```
+GET /api/screenshots
+```
+
+#### Get Screenshot by ID
+```
+GET /api/screenshot/abc123
+```
+
+#### Get Raw Binary Screenshot
+```
+GET /api/raw-screenshot/abc123
+```
+
+#### Delete Screenshot
+```
+DELETE /api/screenshots/abc123
+```
+
+#### Check Server Status
+```
+GET /api/status
+```
+
+#### Capture Console Logs
+```
+POST /api/capture-logs
+Content-Type: application/json
+
+{
+  "url": "https://example.com",
+  "log_file": "logs.txt",
+  "timeout": 300
+}
+```
+
+#### Receive Log Data
+```
+POST /api/receive-logs
+Content-Type: application/json
+
+{
+  "request_id": "uuid-string",
+  "target_url": "https://example.com",
+  "log_file": "logs.txt",
+  "logs": [...],
+  "metadata": {...}
+}
+```
+
+## Architecture
+
+ChromeCap consists of three main components:
+
+1. **FastAPI Backend Server**: Manages screenshot storage, REST API, and server-side functions
+2. **Web Client**: Communicates with the Chrome extension
+3. **Chrome Extension**: Performs the actual screenshot capture
+
+The components communicate in this flow:
+
+```
+CLI/API → FastAPI Server → Web Client → Chrome Extension → Web Client → FastAPI Server → CLI/API
+```
+
+## Extension Integration
+
+ChromeCap works best with the BrowserGPT Chrome extension, but also supports standard extension integrations:
+
+### Extension Types
+
+- **BrowserGPT (Default)**: Advanced screenshot capabilities with AI integration
+- **STANDARD**: Basic DOM capture
+
+To specify extension type:
+```bash
+chromecap capture https://example.com --extension-type STANDARD
+```
+
+### Socket.IO vs HTTP Fallback
+
+ChromeCap uses Socket.IO for real-time communication between the server and extension:
+
+1. **Socket.IO Mode**: Default when extension is already connected
+2. **HTTP Fallback**: Used when no Socket.IO clients are available
+
+## Configuration
+
+ChromeCap can be configured through environment variables:
+
+```bash
+# Server configuration
+export CHROMECAP_HOST=localhost
+export CHROMECAP_PORT=8000
+
+# Screenshot directory
+export CHROMECAP_SCREENSHOTS_DIR=/path/to/screenshots
+
+# Extension type
+export CHROMECAP_EXTENSION_TYPE=BGPT
+```
+
+## Image Analysis with AI
+
+ChromeCap integrates with cursor-agent-tools to provide powerful AI-powered image analysis. See the [Performance Features](#performance-features) section for comprehensive examples.
+
+### Quick Examples
+
+```bash
+# Capture and analyze in one step
+chromecap capture https://example.com --query "What usability issues do you see?"
+
+# Analyze existing image
+chromecap analyze screenshot.png "Identify UI inconsistencies"
+
+# Combine with page actions
+chromecap capture https://example.com --perform "click the menu" --query "What menu items are visible?"
+```
+
+### Analysis Capabilities
+
+- **UI/UX Analysis**: Identify usability issues, accessibility problems, and design inconsistencies
+- **Content Analysis**: Extract and understand page content, interactive elements, and structure
+- **Design Analysis**: Evaluate visual hierarchy, layout patterns, and design systems
+- **Automation Insights**: Analyze results of automated actions and workflows
+
+### Installation
+
+To enable AI analysis features:
+```bash
+pip install cursor-agent-tools
+```
+
+### API Keys
+
+The AI analysis requires either:
+- **Anthropic API Key** (recommended): Set `ANTHROPIC_API_KEY` environment variable
+- **OpenAI API Key**: Set `OPENAI_API_KEY` environment variable
+
+ChromeCap will automatically detect and use the available API key.
+
+## Development
+
+### Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Testing
+
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Test with coverage
+pytest --cov=chromecap
+```
+
+### Building
+
+```bash
+# Build package
+python -m build
+
+# Install locally for testing
+pip install -e .
+```
+
+## Security Considerations
+
+- **URL Validation**: Always validate input URLs
+- **File Access**: Restrict to screenshots directory
+- **CORS Settings**: Configure based on your needs
+- **Protocol Safety**: Validate protocol handlers
+
+## License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information. 
