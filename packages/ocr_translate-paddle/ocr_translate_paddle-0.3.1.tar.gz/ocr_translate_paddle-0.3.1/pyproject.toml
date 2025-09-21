@@ -1,0 +1,115 @@
+[build-system]
+# build the package with [flit](https://flit.readthedocs.io)
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+# See https://www.python.org/dev/peps/pep-0621/
+name = "ocr_translate-paddle"
+dynamic = ["version"] # read from ocr_translate_paddle/__init__.py
+description = "Plugins to enable usage of PaddleOCR in ocr_translate"
+authors = []
+readme = "README.md"
+license = { file = "LICENSE.txt" }
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+keywords = ["django", "translation"]
+requires-python = ">=3.10"
+dependencies = [
+    "django-ocr_translate>=0.7.0,<1.0",
+
+    "pandas~=2.3.2",
+    "protobuf~=6.32.0",
+    "safetensors~=0.6.2",
+
+    "paddleocr~=3.2.0",
+    "paddlepaddle~=3.2.0",
+    "paddlex~=3.2.1",
+]
+
+[project.urls]
+Source = "https://github.com/Crivella/ocr_translate-paddle"
+
+[project.optional-dependencies]
+release = [
+    "flit",
+]
+tests = [
+    "pytest",
+    "pytest-cov",
+    "pytest-django",
+    "pytest-regressions"
+]
+pre-commit = [
+    "pre-commit",
+    "pylint",
+    "pylint-pytest",
+    "pylint-django",
+]
+
+# Need to understand how to properly extract data. Right now it looks like the coordinates are for an
+# XY swapped image, but even considering that, it looks like there is some rescaling going on that makes the boxes
+# have a shifted closer to the edges.
+# [project.entry-points."ocr_translate.box_data"]
+# "box.paddle" = "ocr_translate_paddle:paddle_box_model_data"
+
+# [project.entry-points."ocr_translate.box_models"]
+# "paddle.box" = "ocr_translate_paddle.plugin:PaddleBOXModel"
+
+[project.entry-points."ocr_translate.ocr_data"]
+"ocr.paddle" = "ocr_translate_paddle:paddle_ocr_model_data"
+
+[project.entry-points."ocr_translate.ocr_models"]
+"paddle.ocr" = "ocr_translate_paddle.plugin:PaddleOCRModel"
+
+[tool.flit.module]
+name = "ocr_translate_paddle"
+
+[tool.flit.sdist]
+exclude = [
+    ".gitignore", ".github", ".pre-commit-config.yaml",
+    "tests/", "tests/*",
+    ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+DJANGO_SETTINGS_MODULE = "settings"
+log_cli = true
+pythonpath = ["./tests"]
+
+[tool.pylint.main]
+load-plugins = [
+    "pylint_pytest"
+]
+
+[tool.pylint.messages_control]
+disable = [
+    "logging-fstring-interpolation",
+    "global-statement",
+    "broad-exception-caught",
+    "too-few-public-methods",
+]
+
+
+[tool.pylint.format]
+max-line-length = 120
+good-names = [
+    "_",
+    "l", "r", "b", "t",
+    "l1", "r1", "b1", "t1",
+    "l2", "r2", "b2", "t2",
+    "i", "j",
+    "k", "v",
+    "f", "X", "Y",
+    "DISABLE_LOAD_EVENTS"
+]
+
+[tool.pylint.design]
+max-args = 10
+max-locals = 20
+max-attributes = 12
