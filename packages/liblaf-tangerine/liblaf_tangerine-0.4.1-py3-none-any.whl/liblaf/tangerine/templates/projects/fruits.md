@@ -1,0 +1,6 @@
+- **[🍇 Grapes](https://github.com/liblaf/grapes)** - {{ github_description("liblaf/grapes") | strip_emoji }}
+- **[🍉 Melon](https://github.com/liblaf/melon)** - {{ github_description("liblaf/melon") | strip_emoji }}
+- **[🍊 Tangerine](https://github.com/liblaf/tangerine)** - {{ github_description("liblaf/tangerine") | strip_emoji }}
+- **[🍋‍🟩 Lime](https://github.com/liblaf/lime)** - {{ github_description("liblaf/lime") | strip_emoji }}
+- **[🍎 Apple](https://github.com/liblaf/apple)** - {{ github_description("liblaf/apple") | strip_emoji }}
+- **[🍒 Cherries](https://github.com/liblaf/cherries)** - {{ github_description("liblaf/cherries") | strip_emoji }}
