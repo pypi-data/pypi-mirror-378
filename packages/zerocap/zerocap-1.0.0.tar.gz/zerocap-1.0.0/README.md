@@ -1,0 +1,531 @@
+# Zerocap ⚡
+
+**Build autonomous AI agents that collaborate, reason, and use tools. Zerocap is the universal framework for AI capabilities.**
+
+[![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://badge.fury.io/py/zerocap.svg)](https://badge.fury.io/py/zerocap)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Status](https://img.shields.io/badge/status-alpha-orange.svg)](#)
+
+---
+
+Zerocap is a complete, production-ready framework for building, running, and observing multi-agent AI systems. It provides the essential "plumbing" for agent-to-agent and agent-to-tool communication, allowing you to focus on your agent's logic, not the infrastructure.
+
+## 🚨 The Problem: A World of Disconnected AI
+
+Imagine a world where every phone brand has a different, proprietary charger. That's the state of AI development today. Agents are built on different frameworks, models have different APIs, and connecting them requires a huge amount of custom, brittle code. This fragmentation slows down innovation and makes building complex, multi-agent systems incredibly difficult.
+
+## 💡 The Solution: A Universal Standard
+
+Zerocap solves this problem by providing a universal standard for AI communication, built on two core, open protocols:
+
+### 🔌 Model Context Protocol (MCP)
+Think of this as a standardized USB-C adapter for any AI tool. It's a simple way to expose any function—from a simple calculator to a complex Wikipedia search—as a reliable, discoverable service that any agent can use.
+
+### 🌐 Agent Communication Protocol (ACP)
+Think of this as the internet for your AI agents. It's a universal language that allows agents to discover each other, assign tasks, and collaborate on complex problems, regardless of how they were built.
+
+By combining these, Zerocap creates a seamless ecosystem where specialized agents can find and use the exact tools they need to get the job done.
+
+---
+
+## 🏗️ Architecture Overview
+
+```mermaid
+graph TD
+    subgraph User Interfaces
+        CLI[💻 CLI]
+        UI[🌐 Web UI]
+    end
+
+    subgraph AI Services
+        Agent1[🤖 Agent A]
+        Agent2[🤖 Agent B]
+        Tool1[🛠️ Tool Server X]
+        Tool2[🛠️ Tool Server Y]
+    end
+
+    Daemon((⚡ Zerocap Daemon));
+
+    CLI -- Manages --> Daemon;
+    UI -- Observes & Interacts --> Daemon;
+
+    Agent1 -- Registers & Discovers --> Daemon;
+    Agent2 -- Registers & Discovers --> Daemon;
+    Tool1 -- Registers & Discovers --> Daemon;
+    Tool2 -- Registers & Discovers --> Daemon;
+
+    Agent1 -- Uses --> Tool1;
+    Agent1 -- Collaborates with --> Agent2;
+
+    style Daemon fill:#ff9900,stroke:#333,stroke-width:2px
+```
+
+---
+
+## ✨ Key Features
+
+- **🔄 Zero-Configuration Hub:** Start your agents and tools, and they automatically discover each other in your local environment
+- **🧠 Stateful Agents with Memory:** Easily build agents that can remember context and have multi-turn conversations  
+- **🪄 "Magic" Tool Integration:** Agents can use external tools with a single, clean line of code, as if calling a local function
+- **💻 Powerful CLI:** A professional command-line interface to start, stop, and observe the health of your entire AI ecosystem
+- **🎨 Visual Orchestrator:** A stunning, real-time web UI that visualizes your agent network, allowing you to trigger tasks directly from your browser
+
+---
+
+## 🚀 Installation & Quick Start
+
+This guide will help you install Zerocap and run your first agent in under 5 minutes.
+
+### Step 1: Install Zerocap
+
+All you need is Python 3.9+. We strongly recommend using a virtual environment.
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+pip install zerocap
+```
+
+### Step 2: Start the Zerocap Daemon
+
+The daemon is the central service that allows agents to discover each other. Open your terminal and run:
+
+```bash
+zerocap daemon start
+```
+
+> 💡 **Note:** You only need to do this once. It will run quietly in the background.
+
+### Step 3: Create Your First Agent
+
+Create a new file named `my_agent.py` and paste the following code into it:
+
+```python
+# my_agent.py
+from zerocap import Agent, capability
+
+class EchoAgent(Agent):
+    """A simple agent that repeats whatever you tell it."""
+    agent_id: str = "echo-agent-001"
+    name: str = "Echo Assistant"
+    description: str = "A simple agent for the Zerocap quick start guide."
+
+    @capability
+    async def echo(self, prompt: str) -> str:
+        """Receives a text prompt and returns it with a prefix."""
+        print(f"ECHO AGENT: Received prompt '{prompt}'")
+        return f"The Echo Agent says: {prompt}"
+
+if __name__ == "__main__":
+    EchoAgent().run()
+```
+
+### Step 4: Run Your Agent
+
+In a new terminal (from the same directory as your `my_agent.py` file), run:
+
+```bash
+python my_agent.py
+```
+
+You will see the agent start up and automatically register itself with the daemon.
+
+### Step 5: Interact with Your Agent Using the UI
+
+Now for the fun part. In a third terminal, launch the Command Center UI:
+
+```bash
+zerocap ui launch
+```
+
+Your web browser will open automatically. You will see your "Echo Assistant" appear as a node on the graph.
+
+1. Click on the **"echo-agent-001"** node
+2. The Inspector Panel will open on the right
+3. You will see a form for the `echo` capability
+4. Type a message like **"Hello, Zerocap!"** into the prompt input
+5. Click the **"Run"** button
+6. An alert will pop up in the UI showing the successful result: **"The Echo Agent says: Hello, Zerocap!"**
+
+🎉 **Congratulations!** You have successfully built, run, and interacted with your first AI agent using Zerocap!
+
+---
+
+## 🧠 Agent Collaboration: The Core of Zerocap
+
+Zerocap's true power is unlocked when agents collaborate. This can happen in two ways: an agent using a specialized tool, or an agent delegating a task to another agent.
+
+### Pattern 1: Agent Using a Tool (`@tool`)
+
+This is the most common pattern. You have a "thinker" agent that needs to perform a specific, reliable action (like a calculation or an API call).
+
+#### Step 1: Create the Tool Server
+
+Wrap your function with `@tool`. This function is now a discoverable capability.
+
+```python
+# my_tools.py
+from zerocap import McpServer, tool, McpResponse, Context
+
+class MathServer(McpServer):
+    name: str = "math-server"
+
+    @tool
+    async def add(self, a: int, b: int) -> int:
+        return a + b
+
+    async def default_handler(self, context: Context) -> McpResponse:
+        return McpResponse(message="MathServer is active.")
+
+if __name__ == "__main__":
+    MathServer().run()
+```
+
+#### Step 2: Create an Agent that Requires the Tool
+
+The agent declares its dependency using `requires_mcp_servers`. Zerocap automatically injects a client.
+
+```python
+# calculator_agent.py
+from zerocap import Agent, capability
+
+class CalculatorAgent(Agent):
+    agent_id: str = "calculator-agent-001"
+    requires_mcp_servers = ["math-server"] # Declare the dependency
+
+    @capability
+    async def calculate_sum(self, prompt: str) -> str:
+        # Use the "magic" client to call the tool
+        result = await self.mcp.math_server.add(a=5, b=7)
+        return f"I used a tool to calculate that 5 + 7 = {result}."
+
+if __name__ == "__main__":
+    CalculatorAgent().run()
+```
+
+### Pattern 2: Agent Collaborating with another Agent (`@capability`)
+
+This is a more advanced pattern. You have a "manager" or "orchestrator" agent that delegates a sub-task to another, specialized agent.
+
+#### Step 1: Create the Specialist Agent
+
+This is just a normal agent with a capability.
+
+```python
+# writer_agent.py
+from zerocap import Agent, capability
+
+class WriterAgent(Agent):
+    agent_id: str = "writer-agent-001"
+
+    @capability
+    async def write_paragraph(self, topic: str) -> str:
+        return f"This is a well-written paragraph about {topic}."
+
+if __name__ == "__main__":
+    WriterAgent().run()
+```
+
+#### Step 2: Create the Manager Agent that uses the ZerocapClient
+
+The manager agent uses the same `ZerocapClient` that you would use in a normal application to find and run other agents.
+
+```python
+# manager_agent.py
+from zerocap import Agent, capability, ZerocapClient
+
+class ManagerAgent(Agent):
+    agent_id: str = "manager-agent-001"
+    
+    def __init__(self):
+        super().__init__()
+        # The manager agent has its own client to talk to others
+        self.client = ZerocapClient()
+
+    @capability
+    async def create_document(self, main_topic: str) -> str:
+        print(f"MANAGER: I need a paragraph about '{main_topic}'. Delegating to the writer agent.")
+        
+        # Use the client to find and run the specialist agent
+        writer_run = await self.client.run(
+            agent_id="writer-agent-001",
+            capability_name="write_paragraph",
+            prompt=main_topic
+        )
+        
+        # The result object contains structured output
+        paragraph = writer_run.get_content()
+        return f"--- DOCUMENT ---\n\n{paragraph}\n\n--- END ---"
+
+if __name__ == "__main__":
+    ManagerAgent().run()
+```
+
+---
+
+## 📚 Building with Zerocap: The Core Concepts
+
+Here's a deep dive into the powerful building blocks Zerocap provides.
+
+### 1. The `@tool` Decorator
+
+**What is it?** `@tool` is a decorator that instantly turns any Python function into a robust, discoverable microservice (an MCP Server).
+
+**Why is it powerful?** It eliminates all the boilerplate of writing a web server. You write a simple Python function, and Zerocap automatically handles the networking, input validation, and registration with the hub. It's the fastest way to make your existing code or a new function available for your AI agents to use.
+
+**How to use it:**
+- Inherit from `McpServer`
+- Decorate any async method with `@tool`
+- Implement a simple `default_handler` for generic requests
+
+```python
+# my_tools.py
+from zerocap import McpServer, tool, McpResponse, Context
+
+class MathServer(McpServer):
+    name: str = "math-server" # This name is how agents will find it
+
+    @tool
+    async def add(self, a: int, b: int) -> int:
+        """Adds two numbers together."""
+        return a + b
+
+    async def default_handler(self, context: Context) -> McpResponse:
+        return McpResponse(message="MathServer is active. Please call a tool.")
+
+if __name__ == "__main__":
+    MathServer().run()
+```
+
+### 2. The `@capability` Decorator
+
+**What is it?** `@capability` is a decorator that defines a high-level "skill" or "main task" an agent can perform. It's the public API of your agent that other services (and the UI) can call.
+
+**Why is it powerful?** It brings clarity and organization to your agent's design. It cleanly separates the agent's main abilities from any internal helper functions. This makes your agent's purpose explicit and allows the Zerocap framework to automatically display and run these capabilities in the Command Center UI.
+
+**How to use it:**
+- Inherit from `Agent`
+- Define your agent's unique `agent_id` and `name`
+- Decorate any async method with `@capability`
+
+```python
+# my_agent.py
+from zerocap import Agent, capability
+
+class SimpleWriterAgent(Agent):
+    agent_id: str = "simple-writer-001"
+    name: str = "Simple Writer"
+    description: str = "Writes a simple sentence."
+
+    @capability
+    async def write_sentence(self, topic: str) -> str:
+        return f"This is a sentence about {topic}."
+
+if __name__ == "__main__":
+    SimpleWriterAgent().run()
+```
+
+### 3. The `state_model` Attribute
+
+**What is it?** `state_model` is a class attribute that gives your agent a long-term memory for a conversation session. You define the structure of this memory using a standard Pydantic BaseModel.
+
+**Why is it powerful?** This is the key to building truly intelligent agents. Without memory, every interaction is a "one-shot" transaction. With memory, your agents can handle multi-turn conversations, learn from previous interactions, and perform complex workflows that require context to be saved over time.
+
+**How to use it:**
+1. Define a Pydantic `BaseModel` for your agent's "memory"
+2. Assign this class to your agent's `state_model` attribute
+3. Inside any capability, you can now access `self.state` to read and write to the agent's memory for the current conversation session. The framework handles all the loading and saving for you.
+
+```python
+# counter_agent.py
+from zerocap import Agent, capability
+from pydantic import BaseModel
+
+# 1. Define the agent's memory
+class CounterState(BaseModel):
+    count: int = 0
+
+class CounterAgent(Agent):
+    agent_id: str = "counter-agent-001"
+    state_model = CounterState # 2. Assign the memory schema
+
+    @capability
+    async def increment(self, prompt: str) -> str:
+        # 3. Use self.state to access memory
+        self.state.count += 1
+        return f"The count is now {self.state.count}."
+```
+
+### 4. The `requires_mcp_servers` Attribute
+
+**What is it?** This is your agent's "shopping list" for tools. It's a simple list where you declare, by name, all the tool servers your agent needs to do its job.
+
+**Why is it powerful?** This is the core of Zerocap's "magic"—it enables Dependency Injection for AI. You don't write any code for discovery, networking, or API clients. Zerocap reads this list, finds the tools on your local network (via the daemon), and automatically provides a clean, ready-to-use client object at `self.mcp`. It turns a complex distributed systems problem into a single, simple declaration.
+
+**How to use it:**
+1. Add a `requires_mcp_servers` list to your Agent class
+2. Inside your capability, call the tool as if it were a local Python method: `await self.mcp.<server_name>.<tool_name>(...)`
+
+```python
+# calculator_agent.py
+from zerocap import Agent, capability
+
+class CalculatorAgent(Agent):
+    agent_id: str = "calculator-agent-001"
+    
+    # 1. Declare the dependency by the server's name.
+    requires_mcp_servers: list[str] = ["math-server"]
+
+    @capability
+    async def calculate_sum(self, prompt: str) -> str:
+        # 2. Call the tool with the magical, clean syntax.
+        #    (Run the MathServer from the first example for this to work!)
+        result = await self.mcp.math_server.add(a=5, b=7)
+        return f"I used a tool to calculate that 5 + 7 = {result}."
+```
+
+### 5. The `ZerocapClient`
+
+**What is it?** This is the official toolkit for using Zerocap agents in your own Python applications. It's the bridge between your existing code and the Zerocap ecosystem.
+
+**Why is it powerful?** It abstracts away all the complexity of agent interaction. For simple, one-off tasks, `client.run()` is a single line. For complex, stateful conversations, `client.start_session()` provides a powerful but easy-to-use "session" handle that automatically manages memory for you.
+
+**How to use it:**
+
+```python
+# my_app.py
+from zerocap import ZerocapClient
+import asyncio
+
+async def main():
+    client = ZerocapClient()
+    
+    # Use a session for the stateful CounterAgent
+    session = client.start_session(agent_id="counter-agent-001")
+
+    # Call the same capability multiple times
+    await session.run(capability_name="increment", prompt="Count one")
+    await session.run(capability_name="increment", prompt="Count two")
+    final_run = await session.run(capability_name="increment", prompt="Count three")
+    
+    # The agent will have remembered the previous calls
+    print(final_run.get_content())
+    # Expected Output: "The count is now 3."
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+---
+
+## 💻 Command-Line Reference
+
+Zerocap includes a powerful CLI for managing your ecosystem.
+
+### Daemon Management
+
+The core service for discovery.
+
+```bash
+# Start the daemon in the background (run this first!)
+zerocap daemon start
+
+# Check if the daemon is running
+zerocap daemon status
+
+# Stop the daemon
+zerocap daemon stop
+```
+
+### System Observability
+
+Get a live view of your running services:
+
+```bash
+# See a high-level summary of everything registered
+zerocap hub status
+
+# List all running ACP Agents in a table
+zerocap agent list
+
+# List all running MCP Tool Servers in a table
+zerocap server list
+
+# Get the full manifest and details for a specific agent
+zerocap agent info <agent_id>
+# Example: zerocap agent info research-agent-001
+
+# Get the full manifest and details for a specific server
+zerocap server info <server_name>
+# Example: zerocap server info wikipedia-search-server
+```
+
+### UI Launch
+
+```bash
+# Launch the Command Center UI in your browser
+zerocap ui launch
+
+# (Optional) Start the UI on a different port
+zerocap ui launch --port 9000
+```
+
+### **Project Root: `.`, `pyproject.toml`, `README.md`, etc.**
+
+*   **`pyproject.toml`**: **The Project's "ID Card"**. Defines the project name (`zerocap`), version (`1.0.0`), dependencies (`fastapi`, `rich`, etc.), and the `zerocap` CLI command.
+*   **`README.md`**: **The "Front Door"**. The main documentation that explains what Zerocap is, why it's useful, and how to get started.
+*   **`LICENSE`**: **The "Legal Document"**. Specifies the MIT License, telling others they are free to use, modify, and distribute the code.
+*   **`.gitignore`**: **The "Janitor"**. Tells Git which temporary files and folders (like `.venv`) to ignore, keeping the repository clean.
+*   **`CONTRIBUTING.md`**: **The "Rulebook for Developers"**. Explains how others can contribute code to the project.
+*   **`CODE_OF_CONDUCT.md`**: **The "Community Guidelines"**. Sets the rules for respectful behavior in the project's community spaces.
+*   **`MANIFEST.in`**: **The "Packing List"**. Tells the packaging tools to include non-Python files (specifically, our compiled UI) when creating the `pip` package.
+
+---
+
+### **The Core Framework: `src/zerocap/`**
+
+*   **`src/zerocap/__init__.py`**: **The "Main Export"**. Makes the most important classes (`Agent`, `McpServer`, `ZerocapClient`, etc.) easy to import for the end-user.
+*   **`src/zerocap/client.py`**: **The "Official Toolkit"**. Contains the `ZerocapClient` class, the high-level, user-friendly way to interact with agents from a Python script.
+
+#### **Protocols: `src/zerocap/core/`**
+
+*   **`src/zerocap/core/mcp/models.py`**: **The "MCP Dictionary"**. Defines the Pydantic data structures (the "words") for the Model Context Protocol, like `Context` and `ToolDefinition`.
+*   **`src/zerocap/core/mcp/server.py`**: **The "MCP Server Factory"**. Contains the `McpServer` base class and the `@tool` decorator, making it easy to turn a Python class into a tool server.
+*   **`src/zerocap/core/acp/models.py`**: **The "ACP Dictionary"**. Defines the Pydantic data structures for the Agent Communication Protocol, like `AgentRun` and `AgentManifest`.
+*   **`src/zerocap/core/acp/agent.py`**: **The "Agent Factory"**. Contains the `Agent` base class and `@capability` decorator, providing the engine for creating stateful, tool-using agents.
+
+#### **The Platform: `src/zerocap/daemon/` & `src/zerocap/cli/`**
+
+*   **`src/zerocap/daemon/service.py`**: **The "Daemon's Brain"**. The FastAPI application that runs in the background, managing the registry of all running agents and servers.
+*   **`src/zerocap/daemon/hub_client.py`**: **The "Daemon's Phone"**. A simple client that all other components use to talk to the daemon (to register or discover services).
+*   **`src/zerocap/cli/main.py`**: **The "CLI's Front Door"**. The main entry point for the `zerocap` command, which assembles all the other command groups.
+*   **`src/zerocap/cli/commands/daemon_cmd.py`**: **The "Daemon's On/Off Switch"**. Contains the logic for `zerocap daemon start`, `status`, and `stop`.
+*   **`src/zerocap/cli/commands/hub_cmd.py`**: **The "System Dashboard"**. Contains the logic for `zerocap hub status`.
+*   **`src/zerocap/cli/commands/agent_cmd.py`**: **The "Agent Inspector"**. Contains `zerocap agent list` and `info`.
+*   **`src/zerocap/cli/commands/server_cmd.py`**: **The "Server Inspector"**. Contains `zerocap server list` and `info`.
+*   **`src/zerocap/cli/commands/ui_cmd.py`**: **The "UI Launcher"**. Contains the logic for `zerocap ui launch`.
+
+#### **The User Interface: `src/zerocap/ui/`**
+
+*   **`src/zerocap/ui/backend/main.py`**: **The "UI's Private API"**. The FastAPI server that serves the frontend and provides the `/api/v1/topology` endpoint.
+*   **`src/zerocap/ui/frontend/`**: **The "React App"**. Contains all the TypeScript (`.tsx`) and CSS (`.css`) source code for the Command Center web interface.
+    *   **`App.tsx`**: The main "brain" of the UI, managing state and data fetching.
+    *   **`Topology.tsx`**: The "canvas" component, responsible for drawing the interactive graph.
+    *   **`InspectorPanel.tsx`**: The "details" component, the slide-out panel that shows node info and run forms.
+    *   **`StatsBar.tsx`**: The "HUD" component, the floating bar that shows agent/server counts.
+
+---
+
+### **Examples: `examples/`**
+
+*   This entire directory contains **"Blueprints"** showing developers how to use the framework to build different kinds of services and clients, from simple to advanced.
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see `CONTRIBUTING.md` for details on how to set up a development environment, run tests, and submit pull requests.
+
+## 📜 License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
