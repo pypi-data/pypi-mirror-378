@@ -1,0 +1,177 @@
+Metadata-Version: 2.4
+Name: tauro
+Version: 0.1.1
+Summary: Enhanced Tauro - Data Pipeline Execution System with Auto-Discovery
+License: MIT
+License-File: LICENSE
+Keywords: data,pipeline,etl,automation,cli
+Author: Faustino Lopez Ramos
+Author-email: faustinolopezramos@gmail.com
+Requires-Python: >=3.9,<4.0
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: 3.14
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: System :: Systems Administration
+Provides-Extra: all
+Provides-Extra: spark
+Provides-Extra: yaml
+Requires-Dist: PyYAML (>=6.0,<7.0) ; extra == "yaml" or extra == "all"
+Requires-Dist: click (>=8.1.7,<9.0.0)
+Requires-Dist: loguru (>=0.7.0,<0.8.0)
+Requires-Dist: pandas (>=2.3.1,<3.0.0)
+Requires-Dist: polars (>=1.31.0,<2.0.0)
+Requires-Dist: pyspark (>=3.5.0,<4.0.0) ; extra == "spark" or extra == "all"
+Requires-Dist: scikit-learn (>=1.3.2,<2.0.0)
+Description-Content-Type: text/markdown
+
+# Tauro
+
+Tauro is a simple CLI for running and managing data pipelines (batch and streaming). It runs locally or with Spark and provides a concise command set to list, inspect, validate and execute pipelines.
+
+Quick highlights
+- Run batch, streaming and hybrid pipelines
+- Read/write common formats (Parquet, JSON, CSV, Delta, Avro, ORC)
+- Built-in validation, safe path handling and structured logs
+- Lightweight configuration model with environment-aware settings
+
+Installation
+
+- From PyPI (recommended):
+```
+pip install tauro
+```
+
+Minimum requirements
+- Python 3.9+
+- (Optional) Spark 3.4+ if using Spark-backed formats
+- (Optional) delta-spark for Delta format outside Databricks
+
+Quick start (under 5 minutes)
+
+1. Generate a project template
+```
+tauro --template medallion_basic --project-name demo_project
+```
+
+2. Install project dependencies and open the project
+```
+cd demo_project
+pip install -r requirements.txt
+```
+
+3. Run a batch pipeline
+```
+tauro --env dev --pipeline bronze_batch_ingestion
+```
+
+4. Start a streaming pipeline (async)
+```
+tauro --streaming --streaming-command run \
+  --streaming-config ./settings.json \
+  --streaming-pipeline bronze_streaming_ingestion \
+  --streaming-mode async
+```
+
+Configuration (high level)
+- Tauro uses a single configuration index (settings file) that points to environment-specific sections.
+- Key concepts:
+  - settings file (JSON or YAML) — entry point
+  - environment (dev, prod, etc.) — select runtime values
+  - pipelines and nodes — define DAGs and processing steps
+- Keep per-node streaming options (checkpoint_location, trigger) when using streaming.
+
+Common commands
+
+- List pipelines
+```
+tauro --list-pipelines
+```
+
+- Show pipeline info
+```
+tauro --pipeline-info <pipeline_name>
+```
+
+- Execute a pipeline
+```
+tauro --env <dev|prod|...> --pipeline <name> [--node <node_name>] [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] [--dry-run]
+```
+
+- Validate configuration without running
+```
+tauro --env dev --pipeline my_pipeline --validate-only
+```
+
+Helpful flags
+- Verbosity: `--verbose` `--quiet`
+- Date range: use ISO format `YYYY-MM-DD` (start_date must be <= end_date)
+
+Streaming commands
+
+- Run
+```
+tauro --streaming --streaming-command run \
+  --streaming-config <settings_file> \
+  --streaming-pipeline <pipeline_name> \
+  [--streaming-mode sync|async]
+```
+
+- Status
+```
+tauro --streaming --streaming-command status \
+  --streaming-config <settings_file> \
+  [--execution-id <id>]
+```
+
+- Stop
+```
+tauro --streaming --streaming-command stop \
+  --streaming-config <settings_file> \
+  --execution-id <id>
+```
+
+Best practices
+- Always set a checkpoint_location for streaming nodes.
+- Prefer atomic output formats (Delta, Parquet) for production.
+- Use `dry-run` or `--validate-only` before running in production.
+- Pin Spark and connector versions when running on a cluster.
+
+Troubleshooting (quick)
+
+- Command not found / --help not working:
+  - Try: `python -m tauro --help`
+
+- Spark session missing:
+  - Ensure Spark is installed and the runtime provides a Spark session when using Spark formats.
+
+- Date validation errors:
+  - Use ISO format `YYYY-MM-DD` and ensure start_date ≤ end_date.
+
+- Configuration not found or invalid:
+  - Verify the settings file path and that the selected environment section exists.
+
+- Security/path errors:
+  - Avoid symlinks, hidden paths or locations outside the project workspace.
+
+Exit codes
+- 0: success
+- 1: general error
+- 2: configuration error
+- 3: validation error
+- 4: execution error
+- 5: dependency error
+- 6: security error
+
+Need more help?
+- Use `tauro --help` for a full list of commands and options.
+- For complex issues, reproduce with `--log-level DEBUG` and include the generated log when asking
+
