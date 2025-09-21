@@ -1,0 +1,149 @@
+Metadata-Version: 2.4
+Name: fukui-net
+Version: 0.1.1
+Summary: A neural network for predicting Fukui indices using Kernel-based Attention Networks (KAN) with Chebyshev graph convolutions
+Author-email: Sergei Nikolenko <sergei.nikolenko@gmail.com>
+License: MIT
+License-File: LICENSE
+Keywords: DFT,biology,chemistry,fukui-indices,graph-neural-networks,molecular-property-prediction,pytorch,reactivity
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Requires-Python: >=3.11
+Requires-Dist: huggingface-hub[cli]>=0.35.0
+Requires-Dist: joblib>=1.5.2
+Requires-Dist: lightning>=2.5.5
+Requires-Dist: lion-pytorch>=0.2.3
+Requires-Dist: numpy<2.0
+Requires-Dist: pandas>=2.3.2
+Requires-Dist: rdkit>=2022.9.5
+Requires-Dist: rich>=14.1.0
+Requires-Dist: scikit-learn>=1.7.2
+Requires-Dist: torch-geometric>=2.6.1
+Requires-Dist: torch>=2.8.0
+Requires-Dist: transformers>=4.45.0
+Requires-Dist: typer>=0.19.1
+Description-Content-Type: text/markdown
+
+---
+license: mit
+language:
+- en
+tags:
+- chemistry
+- biology
+- DFT
+- molecular-property-prediction
+- graph-neural-networks
+- fukui-indices
+- reactivity
+- pytorch
+library_name: transformers
+---
+
+# Fukui_Net
+
+Neural network for predicting Fukui indices using Kernel-based Attention Networks (KAN) with Chebyshev graph convolutions.
+
+## Installation
+
+```bash
+# Clone and install
+git clone https://huggingface.co/Nikolenko-Sergei/FukuiNet
+cd FukuiNet
+uv sync
+```
+
+## Usage
+
+### CLI Interface
+
+The CLI provides a simple interface for molecular analysis:
+
+```bash
+# Check available devices and model info
+uv run fukui_net info
+
+# Predict single molecule
+uv run fukui_net predict "CCO" --device cuda:1
+
+# Batch prediction from CSV file
+uv run fukui_net predict --csv molecules.csv --output predictions.csv --device cuda:1
+```
+
+**CLI Options:**
+- `--device`: Specify device (cpu, cuda:0, cuda:1, etc.)
+- `--csv`: Input CSV file with SMILES column
+- `--output`: Output CSV file for batch predictions
+- `--column`: Name of SMILES column in CSV (default: "smiles")
+
+**Input CSV format:**
+```csv
+smiles,name
+CCO,Ethanol
+c1ccccc1,Benzene
+```
+
+**Output CSV format:**
+```csv
+smiles,fukui_indices
+CCO,"[-0.322, -0.122, -0.935, ...]"
+c1ccccc1,"[-0.280, -0.280, ...]"
+```
+
+### Python API
+
+```python
+from transformers import AutoModel
+
+# Load model from Hugging Face Hub
+model = AutoModel.from_pretrained(
+    "Nikolenko-Sergei/FukuiNet",
+    trust_remote_code=True
+)
+
+# Predict Fukui indices
+fukui_indices = model.predict("CCO")
+print(f"Fukui indices: {fukui_indices}")
+
+# Batch prediction
+results = model.predict_batch(["CCO", "c1ccccc1"])
+```
+
+### Direct Usage
+
+```python
+from fukui_net.predictor import FukuiNetPredictor
+
+# Load predictor
+predictor = FukuiNetPredictor("models/final_model.ckpt", device="cuda:1")
+
+# Predict
+fukui_indices = predictor.predict_smiles("CCO")
+```
+
+## Model Architecture
+
+- **Graph Neural Network**: Molecular structure as graphs
+- **Kernel-based Attention Networks (KAN)**: Advanced attention mechanisms  
+- **Chebyshev Convolutions**: Efficient graph operations
+- **RDKit Integration**: Molecular featurization
+
+## Input/Output Format
+
+**Input**: SMILES strings (e.g., "CCO", "c1ccccc1")
+
+**Output**: List of Fukui indices for each atom
+- Positive values: Electrophilic sites
+- Negative values: Nucleophilic sites
+- Magnitude: Reactivity strength
+
+## License
+
+MIT License
