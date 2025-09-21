@@ -1,0 +1,329 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudWatch alarms and monitoring for serverless applications
+
+Parameters:
+  AlarmEmail:
+    Type: String
+    Description: Email address for alarm notifications
+    ConstraintDescription: Must be a valid email address
+
+  AlarmPrefix:
+    Type: String
+    Default: Org
+    Description: Prefix for alarm names to identify organization-wide alerts
+
+  LambdaErrorThreshold:
+    Type: Number
+    Default: 100
+    Description: Number of Lambda errors to trigger alarm (high threshold for account-wide)
+
+  LambdaThrottleThreshold:
+    Type: Number
+    Default: 50
+    Description: Number of Lambda throttles to trigger alarm (disaster level)
+
+  API4xxThreshold:
+    Type: Number
+    Default: 500
+    Description: Number of API Gateway 4xx errors to trigger alarm (high threshold)
+
+  API5xxThreshold:
+    Type: Number
+    Default: 50
+    Description: Number of API Gateway 5xx errors to trigger alarm (disaster level)
+
+  DynamoDBThrottleThreshold:
+    Type: Number
+    Default: 25
+    Description: Number of DynamoDB throttles to trigger alarm (account-wide issue)
+
+Resources:
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${AlarmPrefix}-CloudWatch-Alarms'
+      DisplayName: !Sub '${AlarmPrefix} CloudWatch Alarms'
+      Subscriptions:
+        - Endpoint: !Ref AlarmEmail
+          Protocol: email
+      Tags:
+        - Key: Purpose
+          Value: Monitoring
+        - Key: ManagedBy
+          Value: StackSet
+
+  # Lambda Alarms
+  LambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-Lambda-Errors'
+      AlarmDescription: !Sub 'Lambda function errors exceed ${LambdaErrorThreshold}'
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: !Ref LambdaErrorThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      OKActions:
+        - !Ref AlarmTopic
+
+  LambdaThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-Lambda-Throttles'
+      AlarmDescription: !Sub 'Lambda function throttles exceed ${LambdaThrottleThreshold}'
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: !Ref LambdaThrottleThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      OKActions:
+        - !Ref AlarmTopic
+
+  LambdaDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-Lambda-Duration'
+      AlarmDescription: Lambda function duration exceeds 10 seconds
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 10000  # 10 seconds in milliseconds
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  LambdaConcurrentExecutionsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-Lambda-ConcurrentExecutions'
+      AlarmDescription: Lambda concurrent executions approaching limit
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 2
+      Threshold: 900  # Alert at 90% of default 1000 limit
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  # API Gateway Alarms
+  APIGateway4xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-API-4xx-Errors'
+      AlarmDescription: !Sub 'API Gateway 4xx errors exceed ${API4xxThreshold}'
+      MetricName: 4XXError
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: !Ref API4xxThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  APIGateway5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-API-5xx-Errors'
+      AlarmDescription: !Sub 'API Gateway 5xx errors exceed ${API5xxThreshold}'
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: !Ref API5xxThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      OKActions:
+        - !Ref AlarmTopic
+
+  APIGatewayLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-API-High-Latency'
+      AlarmDescription: API Gateway latency exceeds 1 second
+      MetricName: Latency
+      Namespace: AWS/ApiGateway
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 1000  # 1 second in milliseconds
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  # DynamoDB Alarms
+  DynamoDBUserErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-DynamoDB-UserErrors'
+      AlarmDescription: !Sub 'DynamoDB user errors exceed ${DynamoDBThrottleThreshold}'
+      MetricName: UserErrors
+      Namespace: AWS/DynamoDB
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: !Ref DynamoDBThrottleThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  DynamoDBSystemErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-DynamoDB-SystemErrors'
+      AlarmDescription: DynamoDB system errors detected
+      MetricName: SystemErrors
+      Namespace: AWS/DynamoDB
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      OKActions:
+        - !Ref AlarmTopic
+
+  DynamoDBThrottledRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AlarmPrefix}-DynamoDB-ThrottledRequests'
+      AlarmDescription: DynamoDB requests are being throttled
+      MetricName: ThrottledRequests
+      Namespace: AWS/DynamoDB
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  # CloudWatch Dashboard
+  MonitoringDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub '${AlarmPrefix}-Serverless-Monitoring'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/Lambda", "Invocations", { "stat": "Sum" } ],
+                  [ ".", "Errors", { "stat": "Sum" } ],
+                  [ ".", "Throttles", { "stat": "Sum" } ]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "Lambda Metrics",
+                "yAxis": {
+                  "left": {
+                    "min": 0
+                  }
+                }
+              }
+            },
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApiGateway", "Count", { "stat": "Sum" } ],
+                  [ ".", "4XXError", { "stat": "Sum" } ],
+                  [ ".", "5XXError", { "stat": "Sum" } ]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "API Gateway Metrics",
+                "yAxis": {
+                  "left": {
+                    "min": 0
+                  }
+                }
+              }
+            },
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", { "stat": "Sum" } ],
+                  [ ".", "ConsumedWriteCapacityUnits", { "stat": "Sum" } ],
+                  [ ".", "UserErrors", { "stat": "Sum" } ],
+                  [ ".", "SystemErrors", { "stat": "Sum" } ]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "DynamoDB Metrics",
+                "yAxis": {
+                  "left": {
+                    "min": 0
+                  }
+                }
+              }
+            },
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/Lambda", "Duration", { "stat": "Average" } ],
+                  [ ".", "Duration", { "stat": "Maximum" } ]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "Lambda Duration",
+                "yAxis": {
+                  "left": {
+                    "min": 0,
+                    "label": "Milliseconds"
+                  }
+                }
+              }
+            }
+          ]
+        }
+
+Outputs:
+  SNSTopicArn:
+    Description: SNS Topic ARN for CloudWatch alarms
+    Value: !Ref AlarmTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-SNSTopicArn'
+
+  SNSTopicName:
+    Description: SNS Topic name for CloudWatch alarms
+    Value: !GetAtt AlarmTopic.TopicName
+    Export:
+      Name: !Sub '${AWS::StackName}-SNSTopicName'
+
+  DashboardURL:
+    Description: CloudWatch Dashboard URL
+    Value: !Sub 'https://console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${AlarmPrefix}-Serverless-Monitoring'

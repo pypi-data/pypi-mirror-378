@@ -1,0 +1,259 @@
+name: 🛗 Infrastructure Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'stacksets/**'
+      - 'scripts/**'
+      - '.env.example'
+      - '.github/workflows/infrastructure.yaml'
+  workflow_dispatch:
+    inputs:
+      destroy:
+        description: 'Destroy infrastructure (danger!)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  PYTHON_VERSION: "3.12"
+  UV_SYSTEM_PYTHON: 1
+
+jobs:
+  # ============================================
+  # Pre-commit Checks
+  # ============================================
+  pre-commit:
+    name: Pre-commit Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run pre-commit checks
+        run: make pre-commit
+
+  # ============================================
+  # Validate Templates
+  # ============================================
+  validate:
+    name: Validate CloudFormation Templates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Validate templates and policies
+        run: |
+          echo "🔍 Validating CloudFormation templates and JSON policies..."
+          # Pre-commit will check YAML syntax, JSON validity, and more
+          make pre-commit
+
+  # ============================================
+  # Deploy Infrastructure
+  # ============================================
+  deploy:
+    name: Deploy AWS Infrastructure
+    needs: [validate, pre-commit]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.destroy != 'true'
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: |
+          echo "🔐 Verifying AWS credentials..."
+          aws sts get-caller-identity
+          echo "📍 Current region: $AWS_REGION"
+
+      - name: Update pipeline role (self-healing)
+        run: |
+          echo "📦 Updating pipeline role if needed..."
+          export GH_ACCOUNT="${{ github.repository_owner }}"
+          export GH_REPO="${{ github.event.repository.name }}"
+          make setup
+        continue-on-error: true
+
+      - name: Deploy StackSets and SCPs
+        run: |
+          echo "🚀 Deploying organization infrastructure..."
+
+          # Export environment variables
+          export GH_ACCOUNT="${{ github.repository_owner }}"
+          export GH_REPO="${{ github.event.repository.name }}"
+          export NOTIFICATIONS_EMAIL="${{ vars.NOTIFICATIONS_EMAIL }}"
+          export BUDGETS_MONTHLY_DEFAULT="${{ vars.BUDGETS_MONTHLY_DEFAULT }}"
+          export BUDGETS_ANOMALY_THRESHOLD="${{ vars.BUDGETS_ANOMALY_THRESHOLD }}"
+
+          # Run deployment via make
+          make deploy
+
+      - name: Verify deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          echo ""
+          echo "📚 StackSets deployed:"
+          aws cloudformation list-stack-sets \
+            --query 'Summaries[?Status==`ACTIVE`].[StackSetName,Description]' \
+            --output table
+
+          echo ""
+          echo "📋 Service Control Policies:"
+          aws organizations list-policies \
+            --filter SERVICE_CONTROL_POLICY \
+            --query 'Policies[].Name' \
+            --output table
+
+      - name: Generate deployment report
+        run: |
+          echo "📊 Generating deployment report..."
+
+          # Create deployment summary
+          cat > deployment-summary.json << EOF
+          {
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "github_org": "${{ github.repository_owner }}",
+            "github_repo": "${{ github.event.repository.name }}",
+            "aws_region": "${{ env.AWS_REGION }}",
+            "triggered_by": "${{ github.actor }}",
+            "commit": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}"
+          }
+          EOF
+
+          # List all StackSet instances
+          for stackset in $(aws cloudformation list-stack-sets --query 'Summaries[?Status==`ACTIVE`].StackSetName' --output text); do
+            echo ""
+            echo "StackSet: $stackset"
+            aws cloudformation list-stack-instances \
+              --stack-set-name "$stackset" \
+              --query 'Summaries[].[Account,Region,Status]' \
+              --output table
+          done
+
+      - name: Upload deployment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report-${{ github.run_number }}
+          path: deployment-summary.json
+
+  # ============================================
+  # Destroy Infrastructure (Manual Approval)
+  # ============================================
+  destroy:
+    name: Destroy Infrastructure
+    runs-on: ubuntu-latest
+    if: github.event.inputs.destroy == 'true'
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: |
+          uv sync --all-extras
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify destruction target
+        run: |
+          echo "⚠️  WARNING: About to destroy infrastructure!"
+          echo "📍 Region: $AWS_REGION"
+          echo "👤 Initiated by: ${{ github.actor }}"
+          echo ""
+          echo "The following StackSets will be deleted:"
+          aws cloudformation list-stack-sets \
+            --query 'Summaries[?Status==`ACTIVE`].StackSetName' \
+            --output table
+
+      - name: Destroy infrastructure
+        run: |
+          echo "💣 Destroying organization infrastructure..."
+
+          # Export required variables
+          export GH_ACCOUNT="${{ github.repository_owner }}"
+          export GH_REPO="${{ github.event.repository.name }}"
+
+          # Run destruction
+          make destroy
+
+      - name: Verify destruction
+        run: |
+          echo "✅ Destruction complete"
+          echo ""
+          echo "Remaining StackSets (should be empty or only Control Tower managed):"
+          aws cloudformation list-stack-sets \
+            --query 'Summaries[?Status==`ACTIVE`].StackSetName' \
+            --output table || echo "No StackSets found"
