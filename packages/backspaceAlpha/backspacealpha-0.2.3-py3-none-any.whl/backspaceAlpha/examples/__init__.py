@@ -1,0 +1,4 @@
+from .BuyAndHoldSPYStrategy import BuyAndHoldSPYStrategy
+from .MeanReversionStrategy import MeanReversionStrategy
+from .PairsTradingStrategy import PairsTradingStrategy
+from .SMAMomentumStrategy import SMAMomentumStrategy
