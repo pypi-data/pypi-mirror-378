@@ -1,0 +1,152 @@
+
+#  Librería para Cálculo de Deuda Tributaria en Bolivia
+
+Esta librería permite calcular la **deuda tributaria** de un contribuyente considerando:
+
+- **Tributo Omitido (TO)**
+- **Mantenimiento de Valor (MV)** (ajuste por UFV)
+- **Interes (I)**
+- **Sancion (S)**
+
+Además, se conecta a la **API del Banco Central de Bolivia (BCB)** para obtener los valores de la **UFV** y calcular la actualización de la deuda.
+
+---
+
+##  Estructura del Proyecto
+
+```
+impuestos_package/
+├─ pyproject.toml
+├─ README.md
+├─ LICENSE
+├─ CONTRIBUTING.md
+├─ src/
+│  └─ impuestos_package/
+│     ├─ __init__.py
+│     ├─ calculadora.py
+│     ├─ mv.py
+│     ├─ interes.py
+│     ├─ sancion.py
+│     └─ ufv.py
+├─ tests/
+│  ├─ test_calculadora.py
+│  ├─ test_integracion.py
+│  ├─ test_interes.py
+│  ├─ test_mv.py
+│  ├─ test_sancion.py
+│  └─ test_ufv.py
+└─ examples/
+   └─ ejemplo_basico.py
+```
+
+---
+
+##  Instalación
+
+1. **Clonar el repositorio**  
+   ```bash
+   git clone https://github.com/MarthaGonzalesChumacero/impuestos_package.git
+   cd impuestos_package
+   ```
+
+2. **Crear entorno virtual**  
+   ```bash
+   python -m venv .venv
+   ```
+
+3. **Activar entorno virtual**  
+   - En **Windows (Git Bash / PowerShell)**:
+     ```bash
+     source .venv/Scripts/activate
+     ```
+   - En **Linux/Mac**:
+     ```bash
+     source .venv/bin/activate
+     ```
+
+4. **Instalar en modo editable**  
+   ```bash
+   pip install -e . -r requirements_dev.txt
+   ```
+
+---
+
+##  Ejemplo de Uso
+
+```python
+from impuestos_package.calculadora import CalculadoraDeuda
+
+# Crear instancia
+calc = CalculadoraDeuda(
+    TO=383  # Total Original
+    fecha_inicio = "2018-07-20"
+    fecha_fin = "2025-09-15"
+    tasa = 18       # 12% anual
+    dias = 1461       # días de retraso
+    porcentaje = 12 # sanción en %
+)
+
+# Calcular deuda
+resultado = calc.calcular()
+
+print(" Resultado de la deuda tributaria:")
+for k, v in resultado.items():
+    print(f"{k}: {v}")
+```
+
+### Salida esperada (ejemplo)
+
+```
+ Resultado de la deuda tributaria:
+TO: 1000.48
+MV: 353.18
+I: 45.96
+S: 45.96
+DT: 882.62
+```
+
+---
+
+##  Testing
+
+Este proyecto incluye pruebas unitarias y de integración con **pytest**.
+
+Ejecutar todos los tests:
+
+```bash
+pytest -q
+```
+
+Con reporte de cobertura:
+
+```bash
+pytest --cov=impuestos_package --cov-report=term-missing
+```
+
+Ejemplo de salida:
+
+```
+collected 19 items
+19 passed in 0.55s
+TOTAL coverage: 95%
+```
+
+---
+
+##  Contribuir
+
+1. Haz un **fork** del repositorio.  
+2. Crea una nueva rama para tu mejora:  
+   ```bash
+   git checkout -b mi-mejora
+   ```
+3. Realiza tus cambios y corre los tests.  
+4. Envía un **pull request**.
+
+---
+
+##  Licencia
+
+Este proyecto está bajo la licencia **MIT**.  
+Consulta el archivo [LICENSE](LICENSE) para más detalles.
+
