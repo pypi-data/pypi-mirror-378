@@ -1,0 +1,61 @@
+"""
+Guest asks when spare keys deactivate and requests a spare; assistant verifies identity, issues spare, and mentions auto-deactivation; includes chit-chat and an out-of-scope query.
+
+ROLES: user (guest in room 833 asking for spare and deactivation time), assistant (front desk issuing spare and clarifying policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_guest_identity","description":"Verify guest identity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"last_name":{"type":"string"},"id_last4":{"type":"string"}},"required":["room_number","last_name","id_last4"]}},
+  {"name":"issue_spare_key","description":"Issue spare key for pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pickup_location":{"type":"string","enum":["front_desk"]}},"required":["room_number","pickup_location"]}}
+]
+```
+"""
+
+system:
+Hotel: Skyline Residences — Cloud Wing
+Front desk: 24/7
+Room 833: Deluxe Queen
+Key policy: Verify last name + ID last four; pickup front_desk only; max 2 active spares; all spares auto-deactivate at 00:00
+Notes: Cloud Wing elevator C1 to 8th floor; terrace bar 17:30–23:30
+Contacts: Front Desk 0
+
+user:
+Hello, Garcia in 833 (ID 7714). Could I get a spare? When do spares deactivate?
+
+assistant channel=analysis:
+Verify identity, issue spare for pickup, and answer deactivation time from system (00:00).
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"833","last_name":"Garcia","id_last4":"7714"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"833"}
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"833","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-833-5592","pickup_location":"front_desk"}
+
+assistant channel=final:
+Verified—your spare (SP-833-5592) is ready at the front desk. All spares auto-deactivate at 00:00.
+
+user:
+Thanks. Terrace bar hours?
+
+assistant channel=final:
+The terrace bar runs 17:30–23:30.
+
+user:
+How’s your night?
+
+assistant channel=final:
+Nice and steady—thanks for asking!
+
+user:
+Could you send the key up with room service?
+
+assistant channel=final:
+[ATTENTION] Delivery to the room isn’t supported per the provided policy.
+

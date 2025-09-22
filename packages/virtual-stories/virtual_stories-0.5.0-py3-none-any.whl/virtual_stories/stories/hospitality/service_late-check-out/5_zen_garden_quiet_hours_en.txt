@@ -1,0 +1,69 @@
+"""
+Late checkout request; assistant calls tool, echoes tool outcome; answers quiet-hours question from system; includes small talk and an [ATTENTION] query beyond system.
+
+ROLES: user (guest), assistant (Zen Garden Ryokan front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_late_checkout",
+    "description": "Request a late checkout within policy and return approval and fee.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "requested_time": {"type": "string", "description": "24h time, e.g., 14:00"}
+      },
+      "required": ["room_number", "requested_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Zen Garden Ryokan — Kyoto
+Checkout: 10:00
+Late Checkout: up to 12:00 subject to occupancy
+Fees: ¥3000 until 11:00; ¥6000 until 12:00
+Onsen Hours: 06:00–09:30; 16:00–23:00
+Breakfast: 07:00–09:30 (kaiseki style)
+Quiet Hours: 21:00–07:00
+Tea Service: 16:00–18:00 in lobby
+
+user:
+Room Sakura 3—could I leave at 11:30?
+
+assistant channel=analysis:
+11:30 is within window; fee should be ¥6000 if approved.
+
+assistant channel=commentary to=tool.request_late_checkout:
+{"room_number":"Sakura 3","requested_time":"11:30"}
+
+tool.request_late_checkout channel=commentary to=assistant:
+{"approved":true,"fee":6000,"currency":"JPY","note":"Return yukata to room"}
+
+assistant channel=final:
+Approved—late checkout for Sakura 3 is set for 11:30 with a ¥6000 JPY fee. Please return the yukata to your room.
+
+user:
+Arigato. Peaceful morning?
+
+assistant channel=final:
+Warm wishes from Zen Garden.
+
+user:
+What are quiet hours?
+
+assistant channel=final:
+Quiet hours are 21:00–07:00.
+
+user:
+Can you arrange a private tea ceremony?
+
+assistant channel=final:
+[ATTENTION] Private tea ceremonies aren’t covered by the provided details. Processing your request.
+

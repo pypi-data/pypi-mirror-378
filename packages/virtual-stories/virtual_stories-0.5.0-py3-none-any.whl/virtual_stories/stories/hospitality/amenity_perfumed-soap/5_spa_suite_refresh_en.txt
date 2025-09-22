@@ -1,0 +1,62 @@
+"""
+Deliver a warm sandalwood soap set to a spa suite with timing noted.
+
+ROLES: user (spa suite guest), assistant (spa coordinator arranging in-suite refresh)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"spa_stock","description":"Check sandalwood stock and set options.","parameters":{"type":"object","additionalProperties":false,"properties":{"sandalwood":{"type":"boolean"}},"required":[]},"strict":true},
+  {"name":"suite_delivery","description":"Deliver spa set to suite.","parameters":{"type":"object","additionalProperties":false,"properties":{"suite":{"type":"string"},"set":{"type":"string"}},"required":["suite","set"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Desert Springs Pavilion (hotel_id: dsp_phx_05)
+Address: 7200 N Dreamy Draw Dr, Phoenix, AZ 85020
+Timezone: America/Phoenix
+Spa Desk: 09:00–20:00; delivery 12–18 min
+Signature: sandalwood soap set (two bars)
+Note: paraben-free
+Ext: x9012
+
+user:
+Could I get the sandalwood set delivered to Spa Suite 320?
+
+assistant channel=analysis:
+Verify sandalwood and arrange suite delivery.
+
+assistant channel=commentary to=tool.spa_stock:
+{"sandalwood":true}
+
+tool.spa_stock channel=commentary to=assistant:
+{"available":true,"set":"sandalwood_pair"}
+
+assistant channel=commentary to=tool.suite_delivery:
+{"suite":"320","set":"sandalwood_pair"}
+
+tool.suite_delivery channel=commentary to=assistant:
+{"dispatched":true,"eta":15}
+
+assistant channel=final:
+Certainly—the sandalwood pair is dispatched to Spa Suite 320, ETA about 15 minutes.
+
+user:
+The desert light is beautiful.
+
+assistant channel=analysis:
+Chitchat grounded.
+
+assistant channel=final:
+Desert Springs Pavilion’s setting makes it feel especially warm and bright.
+
+user:
+Can you arrange a sunrise balloon flight?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

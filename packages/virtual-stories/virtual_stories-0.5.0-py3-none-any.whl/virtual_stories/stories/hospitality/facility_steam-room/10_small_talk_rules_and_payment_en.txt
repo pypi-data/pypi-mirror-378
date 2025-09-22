@@ -1,0 +1,81 @@
+"""
+Guest makes small talk, asks about rules and payment, then books a slot.
+
+ROLES: user (guest with casual questions before booking), assistant (spa team member providing rules, payment options, and booking)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rules_and_etiquette","description":"Return rules, attire, and quiet policy.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"next_two_windows","description":"Return next two 20-min windows.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"reserve","description":"Reserve a specific window for one.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"window_id":{"type":"string"}},"required":["hotel_id","window_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Arc Hotel (hotel_id: skyline_arc_nyc)
+Address: 500 Midtown Arc, New York, NY 10018 | Timezone: America/New_York
+Steam Room “Arc Mist”
+  Level: Spa 5; entry beside lightwell; etched glass door
+  Hours: 08:00–22:00; last entry 21:40
+  Capacity: 2; Window length 20 minutes
+  Climate: 45–47°C, high humidity; eucalyptus at :10/:40
+  Amenities: Chilled water; soft white towels
+  Policies: Co-ed; swimwear required; whisper-only; no phones
+  Payment: Room charge or card
+
+user:
+The etched glass looks futuristic.
+
+assistant channel=analysis:
+Provide a brief, friendly acknowledgment.
+
+assistant channel=final:
+It adds a calm, modern feel on the way in.
+
+user:
+What are the rules, and can I pay via room charge? Also, what’s available next?
+
+assistant channel=analysis:
+Pull rules from tool; confirm payment from system; fetch next two windows and present choices.
+
+assistant channel=commentary to=tool.rules_and_etiquette:
+{"hotel_id":"skyline_arc_nyc"}
+
+tool.rules_and_etiquette channel=commentary to=assistant:
+{"attire":"swimwear","quiet":"whisper-only","phones":"not permitted"}
+
+assistant channel=commentary to=tool.next_two_windows:
+{"hotel_id":"skyline_arc_nyc"}
+
+tool.next_two_windows channel=commentary to=assistant:
+{"windows":["AM-1700-1720","AM-1720-1740"]}
+
+assistant channel=final:
+Rules: swimwear required, whisper-only, and no phones inside. Room charge is accepted. Next windows: 5:00–5:20 PM (AM-1700-1720) or 5:20–5:40 PM (AM-1720-1740). Which works for you?
+
+user:
+Let’s do AM-1700-1720.
+
+assistant channel=analysis:
+Reserve the chosen window.
+
+assistant channel=commentary to=tool.reserve:
+{"hotel_id":"skyline_arc_nyc","window_id":"AM-1700-1720"}
+
+tool.reserve channel=commentary to=assistant:
+{"status":"reserved","window_id":"AM-1700-1720"}
+
+assistant channel=final:
+All set—5:00–5:20 PM is reserved (AM-1700-1720). Towels and chilled water await.
+
+user:
+Do you ever run special herbal blends besides eucalyptus?
+
+assistant channel=analysis:
+Herbal blends beyond eucalyptus aren’t listed; use the attention flag.
+
+assistant channel=final:
+[ATTENTION] Your herbal blend question is noted. Reviewing the documentation.
+

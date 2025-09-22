@@ -1,0 +1,65 @@
+"""
+Guest wants a cool sleep setting tonight and a warmer morning setting; apply tonight’s setting and acknowledge morning note without scheduling.
+
+ROLES: user (guest planning ahead), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_panel_status", "description": "Get panel lock status.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "set_room_temperature", "description": "Set temperature and fan.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"temperature_f":{"type":"number"},"fan":{"type":"string","enum":["auto","low","medium","high"]}},"required":["room_number","temperature_f","fan"]}, "strict": true }
+]
+```
+"""
+
+system:
+Harbor Lights Hotel (hotel_id: hlh_boston)
+Address: 1 Long Wharf, Boston, MA 02110
+Timezone: America/New_York
+
+HVAC:
+- Range: 66–74°F
+- Fan: auto/low/medium/high
+Amenities: Waterfront promenade 06:00–22:00
+Accessibility: High‑contrast panels
+Sustainability: Unoccupied set‑back
+
+user:
+Tonight please set 710 to 68°F, fan low. In the morning I’ll probably want 72°F.
+
+assistant channel=analysis:
+Apply tonight’s setting; acknowledge morning preference without scheduling.
+
+assistant channel=commentary to=tool.get_panel_status:
+{"room_number":"710"}
+
+tool.get_panel_status channel=commentary to=assistant:
+{"room_number":"710","locked":false}
+
+assistant channel=commentary to=tool.set_room_temperature:
+{"room_number":"710","temperature_f":68,"fan":"low"}
+
+tool.set_room_temperature channel=commentary to=assistant:
+{"applied":true,"temperature_f":68,"fan":"low"}
+
+assistant channel=final:
+710 is set to 68°F with the fan on low. I’ve noted your morning preference for 72°F.
+
+user:
+The waterfront promenade is lovely at dawn.
+
+assistant channel=analysis:
+Small talk aligned with system.
+
+assistant channel=final:
+It’s open 06:00–22:00—enjoy a peaceful walk.
+
+user:
+Can you push the morning change automatically?
+
+assistant channel=analysis:
+Scheduling not provided; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check if automatic scheduling is available.
+

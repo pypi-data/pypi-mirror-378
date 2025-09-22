@@ -1,0 +1,89 @@
+"""
+Guest requests alcohol pads from first-aid supplies; confirm availability and delivery.
+Use only system-defined tools; include small talk and special flag usage.
+
+ROLES: user (guest requesting alcohol pads), assistant (guest services with amenities tool)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_first_aid_inventory",
+    "description": "Check availability of first-aid items including alcohol pads.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "item": { "type": "string" } },
+      "required": ["item"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_room_delivery",
+    "description": "Arrange delivery of an amenity to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item": { "type": "string" },
+        "quantity": { "type": "integer" }
+      },
+      "required": ["room_number", "item", "quantity"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Oceanfront Beacon Hotel (hotel_id: obh_miami)
+Address: 1600 Collins Ave, Miami Beach, FL 33139
+Timezone: America/New_York
+
+Amenity Guidelines:
+- First-aid items available: alcohol pads, bandages (small/medium), sterile gauze 4x4, cotton swabs.
+- Delivery window 10–20 minutes depending on runner availability.
+- For medical advice, do not provide guidance beyond delivering stocked items.
+
+user:
+Hello! Could I get 6 alcohol pads to room 1015?
+
+assistant channel=analysis:
+Check inventory for alcohol pads, then arrange delivery for 6 units.
+
+assistant channel=commentary to=tool.check_first_aid_inventory:
+{"item":"alcohol pads"}
+
+tool.check_first_aid_inventory channel=commentary to=assistant:
+{"item":"alcohol pads","available":true,"max_per_request":12}
+
+assistant channel=commentary to=tool.arrange_room_delivery:
+{"room_number":"1015","item":"alcohol pads","quantity":6}
+
+tool.arrange_room_delivery channel=commentary to=assistant:
+{"delivery_id":"AM-DEL-10291","eta_minutes":12}
+
+assistant channel=final:
+Confirmed—six alcohol pads are on their way to room 1015. Delivery AM-DEL-10291 should arrive in about 12 minutes.
+
+user:
+Great, thank you! Also, any tips for treating a small cut?
+
+assistant channel=analysis:
+Medical advice is out of scope; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking in. Reviewing available resources.
+
+user:
+No worries. The lobby plants look lush—feels like a tropical garden.
+
+assistant channel=analysis:
+Respond with light small talk; no tools needed.
+
+assistant channel=final:
+We keep the lobby greenery refreshed daily—it adds a calm, tropical feel as you walk in.
+
+

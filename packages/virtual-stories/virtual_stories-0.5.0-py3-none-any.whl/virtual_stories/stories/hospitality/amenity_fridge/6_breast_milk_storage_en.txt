@@ -1,0 +1,105 @@
+"""
+Parent requests a mini-fridge for breast milk storage; confirm medical exemption and temp range. Include chitchat and ATTENTION.
+
+ROLES: user (parent), assistant (guest services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "milk_storage_check",
+    "description": "Verify breast milk storage support, temp guidance, and fee policy.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "milk_fridge_deliver",
+    "description": "Deliver a medical-use fridge for breast milk.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "target_celsius": { "type": "number" }
+      },
+      "required": ["room_number","target_celsius"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Marina Grand Suites (hotel_id: MGS_sfo_12)
+Address: 240 Embarcadero North, San Francisco, CA 94111
+Timezone: America/Los_Angeles
+
+Breast Milk Storage Support:
+- Dedicated medical fridges available; fee waived
+- Recommended range: 2–4°C (labeling tags provided)
+- Sealable containers available on request
+- Delivery: 24/7 on-call
+- Noise: 31 dB ultra-quiet units
+
+Property Highlights:
+Bay views | Boardwalk access | Family lounge with play area
+
+user:
+Hi, can we have a fridge for breast milk in room 1105?
+
+assistant channel=analysis:
+Confirm support then deliver at 3°C.
+
+assistant channel=commentary to=tool.milk_storage_check:
+{"room_number":"1105"}
+
+tool.milk_storage_check channel=commentary to=assistant:
+{"available":true,"fee_waived":true,"labels":true,"recommended_celsius":"2-4"}
+
+assistant channel=analysis:
+Proceed to deliver at 3°C.
+
+assistant channel=commentary to=tool.milk_fridge_deliver:
+{"room_number":"1105","target_celsius":3}
+
+tool.milk_fridge_deliver channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":7,"runner":"ivy","ticket":"MGS-1105-MED"}
+
+assistant channel=final:
+We’ve arranged a dedicated medical fridge at 3°C for room 1105. ETA ~7 minutes with Ivy (ticket MGS-1105-MED). There’s no fee, and labeling tags are included.
+
+user:
+Is it very quiet? Baby’s a light sleeper.
+
+assistant channel=analysis:
+Answer from system: 31 dB.
+
+assistant channel=final:
+The unit is ultra-quiet at 31 dB.
+
+user:
+The boardwalk outside is delightful!
+
+assistant channel=analysis:
+Chitchat referencing property highlights.
+
+assistant channel=final:
+It’s one of our favorite features—easy access right from the bay-side entrance.
+
+user:
+Can you reserve a crib and a bottle warmer?
+
+assistant channel=analysis:
+Those amenities aren’t defined here—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check crib and bottle warmer availability for you.
+

@@ -1,0 +1,59 @@
+"""
+Guest requests a steam-compatible board; includes small talk and hours.
+
+ROLES: user (guest in room 1230 requesting steam-compatible board), assistant (concierge coordinating availability and delivery with a note)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Verify availability","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Create delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Venue: Lantern Quay — Harbor Tower
+Room: 1230 (Executive Twin)
+Policy: Steam-compatible boards available; 1 per room maximum
+Window: 07:00–23:00 normal; 23:00–00:30 urgent
+SLA floors 12–14: 10–16 minutes
+Staging: HT-12 pantry; S2 after 22:00
+Lines: 0 | 7920 | 7921
+
+user:
+Could I get a steam-compatible board to 1230?
+
+assistant channel=analysis:
+Check availability, then schedule normal delivery to 1230 with a steam-compatible note.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board (steam-compatible)","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board (steam-compatible)","available":true,"in_stock":8}
+
+assistant channel=analysis:
+Proceed with normal delivery and include the note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1230","amenity_name":"ironing board (steam-compatible)","quantity":1,"priority":"normal","note":"Steam-compatible cover"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-1230-7719","eta_minutes":12}
+
+assistant channel=final:
+All set—a steam-compatible ironing board is scheduled for room 1230 with an ETA of about 12 minutes.
+
+user:
+Thanks! Are you open later this evening?
+
+assistant channel=final:
+Yes—normal service is until 23:00, with urgent coverage 23:00–00:30.
+
+user:
+Is the cover brand CottonLux?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

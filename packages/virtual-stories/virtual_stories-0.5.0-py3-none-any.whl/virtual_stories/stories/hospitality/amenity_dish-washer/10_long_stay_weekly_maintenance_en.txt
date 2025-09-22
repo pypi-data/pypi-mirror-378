@@ -1,0 +1,147 @@
+"""
+An extended-stay guest requests dishwasher pods, a quick-start guide, and asks about maintenance and quiet hours.
+
+ROLES: user (extended-stay guest cooking nightly), assistant (residence services with housekeeping scheduling)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "deliver_dishwasher_supplies",
+    "description": "Deliver dishwasher pods and rinse aid to a room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "pods": {"type": "integer", "minimum": 1},
+        "rinse_aid_ml": {"type": "integer", "minimum": 0}
+      },
+      "required": ["room_number", "pods"],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_maintenance_visit",
+    "description": "Schedule a preventative dishwasher service.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "window": {"type": "string"}
+      },
+      "required": ["room_number", "window"],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "name": "diagnose_dishwasher_issue",
+    "description": "Run a basic diagnostic (filter/door/overload checks).",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "symptom": {"type": "string"}
+      },
+      "required": ["room_number", "symptom"],
+      "additionalProperties": false
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Residence: Riverside Residences Extended Stay (Riverwalk Wing, Floors 8–15).
+Front desk: 24/7. Check‑in 15:00; Check‑out 11:00. Quiet hours: 22:00–07:00.
+Residence services (appliance support): 07:00–22:00, ext 6610.
+
+In‑suite dishwasher info:
+- Brand/Model: Aquasure Compact DW‑A45.
+- Programs: Eco 50°C (≈2h15), Quick 30' (≈0h30), Intensive 65°C (≈2h35).
+- Noise: 44 dB(A) on Eco; 48 dB(A) on Intensive.
+- Load: Max 9 place settings; upper rack height‑adjustable.
+- Water hardness setpoint: 2 (medium); rinse‑aid dial 3.
+
+Care & parts (structured list):
+  filter_size_mm: 115
+  child_lock_code: Hold Start 3s
+  detergent_label: EU Ecolabel compatible
+  spare_upper_racks_available: 3
+  quick_start_steps: [1: scrape, 2: load, 3: pod in cup, 4: select, 5: Start]
+
+Supply policy:
+1) Pods: 4 per night complimentary; additional on request.
+2) Rinse aid: 50 ml complimentary per 5 nights.
+3) Weekly maintenance window: Tue/Thu 13:00–16:00 (preventative checks).
+4) Same‑floor delivery typical: 20–35 minutes.
+5) Business Center printers: L10 06:30–22:30 (for manuals).
+
+user:
+Hi—room 1208. Could I get some dishwasher pods and a quick start? I cook most nights.
+
+assistant channel=analysis:
+Provide quick start from system and offer to deliver pods. Then call delivery tool.
+
+assistant channel=final:
+Absolutely. Quick start: 1) scrape, 2) load, 3) place a pod in the cup, 4) select program, 5) press Start. Which program do you prefer—Eco 50°C (~2h15) or Quick 30' (~0h30)? I can also send pods up right away.
+
+user:
+Quick 30' tonight. Please send 8 pods and some rinse aid.
+
+assistant channel=analysis:
+Use deliver tool for 8 pods and some rinse aid, e.g., 50 ml. Then confirm.
+
+assistant channel=commentary to=tool.deliver_dishwasher_supplies:
+{"room_number": "1208", "pods": 8, "rinse_aid_ml": 50}
+
+tool.deliver_dishwasher_supplies channel=commentary to=assistant:
+{"status": "en_route", "ticket": "DW-1208-774", "eta_minutes": 25}
+
+assistant channel=final:
+Got it—8 pods and 50 ml rinse aid are on the way (ticket DW-1208-774). Estimated arrival is about 25 minutes.
+
+user:
+Do you offer a weekly maintenance check for the dishwasher?
+
+assistant channel=analysis:
+System shows Tue/Thu 13:00–16:00 window. Offer scheduling and book via tool if accepted.
+
+assistant channel=final:
+Yes. Weekly preventative checks run Tue/Thu between 13:00–16:00. Would you like a slot in that window?
+
+user:
+Yes—this Thursday after 2 pm is fine.
+
+assistant channel=analysis:
+Schedule maintenance for Thursday 14:00–16:00 window via tool.
+
+assistant channel=commentary to=tool.schedule_maintenance_visit:
+{"room_number": "1208", "window": "Thu 14:00–16:00"}
+
+tool.schedule_maintenance_visit channel=commentary to=assistant:
+{"status": "scheduled", "work_order": "PM-44712"}
+
+assistant channel=final:
+All set—preventative service is scheduled Thu 14:00–16:00 (work order PM-44712).
+
+user:
+By the way, what are the quiet hours here?
+
+assistant channel=analysis:
+Answer from system: 22:00–07:00.
+
+assistant channel=final:
+Quiet hours are 22:00–07:00.
+
+user:
+Thanks! Also, can you pull yesterday’s total water usage for this unit?
+
+assistant channel=analysis:
+No tool or system metric for water usage per unit. Use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] That metric isn’t available here. Verifying information sources.
+

@@ -1,0 +1,74 @@
+"""
+Guest requests large rubber bands in a specific quantity and packaging; verify stock and deliver; include small talk and an [ATTENTION] query.
+
+ROLES: user (guest), assistant (front desk stationery)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check stationery stock by item and size.","parameters":{"type":"object","properties":{"item_code":{"type":"string","enum":["rubber_bands"]},"size":{"type":"string","enum":["S","M","L"]}},"required":["item_code","size"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_stationery","description":"Deliver stationery to room with container type.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"size":{"type":"string","enum":["S","M","L"]},"quantity":{"type":"integer","minimum":1},"container":{"type":"string","enum":["paper_sleeve","small_box"]}},"required":["room_number","item_code","size","quantity","container"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Northpoint Executive Tower (hotel_id: ne_chi_14)
+Address: 233 W Lakefront Ave, Chicago, IL 60601
+Stationery service: 06:00–22:30; typical delivery ETA 8–14 minutes
+
+Rubber bands catalog
+• Sizes: S (thin), M (standard), L (wide)
+• On-hand: S(140), M(180), L(95)
+• Packaging: paper_sleeve default; small_box on request
+
+Support facts
+- Check-in 15:00 | Check-out 12:00
+- Business center 24/7 (level 2)
+- Print service via front desk
+- Elevator call panels cleaned hourly
+- Lobby plants watered at 05:30
+- Languages: EN, PT
+
+user:
+Could I get 15 large rubber bands to room 2107 in a small box?
+
+assistant channel=analysis:
+Check L size availability, then deliver 15 in small_box to 2107.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_code":"rubber_bands","size":"L"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"rubber_bands","size":"L","on_hand":95}
+
+assistant channel=analysis:
+Proceed with delivery using small_box container.
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"2107","item_code":"rubber_bands","size":"L","quantity":15,"container":"small_box"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-2107-7114","eta_minutes":10}
+
+assistant channel=final:
+All set—15 large rubber bands will arrive in a small box to 2107. Ticket ST-2107-7114, ETA about 10 minutes.
+
+user:
+The lobby plants look very fresh.
+
+assistant channel=analysis:
+Tie back to support facts.
+
+assistant channel=final:
+They’re watered early—around 05:30 each morning.
+
+user:
+Are the bands biodegradable?
+
+assistant channel=analysis:
+Biodegradability isn’t listed; flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking material details. Verifying biodegradability with the team.
+

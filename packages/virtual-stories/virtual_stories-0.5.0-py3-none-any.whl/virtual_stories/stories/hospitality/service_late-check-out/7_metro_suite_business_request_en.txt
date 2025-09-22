@@ -1,0 +1,69 @@
+"""
+Business guest requests late checkout; assistant invokes tool and states the tool outcome; then answers a system-covered question. Include small talk and an [ATTENTION] item.
+
+ROLES: user (business traveler), assistant (Metro Suite front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_late_checkout",
+    "description": "Request a late checkout within policy and return approval and fee.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "requested_time": {"type": "string", "description": "24h time, e.g., 14:00"}
+      },
+      "required": ["room_number", "requested_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Name: Metro Suite Financial District
+Address: 455 Market St, San Francisco, CA 94105, USA
+Checkout: 12:00
+Late Checkout: up to 15:00 subject to occupancy
+Fees: $35 (≤13:00), $60 (≤14:00), $85 (≤15:00)
+Wi‑Fi: 500 Mbps premium
+Gym: 24/7
+Quiet Hours: 22:00–07:00
+
+user:
+Room 2207—may I checkout at 14:45?
+
+assistant channel=analysis:
+≤15:00 tier: $85 if approved.
+
+assistant channel=commentary to=tool.request_late_checkout:
+{"room_number":"2207","requested_time":"14:45"}
+
+tool.request_late_checkout channel=commentary to=assistant:
+{"approved":true,"fee":85,"currency":"USD","note":"Card on file will be charged at checkout"}
+
+assistant channel=final:
+Approved—late checkout for room 2207 is set for 14:45 with an $85 USD fee.
+
+user:
+Appreciate it. Busy floor today?
+
+assistant channel=final:
+Thanks for choosing Metro Suite.
+
+user:
+Is the gym 24/7?
+
+assistant channel=final:
+Yes—the gym operates 24/7.
+
+user:
+Can you apply a corporate code after checkout?
+
+assistant channel=final:
+[ATTENTION] Applying post‑checkout corporate codes isn’t covered by the provided details. Processing your request.
+

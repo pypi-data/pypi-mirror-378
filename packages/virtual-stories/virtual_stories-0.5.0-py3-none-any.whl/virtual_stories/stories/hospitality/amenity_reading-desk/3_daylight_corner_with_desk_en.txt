@@ -1,0 +1,68 @@
+"""
+A guest asks for a daylight corner room with a reading desk; they confirm lamp specs and chair details, with small talk.
+
+ROLES: user (Guest optimizing for daylight.), assistant (Front desk manager who knows features.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "find_available_room",
+    "description": "Finds an available room with specific features.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "feature": {"type": "string"},
+        "start_date": {"type": "string", "format": "date"},
+        "end_date": {"type": "string", "format": "date"}
+      },
+      "required": ["feature", "start_date", "end_date"]
+    }
+  }
+]
+```
+"""
+
+system:
+Property: Atlas City Suites
+Desk Program:
+- Reading desk standard in Studio+ and Corner One-Bedroom
+- Lamp: warm 2700K dimmable, optional task lamp on request
+- Chair: mesh-back, height/tilt adjustable
+Upgrade Note: Complimentary when desk is a stated work need
+Quiet Hours: 10pm–7am
+Front Desk: Dial 0
+
+user:
+Could I get a corner room with a proper reading desk for this week?
+
+assistant channel=analysis:
+Search rooms with reading_desk for the dates; the Corner One-Bedroom should match. I’ll run the tool.
+
+assistant channel=commentary to=tool.find_available_room:
+{"feature": "reading_desk", "start_date": "2025-09-04", "end_date": "2025-09-08"}
+
+tool.find_available_room channel=commentary to=assistant:
+{"rooms": [{"room_number": "2101", "room_type": "Corner One-Bedroom", "features": ["reading_desk", "daylight"], "orientation": "SE"}]}
+
+assistant channel=final:
+Corner One-Bedroom 2101 is open. It has a full reading desk, SE daylight, a warm 2700K dimmable lamp, and an adjustable mesh-back chair. If the desk is for work, we can comp the upgrade.
+
+user:
+Nice. Is the lamp adjustable?
+
+assistant channel=final:
+Yes—dimmable at 2700K, and we can add a task lamp on request.
+
+user:
+How’s your afternoon?
+
+assistant channel=final:
+Sunny here—perfect for a corner desk setup.
+
+user:
+[ATTENTION] Could you furnish an external monitor?
+
+assistant channel=final:
+That isn’t listed in my system. I can secure the room with the reading desk and lamp.
+

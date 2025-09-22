@@ -1,0 +1,86 @@
+"""
+Family places a large group order and asks about family packages, portion sizes, and group delivery arrangements.
+
+ROLES: user (family ordering multiple meals), assistant (in-room dining operator handling group orders and family packages)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"get_room_service_menu","description":"Retrieve room service menu","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true},
+  {"name":"place_room_service_order","description":"Place an in-room dining order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"qty":{"type":"integer"}}}},"delivery_notes":{"type":"string"}},"required":["hotel_id","room","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Royal Crescent Edinburgh (RCED-16), 12 Royal Circus, Edinburgh EH3.
+Room Service 24/7. Delivery estimate 30–45 minutes.
+Menu highlights (SKUs): RS-BRG (Angus Burger), RS-CAES (Chicken Caesar Salad), RS-TEA (Assorted Teas), RS-SUP (Tomato Soup), RS-SND (Club Sandwich), RS-PST (Pasta), RS-DRT (Dessert Platter), RS-CAF (Coffee Selection).
+Family packages: Family meal deals available for 4+ people; 15% discount on orders over HKD 200; kids' portions available; family platters for sharing; group delivery coordination.
+Portion information: Standard portions serve 1 adult; kids' portions available; sharing platters for 2-3 people; family portions for 4+ people; extra sides available.
+Group services: Coordinated delivery for multiple rooms; family dining setup available; extra cutlery and plates provided; group tray pickup service.
+Special services: Tray pickup by request after dining; family celebration packages; birthday cake delivery available.
+
+user:
+Hi! We're a family of 5 staying in rooms 1205 and 1206. Do you have any family meal packages?
+
+assistant channel=analysis:
+Check menu and provide family package information from system prompt.
+
+assistant channel=commentary to=tool.get_room_service_menu:
+{}
+
+tool.get_room_service_menu channel=commentary to=assistant:
+{"skus":["RS-BRG","RS-CAES","RS-TEA","RS-SUP","RS-SND","RS-PST","RS-DRT","RS-CAF"]}
+
+assistant channel=analysis:
+Provide family package options and group ordering information.
+
+assistant channel=final:
+Perfect! We have family meal deals for 4+ people with a 15% discount on orders over HKD 200. We offer kids' portions, family platters for sharing, and can coordinate delivery to both rooms. We also provide family dining setup with extra cutlery and plates. What would you like to order?
+
+user:
+Great! Can we get 2 Angus Burgers, 1 Chicken Caesar Salad, 1 Club Sandwich, and 1 kids' portion of Pasta to room 1205?
+
+assistant channel=analysis:
+Place the family order with group delivery coordination notes.
+
+assistant channel=commentary to=tool.place_room_service_order:
+{"hotel_id":"RCED-16","room":"1205","items":[{"sku":"RS-BRG","qty":2},{"sku":"RS-CAES","qty":1},{"sku":"RS-SND","qty":1},{"sku":"RS-PST","qty":1}],"delivery_notes":"Family order for 5 people; kids' portion for pasta; family dining setup with extra cutlery and plates; coordinate delivery to rooms 1205 and 1206"}
+
+tool.place_room_service_order channel=commentary to=assistant:
+{"order_id":"RS-1205-778","eta_minutes":45,"status":"accepted","family_discount":"15% applied"}
+
+assistant channel=analysis:
+Confirm the family order with discount applied.
+
+assistant channel=final:
+Excellent! Order RS-1205-778 is confirmed: 2 Angus Burgers, 1 Chicken Caesar Salad, 1 Club Sandwich, and 1 kids' portion Pasta to room 1205. Your 15% family discount has been applied, and we'll coordinate delivery to both rooms with family dining setup and extra cutlery.
+
+user:
+The family dining setup sounds perfect for us.
+
+assistant channel=analysis:
+Acknowledge their appreciation for the family service without adding new information.
+
+assistant channel=final:
+We love helping families enjoy their meals together comfortably!
+
+user:
+Do you have any birthday cake delivery options?
+
+assistant channel=analysis:
+Provide information about birthday cake delivery from system prompt.
+
+assistant channel=final:
+Yes! We offer birthday cake delivery as part of our family celebration packages. I can arrange that for you if needed.
+
+user:
+Do you have any special dietary options for children with allergies?
+
+assistant channel=analysis:
+Children's dietary options aren't specifically mentioned beyond general dietary accommodations, so use attention flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for your question. Reviewing available resources.

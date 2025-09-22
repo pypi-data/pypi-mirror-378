@@ -1,0 +1,66 @@
+"""
+Guest asks for the quietest settings for a child’s nap and whether LEDs can be dimmed.
+
+ROLES: user (parent), assistant (guest services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_air_purifier_status", "description": "Get status.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "set_air_purifier_mode", "description": "Set mode with timer.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"mode":{"type":"string","enum":["auto","sleep","turbo"]},"timer_minutes":{"type":"integer"}},"required":["room_number","mode"]}, "strict": true }
+]
+```
+"""
+
+system:
+Pinecone Family Resort (hotel_id: pfr_lake_tahoe)
+Address: 910 Alpine Way, Incline Village, NV 89451
+Timezone: America/Los_Angeles
+
+Air & Quiet Policy:
+- Sleep mode reduces fan speed and dims indicators
+- Quiet Hours: 21:00–07:00
+Guest Services: 07:00–23:00
+Amenities: Kid’s activity room 10:00–18:00
+Accessibility: Large, tactile buttons on devices
+Safety: Devices inspected between stays
+
+user:
+Hi—room 405. Can you set the purifier to the quietest mode for a 90-minute nap? Also, can the lights on it be dimmed?
+
+assistant channel=analysis:
+Sleep mode with 90 minutes fits; LED dimming behavior stated in system.
+
+assistant channel=commentary to=tool.get_air_purifier_status:
+{"room_number":"405"}
+
+tool.get_air_purifier_status channel=commentary to=assistant:
+{"room_number":"405","mode":"auto","filter_status":"good"}
+
+assistant channel=commentary to=tool.set_air_purifier_mode:
+{"room_number":"405","mode":"sleep","timer_minutes":90}
+
+tool.set_air_purifier_mode channel=commentary to=assistant:
+{"applied":true,"mode":"sleep","timer_minutes":90}
+
+assistant channel=final:
+Done—405 is in sleep mode for 90 minutes. In sleep mode, indicator lights dim automatically here.
+
+user:
+Appreciate it! The kid’s room earlier was a lifesaver.
+
+assistant channel=analysis:
+Small talk from system context.
+
+assistant channel=final:
+Glad it helped—our kid’s activity room runs 10:00 to 18:00.
+
+user:
+Can you also provide a humidifier?
+
+assistant channel=analysis:
+Outside the provided scope.
+
+assistant channel=final:
+[ATTENTION] I can check on humidifier availability.
+

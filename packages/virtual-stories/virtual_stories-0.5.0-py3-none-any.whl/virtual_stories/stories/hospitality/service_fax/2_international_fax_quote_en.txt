@@ -1,0 +1,64 @@
+"""
+Guest needs to send an international fax; confirm rates and limits, then submit via tool; include small talk and ATTENTION for legal advice on international routing.
+
+ROLES: user (guest sending an international fax), assistant (business services clerk confirming policy and submitting job)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "send_fax",
+    "description": "Submit a fax job for transmission.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "recipient_number": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "cover_note": {"type": "string"},
+        "destination_type": {"type": "string", "enum": ["domestic", "international"]}
+      },
+      "required": ["room_number", "recipient_number", "pages", "destination_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Skyline Central Hotel — Business Center (Lobby Mezzanine)
+Hours: 07:00–23:00; after‑hours via Front Desk dispatch
+Rates: USD 2/page domestic; USD 5/page international; cover page complimentary
+Limit: 20 pages per job (excluding cover page)
+Billing: Posted to guest folio; receipt available on request
+Privacy: Documents shredded after successful transmission confirmation
+
+user:
+I need to fax 4 pages to +81-3-5555-0101 with a short note. Is that okay?
+
+assistant channel=analysis:
+International rate applies; pages are within 20‑page limit. Submit fax via tool and state billing and privacy from system.
+
+assistant channel=commentary to=tool.send_fax:
+{"room_number":"1508","recipient_number":"+81-3-5555-0101","pages":4,"cover_note":"PO update attached","destination_type":"international"}
+
+tool.send_fax channel=commentary to=assistant:
+{"job_id":"fax_2025_09_07_201","status":"queued","billed_pages":4,"rate_per_page":5,"currency":"USD"}
+
+assistant channel=final:
+Your 4‑page international fax is queued as fax_2025_09_07_201 and will be billed to room 1508 at USD 20. A transmission receipt can be provided, and documents are shredded after confirmation.
+
+user:
+Thanks—nice view from the mezzanine.
+
+assistant channel=final:
+We’ll monitor the queue and keep it moving.
+
+user:
+Is there a best route to Japan to make it cheaper?
+
+assistant channel=final:
+[ATTENTION] Routing/cost optimization advice isn’t provided here. Reviewing available resources.
+

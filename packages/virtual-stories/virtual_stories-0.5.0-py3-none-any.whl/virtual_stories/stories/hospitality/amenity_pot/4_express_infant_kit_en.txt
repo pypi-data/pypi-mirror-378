@@ -1,0 +1,50 @@
+"""
+Guest requests an express infant warming kit; include tool call, timing, and beyond-scope medical question.
+
+ROLES: user (tired parent), assistant (night duty attendant)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"request_kitchen_item","description":"Request a specific item from the hotel kitchen.",
+   "parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_name":{"type":"string"}},"required":["room_number","item_name"]}}
+]
+```
+"""
+
+system:
+Moonrise Suites — Night Assistance (22:00–06:00)
+On-hand items: compact pot, silicone tongs, absorbent towel
+Response time: 8–12 minutes on floors 3–9
+Cleaning: high-temp cycle; sealed pouch delivery
+Note: no hot plates; use in-room kettle or night pantry (floor 3) 22:00–06:00
+Pickup: call when finished; we collect promptly
+Use request_kitchen_item for dispatch
+
+user:
+Room 803—can I get a compact pot, please?
+
+assistant channel=analysis:
+Dispatch compact pot to 803 with tool; then confirm response time and cleaning details.
+
+assistant channel=commentary to=tool.request_kitchen_item:
+{"room_number": "803", "item_name": "compact_pot"}
+
+tool.request_kitchen_item channel=commentary to=assistant:
+{"status":"success","message":"Compact pot sent to room 803."}
+
+assistant channel=final:
+Absolutely—sending a compact pot to 803 now. It arrives in roughly 8–12 minutes, sealed after a high‑temperature wash.
+
+user:
+You’re a lifesaver.
+
+assistant channel=final:
+We’ve got you—just ring if you need tongs or a towel.
+
+user:
+Is warmed milk okay after 2 hours?
+
+assistant channel=final:
+[ATTENTION] We don’t provide medical or feeding guidance in these resources.
+

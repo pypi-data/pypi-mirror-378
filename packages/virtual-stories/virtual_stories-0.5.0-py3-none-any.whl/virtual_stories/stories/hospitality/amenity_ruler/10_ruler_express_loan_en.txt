@@ -1,0 +1,71 @@
+"""
+Guest needs a quick ruler loan before a call; confirm availability and deliver; include small talk and an acknowledgment linked to property details.
+
+ROLES: user (guest preparing for video call), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check rulers by length and material.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["ruler"]},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["item_code","length","material"]},"strict":true},
+  {"name":"deliver_stationery","description":"Deliver a ruler to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["room_number","item_code","length","material"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Birchline Downtown (hotel_id: bd_min_08)
+Address: 20 S 6th St, Minneapolis, MN 55402
+Stationery dispatch: 06:30–22:00; ETA 6–10 minutes
+Business lounge: 24h for elites; espresso 06:00–11:00
+Wi‑Fi: 500/300 Mbps; Zoom QoS enabled
+Climate note: skyway access to neighboring towers
+Check-in/out: 15:00 / 12:00
+Fitness: 05:30–23:00; Peloton bikes available
+
+Ruler assets:
+- Plastic 15cm(22), 30cm(12)
+- Metal 15cm(6), 30cm(6)
+- Loan policy: please return to front desk or leave on desk
+
+user:
+Could I get a 15 cm plastic ruler to 1010 ASAP?
+
+assistant channel=analysis:
+Check 15cm/plastic; deliver to 1010.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_code":"ruler","length":"15cm","material":"plastic"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":22,"item_code":"ruler","length":"15cm","material":"plastic"}
+
+assistant channel=analysis:
+Proceed with delivery to 1010.
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"1010","item_code":"ruler","length":"15cm","material":"plastic"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-1010-4417","eta_minutes":7}
+
+assistant channel=final:
+On the way—15 cm plastic ruler to 1010. Ticket ST-1010-4417, ETA about 7 minutes.
+
+user:
+The skyway access saved me from the cold.
+
+assistant channel=analysis:
+Acknowledge climate note.
+
+assistant channel=final:
+Glad it helped—the property connects into the skyway network.
+
+user:
+Do you have dry-erase boards to borrow?
+
+assistant channel=analysis:
+Not listed; attention flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on whiteboards. Reviewing equipment inventory.
+

@@ -1,0 +1,74 @@
+"""
+Guest seeks fragrance-free intensive body lotion in a desert climate; requests ingredient check for parabens.
+
+ROLES: user (wellness traveler), assistant (spa concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_skincare_inventory","description":"List fragrance-free body lotions","parameters":{"type":"object","properties":{"product_type":{"type":"string","enum":["body_lotion"]},"skin_type":{"type":"string","enum":["sensitive","dry","all"]}},"required":["product_type"],"additionalProperties":false},"strict":true},
+  {"name":"check_ingredient_allergies","description":"Paraben/fragrance check","parameters":{"type":"object","properties":{"product_id":{"type":"string"},"allergen_concerns":{"type":"array","items":{"type":"string"}}},"required":["product_id","allergen_concerns"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_spa_amenities","description":"Deliver to room","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"product_id":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_time":{"type":"string","enum":["immediate","evening_turndown","morning_refresh"]}},"required":["room_number","products"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Sahara Springs Retreat (hotel_id: ssr_phx_02)
+Address: 9800 E Camelback Rd, Scottsdale, AZ 85251
+Timezone: America/Phoenix
+
+Climate Advisory:
+- Low humidity; encourage barrier-repair and humectants
+- Spa delivery: immediate or evening turndown
+- Fragrance-free line available across body care
+- Sun desk: after-sun mists from 11:00–16:00
+- Hydration stations on each floor (electrolyte water)
+
+Lotion Shelf (table):
+| ID | Name | Tag |
+| ALOE_FR | Aloe Barrier Gel-Lotion | fragrance-free |
+| CERAMIDE_MAX | Ceramide Max Body Cream | rich |
+
+user:
+Hello—do you have a fragrance-free intensive body lotion? Please avoid parabens. I’m in 1420.
+
+assistant channel=analysis:
+List fragrance-free options; check allergens for ALOE_FR; schedule delivery.
+
+assistant channel=commentary to=tool.get_skincare_inventory:
+{"product_type":"body_lotion","skin_type":"sensitive"}
+
+tool.get_skincare_inventory channel=commentary to=assistant:
+{"available_products":[{"id":"ALOE_FR","name":"Aloe Barrier Gel-Lotion","description":"Fragrance-free"},{"id":"CERAMIDE_MAX","name":"Ceramide Max Body Cream","description":"Rich repair"}]}
+
+assistant channel=commentary to=tool.check_ingredient_allergies:
+{"product_id":"ALOE_FR","allergen_concerns":["parabens","fragrance"]}
+
+tool.check_ingredient_allergies channel=commentary to=assistant:
+{"product_id":"ALOE_FR","allergen_status":"safe","ingredients_summary":"paraben-free, fragrance-free, aloe + ceramide blend"}
+
+assistant channel=commentary to=tool.deliver_spa_amenities:
+{"room_number":"1420","products":[{"product_id":"ALOE_FR","quantity":1}],"delivery_time":"immediate"}
+
+tool.deliver_spa_amenities channel=commentary to=assistant:
+{"ticket_id":"SSR-1420-44A","scheduled":"immediate","items":["Aloe Barrier Gel-Lotion x1"],"charge":"bill_to_room"}
+
+assistant channel=final:
+Confirmed—Aloe Barrier Gel-Lotion (fragrance- and paraben-free) is on its way under SSR-1420-44A.
+
+user:
+Thank you! The hydration stations are a great idea.
+
+assistant channel=final:
+They’re on every floor—electrolyte water helps in the desert.
+
+user:
+Any sunset viewpoint you recommend nearby?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check local sunset viewpoints for you.
+

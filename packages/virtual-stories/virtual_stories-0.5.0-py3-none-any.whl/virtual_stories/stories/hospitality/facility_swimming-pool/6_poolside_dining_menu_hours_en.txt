@@ -1,0 +1,84 @@
+"""
+Guest asks about poolside dining hours and orders a drink.
+
+ROLES: user (guest lounging poolside), assistant (pool bar server)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_pool_dining_hours","description":"Return poolside dining hours and last call.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"get_pool_menu","description":"Return a concise pool bar menu with availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"order_pool_drink","description":"Place a drink order to the guest’s chair number.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item_id":{"type":"string"},"chair":{"type":"string"}},"required":["hotel_id","item_id","chair"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Riviera Grand (hotel_id: riviera_grand_cannes)
+Address: 14 Boulevard de la Croisette, 06400 Cannes, France
+Timezone: Europe/Paris
+Pool Terrace:
+  - Seawater pool, 26°C target; depth 1.0–1.5 m; lane line at west bay
+  - Loungers numbered T01–T60; towels at cabane blanche kiosk
+  - Service buttons at every second umbrella; paging chimes off after 20:30
+Food & Beverage:
+  • Pool Kitchen 12:00–21:00; Last call 20:45
+  • Bar Spritz 11:00–22:00; mocktails highlighted
+  • No glass near pool lip; acrylic only on deck
+  • Allergens noted in menu; ask staff for details
+  • Popular: RG-S01 Riviera Spritz (0% ABV), RG-J02 Peach Iced Tea
+
+user:
+What time does poolside dining run? And what’s on the bar menu?
+
+assistant channel=analysis:
+Fetch dining hours; fetch menu items; then summarize.
+
+assistant channel=commentary to=tool.get_pool_dining_hours:
+{"hotel_id":"riviera_grand_cannes"}
+
+tool.get_pool_dining_hours channel=commentary to=assistant:
+{"kitchen":"12:00-21:00","last_call":"20:45","bar":"11:00-22:00"}
+
+assistant channel=commentary to=tool.get_pool_menu:
+{"hotel_id":"riviera_grand_cannes"}
+
+tool.get_pool_menu channel=commentary to=assistant:
+{"items":[{"item_id":"RG-S01","name":"Riviera Spritz (0% ABV)","available":true},{"item_id":"RG-J02","name":"Peach Iced Tea","available":true},{"item_id":"RG-M03","name":"Mint Lemon Cooler","available":false}]}
+
+assistant channel=final:
+Dining: Kitchen 12:00–21:00 (last call 20:45). Bar 11:00–22:00. Menu highlights: Riviera Spritz (0% ABV), Peach Iced Tea; Mint Lemon Cooler currently unavailable.
+
+user:
+Please send one Riviera Spritz to chair T14.
+
+assistant channel=analysis:
+Place order RG-S01 to T14.
+
+assistant channel=commentary to=tool.order_pool_drink:
+{"hotel_id":"riviera_grand_cannes","item_id":"RG-S01","chair":"T14"}
+
+tool.order_pool_drink channel=commentary to=assistant:
+{"status":"queued","eta_minutes":8}
+
+assistant channel=final:
+Riviera Spritz is on the way to T14—about 8 minutes.
+
+user:
+Do you do live pizza tossing by the pool?
+
+assistant channel=analysis:
+No such performance info—flag attention.
+
+assistant channel=final:
+[ATTENTION] I don’t have details on performances like pizza tossing. Checking with events.
+
+user:
+Merci! The sea breeze is perfect.
+
+assistant channel=analysis:
+Brief chitchat in reply.
+
+assistant channel=final:
+C’est vrai—it makes the terrace delightful.
+

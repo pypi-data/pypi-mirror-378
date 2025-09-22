@@ -1,0 +1,76 @@
+"""
+Parent inquires about overnight childcare services for a late business dinner and early morning meetings.
+
+ROLES: user (business traveler needing overnight childcare), assistant (night care services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_overnight_availability","description":"Check availability for overnight childcare services","parameters":{"type":"object","additionalProperties":false,"properties":{"facility_id":{"type":"string"},"check_in_date":{"type":"string","format":"date"},"check_in_time":{"type":"string"},"check_out_date":{"type":"string","format":"date"},"check_out_time":{"type":"string"},"child_age":{"type":"integer"}},"required":["facility_id","check_in_date","check_in_time","check_out_date","check_out_time","child_age"]},"strict":true},
+  {"name":"book_overnight_care","description":"Book overnight childcare with sleep arrangements","parameters":{"type":"object","additionalProperties":false,"properties":{"guest_id":{"type":"string"},"child_name":{"type":"string"},"age":{"type":"integer"},"check_in_time":{"type":"string"},"check_out_time":{"type":"string"},"sleep_preferences":{"type":"object","properties":{"bedtime":{"type":"string"},"comfort_items":{"type":"array","items":{"type":"string"}},"nighttime_routine":{"type":"string"}}},"meal_requirements":{"type":"array","items":{"type":"string"}},"emergency_contact_room":{"type":"string"}},"required":["guest_id","child_name","age","check_in_time","check_out_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Facility: Starlight Overnight Care Center (facility_id: overnight_starlight_chicago)
+Property: Executive Plaza Hotel & Suites (hotel_id: exec_plaza_chicago)
+Address: 71 East Wacker Drive, Chicago, IL 60601
+Timezone: America/Chicago
+Ages: 2-12 years for overnight care
+Hours: 24/7 overnight services available
+Night ratios: 1:4 (ages 2-5), 1:6 (ages 6-12)
+Services: Dinner, bedtime routine, overnight supervision, breakfast, wake-up assistance
+Sleep facilities: Individual sleeping pods with hotel-grade bedding, night lights, white noise machines
+Night staff: Pediatric sleep specialists, overnight RN, security personnel with child safety training
+Meals included: Dinner (18:00-19:30), bedtime snack, breakfast (06:30-08:00)
+Comfort policy: Children may bring personal comfort items, stuffed animals, blankets from room
+Emergency: 24/7 parent contact, emergency pediatrician on-call, direct line to Lurie Children's Hospital
+
+user:
+Hi, I have important business dinners tonight and early meetings tomorrow. Do you offer overnight childcare? My daughter Mia is 6 years old.
+
+assistant channel=analysis:
+Parent needs overnight childcare for business obligations. I should check availability for overnight services for a 6-year-old.
+
+assistant channel=commentary to=tool.check_overnight_availability:
+{"facility_id":"overnight_starlight_chicago","check_in_date":"2025-09-03","check_in_time":"18:00","check_out_date":"2025-09-04","check_out_time":"08:00","child_age":6}
+
+tool.check_overnight_availability channel=commentary to=assistant:
+{"availability":true,"night_supervisor":"Rebecca Park, Pediatric Sleep Specialist","child_group":"ages_6-12","sleeping_pod":"available","staff_ratio":"1:6","included_meals":["dinner","bedtime_snack","breakfast"]}
+
+assistant channel=final:
+Yes, we provide 24/7 overnight care! We have availability for Mia from 6 PM tonight through 8 AM tomorrow. She'll be with Rebecca Park, our Pediatric Sleep Specialist, in the 6-12 age group with dinner, bedtime snack, and breakfast included. Individual sleeping pods ensure comfort and safety.
+
+user:
+Wonderful! She usually goes to bed at 8:30 with her stuffed elephant and likes a story. Can you accommodate that? Guest ID EP-567.
+
+assistant channel=analysis:
+Parent providing specific bedtime routine and comfort item details. I should book the overnight care with these sleep preferences.
+
+assistant channel=commentary to=tool.book_overnight_care:
+{"guest_id":"EP-567","child_name":"Mia","age":6,"check_in_time":"18:00","check_out_time":"08:00","sleep_preferences":{"bedtime":"20:30","comfort_items":["stuffed elephant"],"nighttime_routine":"bedtime story reading"},"meal_requirements":["standard dinner","bedtime snack","breakfast"],"emergency_contact_room":"guest room"}
+
+tool.book_overnight_care channel=commentary to=assistant:
+{"confirmation":"OC-MIA-567-0903","sleeping_pod":"Pod 12 with night light","night_specialist":"Rebecca Park","story_time":"20:15","wake_up":"07:30","parent_text_updates":"bedtime and morning check-in"}
+
+assistant channel=final:
+Perfect! Confirmation OC-MIA-567-0903 reserves Pod 12 for Mia. She can bring her elephant, story time at 8:15 PM, bedtime 8:30 PM, wake-up 7:30 AM. Rebecca will send you text updates at bedtime and morning check-in so you know she's settled well.
+
+user:
+This Chicago skyline view is breathtaking at sunset.
+
+assistant channel=analysis:
+Small talk about the Chicago cityscape view from their hotel.
+
+assistant channel=final:
+The sunset views from Executive Plaza are truly stunning! Chicago's skyline is magnificent at this time of day.
+
+user:
+If Mia wakes up scared in the middle of the night, what's your protocol?
+
+assistant channel=analysis:
+Parent asking about nighttime comfort procedures for scared children. This relates to specialized overnight care protocols beyond my basic booking system.
+
+assistant channel=final:
+[ATTENTION] That's an important comfort question. Reviewing available resources.

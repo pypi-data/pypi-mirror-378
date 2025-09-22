@@ -1,0 +1,73 @@
+"""
+Guest requests a flashlight due to drizzle-dark corridor; asks policy questions.
+
+ROLES: user (guest in 517), assistant (front desk/concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "request_amenity",
+    "description": "Request a hotel amenity for a guest.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "amenity_name": {"type": "string"},
+        "room_number": {"type": "string"},
+        "quantity": {"type": "integer"},
+        "note": {"type": "string"}
+      },
+      "required": ["amenity_name", "room_number", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Ironbridge Inn
+Safety Amenities: LED flashlights; door wedge; spare batteries
+Delivery Window: 10–15 min (floors 5–8)
+Contacts: Front Desk x0; Duty Manager x71
+Borrow Policy: flashlights are complimentary during stay; return at checkout
+Battery Type: AAA (spares on request)
+
+user:
+Hi—517 here. Could I get a flashlight?
+
+assistant channel=analysis:
+Send one LED flashlight to room 517.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name":"LED flashlight","room_number":"517","quantity":1}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status":"success","eta_minutes":12}
+
+assistant channel=final:
+On it—a LED flashlight is heading to 517 with an ETA of about 12 minutes.
+
+user:
+Do you provide spare batteries?
+
+assistant channel=analysis:
+System says AAA spares on request.
+
+assistant channel=final:
+Yes—AAA spare batteries are available on request.
+
+user:
+The lobby fireplace looks cozy.
+
+assistant channel=final:
+Enjoy the warmth.
+
+user:
+Do you know if the hiking trail opens before sunrise?
+
+assistant channel=analysis:
+Beyond system; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the trail opening time.
+

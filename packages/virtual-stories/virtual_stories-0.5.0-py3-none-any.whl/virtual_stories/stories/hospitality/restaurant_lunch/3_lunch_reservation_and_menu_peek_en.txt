@@ -1,0 +1,70 @@
+"""
+Business guest asks for a lunch booking and a quick look at mains; includes chitchat and an [ATTENTION] query.
+
+ROLES: user (business diner), assistant (concierge/table coordination)
+CHANNELS: analysis, commentary, final
+TOOLS:
+[
+  {"name":"hours","description":"Get lunch hours","parameters":{"type":"object","properties":{"rid":{"type":"string"}},"required":["rid"],"additionalProperties":false},"strict":true},
+  {"name":"availability","description":"Check availability","parameters":{"type":"object","properties":{"rid":{"type":"string"},"size":{"type":"integer"},"time":{"type":"string","format":"date-time"}},"required":["rid","size","time"],"additionalProperties":false},"strict":true},
+  {"name":"reserve","description":"Place reservation","parameters":{"type":"object","properties":{"rid":{"type":"string"},"name":{"type":"string"},"size":{"type":"integer"},"time":{"type":"string","format":"date-time"}},"required":["rid","name","size","time"],"additionalProperties":false},"strict":true},
+  {"name":"menu","description":"Fetch mains","parameters":{"type":"object","properties":{"rid":{"type":"string"},"section":{"type":"string","enum":["mains"]}},"required":["rid","section"],"additionalProperties":false},"strict":true}
+]
+"""
+
+system:
+HOTEL: Granite & Ivy (hotel_id: granite_ivy)
+LUNCH RESTAURANT: The Greenroom (rid: rid_greenroom)
+Lunch service: 11:30–14:00; 2-course express option
+Highlights:
+- 96 seats; booth seating near indoor garden
+- Sparkling water on tap; still water refill at bar
+- Acoustic panels keep it quiet for meetings
+- Power outlets under tables along west wall
+- Light meter by host stand adjusts skylights
+
+user:
+Can I book The Greenroom at 12:30 for 2, and what mains are on?
+
+assistant channel=analysis:
+Confirm hours, then check availability and reserve, then show mains.
+
+assistant channel=commentary to=tool.hours:
+{"rid":"rid_greenroom"}
+
+tool.hours channel=commentary to=assistant:
+{"hours":"11:30–14:00"}
+
+assistant channel=commentary to=tool.availability:
+{"rid":"rid_greenroom","size":2,"time":"2025-09-03T12:30:00"}
+
+tool.availability channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.reserve:
+{"rid":"rid_greenroom","name":"Taylor","size":2,"time":"2025-09-03T12:30:00"}
+
+tool.reserve channel=commentary to=assistant:
+{"status":"confirmed","code":"GRN-1230-TAY"}
+
+assistant channel=commentary to=tool.menu:
+{"rid":"rid_greenroom","section":"mains"}
+
+tool.menu channel=commentary to=assistant:
+{"items":[{"name":"Grilled trout, lemon caper"},{"name":"Mushroom risotto"},{"name":"Herb chicken paillard"}]}
+
+assistant channel=final:
+Booked for 2 at 12:30 (GRN-1230-TAY). Lunch hours are 11:30–14:00. Mains: Grilled trout (lemon caper), Mushroom risotto, Herb chicken paillard.
+
+user:
+The indoor garden looks calming.
+
+assistant channel=final:
+Those booths are popular for quiet chats—acoustic panels help too.
+
+user:
+Can you share wholesale fish sourcing docs?
+
+assistant channel=final:
+[ATTENTION] Supplier documentation isn’t available within the provided context.
+

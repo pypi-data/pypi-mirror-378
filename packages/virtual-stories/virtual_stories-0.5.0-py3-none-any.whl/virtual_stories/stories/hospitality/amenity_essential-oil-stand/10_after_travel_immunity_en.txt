@@ -1,0 +1,63 @@
+"""
+Guest requests an immune-support blend after travel and asks if clove is available.
+
+ROLES: user (post-travel guest), assistant (aromatherapy concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"immune_list","description":"List immune-support oils.","parameters":{"type":"object","additionalProperties":false,"properties":{"need":{"type":"string","enum":["immunity"]}},"required":["need"]},"strict":true},
+  {"name":"prepare","description":"Prepare ultrasonic diffuser with selected oil.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"oil":{"type":"string"},"intensity":{"type":"string","enum":["light","medium","strong"]}},"required":["room","oil","intensity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Willow & Stone Inn (hotel_id: wsi_uk_19)
+Address: 2 Kirk Lane, York YO1 6JF, UK
+Program info:
+- Immune-support oils: Eucalyptus, Rosemary, Clove, Tea tree
+- Diffuser default: Ultrasonic for balanced dispersion
+- Delivery: 15–25 minutes
+- Hours: 08:00–22:00
+- Safety: Allergy screen available; avoid direct skin application
+
+user:
+Hi, in 223. I’d like an immune-support diffuser—do you have clove? Medium strength please.
+
+assistant channel=analysis:
+Confirm clove is in immune list; prepare ultrasonic diffuser for 223 at medium intensity using Clove.
+
+assistant channel=commentary to=tool.immune_list:
+{"need":"immunity"}
+
+tool.immune_list channel=commentary to=assistant:
+{"options":["Eucalyptus","Rosemary","Clove","Tea tree"]}
+
+assistant channel=commentary to=tool.prepare:
+{"room":"223","oil":"Clove","intensity":"medium"}
+
+tool.prepare channel=commentary to=assistant:
+{"ticket":"WSI-223-IMM-904","eta_minutes":19}
+
+assistant channel=final:
+Clove is available for immune support. I’ll set an ultrasonic diffuser at medium intensity for room 223 using Clove (ticket WSI-223-IMM-904), ETA about 19 minutes within 08:00–22:00.
+
+user:
+Thanks—the courtyard looks cozy.
+
+assistant channel=analysis:
+Chitchat reply only.
+
+assistant channel=final:
+It’s a calm spot to unwind.
+
+user:
+Can you also add hand sanitizer bottles?
+
+assistant channel=analysis:
+Hand sanitizer supply isn’t described in this dialogue.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability of hand sanitizer bottles.
+

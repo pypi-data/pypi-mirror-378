@@ -1,0 +1,48 @@
+"""
+Guest requests a short‑notice evening wake‑up and asks about accepted time formats.
+
+ROLES: user (guest taking a nap), assistant (operator setting near‑term wake‑up and explaining format)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_wake_up_call","description":"Set a wake‑up call for a room at a given time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time":{"type":"string"}},"required":["room_number","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Bay Tower Hotel — Wake‑Up Calls
+Format: Accepts 24‑hour or am/pm
+Behavior: Rings up to 3 times
+Follow‑Up: No knocks
+Desk: Across from the Sunset Lounge
+Availability: 24/7 automated
+
+user:
+Can you call me at 6:25 pm in 1410? Do you accept am/pm format?
+
+assistant channel=analysis:
+Confirm that am/pm is accepted; convert to 18:25 and set the call.
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"1410","time":"18:25"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_1410_1825","time":"18:25"}
+
+assistant channel=final:
+Yes—am/pm is fine. Your wake‑up is set for 18:25 in room 1410 (wakeup_1410_1825). The system rings up to three times.
+
+user:
+The sunset lounge name fits.
+
+assistant channel=final:
+Our desk is across from the Sunset Lounge.
+
+user:
+Could you play music instead of ringing?
+
+assistant channel=final:
+[ATTENTION] Custom ring tones aren’t listed. Reviewing available resources.
+

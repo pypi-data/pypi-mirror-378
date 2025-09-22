@@ -1,0 +1,73 @@
+"""
+Loyalty guest asks for a refill; confirm membership note and deliver neutral.
+
+ROLES: user (return guest), assistant (loyalty-aware amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"lookup_polish","description":"Show stock and refill eligibility.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"strict":true},
+  {"name":"deliver_refill","description":"Deliver refill tin and log loyalty tag.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"color":{"type":"string","enum":["neutral_clear","midnight_black","cognac_brown"]},"loyalty_tag":{"type":"string"}},"required":["room","color"]},"strict":true}
+]
+```
+"""
+
+system:
+Summit Vista Hotel (hotel_id: svh_den_08)
+Address: 500 Capitol View Blvd, Denver, CO 80203
+Timezone: America/Denver
+
+Polish Refill Policy:
+- Eligible colors: neutral_clear, midnight_black, cognac_brown
+- Refill size: 20ml; for loyalty Silver+ at no charge
+- Standard ETA: 10–15 minutes
+- Tracking prefix: REF-
+- Note: brush/cloth not included on refill unless requested
+
+Property Notes:
+Rooftop terrace 16:00–22:00
+Hydration stations on floors 4, 8, 12
+Parking garage clearance 6'8"
+Yoga: 07:00 Tue/Thu
+SSID: SummitGuest / Pass: Peak@2024
+
+user:
+I’m Silver—can I get a neutral refill to 1204?
+
+assistant channel=analysis:
+Confirm refill eligibility and deliver neutral_clear to 1204 with loyalty tag.
+
+assistant channel=commentary to=tool.lookup_polish:
+{}
+
+tool.lookup_polish channel=commentary to=assistant:
+{"eligible":["neutral_clear","midnight_black","cognac_brown"],"on_hand":{"neutral_clear":29,"midnight_black":17,"cognac_brown":13},"eta_minutes":12}
+
+assistant channel=commentary to=tool.deliver_refill:
+{"room":"1204","color":"neutral_clear","loyalty_tag":"Silver"}
+
+tool.deliver_refill channel=commentary to=assistant:
+{"delivery_id":"REF-5930","room":"1204","color":"neutral_clear","eta_minutes":12}
+
+assistant channel=final:
+Refill confirmed—neutral_clear is on its way to 1204 (REF-5930), ETA about 12 minutes.
+
+user:
+Is the rooftop terrace open right now?
+
+assistant channel=analysis:
+Use terrace hours.
+
+assistant channel=final:
+The rooftop terrace operates 16:00–22:00.
+
+user:
+Any avalanche advisories in the mountains today?
+
+assistant channel=analysis:
+Outside system/tools.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about advisories. Checking available options.
+
+

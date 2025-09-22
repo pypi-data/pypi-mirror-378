@@ -1,0 +1,78 @@
+"""
+Guest tracks small mud spots near entry; asks if mats can be placed after spot cleaning; arrange service and mat placement.
+
+ROLES: user (returning hiker), assistant (housekeeping desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"assess_mud_spots","description":"Assess mud spots and suggest method.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","spots":{"type":"integer","minimum":1}},"required":["room","spots"]}},
+  {"name":"dispatch_with_mat","description":"Dispatch spot clean and place entry mat.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","method":"string"},"required":["room","method"]}}
+]
+```
+"""
+
+system:
+Trailhead Lodge (hotel_id: thl_flag_04)
+Address: 210 Aspen Rd, Flagstaff, AZ 86001
+Timezone: America/Phoenix
+
+Carpet Care:
+- Mud: water blot + gentle rinse; avoid over-wetting
+
+Extras:
+- Temporary entry mat placement on request
+
+Hours & Response:
+- 08:00–21:00; standard 30–60 min; expedite 10–20 min
+
+Noise:
+- Hand tools only for small entry spots
+
+Contact:
+- Housekeeping ext. 18; Front Desk ext. 0
+
+user:
+Sorry—tracked a few muddy spots by the door in room 233. Could you clean and leave a small entry mat?
+
+assistant channel=analysis:
+Assess spots, then dispatch with mat.
+
+assistant channel=commentary to=tool.assess_mud_spots:
+{"room":"233","spots":3}
+
+tool.assess_mud_spots channel=commentary to=assistant:
+{"recommended":"water_blot_gentle_rinse","eligible_for_mat":true}
+
+assistant channel=final:
+We’ll blot and do a gentle rinse, and we can place a temporary entry mat. I’ll send the team now—does that work?
+
+user:
+Yes, thanks.
+
+assistant channel=commentary to=tool.dispatch_with_mat:
+{"room":"233","method":"water_blot_gentle_rinse"}
+
+tool.dispatch_with_mat channel=commentary to=assistant:
+{"ticket":"THL-233-908","eta_minutes":16,"extra":"entry_mat"}
+
+assistant channel=final:
+Confirmed—ticket THL-233-908. Arrival in about 16 minutes with a small entry mat.
+
+user:
+The pine scent in the lobby is great.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+We diffuse a mild pine blend—thanks for noticing.
+
+user:
+Do you rent hiking poles?
+
+assistant channel=analysis:
+Outside carpet scope; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on hiking pole rentals beyond housekeeping.

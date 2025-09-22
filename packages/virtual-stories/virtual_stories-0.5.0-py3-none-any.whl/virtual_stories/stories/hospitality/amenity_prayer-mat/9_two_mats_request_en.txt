@@ -1,0 +1,56 @@
+"""
+Guest requests two prayer mats for companions; include tool dispatch note (one by one), hours info, and an out-of-scope imam inquiry.
+
+ROLES: user (group guest), assistant (front desk)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"provide_religious_item","description":"Provide a religious item to a guest's room.",
+   "parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_name":{"type":"string"}},"required":["room_number","item_name"]}}
+]
+```
+"""
+
+system:
+Harborview Tower Hotel — Group Support
+Prayer mats: available; multiple on request subject to availability
+Delivery: 8–12 minutes
+Prayer room: level 2 west, 06:00–22:00
+Qibla: direction cards on request
+Loan: return at checkout
+Use provide_religious_item for each item
+
+user:
+Hello, room 1912. Could we have two prayer mats?
+
+assistant channel=analysis:
+Dispatch two prayer mats sequentially to 1912; then mention prayer room hours.
+
+assistant channel=commentary to=tool.provide_religious_item:
+{"room_number": "1912", "item_name": "prayer_mat"}
+
+tool.provide_religious_item channel=commentary to=assistant:
+{"status":"success","message":"Prayer mat #1 delivered to room 1912."}
+
+assistant channel=commentary to=tool.provide_religious_item:
+{"room_number": "1912", "item_name": "prayer_mat"}
+
+tool.provide_religious_item channel=commentary to=assistant:
+{"status":"success","message":"Prayer mat #2 delivered to room 1912."}
+
+assistant channel=final:
+Done—two prayer mats are delivered to 1912. If you need a reflection space, the prayer room on level 2 west is open 06:00–22:00.
+
+user:
+Thanks—really appreciate it.
+
+assistant channel=final:
+You’re welcome—let me know if you want Qibla cards as well.
+
+user:
+Who is the imam leading next Friday?
+
+assistant channel=final:
+[ATTENTION] Imam details aren’t included in these resources.
+

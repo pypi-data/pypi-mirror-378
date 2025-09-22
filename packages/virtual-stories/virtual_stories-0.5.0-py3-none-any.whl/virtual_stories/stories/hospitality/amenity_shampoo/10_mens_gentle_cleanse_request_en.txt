@@ -1,0 +1,72 @@
+"""
+Guest asks for a gentle men’s shampoo; confirm availability and deliver. Include chit-chat and one [ATTENTION] query.
+
+ROLES: user (guest requesting men’s gentle shampoo), assistant (spa amenities concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hair_care_inventory","description":"Check gentle cleanse options","parameters":{"type":"object","properties":{"product_preference":{"type":"string","enum":["standard","luxury_brand","hypoallergenic"]}},"required":["product_preference"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_hair_care_amenity","description":"Deliver selection","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"product_selection":{"type":"string"},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown"]}},"required":["room_number","product_selection","delivery_timing"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Summit Crest Hotel (hotel_id: sch_denver_07)
+Address: 1440 16th St Mall, Denver, CO 80202, USA
+Timezone: America/Denver
+
+Program:
+- Gentle cleanse men’s formulations
+- ETA: 10–15 minutes
+- Complimentary amenities
+
+YAML Facility:
+---
+mountain_view_floors: [18,19]
+sprinklers: true
+---
+
+JSON Picks:
+{"mens_gentle": ["Malin_Goetz_Peppermint","Aesop_Classic_Shampoo"]}
+
+user:
+Do you have a gentle men’s shampoo? I’m in 1806.
+
+assistant channel=analysis:
+Check gentle options; deliver immediately.
+
+assistant channel=commentary to=tool.check_hair_care_inventory:
+{"product_preference":"luxury_brand"}
+
+tool.check_hair_care_inventory channel=commentary to=assistant:
+{"available_products":["Malin_Goetz_Peppermint","Aesop_Classic_Shampoo"],"recommended":"Malin_Goetz_Peppermint"}
+
+assistant channel=commentary to=tool.deliver_hair_care_amenity:
+{"room_number":"1806","product_selection":"Malin_Goetz_Peppermint","delivery_timing":"immediate"}
+
+tool.deliver_hair_care_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"12_minutes","products_included":["Malin_Goetz_Peppermint_Shampoo_236ml"]}
+
+assistant channel=final:
+Yes—Malin + Goetz Peppermint is a gentle option. It’s heading to room 1806 with an ETA of about 12 minutes.
+
+user:
+The mountain views are impressive.
+
+assistant channel=analysis:
+Chit-chat referencing mountain view floors.
+
+assistant channel=final:
+Floors 18–19 catch the best front-range views.
+
+user:
+Could you also arrange ski rentals downtown?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

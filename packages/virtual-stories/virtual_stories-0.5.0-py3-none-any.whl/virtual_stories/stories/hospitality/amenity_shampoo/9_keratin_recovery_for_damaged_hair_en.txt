@@ -1,0 +1,72 @@
+"""
+Guest with damaged hair asks for keratin-recovery shampoo; confirm availability and deliver with conditioner. Include chitchat and [ATTENTION].
+
+ROLES: user (guest needing repair shampoo), assistant (spa concierge arranging delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hair_care_inventory","description":"Check repair/keratin lines","parameters":{"type":"object","properties":{"hair_type":{"type":"string","enum":["damaged","color_treated","dry"]},"product_preference":{"type":"string","enum":["luxury_brand","sulfate_free","organic","standard"]}},"required":["hair_type"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_hair_care_amenity","description":"Deliver repair set","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"product_selection":{"type":"string"},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown"]},"include_conditioner":{"type":"boolean"}},"required":["room_number","product_selection","delivery_timing"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverstone Urban Spa Hotel (hotel_id: ruh_chicago_23)
+Address: 233 W Wacker Dr, Chicago, IL 60606, USA
+Timezone: America/Chicago
+
+Program:
+- Keratin-recovery and repair lines for damaged hair
+- Delivery ETA: 12–16 minutes
+- Complimentary hair care amenities
+
+YAML Facility:
+---
+river_walk_access: true
+sprinklers: true
+---
+
+JSON Options:
+{"repair": ["Olaplex_No4","Kerastase_Resistance"]}
+
+user:
+My hair is damaged—do you have a keratin-recovery shampoo? I’m in 1910 and would like the conditioner too.
+
+assistant channel=analysis:
+Check damaged hair inventory; deliver repair set to 1910.
+
+assistant channel=commentary to=tool.check_hair_care_inventory:
+{"hair_type":"damaged","product_preference":"luxury_brand"}
+
+tool.check_hair_care_inventory channel=commentary to=assistant:
+{"available_products":["Olaplex_No4","Kerastase_Resistance"],"recommended":"Olaplex_No4"}
+
+assistant channel=commentary to=tool.deliver_hair_care_amenity:
+{"room_number":"1910","product_selection":"Olaplex_No4","delivery_timing":"immediate","include_conditioner":true}
+
+tool.deliver_hair_care_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"14_minutes","products_included":["Olaplex_No4_Shampoo_250ml","Olaplex_No5_Conditioner_250ml"]}
+
+assistant channel=final:
+Yes—our repair line includes Olaplex No.4. I’ve scheduled the shampoo and matching conditioner to room 1910, arriving in about 14 minutes.
+
+user:
+The river walk access is handy.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+Direct access makes morning strolls easy.
+
+user:
+Could you also book a river architecture tour for tomorrow?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

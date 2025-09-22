@@ -1,0 +1,74 @@
+"""
+Guest with medical condition requests luggage cart with special medical considerations. Includes compassionate small talk and handles medical services request.
+
+ROLES: user (guest with medical needs), assistant (compassionate bell desk coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_luggage_cart",
+    "description": "Send a luggage cart to a room or hold at bell desk.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"delivery_option":{"type":"string","enum":["deliver_to_room","hold_at_bell_desk"]},"needed_time":{"type":"string"}},"required":["room_number","delivery_option"]},
+    "strict": true
+  },
+  {
+    "name": "check_medical_services",
+    "description": "Check available medical services and equipment.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["medical_equipment","doctor","pharmacy","emergency"]}},"required":["service_type"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Seaside Promenade Hotel
+Bell Desk:
+- Luggage carts available 06:00–23:00
+- Options: deliver to room or hold at Bell Desk
+- Courtesy time: 15-minute window; carts should be returned to corridor alcove
+Medical services: Medical equipment, doctor, pharmacy, emergency services
+Hotel features: Oceanfront location, luxury spa, fine dining restaurant, business center, concierge services
+Room amenities: Premium bedding, marble bathrooms, smart TV, minibar, complimentary WiFi, room service
+Special services: Valet parking, airport shuttle, pet-friendly rooms, wheelchair accessible accommodations
+Dining: The Oceanview Restaurant (fine dining), The Beach Café (casual), The Sunset Bar (cocktails)
+Recreation: Private beach access, infinity pool, tennis courts, golf course access, spa services
+Wellness: Full-service spa with 10 treatment rooms, sauna, steam room, yoga classes, personal training
+Medical facilities: On-site doctor, medical equipment, pharmacy delivery, emergency services, medical alert system
+
+user:
+Hello, I'm in room 567 and need a luggage cart. I have a medical condition that requires special handling of my medical equipment. Can you help?
+
+assistant channel=analysis:
+Guest with medical needs requesting luggage cart with special medical considerations. Deliver to room and check medical amenities.
+
+assistant channel=commentary to=tool.request_luggage_cart:
+{"room_number":"567","delivery_option":"deliver_to_room","needed_time":"now"}
+
+tool.request_luggage_cart channel=commentary to=assistant:
+{"dispatch_id":"cart_8847","eta_minutes":15}
+
+assistant channel=commentary to=tool.check_medical_services:
+{"service_type":"medical_equipment"}
+
+tool.check_medical_services channel=commentary to=assistant:
+{"available":true,"services":["medical_equipment","on_site_doctor","pharmacy_delivery","emergency_services"],"medical_support":"available"}
+
+assistant channel=analysis:
+Luggage cart dispatched with medical considerations. Medical services available. Provide confirmation and medical service information.
+
+assistant channel=final:
+Of course! A luggage cart is dispatched to room 567 (dispatch cart_8847) with an ETA of about 15 minutes. We'll handle your medical equipment with special care and have medical services available if needed.
+
+user:
+Thank you so much! The ocean view is so calming for my condition. How's the air quality here?
+
+assistant channel=final:
+Welcome to Seaside Promenade! The air quality is excellent here with our oceanfront location. We're committed to ensuring your comfort and medical needs are met.
+
+user:
+Can you also arrange for a medical alert system in my room?
+
+assistant channel=final:
+[ATTENTION] Medical alert system arrangements require coordination with our medical services. Reviewing available options.

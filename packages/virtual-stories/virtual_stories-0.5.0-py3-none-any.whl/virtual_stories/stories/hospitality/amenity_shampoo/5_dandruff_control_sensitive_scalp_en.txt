@@ -1,0 +1,72 @@
+"""
+Guest asks for dandruff-control shampoo suitable for sensitive scalp; confirm hypoallergenic option and deliver with timing. Include chitchat and [ATTENTION].
+
+ROLES: user (guest needing gentle dandruff care), assistant (spa amenities concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hair_care_inventory","description":"Check for dandruff-control options","parameters":{"type":"object","properties":{"scalp_condition":{"type":"string","enum":["sensitive","dry","oily"]},"product_preference":{"type":"string","enum":["hypoallergenic","sulfate_free","standard"]}},"required":["scalp_condition"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_hair_care_amenity","description":"Deliver selected product","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"product_selection":{"type":"string"},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown"]}},"required":["room_number","product_selection","delivery_timing"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Grand North Shore (hotel_id: gns_auk_17)
+Address: 44 Beach Rd, Auckland 1010, New Zealand
+Timezone: Pacific/Auckland
+
+Hair Care:
+- Dandruff-control lines with sensitive-skin variants
+- Delivery ETA: 12–18 minutes
+- Complimentary amenity program
+
+YAML Facility:
+---
+harbor_view_lounge: true
+sprinklers: true
+---
+
+JSON Options:
+{"dandruff_sensitive": ["Nizoral_Gentle","CLn_Sensitive_Scalp"]}
+
+user:
+My scalp is sensitive—do you have a gentle dandruff shampoo? I’m in 932.
+
+assistant channel=analysis:
+Search for sensitive scalp dandruff options; deliver immediately.
+
+assistant channel=commentary to=tool.check_hair_care_inventory:
+{"scalp_condition":"sensitive","product_preference":"hypoallergenic"}
+
+tool.check_hair_care_inventory channel=commentary to=assistant:
+{"available_products":["Nizoral_Gentle","CLn_Sensitive_Scalp"],"recommended":"CLn_Sensitive_Scalp"}
+
+assistant channel=commentary to=tool.deliver_hair_care_amenity:
+{"room_number":"932","product_selection":"CLn_Sensitive_Scalp","delivery_timing":"immediate"}
+
+tool.deliver_hair_care_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"15_minutes","products_included":["CLn_Sensitive_Scalp_Shampoo_240ml"]}
+
+assistant channel=final:
+Yes—CLn Sensitive Scalp is a gentle dandruff-control option. It’s scheduled to room 932 and should arrive in about 15 minutes.
+
+user:
+The harbor view lounge looks inviting.
+
+assistant channel=analysis:
+Chit-chat referencing lounge.
+
+assistant channel=final:
+It’s a calm spot to unwind between 5–7 PM.
+
+user:
+Can you also arrange airport transfers for tomorrow?
+
+assistant channel=analysis:
+Outside this scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

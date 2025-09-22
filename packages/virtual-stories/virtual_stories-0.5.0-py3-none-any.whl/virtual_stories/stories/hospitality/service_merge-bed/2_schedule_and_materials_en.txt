@@ -1,0 +1,57 @@
+"""
+Guest requests to merge twins; confirm timing window and materials used. Include small talk and [ATTENTION].
+
+ROLES: user (guest asking for bed merge), assistant (housekeeping supervisor scheduling merge with specified materials and timing window)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"schedule_merge","description":"Schedule twin‑to‑king bed merge","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"time":{"type":"string"}},"required":["room","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Rivercourt Residences London (RRLD-20)
+Address: 98 Strand, London WC2R
+Bed merge service (twin → king‑style):
+- Window: 10:00–18:00; duration 20–30 minutes
+- Materials: bed bridge, foam topper, king fitted sheet, king duvet set; straps not used
+- Reversal: available on departure upon request
+- Fee: included for in‑house guests; charge code HK-MERGE for tracking only
+- Safety: gap inspected; no roll‑together guarantee
+Extras:
+- Team base: Housekeeping Office, Level 2
+- Contact channel: Housekeeping through Front Desk
+- Tools sanitized between rooms
+- Mattress rotation excluded
+- Requests queued FIFO within window
+
+user:
+Could you merge beds in 1108 at 3 pm?
+
+assistant channel=analysis:
+Schedule for 15:00; confirm materials and duration.
+
+assistant channel=commentary to=tool.schedule_merge:
+{"room":"1108","time":"15:00"}
+
+tool.schedule_merge channel=commentary to=assistant:
+{"task_id":"merge_1108_1500","eta_minutes":25}
+
+assistant channel=final:
+Scheduled—task merge_1108_1500 at 15:00. We’ll use a bed bridge with a foam topper and king linens; it takes about 25 minutes.
+
+user:
+Thanks—hallway orchids are pretty.
+
+assistant channel=final:
+Appreciated—we’ll arrive within the 15:00 window.
+
+user:
+Can you guarantee there’s no middle seam feel?
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

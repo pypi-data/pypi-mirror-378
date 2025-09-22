@@ -1,0 +1,59 @@
+"""
+Late-night express checkout flow; confirm drop box location and receipt behavior; include small talk and an out-of-scope request handled with the special flag.
+
+ROLES: user (guest checking out at 02:15), assistant (night audit team member handling express checkout logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"initiate_express_checkout","description":"Start express checkout and email a digital receipt.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"email":{"type":"string"}},"required":["reservation_id","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Ironwood City Suites (North Tower)
+Lobby Map Notes:
+- Express key drop: Wall-mounted bronze box right of Night Desk sign.
+- Business Center: mezzanine; Printers MZ-1/MZ-2.
+Checkout & Receipts:
+- Express checkout: keys in box; folio closes post-night-audit and minibar verification.
+- Receipts sent by email when folio posts finalize; paper on request at desk during staffed hours.
+Basic Details:
+- Address: 410 Crown Street, Civic Ward.
+- Wi‑Fi SSID: Ironwood-Guest; Parking: B1–B3; EV: B2 Row D.
+- Quiet hours: 22:00–07:00.
+
+user:
+It’s 2:15 am—can you process express checkout for IW-22107 and email to josh@sample.com?
+
+assistant channel=analysis:
+Use the tool, then remind where to drop keys and when the receipt is issued per system details.
+
+assistant channel=commentary to=tool.initiate_express_checkout:
+{"reservation_id":"IW-22107","email":"josh@sample.com"}
+
+tool.initiate_express_checkout channel=commentary to=assistant:
+{"status":"initiated","receipt":"queued"}
+
+assistant channel=final:
+All set. Please drop your keys in the bronze Express box to the right of the Night Desk sign. Your receipt will be emailed after folio finalization.
+
+user:
+Thanks—your lobby plants are nice.
+
+assistant channel=analysis:
+Light, brief chat with no new facts beyond system.
+
+assistant channel=final:
+Appreciated. Night Desk remains available if you need anything else before departure.
+
+user:
+Can you also send me a full call log of the room phone?
+
+assistant channel=analysis:
+Out of scope—no tool or system support for call logs. Use the flag.
+
+assistant channel=final:
+[ATTENTION] Understood about the detailed call log. Checking available options.
+

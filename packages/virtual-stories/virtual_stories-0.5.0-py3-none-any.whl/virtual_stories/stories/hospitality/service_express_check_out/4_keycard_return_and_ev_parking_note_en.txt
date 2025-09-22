@@ -1,0 +1,58 @@
+"""
+Express checkout with keycard return, EV parking reminder, and [ATTENTION] case; include a small chitchat turn.
+
+ROLES: user (guest with EV in parking), assistant (front desk agent processing express checkout and sharing receipt flow)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"initiate_express_checkout","description":"Start express checkout and email a digital receipt.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"email":{"type":"string"}},"required":["reservation_id","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Venue: Grand Maple Downtown
+Core Info:
+- Address: 77 Alder Avenue; Wi‑Fi SSID: Maple-Guest; Concierge Desk at lobby center.
+- Express key drop: slot labeled “Express Checkout” on Reception counter’s right end.
+- Receipts emailed after folio closing; paper copy available on request during desk hours.
+- Parking: Levels P1–P3; EV chargers at P2 bays 21–28 (8 stalls).
+- Elevators: Car A (rooms 1–12), Car B (13–24).
+- Quiet hours: 22:00–07:00.
+Sustainability:
+- E-receipts default; recycling bins on each floor near ice machine.
+
+user:
+Please process express checkout for GM-55390 and send the receipt to lee@sample.com.
+
+assistant channel=analysis:
+Call the tool, then remind about key drop and receipt policy; keep within system info.
+
+assistant channel=commentary to=tool.initiate_express_checkout:
+{"reservation_id":"GM-55390","email":"lee@sample.com"}
+
+tool.initiate_express_checkout channel=commentary to=assistant:
+{"status":"initiated","receipt":"queued"}
+
+assistant channel=final:
+Express checkout is initiated. Return your keycards to the “Express Checkout” slot at the right end of Reception. Your receipt will be emailed after the folio closes.
+
+user:
+The lobby art looks great.
+
+assistant channel=analysis:
+Provide a friendly acknowledgment—no new details.
+
+assistant channel=final:
+Thank you—Concierge is at the lobby center if you need anything else.
+
+user:
+Can you validate my EV parking overnight fee?
+
+assistant channel=analysis:
+No validation or fee tools here; use [ATTENTION] per policy.
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Checking available options regarding parking validation.
+

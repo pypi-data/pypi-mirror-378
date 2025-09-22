@@ -1,0 +1,65 @@
+"""
+Guest asks ETA for a medium job; provide tool ETA and system turnaround policies; include chitchat and ATTENTION for poster printing.
+
+ROLES: user (guest with a medium copy job), assistant (copy service estimating and creating job)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "estimate_copy_time",
+    "description": "Estimate ETA for a copy job.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"}},"required":["pages"]},
+    "strict": true
+  },
+  {
+    "name": "create_copy_job",
+    "description": "Create a copy job and return job id and price.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"},"color":{"type":"boolean"},"paper_size":{"type":"string","enum":["A4","Letter"]}},"required":["pages","color","paper_size"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Old Town Heritage Inn — Copy Alcove (off Lobby)
+Hours: 08:00–21:00
+Small jobs: 10–15 minutes; Medium (30–60 pages): 20–30 minutes
+Paper: A4 and Letter stocked; duplex available on request
+Rates: B/W USD 0.15; Color USD 0.50 per page
+Queueing: First‑come, first‑served; queue tickets issued at kiosk
+
+user:
+I’ve got 45 pages, black and white, Letter. How long and can you start?
+
+assistant channel=analysis:
+Estimate time for 45 pages, then create the job and confirm ETA per tool, and the general window from system.
+
+assistant channel=commentary to=tool.estimate_copy_time:
+{"pages":45}
+
+tool.estimate_copy_time channel=commentary to=assistant:
+{"estimated_minutes":25}
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":45,"color":false,"paper_size":"Letter"}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-5388","price":"USD 6.75"}
+
+assistant channel=final:
+ETA is about 25 minutes. Your job CPY-5388 is queued for 45 Letter B/W pages at USD 6.75; the Copy Alcove operates 08:00–21:00.
+
+user:
+Thanks! Nice historic tiles down there.
+
+assistant channel=final:
+We’ll keep your pages moving in the queue.
+
+user:
+Can you print a poster on foam board too?
+
+assistant channel=final:
+[ATTENTION] Poster mounting isn’t listed here. Checking available options.
+

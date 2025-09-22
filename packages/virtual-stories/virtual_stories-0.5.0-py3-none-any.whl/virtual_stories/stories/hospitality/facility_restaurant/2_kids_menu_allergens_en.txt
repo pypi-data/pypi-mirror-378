@@ -1,0 +1,85 @@
+"""
+Parent asks about kids' lunch options and peanut allergies; requests a brief kids menu preview.
+
+ROLES: user (parent dining with child, peanut allergy), assistant (restaurant concierge sharing allergen-safe options and kids menu)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_allergen_matrix",
+    "description": "Return allergen matrix for Garden Hearth lunch menu.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  },
+  {
+    "name": "list_kids_menu",
+    "description": "List kids' lunch menu items with brief descriptions.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Bayview Grand Hotel (hotel_id: bayview_grand_sfo)
+Venue: Garden Hearth — Californian farm-to-table (restaurant_id: rest_garden_hearth)
+Hours (Lunch): 11:30–14:30, daily
+Seating: Banquettes, 2/4-top tables, 1 communal farm table
+Dress: Casual
+Allergen protocol: Peanut-free kitchen line for kids' orders; dedicated utensils; color-coded plates
+GF/V options: Gluten-free bread; oat milk; vegan bowls marked with (V)
+Family support: Highchairs available; pram parking zone near host stand; crayons on request
+Accessibility: Level 3 step-free; aisle width ≥ 36"; large-print kids menu available
+Payment: Visa/Mastercard/AmEx, Apple Pay
+Noise level: Moderate at peak (12:00–13:00)
+
+user:
+Is lunch kid-friendly? My child has a peanut allergy.
+
+assistant channel=analysis:
+Answer from system: kid-friendly setup and peanut-free line; then show allergen matrix via tool.
+
+assistant channel=commentary to=tool.get_allergen_matrix:
+{}
+
+tool.get_allergen_matrix channel=commentary to=assistant:
+{"peanut_free":"All kids' menu items prepared on a peanut-free line","cross_contact_controls":["dedicated utensils","color-coded plates","allergen wipe-down checklist"],"notes":"Please inform staff on arrival to apply allergy flag."}
+
+assistant channel=final:
+Yes—Garden Hearth is kid-friendly, and kids' orders are prepared on a dedicated peanut-free line using separate utensils and color‑coded plates. We also have highchairs, pram parking, and large‑print kids menus.
+
+user:
+Could you show me a few kids' items?
+
+assistant channel=analysis:
+Use tool to list kids menu items; keep to facts from tool.
+
+assistant channel=commentary to=tool.list_kids_menu:
+{}
+
+tool.list_kids_menu channel=commentary to=assistant:
+{"items":[{"name":"Grilled Chicken Bowl","note":"brown rice, steamed broccoli"},{"name":"Mini Veggie Pasta","note":"tomato basil sauce (V)"},{"name":"Salmon Bites","note":"roasted carrots"}]}
+
+assistant channel=final:
+Kids' lunch examples: Grilled Chicken Bowl (brown rice, steamed broccoli), Mini Veggie Pasta (tomato basil sauce), Salmon Bites (with roasted carrots). Would a highchair be helpful today?
+
+user:
+Thanks—looks perfect.
+
+assistant channel=analysis:
+Offer quick friendly acknowledgment; no tools.
+
+assistant channel=final:
+Glad to hear it—see you at lunch.
+
+user:
+Can the chef come out to the table to discuss new menu ideas?
+
+assistant channel=analysis:
+Not defined in system or tools; respond with the attention flag.
+
+assistant channel=final:
+[ATTENTION] Noted your request about a chef visit. Reviewing available resources.
+

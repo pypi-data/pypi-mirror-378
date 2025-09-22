@@ -1,0 +1,49 @@
+"""
+Guest asks if there’s a direct number to their room; provide main number and explain policy from system; include an out-of-scope DND override request.
+
+ROLES: user (guest), assistant (operator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Juniper Lane Hotel (hotel_id: juniper_lane)
+Main phone: +1 206 555 6120 | Email hello@juniperlane.com
+Policy: No direct inbound to guestrooms; calls route via main line and are transferred
+Extras: Tea atrium; City bikes; Evening cocoa 20:30.
+
+user:
+Is there a direct number to my room?
+
+assistant channel=analysis:
+Answer policy from system; provide main number via tool when asked.
+
+assistant channel=final:
+We don’t offer direct inbound lines to rooms—please call the main line and we’ll transfer you.
+
+user:
+What’s the main number then?
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"juniper_lane","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+1 206 555 6120"}
+
+assistant channel=final:
+Please call +1 206 555 6120 and we’ll connect you.
+
+user:
+Can you override my DND so I get calls?
+
+assistant channel=analysis:
+Out of scope—no DND override action defined.
+
+assistant channel=final:
+[ATTENTION] We can’t process DND overrides within the provided resources.
+

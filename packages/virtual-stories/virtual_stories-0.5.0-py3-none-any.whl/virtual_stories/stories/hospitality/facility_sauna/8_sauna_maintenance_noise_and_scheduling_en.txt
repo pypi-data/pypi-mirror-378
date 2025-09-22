@@ -1,0 +1,64 @@
+"""
+Guest reports light maintenance noise and asks to shift a session.
+
+ROLES: user (guest sensitive to noise), assistant (wellness coordinator rescheduling and noting maintenance timing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"report_noise","description":"Log a light-noise report for facilities team.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"note":{"type":"string"}},"required":["hotel_id","note"]},"strict":true},
+  {"name":"reschedule_slot","description":"Move an existing sauna slot to a new time.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"from":{"type":"string","format":"date-time"},"to":{"type":"string","format":"date-time"}},"required":["hotel_id","from","to"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Bluewater Marina Hotel (hotel_id: bmh_syd_07)
+Address: 12 Wharf Crescent, Sydney NSW 2000, Australia
+Timezone: Australia/Sydney
+Sauna: Dry; spotted gum benches
+Hours: 06:00–22:00
+Maintenance Window: 17:30–18:30 light HVAC balancing; low hum possible
+Capacity: 3; sessions 25 minutes
+Cooldown: Balcony salt-air zone
+Contacts: Facilities ext. 225; Wellness ext. 310
+
+user:
+There’s a faint hum near 17:40. Could I move my 17:30 slot to 18:45?
+
+assistant channel=analysis:
+Log the noise note and reschedule outside the maintenance window to 18:45.
+
+assistant channel=commentary to=tool.report_noise:
+{"hotel_id":"bmh_syd_07","note":"Guest reports faint hum during HVAC balancing near 17:40."}
+
+tool.report_noise channel=commentary to=assistant:
+{"logged":true,"ticket":"NOISE-1740"}
+
+assistant channel=commentary to=tool.reschedule_slot:
+{"hotel_id":"bmh_syd_07","from":"2025-08-29T17:30:00","to":"2025-08-29T18:45:00"}
+
+tool.reschedule_slot channel=commentary to=assistant:
+{"status":"moved","new_slot_id":"BMH-1845-1910"}
+
+assistant channel=final:
+I’ve logged the hum (ticket NOISE-1740) and moved your session to 18:45–19:10 (BMH-1845-1910).
+
+user:
+The balcony salt air sounds perfect after heat.
+
+assistant channel=analysis:
+Offer a warm, brief reply.
+
+assistant channel=final:
+It’s a refreshing way to cool down by the marina.
+
+user:
+Are the benches sourced from a specific spotted gum plantation?
+
+assistant channel=analysis:
+Provenance isn’t specified; respond with attention flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for raising the sourcing detail. Reviewing available resources.
+

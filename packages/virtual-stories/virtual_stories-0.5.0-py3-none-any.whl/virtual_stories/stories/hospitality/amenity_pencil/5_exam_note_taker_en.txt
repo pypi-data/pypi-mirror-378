@@ -1,0 +1,61 @@
+"""
+Provide standard pencils and erasers for an exam-style note-taking session.
+
+ROLES: user (guest studying for certification), assistant (study concierge preparing exam pencils and erasers)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"study_supplies","description":"Check standard pencil count and erasers.","parameters":{"type":"object","additionalProperties":false,"properties":{"number":{"type":"integer"},"erasers":{"type":"boolean"}},"required":[]},"strict":true},
+  {"name":"dispatch_set","description":"Dispatch study set to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"count":{"type":"integer"}},"required":["room","count"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: University Row Inn (hotel_id: uri_cam_02)
+Address: 1100 Massachusetts Ave, Cambridge, MA 02138
+Timezone: America/New_York
+Study Concierge: 08:00–21:00; delivery 10–15 min
+Included: No.2/HB pencils, vinyl erasers, small ruler
+Ext: x2311
+
+user:
+Can I get 4 No.2 pencils and an eraser to 509?
+
+assistant channel=analysis:
+Check availability and send four pencils and one eraser.
+
+assistant channel=commentary to=tool.study_supplies:
+{"number":4,"erasers":true}
+
+tool.study_supplies channel=commentary to=assistant:
+{"ok":true,"pencils":100,"erasers":25}
+
+assistant channel=commentary to=tool.dispatch_set:
+{"room":"509","count":4}
+
+tool.dispatch_set channel=commentary to=assistant:
+{"scheduled":true,"eta":11}
+
+assistant channel=final:
+Yes—four No.2 pencils and a vinyl eraser are scheduled to 509, about 11 minutes.
+
+user:
+The neighborhood feels academic.
+
+assistant channel=analysis:
+Chitchat grounded in property name/address.
+
+assistant channel=final:
+University Row Inn’s Massachusetts Ave address does bring that study vibe.
+
+user:
+Could you place me in a study group at MIT?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

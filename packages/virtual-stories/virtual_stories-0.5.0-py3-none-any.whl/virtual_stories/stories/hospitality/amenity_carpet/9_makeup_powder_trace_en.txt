@@ -1,0 +1,78 @@
+"""
+Guest notices a little makeup powder on carpet; asks if vacuum alone is fine; advise and schedule.
+
+ROLES: user (guest), assistant (housekeeping)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"powder_guidance","description":"Return guidance for dry powder on carpet.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"dispatch_dry_vac","description":"Dispatch dry vacuum and brush head.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string"},"required":["room"]}}
+]
+```
+"""
+
+system:
+Pearl Arcade Hotel (hotel_id: pah_lv_17)
+Address: 2100 S Las Vegas Blvd, Las Vegas, NV 89104
+Timezone: America/Los_Angeles
+
+Guidance:
+- Dry powder: avoid wetting; dry vacuum with brush head
+
+Windows:
+- Standard 25–45 min; Expedite 10–18 min
+
+Noise:
+- Brief; under 55 dB
+
+Policy:
+- Dry-only method unless otherwise assessed on-site
+
+Contact:
+- Housekeeping ext. 24
+
+user:
+Hi—there’s a little makeup powder on the carpet in 926. Is vacuuming enough?
+
+assistant channel=analysis:
+Answer from system guidance; then schedule dispatch.
+
+assistant channel=commentary to=tool.powder_guidance:
+{}
+
+tool.powder_guidance channel=commentary to=assistant:
+{"method":"dry_vac_with_brush","note":"avoid_wetting"}
+
+assistant channel=final:
+Yes—dry vacuum with a brush head is best; we avoid wetting. I can send a team in the next 25–45 minutes or expedite at 10–18 minutes. What works for room 926?
+
+user:
+Expedite, please.
+
+assistant channel=commentary to=tool.dispatch_dry_vac:
+{"room":"926"}
+
+tool.dispatch_dry_vac channel=commentary to=assistant:
+{"ticket":"PAH-926-120","eta_minutes":15}
+
+assistant channel=final:
+Booked—ticket PAH-926-120 with ETA about 15 minutes.
+
+user:
+Your neon sign is fun!
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Thank you—it nods to the classic arcade vibe.
+
+user:
+Do you sell makeup remover sheets?
+
+assistant channel=analysis:
+Not in system; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability of makeup remover sheets beyond housekeeping services.

@@ -1,0 +1,58 @@
+"""
+Guest requests a full-size ironing board; brief small talk and SLA inquiry.
+
+ROLES: user (guest in room 817 requesting a full-size board), assistant (services coordinating availability and delivery, quoting SLA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check stock availability","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Request delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Stonebridge Hall — East Tower
+Room: 817 (Superior Double)
+Policy: One ironing board per room upon request (compact or full-size)
+Window: 06:45–22:45 normal; 22:45–00:15 urgent
+SLA floors 7–10: 8–14 minutes
+Staging: ET-8 pantry; use S1
+Ext: 0; 7910; 7911
+
+user:
+Could I have a full-size ironing board to 817?
+
+assistant channel=analysis:
+Check availability for one full-size board; then arrange normal delivery to 817.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board (full-size)","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board (full-size)","available":true,"in_stock":11}
+
+assistant channel=analysis:
+Place the normal delivery now.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"817","amenity_name":"ironing board (full-size)","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-817-4408","eta_minutes":9}
+
+assistant channel=final:
+Confirmed—a full-size ironing board is scheduled for room 817 with an ETA of about 9 minutes.
+
+user:
+Thanks! What’s the normal SLA for this band?
+
+assistant channel=final:
+For floors 7–10, normal deliveries are about 8–14 minutes.
+
+user:
+Is the frame aluminum or steel?
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.

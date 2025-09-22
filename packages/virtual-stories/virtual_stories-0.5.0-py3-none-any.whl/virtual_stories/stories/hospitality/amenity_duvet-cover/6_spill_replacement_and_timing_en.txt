@@ -1,0 +1,59 @@
+"""
+Spill-triggered duvet cover replacement; confirm timing window. Include chit-chat and [ATTENTION].
+
+ROLES: user (guest in 1511), assistant (housekeeping desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_housekeeping_window","description":"List current service windows.","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true},
+  {"name":"request_linen_delivery","description":"Deliver a replacement duvet cover.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"linen_type":{"type":"string","enum":["duvet_cover"]},"size":{"type":"string","enum":["queen","king"]},"quantity":{"type":"integer"}},"required":["room_number","linen_type","size","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Bayfront Conference Hotel (hotel_id: bch_sfo)
+Address: 299 Harbor Dr, Burlingame, CA 94010
+Timezone: America/Los_Angeles
+Program Details:
+- Fabric: cotton percale 400TC
+- Sizes: queen, king
+- Windows: 09:00–16:00; 19:00–22:00 light service
+- Normal ETA: 20–30 min; Evening ETA: 15–25 min
+- Spill protocol: replace cover, bag soiled item
+Reference JSON: {"reusable_bags":"linen-amber","evening_core":"service-elevator-2"}
+
+user:
+Spilled tea on the duvet in 1511. Can you swap the cover soon?
+
+assistant channel=analysis:
+Proceed with replacement; size not specified. Ask for size first per tool requirement.
+
+assistant channel=final:
+I can get a replacement over quickly. Is your bed a queen or a king in 1511?
+
+user:
+King.
+
+assistant channel=commentary to=tool.request_linen_delivery:
+{"room_number":"1511","linen_type":"duvet_cover","size":"king","quantity":1}
+
+tool.request_linen_delivery channel=commentary to=assistant:
+{"ok":true,"eta_minutes":22,"ticket":"BCH-1511-DC-72"}
+
+assistant channel=final:
+Got it. A king cover is on its way with an ETA of about 22 minutes. Ref BCH-1511-DC-72.
+
+user:
+The conference foyer smelled like eucalyptus earlier.
+
+assistant channel=final:
+We do keep a light, calming scent in the foyer.
+
+user:
+Which laundry vendor handles your linens?
+
+assistant channel=final:
+[ATTENTION] I’ll check who our current vendor is.
+

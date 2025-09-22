@@ -1,0 +1,83 @@
+"""
+Guest asks where the ice bucket is and requests a replacement.
+
+ROLES: user (guest in suite 1703 looking for the ice bucket), assistant (concierge guiding item location and arranging replacements)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_in_room_item_location",
+    "description": "Return the standard in-room location for a specified item.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"item": {"type": "string"}},
+      "required": ["item"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_amenity_delivery",
+    "description": "Arrange delivery of a replacement item to the guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Resort: Clifftop Horizon — Panorama Suites Wing
+Room 1703 (Panorama Corner Suite)
+Standard item placement:
+- Ice bucket: in the minibar cabinet, lower left shelf
+- Tongs: inside the ice bucket in a clear sleeve
+Service: Replacement items available 07:00–23:30; urgent runs until 01:00
+SLA: Normal 15–25 minutes; urgent 10–15 minutes
+
+user:
+Where is the ice bucket in 1703? I can't seem to find it.
+
+assistant channel=analysis:
+Use location tool for ice bucket and provide placement details.
+
+assistant channel=commentary to=tool.get_in_room_item_location:
+{"item":"ice bucket"}
+
+tool.get_in_room_item_location channel=commentary to=assistant:
+{"item":"ice bucket","location":"minibar cabinet, lower left shelf","notes":"tongs stored inside bucket"}
+
+assistant channel=final:
+It’s in the minibar cabinet on the lower left shelf, and the tongs are stored inside the bucket in a clear sleeve.
+
+user:
+Found the spot, but the bucket’s missing. Can I get one sent up?
+
+assistant channel=analysis:
+Arrange a normal replacement delivery of one ice bucket to 1703.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1703","amenity_name":"ice bucket","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICEB-1703-1188","eta_minutes":16}
+
+assistant channel=final:
+Absolutely—one ice bucket is on its way to 1703 with an ETA of about 16 minutes.
+
+user:
+Do you know the brand of the tongs?
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.

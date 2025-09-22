@@ -1,0 +1,62 @@
+"""
+Guest wants a focused reading chair setup and asks if neutral white is okay.
+
+ROLES: user (avid reader), assistant (lighting concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"recommend","description":"Return reading chair recommendation.","parameters":{"type":"object","additionalProperties":false,"properties":{"area":{"type":"string","enum":["reading"]}},"required":["area"]},"strict":true},
+  {"name":"set","description":"Set lamp at reading chair.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"brightness":{"type":"number","minimum":10,"maximum":100},"temperature":{"type":"string","enum":["neutral_3000k","warm_2700k"]}},"required":["room","brightness","temperature"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Library Row Inn (hotel_id: lri_ma_52)
+Address: 12 Beacon St, Boston, MA 02108
+Standards:
+- Reading chair: 70–80% brightness, neutral 3000K
+- Bedside: 40–60% brightness, warm 2700K
+- Desk: 85–95% brightness, daylight 5000K
+Hours: 07:00–23:00; ETA 10–16 minutes
+
+user:
+Hi—room 405. Is neutral white okay for the reading chair? Please set it for me.
+
+assistant channel=analysis:
+Confirm neutral 3000K is standard; set 75% at neutral for room 405.
+
+assistant channel=commentary to=tool.recommend:
+{"area":"reading"}
+
+tool.recommend channel=commentary to=assistant:
+{"area":"reading","guidance":{"brightness":"70–80%","temperature":"neutral_3000k"}}
+
+assistant channel=commentary to=tool.set:
+{"room":"405","brightness":75,"temperature":"neutral_3000k"}
+
+tool.set channel=commentary to=assistant:
+{"ticket":"LRI-405-RDG-884","eta_minutes":12}
+
+assistant channel=final:
+Neutral 3000K is our reading-chair standard at about 70–80% brightness. I’ve set yours to 75% in room 405 (ticket LRI-405-RDG-884), ETA around 12 minutes within 07:00–23:00.
+
+user:
+Thanks—the lobby bookshelf is great.
+
+assistant channel=analysis:
+Chitchat response.
+
+assistant channel=final:
+It’s a favorite spot for guests.
+
+user:
+Could you reserve that nook for 8 PM?
+
+assistant channel=analysis:
+Space reservation isn’t part of these tools.
+
+assistant channel=final:
+[ATTENTION] I’ll check if we can reserve the nook.
+

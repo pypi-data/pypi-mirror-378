@@ -1,0 +1,62 @@
+"""
+Guest asks about riding boundary and assistance line; confirm and book.
+
+ROLES: user (guest verifying route limits), assistant (concierge clarifying boundary, assistance, and finalizing booking)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"ping_availability","description":"Ping partner for model availability","parameters":{"type":"object","properties":{"partner_id":{"type":"string"},"model":{"type":"string"},"start":{"type":"string","format":"date-time"},"hours":{"type":"integer"}},"required":["partner_id","model","start","hours"],"additionalProperties":false},"strict":true},
+  {"name":"commit","description":"Commit booking","parameters":{"type":"object","properties":{"partner_id":{"type":"string"},"guest":{"type":"string"},"room":{"type":"string"},"model":{"type":"string"},"hours":{"type":"integer"}},"required":["partner_id","guest","room","model","hours"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbor Pointe Lisbon (HPL-33)
+Address: Av. Ribeira das Naus 24, 1100-016 Lisboa, Portugal
+Concierge: 08:00–22:00
+Partner: TejoMoto (partner_id TJ-05)
+Models: Honda SH150i, Piaggio Medley 150
+Requirements: Passport + license; age 21+
+Deposit: €200 card hold
+Boundaries: City center and riverside avenues; no highways or bridges
+Helmets: Two included
+Pickup: Front curb bay C; return to stall C4
+Assistance: Dial ext. 12 for partner hotline
+Fuel: Return full
+
+user:
+Are bridges allowed? I’d like the SH150i from 1 pm for 2 hours. Room 1006.
+
+assistant channel=analysis:
+Per boundary, bridges are not allowed. Check SH150i availability at 13:00 for 2 hours; commit the booking for room 1006.
+
+assistant channel=commentary to=tool.ping_availability:
+{"partner_id":"TJ-05","model":"Honda SH150i","start":"2025-09-08T13:00:00","hours":2}
+
+tool.ping_availability channel=commentary to=assistant:
+{"available":true,"token":"TJH-552"}
+
+assistant channel=commentary to=tool.commit:
+{"partner_id":"TJ-05","guest":"Guest 1006","room":"1006","model":"Honda SH150i","hours":2}
+
+tool.commit channel=commentary to=assistant:
+{"reservation_id":"TJ-RES-552","status":"confirmed"}
+
+assistant channel=final:
+Bridges aren’t within the permitted boundary. Your Honda SH150i is confirmed (TJ-RES-552) from 1 pm for 2 hours, pickup at front curb bay C and return to stall C4. Two helmets are included.
+
+user:
+The lobby tiles look like waves.
+
+assistant channel=final:
+They’re patterned to echo the Tejo—nicely spotted.
+
+user:
+Can you share the partner’s repair partner list?
+
+assistant channel=final:
+[ATTENTION] Checking available resources.
+

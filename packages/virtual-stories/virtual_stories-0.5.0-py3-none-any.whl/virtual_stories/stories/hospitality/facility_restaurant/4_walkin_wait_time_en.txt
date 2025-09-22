@@ -1,0 +1,57 @@
+"""
+Guest inquires about walk-in wait times for a casual spot; asks about Apple Pay and remote waitlist.
+
+ROLES: user (walk-in party planning), assistant (concierge advising current wait and policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"estimate_wait_time","description":"Estimate current walk-in wait for Harbor Noodle Bar.","parameters":{"type":"object","properties":{"party_size":{"type":"integer","minimum":1,"maximum":6}},"required":["party_size"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Casual Venue: Harbor Noodle Bar (restaurant_id: rest_harbor_noodles)
+Meal period: Lunch focus; hours 11:30–14:30 (walk‑in only)
+Capacity: 46 seats (bar 10, tables 36)
+Queue system: Pagers; name taken in person only; typical waits 10–25 min peak
+Takeout: Available for noodles and rice bowls
+Allergens: Peanut-free recipes; contains soy/wheat on several items
+Accessibility: Counter at 34" ADA section; step-free access; menu card with large print
+Noise: Energetic at peak; bar seating first‑come
+Payment: Visa/Mastercard/AmEx, Apple Pay
+
+user:
+What’s the current wait for a walk‑in party of three?
+
+assistant channel=analysis:
+Use the wait time tool with party_size=3 and report result.
+
+assistant channel=commentary to=tool.estimate_wait_time:
+{"party_size":3}
+
+tool.estimate_wait_time channel=commentary to=assistant:
+{"quoted":"20–30 minutes","method":"in-person pager","note":"Name must be added on arrival."}
+
+assistant channel=final:
+For three guests, the current quoted wait is about 20–30 minutes; we add names in person and provide a pager.
+
+user:
+Do you take Apple Pay?
+
+assistant channel=analysis:
+Answer directly from system payment list.
+
+assistant channel=final:
+Yes—Apple Pay is accepted.
+
+user:
+Can you put my name down remotely before I get there?
+
+assistant channel=analysis:
+Remote waitlist isn’t in system or tools—respond with attention flag.
+
+assistant channel=final:
+[ATTENTION] We’ve noted your request about remote waitlisting. Verifying possibilities.
+

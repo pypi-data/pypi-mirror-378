@@ -1,0 +1,61 @@
+"""
+Assemble a trial document set with jumbo clips and tab dividers.
+
+ROLES: user (legal guest organizing exhibits), assistant (business services clerk providing jumbo clips and tabs)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_clips","description":"Check jumbo clip availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"size":{"type":"string","enum":["jumbo","large","small"]}},"required":["size"]},"strict":true},
+  {"name":"deliver_kit","description":"Deliver a named kit.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"kit":{"type":"string"}},"required":["room","kit"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Summit Court Downtown (hotel_id: scd_den_07)
+Address: 1800 Wazee St, Denver, CO 80202
+Timezone: America/Denver
+Business Support: 06:30–21:30; delivery SLA 10–20 min
+Included: paper clips (all sizes), tab dividers, clear sleeves
+Desk: x4419
+
+user:
+Do you have jumbo paper clips and tab dividers for 1022?
+
+assistant channel=analysis:
+Confirm jumbo clips; send trial_docs kit.
+
+assistant channel=commentary to=tool.check_clips:
+{"size":"jumbo"}
+
+tool.check_clips channel=commentary to=assistant:
+{"available":true,"count":28}
+
+assistant channel=commentary to=tool.deliver_kit:
+{"room":"1022","kit":"trial_docs"}
+
+tool.deliver_kit channel=commentary to=assistant:
+{"ok":true,"eta":16}
+
+assistant channel=final:
+Yes—jumbo clips are available, and I’ve sent the trial_docs kit with tab dividers to 1022, ETA ~16 minutes.
+
+user:
+The mountain air feels crisp here.
+
+assistant channel=analysis:
+Ground response in property location only.
+
+assistant channel=final:
+Summit Court Downtown in Denver does have that crisp feel.
+
+user:
+Can you book a ski lesson tomorrow?
+
+assistant channel=analysis:
+Out of scope.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

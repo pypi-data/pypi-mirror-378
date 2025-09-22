@@ -1,0 +1,54 @@
+"""
+Guest asks which curated walk is shorter and takes a map; include small talk and [ATTENTION].
+
+ROLES: user (guest optimizing time), assistant (concierge advising from curated routes and logging handover)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"record_handover","description":"Record map handover with route note","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"route":{"type":"string"}},"required":["hotel_id","room","route"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Garden Arc Kyoto (GAKY-22)
+Address: 321 Shijo-dori, Kyoto 600-8492
+Map notes:
+- Complimentary maps in EN/JA
+- Curated: Nishiki Market loop (~45m), Gion–Yasaka loop (~70m)
+- Pickup at Concierge alcove; Front Desk after 21:00
+- Laminated rain cover: ¥300 deposit, same‑day refund
+- Stock: 220 copies
+
+user:
+Which curated walk is shorter?
+
+assistant channel=analysis:
+Answer from system: Nishiki Market loop at ~45 minutes; then record handover.
+
+assistant channel=final:
+The Nishiki Market loop is shorter at around 45 minutes.
+
+assistant channel=commentary to=tool.record_handover:
+{"hotel_id":"GAKY-22","room":"712","route":"Nishiki Market loop"}
+
+tool.record_handover channel=commentary to=assistant:
+{"ticket":"MAP-712-GA"}
+
+assistant channel=final:
+Your map is set under ticket MAP-712-GA at the Concierge alcove.
+
+user:
+Looks peaceful here.
+
+assistant channel=final:
+Enjoy your stroll through Nishiki Market.
+
+user:
+Do you provide live crowd levels?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

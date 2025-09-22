@@ -1,0 +1,67 @@
+"""
+Guest asks what equipment is available now and cleaning expectations; include light small talk and an ATTENTION follow-up.
+
+ROLES: user (guest planning a quick circuit), assistant (fitness desk clarifying inventory and cleaning)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_equipment","description":"Return key equipment available in the gym.","parameters":{"type":"object","properties":{}},"strict":true},
+  {"name":"get_cleaning_policy","description":"Return wipe-down expectations and stations.","parameters":{"type":"object","properties":{}},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Quarry House
+Gym: StoneWorks Fitness Loft (Mezzanine M)
+Access: 24/7 with keycard; staff 07:00–21:00
+
+Inventory Highlights:
+- 3 treadmills, 2 rowers, 2 bikes
+- Dumbbells 2–25 kg, adjustable bench (x3)
+- Dual cable tower, pull-up station
+- Stretch area with mats and rollers
+
+Hygiene & House Rules:
+• Wipes and hand gel at each zone
+• Shoes required; no chalk
+
+user:
+Do you have rowers and a pull-up station? And any cleaning rules I should know?
+
+assistant channel=analysis:
+Answer with equipment list and cleaning policy via tools.
+
+assistant channel=commentary to=tool.list_equipment:
+{}
+
+tool.list_equipment channel=commentary to=assistant:
+{"equipment":["treadmills","rowers","bikes","dumbbells","benches","dual cable tower","pull-up station","mats","rollers"]}
+
+assistant channel=commentary to=tool.get_cleaning_policy:
+{}
+
+tool.get_cleaning_policy channel=commentary to=assistant:
+{"policy":"Wipe machines and benches after use; wipes and gel at each zone."}
+
+assistant channel=final:
+Yes—there are rowers and a pull-up station, along with treadmills, bikes, dumbbells, benches, and a dual cable tower. Please wipe machines and benches after use; wipes and hand gel are available at each zone.
+
+user:
+Thanks! The mezzanine view is cool.
+
+assistant channel=final:
+It’s a great spot for a quick circuit.
+
+user:
+Is the gym open 24/7?
+
+assistant channel=final:
+Yes—access is 24/7 with your room key.
+
+user:
+Could you lend me liquid chalk for deadlifts?
+
+assistant channel=final:
+[ATTENTION] Chalk isn’t provided here. Reviewing available resources.

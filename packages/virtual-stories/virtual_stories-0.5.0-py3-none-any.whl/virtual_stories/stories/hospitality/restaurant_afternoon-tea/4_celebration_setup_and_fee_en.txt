@@ -1,0 +1,50 @@
+"""
+Guest asks about a small celebration setup; we add a note on the reservation, include small talk, and flag an out‑of‑scope off‑menu cake recipe request.
+
+ROLES: user (guest celebrating), assistant (lounge concierge noting preferences)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"add_reservation_note","description":"Add a note to an existing booking.","parameters":{"type":"object","additionalProperties":false,"properties":{"confirmation_id":{"type":"string"},"note":{"type":"string"}},"required":["confirmation_id","note"]}}
+]
+```
+"""
+
+system:
+Orchid Lounge — Afternoon Tea
+Options:
+- Celebration note can be added to a reservation
+- Hours 13:00–17:00; Level 2; cloakroom adjacent
+- Seating types: window, sofa, standard
+
+user:
+My confirmation is ORC-TEA-9051—can you note a birthday celebration?
+
+assistant channel=analysis:
+Add a celebration note using the tool and confirm.
+
+assistant channel=commentary to=tool.add_reservation_note:
+{"confirmation_id":"ORC-TEA-9051","note":"birthday celebration"}
+
+tool.add_reservation_note channel=commentary to=assistant:
+{"status":"noted"}
+
+assistant channel=final:
+I’ve added a birthday celebration note to ORC‑TEA‑9051. Afternoon Tea runs 13:00–17:00 on Level 2.
+
+user:
+Thank you—the cloakroom is handy.
+
+assistant channel=final:
+Glad it helps.
+
+user:
+Can you share the exact recipe of your signature cake?
+
+assistant channel=analysis:
+Recipes aren’t provided; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Recipe details aren’t available here. Checking available options.
+

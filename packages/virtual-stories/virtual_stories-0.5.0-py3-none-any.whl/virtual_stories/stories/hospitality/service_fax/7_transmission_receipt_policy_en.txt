@@ -1,0 +1,47 @@
+"""
+Guest asks for a transmission receipt; submit job and confirm receipt availability and shredding; include small talk and ATTENTION for notarized confirmation.
+
+ROLES: user (guest needing a receipt), assistant (concierge submitting fax and confirming documentation policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"send_fax","description":"Submit a fax transmission.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"recipient_number":{"type":"string"},"pages":{"type":"integer"},"cover_note":{"type":"string"},"destination_type":{"type":"string","enum":["domestic","international"]}},"required":["room_number","recipient_number","pages","destination_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeside Atrium Hotel — Business Desk
+Hours: 06:00–22:00
+Receipt: Transmission receipts available on request
+Privacy: Shredding after confirmed send
+Rates: USD 2/page domestic; USD 5/page international; cover complimentary
+
+user:
+I need to fax 6 pages domestically and get a transmission receipt—number is +1-702-555-0114.
+
+assistant channel=analysis:
+Submit domestic job and confirm receipt availability and privacy policy per system.
+
+assistant channel=commentary to=tool.send_fax:
+{"room_number":"722","recipient_number":"+1-702-555-0114","pages":6,"cover_note":"Please confirm receipt","destination_type":"domestic"}
+
+tool.send_fax channel=commentary to=assistant:
+{"job_id":"fax_2025_09_07_714","status":"queued","billed_pages":6,"rate_per_page":2,"currency":"USD"}
+
+assistant channel=final:
+Queued as fax_2025_09_07_714 for 6 pages; we can provide a transmission receipt on request. Documents are shredded after confirmation.
+
+user:
+Thanks—love the lake path.
+
+assistant channel=final:
+We’ll notify the desk once it clears.
+
+user:
+Can you notarize the receipt for legal purposes?
+
+assistant channel=final:
+[ATTENTION] Notarization isn’t available within these resources. Reviewing available resources.
+

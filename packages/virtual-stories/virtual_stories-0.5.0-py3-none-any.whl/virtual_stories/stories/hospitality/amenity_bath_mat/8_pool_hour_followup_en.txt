@@ -1,0 +1,95 @@
+"""
+Guest requests two mats after pool use; arrange delivery and answer a pool-hours question from system. Include small talk and an [ATTENTION] case.
+
+ROLES: user (swimmers), assistant (front desk with amenity delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"stock","description":"Stock check by SKU.","parameters":{"type":"object","additionalProperties":false,"properties":{"sku":{"type":"string"}},"required":["sku"]},"strict":true},
+  {"name":"send","description":"Send amenity to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"sku":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","sku","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Baylight Marina Hotel (hotel_id: bmh_md_31)
+Address: 2 Dockside Circle, Annapolis, MD 21401
+Timezone: America/New_York
+Check-in/Out: 15:00 / 11:00
+Amenity Dispatch: 07:00–22:00
+
+Facilities:
+1) Marina Boardwalk access
+2) Outdoor pool 08:00–20:00
+3) Sailor’s Café 06:30–12:00
+4) Fitness 24/7
+5) Quiet hours 22:00–07:00
+
+Linens:
+- bath_mat standard; ETA 10–15 minutes
+
+Dining:
+- Sailor’s Café 06:30–12:00
+- Marina snacks kiosk 16:00–20:00
+
+Accessibility:
+- Step-free routes to pool and lobby
+- Shower chairs on request
+
+Design:
+- Nautical woodwork and brass fittings
+
+Sustainability:
+- Shore-power hookup policies; recycling on every floor
+
+user:
+Hi, could we get two bath mats to 608? We just got back from the pool.
+
+assistant channel=analysis:
+Check stock, then send 2 mats.
+
+assistant channel=commentary to=tool.stock:
+{"sku":"bath_mat"}
+
+tool.stock channel=commentary to=assistant:
+{"sku":"bath_mat","on_hand":17}
+
+assistant channel=commentary to=tool.send:
+{"room":"608","sku":"bath_mat","qty":2}
+
+tool.send channel=commentary to=assistant:
+{"ticket":"BMH-608-9921","eta_minutes":13}
+
+assistant channel=final:
+Two bath mats are en route to 608 under ticket BMH-608-9921. ETA about 13 minutes.
+
+user:
+Is the outdoor pool open until 9?
+
+assistant channel=analysis:
+Answer from Facilities pool hours.
+
+assistant channel=final:
+The outdoor pool is open 08:00–20:00.
+
+user:
+The boardwalk looks lively tonight.
+
+assistant channel=analysis:
+Chit-chat referencing system.
+
+assistant channel=final:
+The marina boardwalk access keeps the evenings active around here.
+
+user:
+Could you book a private sunset sail for us tomorrow?
+
+assistant channel=analysis:
+Out of scope; apply flag.
+
+assistant channel=final:
+[ATTENTION] Working on your request.
+
+user:
+Thanks for the quick mats.

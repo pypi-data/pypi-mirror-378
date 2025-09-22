@@ -1,0 +1,89 @@
+"""
+Guest reports a small red wine spill in evening hours and asks about quiet methods; confirm oxidizing agent use and book.
+
+ROLES: user (evening guest), assistant (evening housekeeping)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"evening_slots","description":"Return evening spot-clean slots.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string"},"required":["room"]}},
+  {"name":"dispatch_evening_team","description":"Dispatch evening team with oxidizing agent (low).","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","method":"string","slot":"string"},"required":["room","method"]}}
+]
+```
+"""
+
+system:
+Marina North Hotel (hotel_id: mnh_sfo_19)
+Address: 2900 Lombard St, San Francisco, CA 94123
+Timezone: America/Los_Angeles
+
+Carpet Care:
+- Red wine: oxidizing agent (low) + water blot
+- Final pass: quick steam edge when appropriate
+
+Quiet Hours:
+- After 21:30 minimize machine use; steam edge brief under 55 dB
+
+Evening Coverage:
+- 17:00–22:00 team for spot cleans
+
+Response Times:
+- Evening typical: 15–25 minutes, subject to queue
+
+Contact:
+- Evening ops ext. 44; Front Desk ext. 0
+
+Reference (YAML):
+```yaml
+quiet_hours_start: "21:30"
+evening_team_window: "17:00-22:00"
+wine_method:
+  - oxidizing_agent_low
+  - water_blot
+  - brief_steam_edge
+```
+
+user:
+Hi—small red wine drip on the carpet in room 504. It’s quiet hours soon; can you handle it discreetly?
+
+assistant channel=analysis:
+Offer low-oxidizer and quick steam edge if time; check evening slot; dispatch.
+
+assistant channel=commentary to=tool.evening_slots:
+{"room":"504"}
+
+tool.evening_slots channel=commentary to=assistant:
+{"next":"within_20_min","cutoff":"22:00"}
+
+assistant channel=final:
+We treat wine with a low oxidizer and a brief steam edge. The next evening slot is within 20 minutes—shall I send the team to 504?
+
+user:
+Yes, please—thanks for being quick.
+
+assistant channel=commentary to=tool.dispatch_evening_team:
+{"room":"504","method":"oxidizing_agent_low","slot":"within_20_min"}
+
+tool.dispatch_evening_team channel=commentary to=assistant:
+{"ticket":"EVE-504-993","eta_minutes":18}
+
+assistant channel=final:
+Confirmed—ticket EVE-504-993. Arrival in about 18 minutes for discreet spot cleaning.
+
+user:
+Your marina photos in the hallways are lovely.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Thank you—they’re local marina scenes at golden hour.
+
+user:
+Can you loan a portable steamer to refresh my suit?
+
+assistant channel=analysis:
+Not part of carpet service details; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on clothing steamers beyond our carpet spot-clean methods.

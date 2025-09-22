@@ -1,0 +1,50 @@
+"""
+Guest asks for a wireless charging pad; we lend the accessory via tool, include small talk, and flag an out‑of‑scope brand request.
+
+ROLES: user (guest with a wireless‑charge phone), assistant (front desk lending accessories)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"borrow_accessory","description":"Loan an accessory to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string","enum":["wireless_charging_pad"]}},"required":["room","item"]}}
+]
+```
+"""
+
+system:
+Hotel: Harborline Suites
+Accessories:
+- Wireless charging pads available at Front Desk
+- 1 per room; 24‑hour courtesy; $20 hold after 24h
+- Return at Front Desk
+
+user:
+Can I borrow a wireless charging pad for room 514?
+
+assistant channel=analysis:
+Issue a wireless charging pad to room 514 via tool and confirm.
+
+assistant channel=commentary to=tool.borrow_accessory:
+{"room":"514","item":"wireless_charging_pad"}
+
+tool.borrow_accessory channel=commentary to=assistant:
+{"loan_id":"acc_514_wcp","item":"wireless_charging_pad"}
+
+assistant channel=final:
+Wireless charging pad loaned to room 514 (acc_514_wcp). One accessory per room for up to 24 hours; after 24 hours a $20 hold may apply. Return to the Front Desk.
+
+user:
+Thanks—the lobby lighting is cozy.
+
+assistant channel=final:
+Glad you like it.
+
+user:
+Is it the Anker brand?
+
+assistant channel=analysis:
+Brand details not provided; use special flag.
+
+assistant channel=final:
+[ATTENTION] Specific brand details aren’t listed here. Verifying information.
+

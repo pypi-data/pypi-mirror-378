@@ -1,0 +1,111 @@
+"""
+Guest requests chopsticks for in-room dining; confirm available types and arrange delivery.
+
+ROLES: user (guest requesting chopsticks), assistant (dining support coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_tableware_options",
+    "description": "List available chopsticks types and quantities.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["chopsticks"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_tableware",
+    "description": "Deliver selected chopsticks to a room with optional wrappers.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "string" } },
+        "sanitized_wrap": { "type": "boolean" }
+      },
+      "required": ["room_number", "items"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_room_status",
+    "description": "Confirm occupancy and DND before delivery.",
+    "parameters": { "type": "object", "additionalProperties": false, "properties": {"room_number": {"type":"string"}}, "required":["room_number"] },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Azure Lantern Hotel (hotel_id: alh_sea_04)
+Address: 600 Pine St, Seattle, WA 98101
+Timezone: America/Los_Angeles
+
+Dining Support:
+- Chopsticks types: disposable bamboo (paper-wrapped), reusable lacquered (black), training chopsticks (silicone guide)
+- Sanitization: reusable sets dishwashed; optional sealed wrap on request
+- Typical delivery ETA: 10–15 minutes
+
+Policy:
+- Up to 4 sets complimentary per room per day
+- Deliveries require room to be occupied and not on DND
+
+Design Notes:
+- Lobby lanterns cast a blue hue at dusk
+
+user:
+Hello—could I get two sets of chopsticks sent to room 1905?
+
+assistant channel=analysis:
+Confirm room status, list available options, then let the guest choose.
+
+assistant channel=commentary to=tool.check_room_status:
+{"room_number":"1905"}
+
+tool.check_room_status channel=commentary to=assistant:
+{"room_number":"1905","occupied":true,"do_not_disturb":false}
+
+assistant channel=commentary to=tool.get_tableware_options:
+{"category":"chopsticks"}
+
+tool.get_tableware_options channel=commentary to=assistant:
+{"options":[{"code":"bamboo_disposable","desc":"paper-wrapped"},{"code":"lacquered_reusable","desc":"black_reusable"},{"code":"training_chopsticks","desc":"silicone_guide"}],"limit_per_room":4}
+
+assistant channel=final:
+We have bamboo disposable (paper-wrapped), lacquered reusable (black), and training chopsticks with a silicone guide. Which two would you like for room 1905, and should we include sealed wraps?
+
+user:
+One lacquered reusable and one training set, please—with sealed wraps if you can. Also, the blue lanterns downstairs look amazing.
+
+assistant channel=analysis:
+Reply to the design note, then arrange delivery with sanitized_wrap=true.
+
+assistant channel=final:
+They are beautiful—the lobby lanterns do cast a blue hue at dusk.
+
+assistant channel=commentary to=tool.deliver_tableware:
+{"room_number":"1905","items":["lacquered_reusable","training_chopsticks"],"sanitized_wrap":true}
+
+tool.deliver_tableware channel=commentary to=assistant:
+{"ticket_id":"DIN-1905-2290","eta_minutes":11,"items_confirmed":["lacquered_reusable","training_chopsticks"],"wrap":"sealed"}
+
+assistant channel=final:
+Confirmed—ticket DIN-1905-2290 is set. One lacquered reusable and one training set will arrive in about 11 minutes with sealed wraps.
+
+user:
+Could you also suggest a nearby sushi spot that’s open late?
+
+assistant channel=analysis:
+Dining recommendations are outside the defined tools and system scope here; use special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking about late-night sushi. Reviewing the documentation.
+

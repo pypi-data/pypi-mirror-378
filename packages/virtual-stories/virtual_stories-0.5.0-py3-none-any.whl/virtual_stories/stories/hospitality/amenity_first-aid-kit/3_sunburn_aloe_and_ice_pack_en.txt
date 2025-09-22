@@ -1,0 +1,91 @@
+"""
+Guest with sunburn requests aloe gel and ice packs; confirm availability and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (sunburned guest), assistant (medical supply coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"aid_check","description":"Check availability of aloe gel and ice packs.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"location":{"type":"string","enum":["pool","front_desk"]},
+                  "item_type":{"type":"string","enum":["aloe_gel","ice_pack"]}},
+     "required":["location","item_type"]},"strict":true},
+  {"name":"aid_deliver","description":"Deliver medical supplies to the room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},
+                  "priority":{"type":"string","enum":["standard","urgent"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Coral Vista Beach Resort (hotel_id: CVB_mia_08)
+Address: 500 Shoreline Dr, Miami Beach, FL 33139 | TZ: America/New_York
+
+Medical Supply Points:
+- Pool cabana: aloe gel, after-sun lotion, instant ice packs
+- Front desk: complete kits, pain relief tablets
+- Hours: delivery 07:00–23:30 (urgent after-hours available)
+
+Safety Notes:
+Shade cabanas | SPF dispensers | Hydration coolers
+
+user:
+I got a sunburn—can you send aloe gel and two ice packs to room 721?
+
+assistant channel=analysis:
+Check pool cabana inventory then deliver urgently to 721.
+
+assistant channel=commentary to=tool.aid_check:
+{"location":"pool","item_type":"aloe_gel"}
+
+tool.aid_check channel=commentary to=assistant:
+{"available":true,"item":"aloe_gel"}
+
+assistant channel=commentary to=tool.aid_check:
+{"location":"pool","item_type":"ice_pack"}
+
+tool.aid_check channel=commentary to=assistant:
+{"available":true,"item":"ice_pack"}
+
+assistant channel=analysis:
+Proceed to deliver both items urgently.
+
+assistant channel=commentary to=tool.aid_deliver:
+{"room_number":"721","items":["aloe_gel","ice_pack","ice_pack"],"priority":"urgent"}
+
+tool.aid_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":9,"runner":"pool-team","ticket":"CVB-721-SUN"}
+
+assistant channel=final:
+On it—aloe gel and two instant ice packs are heading to room 721. ETA ~9 minutes (pool-team, ticket CVB-721-SUN).
+
+user:
+Do you have SPF dispensers around the pool?
+
+assistant channel=analysis:
+Answer from Safety Notes.
+
+assistant channel=final:
+Yes—SPF dispensers are set around the pool area.
+
+user:
+The shade cabanas look comfy.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+They’re perfect for cooling down between dips.
+
+user:
+Can you recommend a dermatologist nearby?
+
+assistant channel=analysis:
+Outside current system scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll look into nearby dermatology options.
+

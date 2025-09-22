@@ -1,0 +1,74 @@
+"""
+Business traveler requests quick bed making before important meeting. Includes professional small talk and handles business services request.
+
+ROLES: user (business executive with meeting), assistant (efficient housekeeping coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_make_bed",
+    "description": "Dispatch a make-the-bed task to a room.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"urgency":{"type":"string","enum":["now","next_available"]}},"required":["room_number","urgency"]},
+    "strict": true
+  },
+  {
+    "name": "check_business_services",
+    "description": "Check available business services and amenities.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["meeting_rooms","business_center","printing","concierge"]}},"required":["service_type"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Parkline Suites
+Make-the-Bed Task:
+- Purpose: tidy linens and pillows only; no full clean
+- Window: 08:00–20:00; typical ETA 10–20 minutes
+- DND pauses response until cleared
+Business services: Meeting rooms, business center, printing services, concierge services
+Hotel features: Park view rooms, luxury spa, fine dining restaurant, business center, concierge services
+Room amenities: Premium bedding, marble bathrooms, smart TV, minibar, complimentary WiFi, room service
+Special services: Valet parking, airport shuttle, pet-friendly rooms, wheelchair accessible accommodations
+Dining: The Parkview Restaurant (fine dining), The Garden Café (casual), The Sunset Lounge (cocktails)
+Recreation: Private park access, infinity pool, tennis courts, golf course access, spa services
+Wellness: Full-service spa with 8 treatment rooms, sauna, steam room, yoga classes, personal training
+Business facilities: Executive meeting rooms, business center, printing services, secretarial support, high-speed internet
+
+user:
+Good morning! I'm in room 456 and need the bed made immediately. I have an important client meeting in 30 minutes.
+
+assistant channel=analysis:
+Business traveler with urgent meeting needs immediate bed making. Dispatch service and check business amenities.
+
+assistant channel=commentary to=tool.request_make_bed:
+{"room_number":"456","urgency":"now"}
+
+tool.request_make_bed channel=commentary to=assistant:
+{"task_id":"mtb_5512","eta_minutes":8}
+
+assistant channel=commentary to=tool.check_business_services:
+{"service_type":"meeting_rooms"}
+
+tool.check_business_services channel=commentary to=assistant:
+{"available":true,"services":["executive_meeting_rooms","business_center","printing_services","secretarial_support"],"meeting_equipment":"available"}
+
+assistant channel=analysis:
+Make-the-bed dispatched with priority timing. Business services available. Provide confirmation and business service information.
+
+assistant channel=final:
+Absolutely! Bed making is dispatched to room 456 (task mtb_5512) with an ETA of about 8 minutes. For your client meeting, we have executive meeting rooms and business center services available.
+
+user:
+Perfect! How's the business center? I might need to print some documents.
+
+assistant channel=final:
+Welcome to Parkline Suites! Our business center is fully equipped with high-speed internet, printing services, and secretarial support. Everything you need for your meeting.
+
+user:
+Can you also arrange for a private car to pick up my client from the airport?
+
+assistant channel=final:
+[ATTENTION] Private car arrangements require coordination with our transportation services. Reviewing available options.

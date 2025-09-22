@@ -1,0 +1,90 @@
+"""
+Guest reports a snag/tear on the bed skirt fabric and requests replacement.
+Coordinate inspection, replacement, and quick room refresh.
+
+ROLES: user (guest noticing damaged bed skirt), assistant (housekeeping presentation lead)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_damage","description":"Record a quick visual inspection result.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"reported_issue":{"type":"string"}},"required":["room_number","reported_issue"]},"strict":true},
+  {"name":"schedule_replacement","description":"Schedule bed skirt replacement with matching color/style.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"style":{"type":"string"}},"required":["room_number"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeview Grand (hotel_id: lg_minneapolis_04)
+Address: 700 W Lake St, Minneapolis, MN 55408
+Timezone: America/Chicago
+
+Service Policy:
+- Damaged textiles are replaced same day during 09:00–18:00 windows.
+- Styles follow room type; minimalist in studios, pleated in suites.
+
+Article A — Materials:
+We use durable blends that resist pilling; a snag triggers a full swap to preserve presentation.
+
+Article B — Workflow:
+Runner removes the skirt, housekeeping vacuums along the base, and the new piece is steamed before fitting.
+
+Article C — Setting:
+Rooms face calm lakeside streets; evenings are quiet with soft shoreline light.
+
+Article D — Inventory:
+Sizes and colors are stocked per floor for quick turns.
+
+Article E — Comfort:
+Neutral palettes keep spaces restful after long days.
+
+user:
+Hi—there’s a small tear on the bed skirt in 1711. Could you replace it?
+
+assistant channel=analysis:
+Verify damage and schedule replacement.
+
+assistant channel=commentary to=tool.verify_damage:
+{"room_number":"1711","reported_issue":"tear_on_corner"}
+
+tool.verify_damage channel=commentary to=assistant:
+{"room_number":"1711","confirmed":true,"recommended_style":"minimalist"}
+
+assistant channel=commentary to=tool.schedule_replacement:
+{"room_number":"1711","style":"minimalist"}
+
+tool.schedule_replacement channel=commentary to=assistant:
+{"service_id":"BS-REP-1711","scheduled":"15:30","assigned":"Omar","steam_before_fit":true}
+
+assistant channel=final:
+Thanks for pointing it out—we’ll replace the skirt today. Omar is scheduled for 3:30 PM, and he’ll steam the new piece before fitting to keep everything crisp.
+
+user:
+Appreciate it. The room feels very calm.
+
+assistant channel=analysis:
+Chitchat referencing setting.
+
+assistant channel=final:
+The lakeside light here helps set that calm tone in the evenings.
+
+user:
+Do studios here usually get the minimalist style?
+
+assistant channel=analysis:
+Answer from Service Policy.
+
+assistant channel=final:
+Yes—studios use the minimalist style, and suites typically get pleated for a softer look.
+
+user:
+Any chance you know if the lake fireworks show is happening tonight?
+
+assistant channel=analysis:
+Out of scope.
+
+assistant channel=final:
+[ATTENTION] Understood. Checking available options.
+
+user:
+Thanks!
+

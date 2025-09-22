@@ -1,0 +1,82 @@
+"""
+Guest asks for fragrance-free dental items; confirm toothbrush and provide only facts from system/tools. Include small talk and an [ATTENTION] query.
+
+ROLES: user (guest with fragrance sensitivity), assistant (amenities desk with allergy-aware items)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_allergy_friendly_toothbrush","description":"Check if fragrance-free line is in stock","parameters":{"type":"object","properties":{"line":{"type":"string","enum":["fragrance_free"]},"size":{"type":"string","enum":["adult"]},"bristle":{"type":"string","enum":["soft"]}},"required":["line","size","bristle"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_toothbrush","description":"Deliver adult soft fragrance-free toothbrush","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"line":{"type":"string"},"bristle":{"type":"string"},"size":{"type":"string"}},"required":["room_number","line","bristle","size"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Garden Hotel (hotel_id: sgh_sin_11)
+Address: 18 Marina View, Singapore 018960
+Timezone: Asia/Singapore
+
+Core Amenity Details:
+- Allergy-aware options: fragrance-free dental kit on request
+- Toothbrushes: adult soft/medium; child soft
+- Delivery: 10–16 minutes within tower
+
+YAML Allergy Program:
+---
+fragrance_free_lines:
+  dental: true
+  soap: true
+  lotion: true
+contact_protocol:
+  label_on_bag: true
+  note_on_reservation: true
+---
+
+JSON Ops:
+{"runner":"Kenji","staging_floor":"12"}
+
+CSV Facilities (area,level):
+SkyGarden,35
+Pool,7
+Gym,6
+
+user:
+Hi, I’m sensitive to fragrance. Could I get a fragrance-free adult soft toothbrush to room 3510?
+
+assistant channel=analysis:
+Verify fragrance-free line availability for adult soft; then deliver to 3510 with labeling protocol.
+
+assistant channel=commentary to=tool.check_allergy_friendly_toothbrush:
+{"line":"fragrance_free","size":"adult","bristle":"soft"}
+
+tool.check_allergy_friendly_toothbrush channel=commentary to=assistant:
+{"available":true,"label_on_bag":true,"brand":"PureLine"}
+
+assistant channel=commentary to=tool.deliver_toothbrush:
+{"room_number":"3510","line":"fragrance_free","bristle":"soft","size":"adult"}
+
+tool.deliver_toothbrush channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":13,"runner":"Kenji","note":"bag labeled fragrance-free"}
+
+assistant channel=final:
+Done—PureLine fragrance-free adult soft toothbrush is labeled accordingly and heading to room 3510. ETA about 13 minutes (runner: Kenji).
+
+user:
+The SkyGarden views are unreal!
+
+assistant channel=analysis:
+Friendly acknowledgment tied to facilities CSV.
+
+assistant channel=final:
+Level 35 has the best angles over the bay.
+
+user:
+Could you also provide fragrance-free body lotion?
+
+assistant channel=analysis:
+Body lotion falls outside defined tools for this dialogue; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Accessing relevant resources.
+

@@ -1,0 +1,137 @@
+"""
+Guest asks front desk to arrange a taxi to the airport; include small talk, one in-context Q, and one [ATTENTION] beyond-context Q handled via tools.
+
+ROLES: user (hotel guest), assistant (front desk concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "get_taxi_eta",
+    "description": "Get current estimated pickup time and driver details for a taxi request.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pickup_point": {"type": "string"},
+        "vehicle_type": {"type": "string", "enum": ["sedan","van","luxury","eco"]}
+      },
+      "required": ["pickup_point","vehicle_type"]
+    }
+  },
+  {
+    "name": "request_taxi",
+    "description": "Place a taxi order through partner dispatch.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pickup_point": {"type": "string"},
+        "destination": {"type": "string"},
+        "passengers": {"type": "integer", "minimum": 1},
+        "vehicle_type": {"type": "string", "enum": ["sedan","van","luxury","eco"]}
+      },
+      "required": ["pickup_point","destination","passengers","vehicle_type"]
+    }
+  },
+  {
+    "name": "estimate_fare",
+    "description": "Estimate taxi fare based on route and vehicle type.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "origin": {"type": "string"},
+        "destination": {"type": "string"},
+        "vehicle_type": {"type": "string", "enum": ["sedan","van","luxury","eco"]}
+      },
+      "required": ["origin","destination","vehicle_type"]
+    }
+  }
+]
+"""
+
+system:
+Front Desk Profile – Harborview Grand (hotel_id: harborview_grand_bos)
+Address: 88 Seaport Blvd, Boston, MA 02210 | Timezone: America/New_York
+Check-in 3:00 PM | Check-out 11:00 AM | Main line: +1-617-555-1188
+Service scope: concierge can request metered taxis and pre-booked sedans; no ride-hailing app proxies.
+Taxi desk hours: 05:30–23:30 daily. After-hours: bell team can still request metered sedans from curb partner.
+Pickup points: "Main Portico A" (sedan/luxury), "Side Lane B" (van/eco). Loading height limit at B: 2.6 m.
+Vehicle classes available: sedan (up to 3 pax), van (up to 6 pax), luxury (2–3 pax), eco hybrid (3 pax, low trunk).
+Card acceptance: metered taxis accept Visa/Mastercard; hotel cannot charge taxi fares to room.
+Airport guidance: typical off-peak ETA 8–12 min; peak 15–25 min. Not guaranteed—check tools for live ETA.
+Accessibility: foldable wheelchairs fit sedan trunk; non-foldable require van.
+Policy notes:
+- Luggage: 1 large + 1 carry-on per guest included; oversized ski bags require van.
+- Child seats: limited supply; request van if two or more are needed.
+- Weather surge: heavy rain may add 5–10 min to ETA.
+Partners JSON (for internal reference):
+{
+  "dispatch_vendor": "BayStateCabs",
+  "priority_lines": ["portico_a","lane_b"],
+  "airport_flat_rates": {"BOS_T1": 38, "BOS_TA": 42}
+}
+
+user:
+Hi, can you arrange a taxi to the airport?
+
+assistant channel=analysis:
+Answer basics from system (we can arrange taxis, vehicle classes, pickup points). Then confirm details and offer live ETA via tool.
+
+assistant channel=final:
+Yes—our concierge can request a metered taxi. We can dispatch a sedan (up to 3), van (up to 6), luxury, or eco hybrid. Pickups are at Main Portico A (sedan/luxury) or Side Lane B (van/eco). Would you like me to check a live ETA?
+
+user:
+What time is your taxi desk open?
+
+assistant channel=analysis:
+Pull hours from system context; no tool needed.
+
+assistant channel=final:
+Our taxi desk runs 05:30–23:30 daily. After-hours, the bell team can still request a metered sedan at the curb.
+
+user:
+[ATTENTION] How long right now for a van pickup at Side Lane B?
+
+assistant channel=analysis:
+Use get_taxi_eta with pickup_point="Side Lane B" and vehicle_type="van".
+
+assistant channel=commentary to=get_taxi_eta:
+{"pickup_point":"Side Lane B","vehicle_type":"van"}
+
+tool.get_taxi_eta:
+{"eta_minutes": 14, "provider": "BayStateCabs", "driver_hint": "Blue Ford Transit, plate 7XZ-512"}
+
+assistant channel=final:
+Live ETA is 14 minutes for a van at Side Lane B (Blue Ford Transit, plate 7XZ-512) via BayStateCabs.
+
+user:
+Roughly how much to BOS Terminal A from here?
+
+assistant channel=analysis:
+We have an airport_flat_rates JSON showing TA: $42—answer from system context, no tool.
+
+assistant channel=final:
+We have a partner flat estimate for BOS Terminal A around $42 for a metered sedan. Final fare is per meter and traffic.
+
+user:
+Thanks! Book it for 2 people, please.
+
+assistant channel=analysis:
+Place the booking via request_taxi. Use pickup Main Portico A by default since 2 pax and sedan is OK unless they prefer van.
+
+assistant channel=commentary to=request_taxi:
+{"pickup_point":"Main Portico A","destination":"Boston Logan Terminal A","passengers":2,"vehicle_type":"sedan"}
+
+tool.request_taxi:
+{"status":"confirmed","dispatch_id":"BX-90314","eta_minutes":9}
+
+assistant channel=final:
+Booked. Dispatch ID BX-90314, sedan to Terminal A, ETA 9 minutes at Main Portico A. Anything else I can help with?
+
+user:
+All good—appreciate the help!
+
+assistant channel=analysis:
+End with friendly chitchat; no new facts.
+
+assistant channel=final:
+My pleasure—safe travels!
+

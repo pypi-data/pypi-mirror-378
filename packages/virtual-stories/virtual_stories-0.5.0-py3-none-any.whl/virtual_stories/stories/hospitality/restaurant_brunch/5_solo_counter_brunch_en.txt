@@ -1,0 +1,69 @@
+"""
+Solo diner requests counter seating for brunch with beverage list; include small talk, confirm accessible route from system, and an out-of-scope chef email ask.
+
+ROLES: user (solo guest), assistant (restaurant concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_table_availability","description":"Check availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"},"seating":{"type":"string","enum":["bar","standard"]}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"},"seating":{"type":"string"}},"required":["restaurant_id","guest_name","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Preview beverages.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["beverages"]}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Highlands Lodge (hotel_id: highlands_lodge)
+Brunch: Timberline Kitchen (restaurant_id: timberline_kitchen)
+Hours: Sun 09:30–14:00
+Seating: Chef’s counter (bar), booths, window 2‑tops
+Address: 88 Alpine Rd, Queenstown 9300, NZ
+Access: Lift from Lobby to Level 1; step‑free throughout
+Wi‑Fi: SSID "Highlands-Guest"
+Coffee: Local roaster; seasonal single‑origin pour‑over
+
+user:
+Counter seat for one at 10:00 under Jae, and what beverages do you have?
+
+assistant channel=analysis:
+Check bar seating, book, then list beverages.
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"timberline_kitchen","party_size":1,"datetime":"2025-09-07T10:00:00","seating":"bar"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"C02"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"timberline_kitchen","guest_name":"Jae","party_size":1,"datetime":"2025-09-07T10:00:00","seating":"bar"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"TLK-BRN-7720"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"timberline_kitchen","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"Flat White"},{"name":"Earl Grey Iced Tea"},{"name":"Spiced Apple Cider"}]}
+
+assistant channel=final:
+Booked—counter seat at 10:00 under Jae (TLK-BRN-7720). Beverages: Flat White, Earl Grey Iced Tea, Spiced Apple Cider.
+
+user:
+Sounds perfect.
+
+assistant channel=final:
+Lift from the Lobby provides step‑free access to Level 1.
+
+user:
+Is the route to the counter step‑free?
+
+assistant channel=final:
+Yes—step‑free via the Lobby lift to Level 1.
+
+user:
+Could you share the chef’s email?
+
+assistant channel=final:
+[ATTENTION] That contact isn’t included in these resources. Reviewing.

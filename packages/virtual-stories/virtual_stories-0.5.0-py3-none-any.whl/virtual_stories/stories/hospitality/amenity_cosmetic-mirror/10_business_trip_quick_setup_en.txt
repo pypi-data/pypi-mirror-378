@@ -1,0 +1,74 @@
+"""
+Business traveler requests a quick mirror setup before an early meeting.
+Provide fast delivery within available window.
+
+ROLES: user (business traveler), assistant (beauty amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "quick_setup_mirror",
+    "description": "Deliver a basic mirror with specified magnification quickly.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": { "type": "string" },
+        "magnification": { "type": "string", "enum": ["3x","5x"] },
+        "placement": { "type": "string", "enum": ["desk","near_window"] }
+      },
+      "required": ["room","magnification"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Nordic Harbor Hotel (hotel_id: nhh_copenhagen_01)
+Address: Nyhavn 41, 1051 København K, Denmark
+Timezone: Europe/Copenhagen
+Business Support: early morning amenity delivery on request
+
+Mirror Loans:
+- Options: 3x or 5x tabletop
+- Delivery: 15–25 minutes early morning
+- Placement: desk or near_window
+- Fees: complimentary
+- Contact: front desk coordinates
+
+user:
+Could I get a 3x tabletop mirror to room 217 as soon as possible? I have an early meeting.
+
+assistant channel=analysis:
+Arrange quick setup with 3x, place on desk.
+
+assistant channel=commentary to=tool.quick_setup_mirror:
+{"room":"217","magnification":"3x","placement":"desk"}
+
+tool.quick_setup_mirror channel=commentary to=assistant:
+{"scheduled":true,"eta":"15–20 minutes","item":"3x tabletop","placement":"desk"}
+
+assistant channel=final:
+On it—a 3x tabletop mirror will be set on your desk within about 15–20 minutes. Complimentary.
+
+user:
+Thanks. Do you also have garment steamers?
+
+assistant channel=analysis:
+Not listed—avoid claiming. Provide contact path only.
+
+assistant channel=final:
+I can coordinate through the front desk for available business-support amenities. Would you like me to connect you now?
+
+user:
+That would be great. Also, is sunrise visible over Nyhavn from the rooms?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the current sunrise view information for Nyhavn. Investigating potential answers.
+

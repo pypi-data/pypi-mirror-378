@@ -1,0 +1,61 @@
+"""
+Guest asks for pet care (dog walking) with time and duration.
+
+ROLES: user (guest traveling with a dog), assistant (concierge arranging vetted pet care with on‑property scope)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_pet_care",
+    "description": "Arrange on‑property pet walking with duration and start time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "start_time": {"type": "string"},
+        "duration_minutes": {"type": "integer", "enum": [15, 30, 45, 60]}
+      },
+      "required": ["room_number", "start_time", "duration_minutes"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Greenway Urban Lodge
+Pet Care:
+- On‑property walks only; designated relief area by the east garden gate
+- Durations: 15/30/45/60 minutes
+- Rates: $15/15 min, $25/30 min, $35/45 min, $45/60 min
+- Meet point: Room door or lobby bench per guest choice
+
+user:
+Could someone walk my dog from room 416 at 3 pm for 30 minutes?
+
+assistant channel=analysis:
+Arrange 30‑minute walk at 15:00 from room 416.
+
+assistant channel=commentary to=tool.request_pet_care:
+{"room_number":"416","start_time":"15:00","duration_minutes":30}
+
+tool.request_pet_care channel=commentary to=assistant:
+{"order_id":"pet_2741","rate":25,"currency":"USD","meet":"Room door"}
+
+assistant channel=final:
+Set—30‑minute on‑property walk at 15:00 from room 416 (order pet_2741). Rate is $25 USD; the walker will meet you at your room door.
+
+user:
+He loves that courtyard grass—it’s great.
+
+assistant channel=final:
+The east garden gate leads directly to the designated relief area.
+
+user:
+Can they take him to the off‑site dog park?
+
+assistant channel=final:
+[ATTENTION] Off‑site walks aren’t listed in our pet‑care scope. Assessing the available data.

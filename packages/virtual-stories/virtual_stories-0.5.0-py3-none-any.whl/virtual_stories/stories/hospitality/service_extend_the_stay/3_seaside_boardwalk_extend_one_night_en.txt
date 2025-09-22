@@ -1,0 +1,62 @@
+"""
+Guest requests a one‑night extension; assistant checks with tool and reports only tool findings with policy reminder; then answers a system question. Include small talk and an [ATTENTION] request beyond system.
+
+ROLES: user (guest), assistant (Seaside Boardwalk Hotel front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_extension_availability",
+    "description": "Check if the current room category can be extended with the new checkout date.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"new_checkout":{"type":"string","format":"date"}},"required":["reservation_id","new_checkout"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Seaside Boardwalk Hotel — Santa Monica
+Address: 1400 Ocean Ave, Santa Monica, CA 90401, USA
+Check‑in: 16:00 | Check‑out: 12:00
+Extension: Based on availability; rate varies per night
+Breakfast: 06:30–10:00
+Parking: Valet $55/night; EV 6 ports
+Wi‑Fi: 300 Mbps
+Quiet Hours: 22:00–07:00
+Rooms: Ocean King (30 m²), Pier View Double (32 m²), Junior Suite (44 m²)
+
+user:
+Could you extend SB-99321 to check out on 2025-06-18?
+
+assistant channel=analysis:
+Run extension check and relay tool’s availability and rate; add policy note from system.
+
+assistant channel=commentary to=tool.check_extension_availability:
+{"reservation_id":"SB-99321","new_checkout":"2025-06-18"}
+
+tool.check_extension_availability channel=commentary to=assistant:
+{"available":true,"room_id":"Ocean King 1112","rate":"USD 319/night"}
+
+assistant channel=final:
+Extension confirmed to 2025-06-18 in Ocean King 1112 at USD 319/night. Extensions depend on availability, and nightly rates may vary.
+
+user:
+Appreciate it. Nice breeze today?
+
+assistant channel=final:
+Thanks for staying at Seaside Boardwalk.
+
+user:
+Do you have EV charging onsite?
+
+assistant channel=final:
+Yes—6 EV ports are available with valet.
+
+user:
+Could you place a complimentary crib in the room?
+
+assistant channel=final:
+[ATTENTION] Complimentary cribs aren’t covered by the provided details. Processing your request.
+

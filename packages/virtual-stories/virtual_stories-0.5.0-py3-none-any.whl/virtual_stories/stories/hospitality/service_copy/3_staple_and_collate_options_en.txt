@@ -1,0 +1,63 @@
+"""
+Guest requests B/W copies with staple; create job and confirm staple policy, include small talk and ATTENTION for comb binding.
+
+ROLES: user (guest needing stapled copies), assistant (copy/print desk confirming options and creating job)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "create_copy_job",
+    "description": "Create a copy job with finish options.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pages": {"type": "integer"},
+        "color": {"type": "boolean"},
+        "paper_size": {"type": "string", "enum": ["A4", "Letter"]},
+        "staple": {"type": "boolean"}
+      },
+      "required": ["pages", "color", "paper_size"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborview Grand — Business Center Copy Desk (Level 2)
+Hours: 06:30–23:00
+Per‑page rate: B/W USD 0.15; Color USD 0.50
+Staple: Complimentary on request; no comb binding
+Turnaround: Up to 20 minutes for small jobs
+Billing: Posted to folio or pay at desk; receipts on request
+
+user:
+Please make 20 black‑and‑white copies on A4 and staple them.
+
+assistant channel=analysis:
+Create a B/W job for 20 A4 pages with staple true; use tool to return job id and price; state staple is complimentary.
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":20,"color":false,"paper_size":"A4","staple":true}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-5271","price":"USD 3.00"}
+
+assistant channel=final:
+Your job CPY-5271 is queued for 20 A4 B/W pages at USD 3.00; staple is complimentary. Collect at the Level 2 Business Center in about 20 minutes.
+
+user:
+Thanks—busy day up there?
+
+assistant channel=final:
+All set—we’ll notify the desk.
+
+user:
+Can you comb bind the set?
+
+assistant channel=final:
+[ATTENTION] Comb binding isn’t available here. Reviewing available resources.
+

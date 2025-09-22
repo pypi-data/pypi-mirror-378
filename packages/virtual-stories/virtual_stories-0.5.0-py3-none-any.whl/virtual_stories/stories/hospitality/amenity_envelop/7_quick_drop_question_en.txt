@@ -1,0 +1,59 @@
+"""
+Guest needs one standard envelope ASAP and asks if drop accepts after-hours; include chat and [ATTENTION].
+
+ROLES: user (guest 1622), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_stationery_item","description":"Deliver stationery items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_name":{"type":"string","enum":["envelope_standard","envelope_large","letterhead"]},"quantity":{"type":"integer","minimum":1}},"required":["room_number","item_name","quantity"]},"strict":true},
+  {"name":"get_mail_drop_info","description":"Mail drop details.","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true}
+]
+```
+"""
+
+system:
+Riverbend Conference Center (hotel_id: rcc_cin)
+Address: 88 Walnut St, Cincinnati, OH 45202
+Timezone: America/New_York
+Mail & Stationery Policy:
+- Standard envelopes complimentary
+- Mail drop: Business Center wall slot
+- Pickup: weekdays 16:00
+- Delivery ETA: 8–12 minutes
+- After-hours: Business Center closed
+JSON: {"after_hours_drop":false}
+
+user:
+Can I get one standard envelope to 1622 quickly? Does the drop accept after-hours?
+
+assistant channel=analysis:
+Deliver one envelope; state that Business Center is closed after-hours per system.
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"1622","item_name":"envelope_standard","quantity":1}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"ok":true,"eta_minutes":10}
+
+assistant channel=commentary to=tool.get_mail_drop_info:
+{}
+
+tool.get_mail_drop_info channel=commentary to=assistant:
+{"location":"Business Center wall slot","pickup_time":"weekdays 16:00"}
+
+assistant channel=final:
+On the way—one standard envelope to 1622 in about 10 minutes. The mail drop is at the Business Center wall slot with weekday pickup at 16:00; after-hours, the Business Center is closed.
+
+user:
+The river looks calm tonight.
+
+assistant channel=final:
+It’s a peaceful view from this side.
+
+user:
+Could you send it to the post office for me?
+
+assistant channel=final:
+[ATTENTION] I’ll check if offsite posting is available.
+

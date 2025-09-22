@@ -1,0 +1,56 @@
+"""
+Guest asks for cross-border limousine to a winery outside the service area.
+
+ROLES: user (guest planning a cross-border day trip), assistant (concierge constrained by service area)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"check_service_area","description":"Check whether destination is within supported service area.","parameters":{"type":"object","additionalProperties":false,"properties":{"destination":{"type":"string"}},"required":["destination"]},"strict":true},
+  {"name":"quote_local_winery_loop","description":"Quote a local winery loop within service area (4 hours).","parameters":{"type":"object","additionalProperties":false,"properties":{"hours":{"type":"integer","minimum":4}},"required":["hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Blue Ridge Summit Lodge (hotel_id: brsl_ash_01)
+Address: 77 Mountain Rd, Asheville, NC 28801
+Timezone: America/New_York
+
+Service Area:
+- Counties covered: Buncombe, Henderson, Transylvania
+- Out-of-area & cross-border: Not supported
+- Winery Loop (Local): 4 hours sedan $360; suv $420
+- Billing: Room charge OK
+- Cancellation: Free >2h; inside 2h = 1h charge
+
+user:
+Could you take us to Tiger Mountain Winery in Georgia tomorrow?
+
+assistant channel=analysis:
+Check service area. Georgia is outside supported area; we must not promise service. Provide [ATTENTION] for cross-border, but also offer local winery loop details from system if asked.
+
+assistant channel=commentary to=tool.check_service_area:
+{"destination":"Tiger Mountain Winery, GA"}
+
+tool.check_service_area channel=commentary to=assistant:
+{"in_service_area":false}
+
+assistant channel=final:
+[ATTENTION] Destination is outside our service area. Reviewing available options.
+
+user:
+What local winery option do you have instead?
+
+assistant channel=analysis:
+Answer is in system: Winery Loop 4 hours sedan $360; suv $420. Use tool for quote format.
+
+assistant channel=commentary to=tool.quote_local_winery_loop:
+{"hours":4}
+
+tool.quote_local_winery_loop channel=commentary to=assistant:
+{"sedan":360,"suv":420,"currency":"USD","duration_hours":4}
+
+assistant channel=final:
+Within our service area, we offer a 4‑hour Winery Loop: sedan $360 or SUV $420 USD, room charge available. Counties covered are Buncombe, Henderson, and Transylvania.
+

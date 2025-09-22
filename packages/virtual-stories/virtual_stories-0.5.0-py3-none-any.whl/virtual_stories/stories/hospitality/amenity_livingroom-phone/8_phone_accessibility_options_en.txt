@@ -1,0 +1,65 @@
+"""
+Guest in an accessible suite asks about amplified handset options and TTY availability.
+
+ROLES: user (guest in 405 requesting accessibility phone features), assistant (concierge explaining options and arranging loan)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_accessible_handset","description":"Arrange an amplified handset or TTY loan.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"device":{"type":"string","enum":["amplified_handset","tty"]}},"required":["room","device"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverbank Suites — Garden Level
+Room: 405 (Accessible King)
+Phone: on the low-height media shelf, left of the set‑top box
+Accessibility:
+- Amplified handset available on request
+- TTY device on loan; connect via side port
+- Large‑print key overlays available
+- Volume slider 0–5 on the right
+Codes: Front Desk 9; Housekeeping 7711; Concierge 7700; Dining 55; Emergency 11
+Voicemail: Envelope → room + # → PIN
+
+General:
+- Wi‑Fi SSID Riverbank-Guest / Pass CalmBanks2025
+- Quiet hours 22:00–07:00
+- Check-in 15:00; Check-out 12:00
+- Model: StreamTel S‑310
+- Sanitized daily
+
+user:
+Hi—do you have an amplified handset or TTY I can use in 405?
+
+assistant channel=analysis:
+Offer either device and schedule delivery.
+
+assistant channel=commentary to=tool.request_accessible_handset:
+{"room":"405","device":"amplified_handset"}
+
+tool.request_accessible_handset channel=commentary to=assistant:
+{"room":"405","device":"amplified_handset","delivery_eta_minutes":15,"ticket":"ACC-405-1"}
+
+assistant channel=final:
+Yes—we can provide an amplified handset. I’ve arranged delivery to 405 in about 15 minutes (ticket ACC‑405‑1). If you prefer a TTY instead, let me know and I’ll swap the request.
+
+user:
+Thanks! Where exactly is the living room phone again?
+
+assistant channel=analysis:
+Echo placement from system.
+
+assistant channel=final:
+It’s on the low‑height media shelf, just to the left of the set‑top box.
+
+user:
+Do you know if the museum is open late tonight?
+
+assistant channel=analysis:
+Out of scope.
+
+assistant channel=final:
+[ATTENTION] Good question about museum hours. Checking available information.
+

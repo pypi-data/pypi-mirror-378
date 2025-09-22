@@ -1,0 +1,73 @@
+"""
+Guest needs rollerball refill replacement; asks if blue‑black is available.
+Provide refill options and quick delivery.
+
+ROLES: user (guest with empty refill), assistant (stationery concierge replacing refills promptly)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_writing_instruments","description":"Check rollerball refill colors.","parameters":{"type":"object","properties":{"pen_type":{"type":"string","enum":["rollerball"]},"quality_tier":{"type":"string","enum":["premium","luxury"]}},"required":["pen_type"]},"strict":true},
+  {"name":"deliver_writing_supplies","description":"Deliver replacement refills to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"pen_selection":{"type":"array","items":{"type":"string"}},"accessories_included":{"type":"boolean"},"delivery_priority":{"type":"string","enum":["immediate"]}},"required":["room_number","pen_selection"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: City Garden Executive (hotel_id: cge_hkg_95)
+Address: 9 City Garden Rd, North Point, Hong Kong
+Timezone: Asia/Hong_Kong
+
+Refill Bar:
+- Rollerball refills: black, blue‑black, royal blue
+- Quick swap service; concierge installs
+- Sealed blister packs; dated
+- Complimentary for executive floors
+- Recycling for used refills
+
+Delivery Loop:
+- Immediate run 6–9 minutes
+- Tool tray for safe swap
+- Blotter sheet included
+- Inventory check logged
+- Quiet service etiquette
+
+user:
+Hi, room 2315. My rollerball ran out—do you have blue‑black refills?
+
+assistant channel=analysis:
+Check refill colors; deliver immediate blue‑black to 2315.
+
+assistant channel=commentary to=tool.check_writing_instruments:
+{"pen_type":"rollerball","quality_tier":"premium"}
+
+tool.check_writing_instruments channel=commentary to=assistant:
+{"available":true,"refills":["black","blue_black","royal_blue"],"install_service":true}
+
+assistant channel=commentary to=tool.deliver_writing_supplies:
+{"room_number":"2315","pen_selection":["rollerball_refill_blue_black"],"accessories_included":true,"delivery_priority":"immediate"}
+
+tool.deliver_writing_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta_minutes":7,"items":["blue‑black refill","blotter"],"runner":"Mei"}
+
+assistant channel=final:
+Yes—blue‑black rollerball refills are available. Mei will arrive in about 7 minutes to swap it in and leave a blotter sheet.
+
+user:
+Is refill recycling available?
+
+assistant channel=analysis:
+Answer from Refill Bar.
+
+assistant channel=final:
+Yes—we recycle used refills at the concierge desk.
+
+user:
+Any tram viewpoints you like?
+
+assistant channel=analysis:
+Out of scope; ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Processing your request.
+

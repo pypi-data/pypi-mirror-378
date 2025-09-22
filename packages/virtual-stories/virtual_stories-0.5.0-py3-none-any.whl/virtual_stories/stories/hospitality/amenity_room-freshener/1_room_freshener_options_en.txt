@@ -1,0 +1,102 @@
+"""
+Guest requests an in-room air freshening option with specific scent and device; confirm availability and arrange setup via tools; include a casual remark and one background-acknowledgment message.
+
+ROLES: user (guest requesting room freshener by scent and device), assistant (front desk coordinating housekeeping supplies and setup)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_housekeeping_supplies",
+    "description": "Check availability of room freshener variants and fragrances.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "enum": ["room_freshener"] },
+        "variant": { "type": "string", "enum": ["spray", "reed_diffuser", "plug_in"] },
+        "fragrance": { "type": "string", "enum": ["citrus_mist", "lavender_calm", "ocean_breeze", "unscented_ionizer"] }
+      },
+      "required": ["item_code", "variant", "fragrance"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_housekeeping_delivery",
+    "description": "Arrange delivery and placement of a room freshener device.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "variant": { "type": "string", "enum": ["spray", "reed_diffuser", "plug_in"] },
+        "fragrance": { "type": "string", "enum": ["citrus_mist", "lavender_calm", "ocean_breeze", "unscented_ionizer"] },
+        "placement_location": { "type": "string", "enum": ["entryway", "bedside", "desk"] },
+        "timer_hours": { "type": "integer", "enum": [2, 4, 8] },
+        "priority": { "type": "string", "enum": ["normal", "high"] }
+      },
+      "required": ["room_number", "item_code", "variant", "fragrance", "placement_location", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Seabreeze Harbor Hotel (hotel_id: sb_harbor_04)
+Address: 88 Marina Esplanade, Santa Barbara, CA 93101
+Housekeeping service window: 07:00–23:00; express delivery ETA 10–15 minutes
+
+Freshener program:
+- Variants: spray, reed_diffuser, plug_in (plug-in timers: 2h/4h/8h)
+- Fragrances: citrus_mist, lavender_calm, ocean_breeze, unscented_ionizer
+- On-hand (approx.): spray(ocean_breeze: 12), reed_diffuser(lavender_calm: 6), plug_in(ocean_breeze: 9), plug_in(unscented_ionizer: 7)
+- Allergy handling: unscented_ionizer available on request
+
+Lobby trivia:
+- A 1,200-gallon saltwater aquarium anchors the reception wall.
+
+user:
+Hi, could I have an ocean breeze plug-in in room 1412, placed by the desk with a 4-hour timer?
+
+assistant channel=analysis:
+Confirm stock for plug_in + ocean_breeze, then place a housekeeping delivery with desk placement and a 4-hour timer.
+
+assistant channel=commentary to=tool.check_housekeeping_supplies:
+{"item_code":"room_freshener","variant":"plug_in","fragrance":"ocean_breeze"}
+
+tool.check_housekeeping_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"room_freshener","variant":"plug_in","fragrance":"ocean_breeze","on_hand":9}
+
+assistant channel=analysis:
+Availability confirmed. Submit delivery request with timer and normal priority.
+
+assistant channel=commentary to=tool.request_housekeeping_delivery:
+{"room_number":"1412","item_code":"room_freshener","variant":"plug_in","fragrance":"ocean_breeze","placement_location":"desk","timer_hours":4,"priority":"normal"}
+
+tool.request_housekeeping_delivery channel=commentary to=assistant:
+{"ticket_id":"HK-1412-2197","eta_minutes":12,"placed":"desk","timer_hours":4}
+
+assistant channel=final:
+All set—your ocean breeze plug-in is queued for room 1412 (desk placement), ticket HK-1412-2197, with an estimated 12 minutes to arrival and a 4-hour timer.
+
+user:
+By the way, that big aquarium in the lobby is mesmerizing.
+
+assistant channel=analysis:
+Provide a light acknowledgment referencing the aquarium detail.
+
+assistant channel=final:
+It’s a guest favorite—the 1,200‑gallon saltwater display anchors our reception wall.
+
+user:
+Do you know the VOC emissions rating of that plug-in?
+
+assistant channel=analysis:
+No emissions data in tools or system facts; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking about emissions. Reviewing available resources.
+

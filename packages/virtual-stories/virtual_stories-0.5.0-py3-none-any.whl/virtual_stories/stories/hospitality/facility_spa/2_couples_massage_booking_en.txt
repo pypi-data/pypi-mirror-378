@@ -1,0 +1,115 @@
+"""
+Couple inquires about couples massage packages, checks availability, and books a romantic spa experience.
+
+ROLES: user (couple seeking romantic spa experience), assistant (spa concierge specializing in couples treatments and romantic packages)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_facility_hours",
+    "description": "Return operating hours for a facility by ID.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "facility_id": {"type": "string"}
+      },
+      "required": ["facility_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "book_spa_session",
+    "description": "Book a spa session with treatment type and add-ons.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_id": {"type": "string"},
+        "treatment": {"type": "string"},
+        "date": {"type": "string", "format": "date"},
+        "time": {"type": "string"},
+        "add_ons": {"type": "array", "items": {"type": "string"}}
+      },
+      "required": ["guest_id", "treatment", "date", "time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Azure Springs Hotel (hotel_id: azure_springs_hkg)
+Address: 88 Fountain Terrace, Central, Hong Kong
+Timezone: Asia/Hong_Kong
+Facility: SPA & Thermal Suite (facility_id: spa_azure_hkg)
+Hours: Mon–Thu 10:00–20:00; Fri–Sun 09:00–22:00
+Location notes: Level B1 via Garden Elevators; eucalyptus steam; dry sauna seats 12
+Policies: Adults 16+; Quiet zone; Robe and slippers provided; 15‑minute hold after provisional booking
+Fees: Thermal suite day pass HKD 380; Relaxation package (60-min massage + sauna) HKD 980; Couples massage (90-min) HKD 1,680; Romantic package (couples massage + champagne + chocolate) HKD 2,200
+Special amenities: Private couples suite with ocean view; aromatherapy selection; heated massage stones; couples sauna access
+
+user:
+Good morning! My partner and I are celebrating our anniversary and would love to book a couples massage. What options do you have?
+
+assistant channel=analysis:
+Provide information about couples massage options from system prompt, including pricing and special amenities.
+
+assistant channel=final:
+Congratulations on your anniversary! We offer a 90-minute couples massage for HKD 1,680, or our romantic package at HKD 2,200 which includes the couples massage plus champagne and chocolate. Both include access to our private couples suite with ocean view, aromatherapy selection, heated massage stones, and couples sauna access.
+
+user:
+The romantic package sounds perfect! Do you have availability this Saturday afternoon?
+
+assistant channel=analysis:
+Check facility hours first to confirm Saturday availability, then ask for guest details to proceed with booking.
+
+assistant channel=commentary to=tool.check_facility_hours:
+{"facility_id":"spa_azure_hkg"}
+
+tool.check_facility_hours channel=commentary to=commentary:
+{"hours":"Mon–Thu 10:00–20:00; Fri–Sun 09:00–22:00"}
+
+assistant channel=analysis:
+Saturday hours are 09:00–22:00, so afternoon slots are available. Need guest ID and preferred time to book.
+
+assistant channel=final:
+Perfect! We're open Saturday 09:00–22:00, so afternoon slots are available. May I have your guest ID and preferred time to book the romantic package?
+
+user:
+Guest ID is GUEST-4456. How about 2:30 PM on Saturday, September 14th?
+
+assistant channel=analysis:
+Book the romantic package for the specified date and time with appropriate add-ons.
+
+assistant channel=commentary to=tool.book_spa_session:
+{"guest_id":"GUEST-4456","treatment":"romantic package","date":"2025-09-14","time":"14:30","add_ons":["champagne","chocolate","couples_suite","ocean_view"]}
+
+tool.book_spa_session channel=commentary to=assistant:
+{"status":"confirmed","booking_id":"SPA-HKG-4457","price":"HKD 2,200"}
+
+assistant channel=analysis:
+Confirm the booking with all details and special amenities included.
+
+assistant channel=final:
+Wonderful! Your romantic package is confirmed for Saturday, September 14th at 2:30 PM. Booking ID SPA-HKG-4457 for HKD 2,200 includes your couples massage, champagne, chocolate, private ocean-view suite, and couples sauna access. Robes and slippers will be provided.
+
+user:
+This is going to be such a special day. Thank you!
+
+assistant channel=analysis:
+Warm acknowledgment of their special occasion without introducing new information.
+
+assistant channel=final:
+We're honored to be part of your anniversary celebration. Enjoy your romantic spa experience!
+
+user:
+Do you offer any pre-treatment consultations with the therapists?
+
+assistant channel=analysis:
+Pre-treatment consultations aren't mentioned in system prompt or available through tools, so use attention flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking. Reviewing available resources.

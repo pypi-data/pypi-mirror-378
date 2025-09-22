@@ -1,0 +1,71 @@
+"""
+Guest reports child lock active; verify and unlock with verification code.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_panel_status", "description": "Get panel lock status.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "unlock_panel", "description": "Unlock panel using verification code.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"verification_code":{"type":"string"}},"required":["room_number","verification_code"]}, "strict": true }
+]
+```
+"""
+
+system:
+Summit View Hotel (hotel_id: svh_denver)
+Address: 1500 16th St, Denver, CO 80202
+Timezone: America/Denver
+
+Panel Policy:
+- Child lock can engage after long press
+- Unlock requires last four digits of phone on file
+- Three failed attempts trigger 10‑minute lockout
+Engineering: 07:00–22:00
+Accessibility: Large‑font panel decals
+
+user:
+My panel in 1104 shows a child lock icon. Can you unlock it?
+
+assistant channel=analysis:
+Check status; request last four digits; unlock.
+
+assistant channel=commentary to=tool.get_panel_status:
+{"room_number":"1104"}
+
+tool.get_panel_status channel=commentary to=assistant:
+{"room_number":"1104","locked":true,"lock_reason":"child_lock","failed_attempts":0}
+
+assistant channel=final:
+I can help with that. What are the last four digits of the phone number on your reservation?
+
+user:
+3441.
+
+assistant channel=commentary to=tool.unlock_panel:
+{"room_number":"1104","verification_code":"3441"}
+
+tool.unlock_panel channel=commentary to=assistant:
+{"unlocked":true,"attempts_used":1}
+
+assistant channel=final:
+All set—1104 is unlocked. You can adjust temperature and fan normally.
+
+user:
+Those mountain sunsets are gorgeous.
+
+assistant channel=analysis:
+Small talk response without new facts.
+
+assistant channel=final:
+They add a calm finish to the day here.
+
+user:
+Can I schedule a 6 PM cool-down every day?
+
+assistant channel=analysis:
+Scheduling automation isn’t in system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check whether daily scheduling is available.
+

@@ -1,0 +1,51 @@
+"""
+Short meeting AED standby in a boardroom; confirm supervision and return; small talk and [ATTENTION] inquiry.
+
+ROLES: user (boardroom organizer), assistant (security liaison handling AED standby logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_aed","description":"Schedule AED for supervised on-property standby.","parameters":{"type":"object","additionalProperties":false,"properties":{"event_space":{"type":"string"},"start_time":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":8}},"required":["event_space","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Stonebridge Executive
+AED Notes:
+- 2 portable AEDs; Security briefing required; on-property only; return to Security after event.
+- Rate: $24/hour; up to 8 hours.
+- Security Office: Ground Floor corridor behind Front Desk.
+Rooms: Boardroom East, Boardroom West, Bridge Salon.
+
+user:
+Set AED standby in Boardroom East from 09:00 for 1 hour.
+
+assistant channel=analysis:
+Reserve via tool; confirm terms; keep to system details.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"Boardroom East","start_time":"09:00","duration_hours":1}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_se_111","hourly_rate":24,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+AED standby reserved in Boardroom East 09:00 for 1 hour (aed_se_111). Security will place and brief; the rate is $24/hour. Units remain on property and are returned to Security afterward.
+
+user:
+The ground floor is easy to navigate.
+
+assistant channel=final:
+The Security Office is in the corridor behind the Front Desk on the Ground Floor.
+
+user:
+Can you share battery service logs for the AEDs?
+
+assistant channel=analysis:
+No maintenance logs available in system; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available resources regarding service logs.
+

@@ -1,0 +1,53 @@
+"""
+Guest asks if an emotional support animal is allowed in a no‑pet property.
+
+ROLES: user (guest with ESA letter), assistant (front desk clarifying policy)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_pet_policy_summary","description":"Return concise summary of ESA and service animal differences.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Summit Peak Lodge (hotel_id: spl_den)
+Address: 1999 16th St, Denver, CO 80202
+Timezone: America/Denver
+
+Policy (Pets and Animals):
+- No pets allowed
+- Trained service animals permitted while under control
+- Emotional support animals are not classified as service animals
+
+user:
+I have an emotional support cat with a letter—can it stay with me?
+
+assistant channel=analysis:
+Answer directly from policy: ESAs are not permitted; only trained service animals.
+
+assistant channel=commentary to=tool.get_pet_policy_summary:
+{"hotel_id":"spl_den"}
+
+tool.get_pet_policy_summary channel=commentary to=assistant:
+{"pets":false,"service_animals":true,"esa":false}
+
+assistant channel=final:
+Our property is pet‑free. Only trained service animals are permitted; emotional support animals aren’t classified as service animals under our policy.
+
+user:
+Your lobby fireplace is cozy.
+
+assistant channel=final:
+It makes for a warm welcome.
+
+user:
+Which state regulation do you follow for this?
+
+assistant channel=analysis:
+Regulatory citation not provided. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] I see your question. Reviewing the documentation.
+

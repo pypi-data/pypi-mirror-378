@@ -1,0 +1,52 @@
+"""
+Guest asks where a pet (not service animal) can go in public spaces.
+
+ROLES: user (guest with small pet), assistant (front desk reiterating restrictions and alternatives)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_public_space_rules","description":"Return public space access rules for pets vs service animals.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Crescent City House (hotel_id: cch_no)
+Address: 700 Canal St, New Orleans, LA 70130
+Timezone: America/Chicago
+
+Rules Snapshot:
+- Pets: Not permitted in guestrooms or public areas
+- Service Animals: Welcome while under control
+
+user:
+Can I carry my cat in a bag through the lobby?
+
+assistant channel=analysis:
+Pets are not permitted in public areas; answer from rules snapshot. Use tool to echo rules.
+
+assistant channel=commentary to=tool.get_public_space_rules:
+{"hotel_id":"cch_no"}
+
+tool.get_public_space_rules channel=commentary to=assistant:
+{"pets_public":false,"service_animals_public":true}
+
+assistant channel=final:
+Pets aren’t permitted in public areas here. Only trained service animals may be in public spaces while under control.
+
+user:
+The jazz in the lobby is great.
+
+assistant channel=final:
+Enjoy the music.
+
+user:
+Is there an outdoor patio where pets can sit?
+
+assistant channel=analysis:
+No pet‑permitted patio defined. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Question received. Checking available options.
+

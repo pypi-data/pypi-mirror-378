@@ -1,0 +1,73 @@
+"""
+Guest requests bulk hotel-branded ballpoints for a breakout session; asks about quantity and turnaround.
+Provide bulk ballpoint availability and quick prep for pickup.
+
+ROLES: user (conference organizer), assistant (stationery concierge preparing bulk pens)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_writing_instruments","description":"Check hotel-branded ballpoint bulk stock.","parameters":{"type":"object","properties":{"pen_type":{"type":"string","enum":["ballpoint"]},"quality_tier":{"type":"string","enum":["standard"]}},"required":["pen_type"]},"strict":true},
+  {"name":"deliver_writing_supplies","description":"Stage bulk pens for front desk pickup.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"pen_selection":{"type":"array","items":{"type":"string"}},"accessories_included":{"type":"boolean"},"delivery_priority":{"type":"string","enum":["immediate"]}},"required":["pen_selection","delivery_priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Harbor Convention Hotel (hotel_id: shc_sea_92)
+Address: 800 Alaskan Way, Seattle, WA 98104
+Timezone: America/Los_Angeles
+
+Bulk Stationery:
+- Hotel-branded ballpoints (blue ink) in boxes of 50
+- Quick labels by room/event name
+- Complimentary for booked meeting spaces
+- Recycling for empty boxes
+- Clipboards available on request
+
+Pickup Timing:
+- Immediate prep 5–8 minutes
+- Concierge shelf “Conference A”
+- Name labels printed and attached
+- Optional tote caddies
+- Inventory audited nightly
+
+user:
+Hi, can I grab 150 hotel ballpoints for a breakout in 20 minutes?
+
+assistant channel=analysis:
+Confirm bulk stock for 150 (3 boxes) and stage immediate pickup.
+
+assistant channel=commentary to=tool.check_writing_instruments:
+{"pen_type":"ballpoint","quality_tier":"standard"}
+
+tool.check_writing_instruments channel=commentary to=assistant:
+{"available":true,"box_size":50,"estimated_boxes":60}
+
+assistant channel=commentary to=tool.deliver_writing_supplies:
+{"room_number":"","pen_selection":["ballpoint_box_50","ballpoint_box_50","ballpoint_box_50"],"accessories_included":true,"delivery_priority":"immediate"}
+
+tool.deliver_writing_supplies channel=commentary to=assistant:
+{"pickup_ready_in":"6 minutes","shelf":"Conference A","labels":["Breakout pens 150"]}
+
+assistant channel=final:
+Yes—150 hotel ballpoints (3 boxes) will be ready on shelf “Conference A” in about 6 minutes with labels attached.
+
+user:
+Could we get clipboards too?
+
+assistant channel=analysis:
+Answer from Bulk Stationery.
+
+assistant channel=final:
+Yes—clipboards are available on request and can be added to your pickup.
+
+user:
+Any good coffee roasters in the area?
+
+assistant channel=analysis:
+Out of scope; ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

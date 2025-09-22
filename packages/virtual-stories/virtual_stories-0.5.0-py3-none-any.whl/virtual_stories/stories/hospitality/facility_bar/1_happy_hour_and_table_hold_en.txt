@@ -1,0 +1,98 @@
+"""
+Guest asks about bar hours and happy hour, then requests a small table hold.
+
+ROLES: user (guest visiting the hotel bar), assistant (bar host providing facts and placing a 15-minute table hold)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_facility_hours",
+    "description": "Return operating hours for a facility by ID.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"facility_id": {"type": "string"}},
+      "required": ["facility_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "hold_bar_table",
+    "description": "Place a 15-minute hold for a bar table.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "party_size": {"type": "integer", "minimum": 1},
+        "time": {"type": "string"}
+      },
+      "required": ["party_size", "time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Bar: Ember & Oak Lounge (facility_id: bar_ember_oak_ldn)
+Property: Kingsbridge Plaza Hotel (hotel_id: kingsbridge_ldn)
+Address: 220 Strand, London WC2R
+Timezone: Europe/London
+Hours: Sun–Thu 16:00–00:00; Fri–Sat 16:00–01:00
+Happy hour: Daily 17:00–19:00; Signature cocktail “Smoked Earl”
+Seating: Fireplace alcove tables; bar-height rail; garden terrace when weather permits
+Policy: We can hold a table for 15 minutes on request
+
+user:
+Hi! What time is happy hour at your bar, and are you open late tonight?
+
+assistant channel=analysis:
+Use tool for hours; share happy hour from system facts.
+
+assistant channel=commentary to=tool.check_facility_hours:
+{"facility_id":"bar_ember_oak_ldn"}
+
+tool.check_facility_hours channel=commentary to=assistant:
+{"hours":"Sun–Thu 16:00–00:00; Fri–Sat 16:00–01:00"}
+
+assistant channel=final:
+Happy hour runs 17:00–19:00 daily. Tonight we’re open Fri–Sat 16:00–01:00.
+
+user:
+Nice. Can you hold a two-top for 19:15 by the fireplace?
+
+assistant channel=analysis:
+Place a 15-minute hold at 19:15 for party_size=2. Location preference acknowledged but the tool only captures size/time; note policy.
+
+assistant channel=commentary to=tool.hold_bar_table:
+{"party_size":2,"time":"19:15"}
+
+tool.hold_bar_table channel=commentary to=assistant:
+{"status":"on_hold","hold_id":"BAR-LDN-741","expires_in_minutes":15}
+
+assistant channel=analysis:
+Confirm the hold reference and expiry.
+
+assistant channel=final:
+Done—hold BAR-LDN-741 is set for a two-top at 19:15 and will be kept for 15 minutes. We’ll do our best for a fireplace table.
+
+user:
+By the way, the lounge lighting feels very warm and cozy.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+Glad the atmosphere feels inviting.
+
+user:
+Is there live jazz tonight?
+
+assistant channel=analysis:
+Entertainment schedule isn’t in system facts and there’s no tool—use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking on performances. Looking up the latest information.
+

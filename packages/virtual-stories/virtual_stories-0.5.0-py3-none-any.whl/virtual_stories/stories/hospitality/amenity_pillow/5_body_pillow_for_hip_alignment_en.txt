@@ -1,0 +1,73 @@
+"""
+Guest requests body pillow for hip alignment and back relief.
+Provide body pillow availability, delivery, and setup timing.
+
+ROLES: user (guest with hip discomfort), assistant (sleep concierge aiding alignment)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_body_pillow","description":"Check body pillow availability and materials.","parameters":{"type":"object","properties":{"material":{"type":"string","enum":["down_alt","latex_mix","memory_foam"]}},"required":["material"]},"strict":true},
+  {"name":"deliver_body_pillow","description":"Deliver body pillow and install during turndown or now.","parameters":{"type":"object","properties":{"room":{"type":"string"},"model":{"type":"string"},"timing":{"type":"string","enum":["immediate","during_turndown"]}},"required":["room","model"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Desert Haven Spa Resort (hotel_id: dhs_sdl_07)
+Address: 7000 E Camelback Rd, Scottsdale, AZ 85251
+Timezone: America/Phoenix
+
+Alignment Support:
+- 54" body pillows: down‑alternative (soft), latex blend (medium), memory foam (firm)
+- Stretch-knit covers with cooling mesh side panels
+- Therapist tips card included for side-sleep hip spacing
+- Optional knee spacer wedge for lumbar relief
+- Laundry: scent-free, hypoallergenic cycle available
+
+Service & Timing:
+- On-demand delivery 8 AM–11 PM; after-hours concierge on call
+- Typical ETA: 8–12 minutes inside Tower A/B
+- Turndown install with sheet re-tuck and pillow rail guard
+- Sanitization log sticker dated per item
+- Replacement upon request, no charge
+
+user:
+Hi, room 1906. Do you have a firmer body pillow to help with hip alignment?
+
+assistant channel=analysis:
+Check memory foam body pillow for firm option; then deliver now.
+
+assistant channel=commentary to=tool.check_body_pillow:
+{"material":"memory_foam"}
+
+tool.check_body_pillow channel=commentary to=assistant:
+{"available":true,"models":["body_firm_memoryfoam_54"],"stock":11,"cover":"stretch_knit_cooling_mesh"}
+
+assistant channel=commentary to=tool.deliver_body_pillow:
+{"room":"1906","model":"body_firm_memoryfoam_54","timing":"immediate"}
+
+tool.deliver_body_pillow channel=commentary to=assistant:
+{"sent":true,"eta_minutes":9,"runner":"Jasmin","items":["body_firm_memoryfoam_54","therapist_tips_card"],"sanitized":true}
+
+assistant channel=final:
+Yes—the firm 54" memory‑foam body pillow is available. Jasmin will arrive in about 9 minutes with the cooling mesh cover and a therapist tips card.
+
+user:
+Do you have a knee spacer wedge?
+
+assistant channel=analysis:
+Answer from system Alignment Support.
+
+assistant channel=final:
+We do—there’s an optional knee spacer wedge for lumbar relief, available on request.
+
+user:
+Any great trailheads open before sunrise nearby?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

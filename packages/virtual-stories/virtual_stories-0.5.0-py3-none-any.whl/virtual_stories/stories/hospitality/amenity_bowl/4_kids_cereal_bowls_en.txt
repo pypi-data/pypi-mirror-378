@@ -1,0 +1,72 @@
+"""
+Family requests lightweight bowls for kids’ cereal; asks if bamboo bowls are available and delivery timing.
+
+ROLES: user (parent), assistant (guest services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_inventory","description":"Check bamboo and porcelain","parameters":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["item_code"],"additionalProperties":false},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver bowls","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"quantity_map":{"type":"object","additionalProperties":{"type":"integer"}},"priority":{"type":"string","enum":["normal","express"]},"sanitized":{"type":"boolean"}},"required":["room_number","items"],"additionalProperties":false},"strict":true},
+  {"name":"get_room_status","description":"Check occupancy/DND","parameters":{"type":"object","properties":{"room_number":{"type":"string"}},"required":["room_number"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Lakeshore Family Suites (hotel_id: lfs_chi_02)
+Address: 200 E Grand Ave, Chicago, IL 60611
+Timezone: America/Chicago
+
+Family Amenities:
+- Bamboo bowls: 14 oz (not microwave-safe)
+- Porcelain: 16 oz (microwave-safe)
+- Delivery: 10–20 minutes
+- Sanitization on request
+- High chairs and step stools available
+
+user:
+Hi—do you have two bamboo bowls for cereal to room 1910? How fast is delivery?
+
+assistant channel=analysis:
+Answer timing; check room status; check bamboo stock; deliver sanitized.
+
+assistant channel=final:
+Delivery typically takes 10–20 minutes. I’ll confirm your room and bamboo availability now.
+
+assistant channel=commentary to=tool.get_room_status:
+{"room_number":"1910"}
+
+tool.get_room_status channel=commentary to=assistant:
+{"room_number":"1910","occupied":true,"do_not_disturb":false}
+
+assistant channel=commentary to=tool.check_amenity_inventory:
+{"item_code":"bowl_bamboo","quantity":2}
+
+tool.check_amenity_inventory channel=commentary to=assistant:
+{"item_code":"bowl_bamboo","on_hand":10,"can_fulfill":true,"notes":"lightweight"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1910","items":["bowl_bamboo"],"quantity_map":{"bowl_bamboo":2},"priority":"normal","sanitized":true}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ticket_id":"HK-1910-CHI-552","estimated_minutes":16,"items":[{"code":"bowl_bamboo","qty":2}],"sanitized":"re_sanitized"}
+
+assistant channel=final:
+Two bamboo bowls are on their way under HK-1910-CHI-552, ETA ~16 minutes.
+
+user:
+Perfect, thanks! The step stool was helpful earlier.
+
+assistant channel=final:
+Glad it helped—just let us know if you need a high chair too.
+
+user:
+Any indoor kid museums open today?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check kid-friendly museums and hours.
+

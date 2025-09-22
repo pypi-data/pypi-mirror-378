@@ -1,0 +1,39 @@
+"""
+Guest switches from room delivery to front desk pickup.
+
+ROLES: user (switch delivery), assistant (guest services coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"arrange_amenity_delivery","description":"Arrange delivery or pickup of personal care amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["room_delivery","front_desk_pickup","concierge_hand_delivery"]},"timing":{"type":"string","enum":["immediate","within_hour","specific_time"]}},"required":["room_number","items","delivery_method"]},"strict":true}
+]
+```
+"""
+
+system:
+Gran Via Central (hotel_id: gvc_madrid)
+Address: 99 Gran Via, Madrid, Spain
+Timezone: Europe/Madrid
+
+user:
+Can we change my lens kit to front desk pickup instead?
+
+assistant channel=analysis:
+Confirm switch to front desk pickup.
+
+assistant channel=commentary to=tool.arrange_amenity_delivery:
+{"room_number":"802","items":["Basic Contact Lens Kit"],"delivery_method":"front_desk_pickup","timing":"within_hour"}
+
+tool.arrange_amenity_delivery channel=commentary to=assistant:
+{"delivery_id":"GVC-802-SW-07","ready_in":"20 minutes"}
+
+assistant channel=final:
+Updated—your kit will be ready for pickup in about 20 minutes (GVC-802-SW-07).
+
+user:
+Thanks! Also, what time is breakfast?
+
+assistant channel=final:
+[ATTENTION] Checking breakfast hours.
+

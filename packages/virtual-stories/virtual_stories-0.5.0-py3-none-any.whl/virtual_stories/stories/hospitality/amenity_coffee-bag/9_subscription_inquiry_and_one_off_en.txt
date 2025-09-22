@@ -1,0 +1,43 @@
+"""
+Guest asks about a subscription (beyond scope) but purchases one bag now.
+
+ROLES: user (frequent traveler), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_coffee_inventory","description":"List coffees","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["all"]}},"required":[]},"strict":true},
+  {"name":"place_boutique_order","description":"Place delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"qty":{"type":"integer"}},"required":["sku","qty"],"additionalProperties":false}},"delivery_option":{"type":"string","enum":["room_delivery"]}},"required":["room_number","items","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Juniper & Brass (hotel_id: jb_nashville)
+Address: 220 Printer’s Alley, Nashville, TN 37201
+Timezone: America/Chicago
+
+user:
+Do you offer a monthly coffee subscription? If not, I’ll take a House Balanced to room 1712.
+
+assistant channel=analysis:
+Subscription is out of scope; flag, then place single order.
+
+assistant channel=final:
+[ATTENTION] Noted on subscriptions. I’ll arrange a single bag now.
+
+assistant channel=commentary to=tool.get_coffee_inventory:
+{"category":"all"}
+
+tool.get_coffee_inventory channel=commentary to=assistant:
+{"products":[{"sku":"COF_HOUSE_BALANCED_12","name":"House Balanced 12oz","price":21}]}
+
+assistant channel=commentary to=tool.place_boutique_order:
+{"room_number":"1712","items":[{"sku":"COF_HOUSE_BALANCED_12","qty":1}],"delivery_option":"room_delivery"}
+
+tool.place_boutique_order channel=commentary to=assistant:
+{"order_id":"JB-COF-902","total_amount":21,"delivery_eta_minutes":19}
+
+assistant channel=final:
+All set—order JB-COF-902 is on its way to 1712 in about 19 minutes.
+

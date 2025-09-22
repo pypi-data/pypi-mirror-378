@@ -1,0 +1,64 @@
+"""
+Guest with a child asks if there’s a family-friendly corner and what’s allowed.
+
+ROLES: user (parent guest), assistant (concierge explaining family zone details and limits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "get_family_zone_details",
+    "description": "Return location, suitable ages, supplies, and quiet guidelines for the family reading corner.",
+    "parameters": {"type":"object","properties":{},"required":[],"additionalProperties":false},
+    "strict": true
+  }
+]
+"""
+
+system:
+Space: Story Corner (family reading area)
+Location: Ground floor, beside children’s mural near cafe
+Hours: 09:00–20:00
+Seating: 4 small beanbags, 2 low tables, bench for adults
+Amenities: Picture books, coloring sheets, wipe-clean crayons, soft blocks
+Rules: Indoor voices; keep materials here; tidy before leaving
+Suggested Ages: 3–8 years with guardian
+Flooring: Cushioned vinyl; anti-slip
+Sanitizing: Wipes provided; toy rotation every Friday
+Nearby: Restroom with changing table 10 m west
+
+user:
+Do you have a space where my 6‑year‑old can read quietly with me?
+
+assistant channel=analysis:
+Use tool for the family zone specifics and answer plainly.
+
+assistant channel=commentary to=tool.get_family_zone_details:
+{}
+
+tool.get_family_zone_details channel=commentary to=assistant:
+{"location":"Ground floor by the mural near the cafe","ages":"3–8 with guardian","supplies":["picture books","coloring sheets","wipe-clean crayons","soft blocks"],"quiet":"indoor voices, tidy up on exit"}
+
+assistant channel=analysis:
+State availability, age suitability, and supplies.
+
+assistant channel=final:
+Yes—the Story Corner by the mural near the cafe fits ages 3–8 with a guardian. It offers picture books, coloring sheets, wipe‑clean crayons, and soft blocks, with indoor‑voice guidelines.
+
+user:
+Cute name.
+
+assistant channel=analysis:
+Warm acknowledgement.
+
+assistant channel=final:
+It makes first chapter books feel like an adventure.
+
+user:
+Could you arrange a sitter to watch my child there for an hour?
+
+assistant channel=analysis:
+Sitter service isn’t defined—flag attention.
+
+assistant channel=final:
+[ATTENTION] You’re asking for a sitter in the Story Corner. I’ll check whether that support is available.
+

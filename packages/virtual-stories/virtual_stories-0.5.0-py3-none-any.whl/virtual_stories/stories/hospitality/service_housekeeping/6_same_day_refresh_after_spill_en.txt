@@ -1,0 +1,50 @@
+"""
+Guest requests a same‑day refresh after a minor spill; asks for earliest window.
+
+ROLES: user (guest with small spill), assistant (housekeeping coordinator scheduling quick refresh)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_housekeeping","description":"Schedule housekeeping service for a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["full_clean","refresh","turn_down"]},"preferred_window":{"type":"string"}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Canopy Quarters — Housekeeping
+Hours: 08:00–20:00
+Services: full_clean, refresh, turn_down
+Priority: Minor spill cleanup via refresh when available
+DND: Honored
+Windows: 60‑minute blocks
+Note: Amenity top‑ups during refresh
+Location: North tower service desk
+
+user:
+I spilled some juice. Can you do a quick refresh for 1006 as soon as possible?
+
+assistant channel=analysis:
+Schedule a refresh; since no specific time, pick the earliest available window.
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"1006","service_type":"refresh","preferred_window":"next_available"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_1006_ref","status":"queued","window":"next_available"}
+
+assistant channel=final:
+We’ve queued a refresh for room 1006 (hk_1006_ref) at the next available window within 08:00–20:00. DND will pause service if placed.
+
+user:
+Thanks—the north tower desk is easy to find.
+
+assistant channel=final:
+Amenity top‑ups are included with the refresh.
+
+user:
+Can you treat the carpet with enzyme cleaner?
+
+assistant channel=final:
+[ATTENTION] Specialized treatments aren’t listed. Reviewing the documentation.
+

@@ -1,0 +1,75 @@
+"""
+Guest wants a bamboo wrap-style nursing top for an evening lounge visit.
+Provide fabric/style confirmation and arrange quick delivery.
+
+ROLES: user (guest seeking soft bamboo wrap), assistant (club level family attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_family_amenities","description":"Check availability of family and maternal support amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["nursing_tops","nursing_pillow","privacy_screen","comfortable_chair","baby_supplies"]},"size_needed":{"type":"string","enum":["XS","S","M","L","XL","XXL"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_maternal_support","description":"Coordinate maternal wellness and nursing support services.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["nursing_clothing","privacy_setup","comfort_furniture","feeding_supplies"]},"size_specifications":{"type":"string"},"delivery_urgency":{"type":"string","enum":["standard","priority","immediate"]}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Summit Peak City Center (hotel_id: spc_den_16)
+Address: 1701 California St, Denver, CO 80202
+Timezone: America/Denver
+
+Nursing Wear Menu:
+- Bamboo wrap tops: colors—slate, rose; sizes XS–XL
+- Organic cotton: crossover tees
+- Extras: privacy scarf, nursing pillow loan
+- Delivery: rooms 7–10 min typical
+- Wellness: lactation consultation Fri 13:00–16:00
+
+user:
+Hello from room 2314. Do you have a bamboo wrap top in slate?
+
+assistant channel=analysis:
+Confirm availability and request size.
+
+assistant channel=commentary to=tool.check_family_amenities:
+{"amenity_type":"nursing_tops"}
+
+tool.check_family_amenities channel=commentary to=assistant:
+{"available":true,"styles":["wrap","crossover"],"fabrics":["bamboo","organic_cotton"],"colors":["slate","rose"],"stock_levels":{"XS":2,"S":4,"M":5,"L":4,"XL":2}}
+
+assistant channel=final:
+Yes—slate bamboo wrap tops are in stock. What size would you like for room 2314?
+
+user:
+Medium.
+
+assistant channel=analysis:
+Arrange delivery.
+
+assistant channel=commentary to=tool.arrange_maternal_support:
+{"room_number":"2314","service_type":"nursing_clothing","size_specifications":"bamboo wrap, slate, M","delivery_urgency":"priority"}
+
+tool.arrange_maternal_support channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":9,"items_included":["bamboo_wrap_slate_M","privacy_scarf"],"delivery_team":"club_family_attendant"}
+
+assistant channel=final:
+On the way—bamboo wrap top in slate (M) with a privacy scarf will reach room 2314 in about 9 minutes.
+
+user:
+Such a cozy fabric.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+It’s soft and breathable for evenings.
+
+user:
+Could you secure last-minute concert tickets for tonight?
+
+assistant channel=analysis:
+Ticketing isn’t defined in system/tools; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Looking deeper into this issue.
+

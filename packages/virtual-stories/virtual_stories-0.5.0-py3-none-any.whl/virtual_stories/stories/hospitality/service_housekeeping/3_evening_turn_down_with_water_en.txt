@@ -1,0 +1,50 @@
+"""
+Guest requests turndown service with water placement and asks about hours.
+
+ROLES: user (guest requesting evening turndown), assistant (housekeeping coordinator scheduling turn‑down)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_housekeeping","description":"Schedule housekeeping service for a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["full_clean","refresh","turn_down"]},"preferred_window":{"type":"string"}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Summit Crest Towers
+Housekeeping: 09:00–21:00
+Turn‑Down Includes: Curtain close, pillow setup, water at bedside
+Full Clean: Linen change, bathroom deep clean, vacuum, trash removal
+Refresh: Towels, trash, wipe‑down
+DND: Always respected
+Floors: 20–35 served by Service Core B
+Notes: 1‑hour preferred window accepted
+
+user:
+Please set turndown for room 2204 around 20:00.
+
+assistant channel=analysis:
+Schedule turn_down at 20:00 using a window.
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"2204","service_type":"turn_down","preferred_window":"20:00-21:00"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_2204_td","status":"scheduled","window":"20:00-21:00"}
+
+assistant channel=final:
+Turndown for room 2204 is scheduled 20:00–21:00 (hk_2204_td). Housekeeping operates 09:00–21:00 and observes DND.
+
+user:
+The sunset from Service Core B is amazing.
+
+assistant channel=final:
+We can arrange the evening setup and water placement during the window.
+
+user:
+Do you have memory‑foam pillows available?
+
+assistant channel=final:
+[ATTENTION] Pillow inventory details aren’t listed. Checking available options.
+

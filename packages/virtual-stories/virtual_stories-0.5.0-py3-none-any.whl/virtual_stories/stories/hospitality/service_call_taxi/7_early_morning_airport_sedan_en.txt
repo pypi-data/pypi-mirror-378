@@ -1,0 +1,59 @@
+"""
+Very early morning airport taxi; include in-context answer about after-hours and one [ATTENTION] via tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"get_taxi_eta","description":"ETA","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"vehicle_type":{"type":"string","enum":["sedan"]}},"required":["pickup_point","vehicle_type"]}},
+  {"name":"request_taxi","description":"Dispatch","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"destination":{"type":"string"},"passengers":{"type":"integer"},"vehicle_type":{"type":"string","enum":["sedan"]}},"required":["pickup_point","destination","passengers","vehicle_type"]}}
+]
+"""
+
+system:
+Hotel: Northern Lights Inn (hotel_id: nli_reyk)
+Address: Austurstræti 5, 101 Reykjavík | Timezone: Atlantic/Reykjavik
+Front desk: +354 555 2020 | Check-in 3 PM | Check-out 11 AM
+Taxi coordination: desk 06:00–23:00; after-hours the night auditor can still request sedans curbside.
+Pickups: "Main Entrance" (sedan/eco), "Coach Layby" (van).
+Card use: widely accepted in Icelandic taxis.
+
+user:
+Can you help me get a taxi at 04:30 to the airport?
+
+assistant channel=analysis:
+Answer from system: after-hours night auditor can request sedan.
+
+assistant channel=final:
+Yes—although our desk opens at 06:00, the night auditor can request a sedan at the Main Entrance for you at 04:30.
+
+user:
+[ATTENTION] What’s the live ETA for a sedan right now?
+
+assistant channel=analysis:
+Use get_taxi_eta for Main Entrance, sedan.
+
+assistant channel=commentary to=get_taxi_eta:
+{"pickup_point":"Main Entrance","vehicle_type":"sedan"}
+
+tool.get_taxi_eta:
+{"eta_minutes": 5, "provider":"Reykjavík Taxi","vehicle":"Grey Skoda IS-G45"}
+
+assistant channel=final:
+Current ETA is 5 minutes at the Main Entrance (Grey Skoda IS-G45) via Reykjavík Taxi.
+
+user:
+Please book for 1 passenger to KEF.
+
+assistant channel=analysis:
+Dispatch request.
+
+assistant channel=commentary to=request_taxi:
+{"pickup_point":"Main Entrance","destination":"Keflavík International Airport","passengers":1,"vehicle_type":"sedan"}
+
+tool.request_taxi:
+{"status":"confirmed","dispatch_id":"NL-1045","eta_minutes":5}
+
+assistant channel=final:
+Booked—Dispatch NL-1045, sedan to KEF, ETA 5 minutes. Have a smooth flight!
+

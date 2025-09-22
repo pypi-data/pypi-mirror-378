@@ -1,0 +1,108 @@
+"""
+Journalist requests utility scissors for newsroom preparation; coordinate with business center and discuss hotel's media amenities; include chitchat about local news sources and one query about press release distribution beyond system knowledge.
+
+ROLES: user (journalist preparing press materials needing reliable cutting tools), assistant (media concierge providing press support and communication resources)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_media_supplies",
+    "description": "Check availability of media and communication supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "supply_category": {
+          "type": "string",
+          "enum": ["cutting_tools", "printing", "communication"]
+        },
+        "usage_type": {
+          "type": "string",
+          "enum": ["newsroom", "press_kit", "presentation"]
+        },
+        "urgency": {
+          "type": "string",
+          "enum": ["standard", "rush", "emergency"]
+        }
+      },
+      "required": ["supply_category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_media_session",
+    "description": "Arrange media preparation session with communication tools.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {
+          "type": "string"
+        },
+        "media_type": {
+          "type": "string",
+          "enum": ["press_prep", "interview", "broadcast"]
+        },
+        "equipment_list": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["scissors", "printer", "scanner", "phone"]
+          }
+        },
+        "support_staff": {
+          "type": "boolean"
+        }
+      },
+      "required": ["room_number", "media_type"]
+    },
+    "strict": true
+  }
+]
+```
+
+system:
+Hotel: Press Club Hotel (hotel_id: pch_washington_56), Address: 1400 K Street NW, Washington, DC 20005, Phone: +1 (202) 555-0140, Email: press@pressclubhotel.com. Media amenities: - Press briefing room with teleconferencing, - High-speed internet and secure connections, - Business center with printing and scanning, - Soundproof interview rooms, - Media storage and equipment lockers. Media supplies: - Utility scissors: 8 units (heavy-duty, reliable), - Professional notebooks: 12 units, - Press release paper: 15 reams, - Media badges and lanyards: 20 units. Media services: - Press kit preparation assistance, - Media contact database access, - Translation services for interviews, - Equipment rental and setup, - Secure document handling.
+
+user:
+I'm a journalist preparing press kits for a story and need some reliable utility scissors for cutting articles and photos. Can you help?
+
+assistant channel=analysis:
+Check utility scissors availability for press preparation, then arrange media session.
+
+assistant channel=commentary to=tool.check_media_supplies:
+{"supply_category":"cutting_tools","usage_type":"press_kit","urgency":"standard"}
+
+tool.check_media_supplies channel=commentary to=assistant:
+{"available":true,"category":"cutting_tools","utility_scissors":3,"press_paper":2,"notebooks":1,"quality":"professional"}
+
+assistant channel=analysis:
+Utility scissors available. Arrange press preparation session.
+
+assistant channel=commentary to=tool.arrange_media_session:
+{"room_number":"3205","media_type":"press_prep","equipment_list":["scissors","printer","scanner"],"support_staff":true}
+
+tool.arrange_media_session channel=commentary to=assistant:
+{"session_id":"MD-3205-9900","press_room":"reserved","equipment":"prepared","support_staff":"assigned"}
+
+assistant channel=final:
+Perfect for your press kit preparation! Utility scissors and press supplies are being delivered to media suite 3205. I've also reserved our press briefing room with printing equipment and support staff. Session ID MD-3205-9900.
+
+user:
+Washington has so many news organizations. Which ones have the best press release services?
+
+assistant channel=analysis:
+Chitchat about media resources - information available in system prompt about media amenities.
+
+assistant channel=final:
+Washington DC has unparalleled media resources! The Associated Press maintains extensive press release distribution, and Bloomberg's wire service is excellent for financial news. Our press room often hosts journalists coordinating with these major outlets.
+
+user:
+What's the most effective way to distribute press releases to international media?
+
+assistant channel=analysis:
+International press release distribution methods aren't covered in tools or system prompt - requires ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Let me check international press release distribution methods. Reviewing media networks.

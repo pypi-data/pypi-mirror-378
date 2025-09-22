@@ -1,0 +1,80 @@
+"""
+Guest interested in sour beers and asks about serving temperature; verify age and deliver at cellar temp.
+
+ROLES: user (guest exploring sours), assistant (tasting guide and delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_drinking_age","description":"Verify legal drinking age.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"get_beer_selection","description":"Get beer options.","parameters":{"type":"object","additionalProperties":false,"properties":{"beer_type":{"type":"string","enum":["sour","all"]},"region_preference":{"type":"string","enum":["local","domestic","imported","no_preference"]},"alcohol_content":{"type":"string","enum":["light","standard","strong","no_preference"]}},"required":["beer_type"]},"strict":true},
+  {"name":"place_beer_order","description":"Place in-room beer order.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"beer_items":{"type":"array","items":{"type":"object","properties":{"beer_sku":{"type":"string"},"quantity":{"type":"integer"},"temperature":{"type":"string","enum":["ice_cold","chilled","cellar_temp"]}},"required":["beer_sku","quantity"],"additionalProperties":false}},"delivery_instructions":{"type":"string"}},"required":["room_number","beer_items"]},"strict":true}
+]
+```
+"""
+
+system:
+Bayfront Culture Hotel (hotel_id: bch_tampa)
+Address: 900 Water St, Tampa, FL 33602
+Timezone: America/New_York
+
+Sour Program:
+1) Berliner Weisse and Gose styles rotate weekly.
+2) Cellar temp (50–55°F) highlights complexity; chilled tightens acidity.
+3) Served in stemmed tulip to concentrate aroma.
+4) Local sours often feature citrus and sea salt notes.
+5) Delivery includes tasting card with style background.
+
+user:
+I’m curious about sours—should they be cold or closer to room temp?
+
+assistant channel=analysis:
+Verify age; fetch sour options; recommend cellar temp for complexity; offer delivery.
+
+assistant channel=commentary to=tool.verify_drinking_age:
+{"room_number":"1503"}
+
+tool.verify_drinking_age channel=commentary to=assistant:
+{"room_number":"1503","guest_age_verified":true,"legal_drinking_age_met":true}
+
+assistant channel=commentary to=tool.get_beer_selection:
+{"beer_type":"sour","region_preference":"local","alcohol_content":"no_preference"}
+
+tool.get_beer_selection channel=commentary to=assistant:
+{"selections":[{"sku":"FL_CITRUS_GOSE","name":"Citrus Bay Gose","style":"Gose","notes":"Sea salt, citrus"},{"sku":"FL_BERLINER_WEISSE","name":"Sunline Berliner","style":"Berliner Weisse","notes":"Lemon, light tart"}]}
+
+assistant channel=final:
+For full character, cellar temp (around 50–55°F) brings out more nuance, while chilled is zippier. Would you like a Citrus Bay Gose at cellar temp delivered with a tulip glass?
+
+user:
+Yes, one Gose at cellar temp, please.
+
+assistant channel=analysis:
+Place cellar‑temp order with tulip glass.
+
+assistant channel=commentary to=tool.place_beer_order:
+{"room_number":"1503","beer_items":[{"beer_sku":"FL_CITRUS_GOSE","quantity":1,"temperature":"cellar_temp"}],"delivery_instructions":"Provide tulip glass and tasting card"}
+
+tool.place_beer_order channel=commentary to=assistant:
+{"order_id":"BEER-BCH-2877","estimated_delivery_minutes":14}
+
+assistant channel=final:
+Excellent—your Gose at cellar temp will arrive in about 14 minutes with a tulip glass and a tasting card.
+
+user:
+The waterfront art installations look great tonight.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Glad the evening along the water felt nice.
+
+user:
+Could you also reserve a cab for 6 AM?
+
+assistant channel=analysis:
+Transport booking is beyond this scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for a 6 AM cab.

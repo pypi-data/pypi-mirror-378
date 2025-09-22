@@ -1,0 +1,74 @@
+"""
+Family with multiple children requests luggage cart with family assistance. Includes family small talk and handles family services request.
+
+ROLES: user (parent with children needing cart), assistant (family-focused bell desk coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_luggage_cart",
+    "description": "Send a luggage cart to a room or hold at bell desk.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"delivery_option":{"type":"string","enum":["deliver_to_room","hold_at_bell_desk"]},"needed_time":{"type":"string"}},"required":["room_number","delivery_option"]},
+    "strict": true
+  },
+  {
+    "name": "check_family_services",
+    "description": "Check available family services and assistance.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["child_assistance","family_activities","safety_equipment","entertainment"]}},"required":["service_type"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Seaside Promenade Hotel
+Bell Desk:
+- Luggage carts available 06:00–23:00
+- Options: deliver to room or hold at Bell Desk
+- Courtesy time: 15-minute window; carts should be returned to corridor alcove
+Family services: Child assistance, family activities, safety equipment, entertainment options
+Hotel features: Oceanfront location, luxury spa, fine dining restaurant, business center, concierge services
+Room amenities: Premium bedding, marble bathrooms, smart TV, minibar, complimentary WiFi, room service
+Special services: Valet parking, airport shuttle, pet-friendly rooms, wheelchair accessible accommodations
+Dining: The Oceanview Restaurant (fine dining), The Beach Café (casual), The Sunset Bar (cocktails)
+Recreation: Private beach access, infinity pool, tennis courts, golf course access, spa services
+Wellness: Full-service spa with 10 treatment rooms, sauna, steam room, yoga classes, personal training
+Family amenities: Child safety equipment, family activities, children's entertainment, family dining options, playground access
+
+user:
+Hi! We're a family of 5 in room 1208 and need a luggage cart. Can you send one now? We have lots of bags and kids' stuff.
+
+assistant channel=analysis:
+Family requesting luggage cart with multiple bags and children's items. Deliver to room and check family services.
+
+assistant channel=commentary to=tool.request_luggage_cart:
+{"room_number":"1208","delivery_option":"deliver_to_room","needed_time":"now"}
+
+tool.request_luggage_cart channel=commentary to=assistant:
+{"dispatch_id":"cart_8842","eta_minutes":8}
+
+assistant channel=commentary to=tool.check_family_services:
+{"service_type":"child_assistance"}
+
+tool.check_family_services channel=commentary to=assistant:
+{"available":true,"services":["child_assistance","family_activities","safety_equipment","children_entertainment"],"family_support":"available"}
+
+assistant channel=analysis:
+Luggage cart dispatched for family. Family services available. Provide confirmation and family service information.
+
+assistant channel=final:
+Absolutely! A luggage cart is dispatched to room 1208 (dispatch cart_8842) with an ETA of about 8 minutes. We have child assistance and family activities available if you need help with the kids during checkout.
+
+user:
+Thank you! The kids love the ocean mural by the elevators. Are there any family activities today?
+
+assistant channel=final:
+Welcome to Seaside Promenade! We have family activities available including beach games and children's entertainment. The ocean mural is a favorite with families.
+
+user:
+Can you also arrange for a family photo session on the beach?
+
+assistant channel=final:
+[ATTENTION] Family photo session arrangements require coordination with our photography services. Reviewing available options.

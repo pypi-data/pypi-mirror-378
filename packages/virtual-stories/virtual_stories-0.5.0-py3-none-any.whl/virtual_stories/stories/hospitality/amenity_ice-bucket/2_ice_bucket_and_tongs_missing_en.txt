@@ -1,0 +1,88 @@
+"""
+Guest can’t find ice bucket and tongs; arrange replacement and provide machine location; include small talk and [ATTENTION].
+
+ROLES: user (guest 914), assistant (concierge/amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_in_room_item_location",
+    "description": "Return the standard in-room location for a specified item.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},
+    "strict": true
+  },
+  {
+    "name": "request_amenity_delivery",
+    "description": "Arrange delivery of a replacement item to the guest room.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},
+    "strict": true
+  },
+  {
+    "name": "get_ice_machine_info",
+    "description": "Provide nearest ice machine floor and location details.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Lakeview Court (hotel_id: lvc_msp)
+Address: 300 Lakeshore Dr, Minneapolis, MN 55403
+Timezone: America/Chicago
+Item Placement:
+- Ice bucket: wardrobe cabinet, upper shelf
+- Tongs: inside bucket, paper sleeve
+Service Hours: 07:00–23:00 (amenities)
+Ice Machines:
+- Even floors only; nearest to 9th = 8th floor, vending alcove east wing
+Delivery SLA: normal 15–25 min; urgent 8–12 min
+Contact: Guest Services x0
+
+user:
+I can’t find the ice bucket in 914. Where should it be, and can I get a replacement with tongs?
+
+assistant channel=analysis:
+Provide location and arrange normal replacement bucket with tongs implied by amenity.
+
+assistant channel=commentary to=tool.get_in_room_item_location:
+{"item":"ice bucket"}
+
+tool.get_in_room_item_location channel=commentary to=assistant:
+{"item":"ice bucket","location":"wardrobe cabinet, upper shelf","notes":"tongs inside bucket"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"914","amenity_name":"ice bucket","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"LVC-ICE-914-22","eta_minutes":19}
+
+assistant channel=final:
+It’s usually in the wardrobe cabinet on the upper shelf, with the tongs inside the bucket. I’ve arranged a replacement for 914—ETA about 19 minutes. Ref LVC-ICE-914-22.
+
+user:
+Where’s the nearest ice machine to 9?
+
+assistant channel=commentary to=tool.get_ice_machine_info:
+{}
+
+tool.get_ice_machine_info channel=commentary to=assistant:
+{"nearest_floor":"8","location":"east wing vending alcove"}
+
+assistant channel=final:
+The nearest ice machine is on the 8th floor in the east wing vending alcove.
+
+user:
+The lake looked glassy this morning.
+
+assistant channel=final:
+It’s a calm view when the water’s that still.
+
+user:
+What brand are the buckets?
+
+assistant channel=final:
+[ATTENTION] I’ll check on the brand details.
+

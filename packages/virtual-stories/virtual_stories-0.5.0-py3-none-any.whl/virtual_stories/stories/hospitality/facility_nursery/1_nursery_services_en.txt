@@ -1,0 +1,60 @@
+"""
+Guest asks about nursery services: age limits, hours, and amenities.
+
+ROLES: user (parent exploring nursery options), assistant (guest services explaining nursery specifics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_nursery_services",
+    "description": "Return nursery hours, age policy, capacity, and amenities.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Nursery: Little Stars Nursery
+Location: Level 2, beside the family lounge
+Spaces: Playroom, quiet nap pods, diaper-changing area
+Amenities: Bottle-warming station, story corner, washable toys
+Notes: Parents must remain reachable by phone; sign-in/out required
+
+user:
+Do you have a nursery? What ages and what hours?
+
+assistant channel=analysis:
+Use tool for hours, age limits, and capacity; add location from system facts.
+
+assistant channel=commentary to=tool.get_nursery_services:
+{}
+
+tool.get_nursery_services channel=commentary to=assistant:
+{"hours":"09:00–18:00","ages":"6 months to 6 years","capacity":12,"amenities":["nap pods","bottle warming","story corner"]}
+
+assistant channel=analysis:
+Answer concisely and warmly.
+
+assistant channel=final:
+Yes—Little Stars Nursery is on Level 2 beside the family lounge. We welcome children from 6 months to 6 years, 09:00–18:00, with space for up to 12 children. Amenities include nap pods, a bottle‑warming station, and a story corner; sign‑in/out is required.
+
+user:
+That’s reassuring.
+
+assistant channel=analysis:
+Small talk reply.
+
+assistant channel=final:
+Happy to provide the details.
+
+user:
+Can you arrange private babysitting tonight?
+
+assistant channel=analysis:
+Private babysitting isn’t covered by system/tools—use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking on babysitting. Looking up the latest information.

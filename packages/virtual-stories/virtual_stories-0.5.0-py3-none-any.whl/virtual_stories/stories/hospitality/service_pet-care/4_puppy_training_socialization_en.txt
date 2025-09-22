@@ -1,0 +1,124 @@
+"""
+Young family with energetic puppy needing exercise and socialization during vacation.
+
+ROLES: user (parent with young children and energetic puppy), assistant (family services coordinator providing puppy-appropriate care)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_pet_care",
+    "description": "Arrange on‑property pet walking with duration and start time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "start_time": {"type": "string"},
+        "duration_minutes": {"type": "integer", "enum": [15, 30, 45, 60]}
+      },
+      "required": ["room_number", "start_time", "duration_minutes"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_family_pet_activities",
+    "description": "Check family-friendly pet activities and training opportunities.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "activity_type": {"type": "string", "enum": ["puppy_training", "socialization", "family_activities", "exercise_programs"]}
+      },
+      "required": ["activity_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Sunshine Family Resort — Comprehensive family destination with pet-friendly amenities
+LOCATION: Expansive resort grounds with dedicated family and pet activity areas
+STAR RATING: 4-star family resort with Kids Club certification and pet accommodation awards
+ARCHITECTURE: Family-focused design with connecting rooms, play areas, and safe outdoor spaces
+GUEST CAPACITY: 280 family suites, 45 pet-friendly rooms, 12 multi-generational vacation rentals
+Pet Care Services:
+- Specialized puppy care with age-appropriate activities and socialization opportunities
+- Professional dog handlers experienced with young, energetic breeds
+- On‑property walks in designated puppy training areas with agility equipment
+- Family-friendly pet activities where children can participate safely
+- Durations: 15/30/45/60 minutes with high-energy activities for young dogs
+- Rates: $18/15 min, $28/30 min, $38/45 min, $48/60 min (puppy premium for extra energy needs)
+- Meet point: Family activity center or room door with child-safe handling
+FAMILY PET FACILITIES:
+- Puppy playground with agility course, tunnels, and safe toys
+- Family pet training sessions with certified dog trainers (group activities 16:00 daily)
+- Dog washing station with pet-safe grooming supplies and blow dryers
+- Pet supply shop with toys, treats, leashes, and vacation accessories
+- Kids and Pets educational programs teaching responsible pet ownership
+- Fenced dog park areas separated by size: small dogs (under 25lbs) and large dogs (25lbs+)
+
+user:
+We have a 6-month-old golden retriever puppy who has tons of energy. Can someone help exercise him while we're at the pool with our kids?
+
+assistant channel=analysis:
+Family needs puppy exercise while they're busy - should check puppy-specific activities and exercise programs.
+
+assistant channel=commentary to=tool.check_family_pet_activities:
+{"activity_type": "exercise_programs"}
+
+tool.check_family_pet_activities channel=commentary to=assistant:
+{"activity_type": "exercise_programs", "available": true, "puppy_specific": "high-energy activities for young dogs", "equipment": "agility course, tunnels, safe toys", "location": "puppy playground"}
+
+assistant channel=final:
+Perfect! We offer specialized puppy exercise with high-energy activities using our agility course, tunnels, and safe toys at the puppy playground.
+
+user:
+How long would you recommend for a 6-month-old with lots of energy?
+
+assistant channel=analysis:
+Guest asking for recommendation on duration - can suggest 45 or 60 minutes for high-energy puppy.
+
+assistant channel=final:
+For an energetic 6-month-old golden retriever, I'd recommend 45-60 minutes to help burn energy while keeping it age-appropriate for a puppy.
+
+user:
+The kids would love to learn about responsible pet care.
+
+assistant channel=analysis:
+Chitchat about educational programs - can share system info about Kids and Pets educational programs.
+
+assistant channel=final:
+Wonderful! Our Kids and Pets educational programs teach responsible pet ownership - it's perfect for families with children and pets.
+
+user:
+Can I book 45 minutes starting at 2 PM from room 318?
+
+assistant channel=analysis:
+Guest requesting specific booking for 45-minute session.
+
+assistant channel=commentary to=tool.request_pet_care:
+{"room_number": "318", "start_time": "14:00", "duration_minutes": 45}
+
+tool.request_pet_care channel=commentary to=assistant:
+{"order_id": "puppy_care_5672", "rate": 38, "currency": "USD", "meet": "Family activity center", "special_notes": "High-energy puppy exercise program with agility activities"}
+
+assistant channel=final:
+Booked! 45-minute puppy exercise at 14:00 from room 318 (order puppy_care_5672). Rate is $38, meeting at the family activity center for agility fun.
+
+user:
+Do you offer group training sessions where families can participate together?
+
+assistant channel=analysis:
+Guest asking about group training sessions - should check family activities and training opportunities.
+
+assistant channel=commentary to=tool.check_family_pet_activities:
+{"activity_type": "family_activities"}
+
+tool.check_family_pet_activities channel=commentary to=assistant:
+{"activity_type": "family_activities", "available": true, "group_sessions": "family pet training with certified trainers", "schedule": "daily at 16:00", "participation": "children can participate safely"}
+
+assistant channel=final:
+Yes! We have family pet training sessions with certified dog trainers daily at 16:00 where children can participate safely alongside parents and pets.

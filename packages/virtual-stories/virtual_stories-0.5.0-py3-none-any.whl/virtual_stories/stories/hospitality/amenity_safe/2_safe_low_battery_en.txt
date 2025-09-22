@@ -1,0 +1,59 @@
+"""
+Guest reports low-battery indicator on safe; verify status, advise, and include chit-chat plus an out-of-scope request.
+
+ROLES: user (guest concerned about safe battery), assistant (front desk coordinating checks and resets)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_safe_status","description":"Verify current status of the in-room safe.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"dispatch_engineering","description":"Dispatch engineering if maintenance is required.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"issue_code":{"type":"string"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","issue_code","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Grand Mariner (hotel_id: gm_bal)
+Address: 701 E Pratt St, Baltimore, MD
+Safe Info:
+- Model: SafeGuard S450
+- PIN: 4–6 digits; lockout 5 minutes after 3 failed attempts
+- Battery: Low indicator triggers proactive battery swap by engineering
+Support Hours:
+- Front Desk 24/7; Engineering 07:00–22:00
+Fees: No charge for battery replacement or resets
+Note: Harbor-view lounge opens at 17:00
+
+user:
+My safe in 1410 says low battery. Is it okay to use?
+
+assistant channel=analysis:
+Verify status; if low battery, dispatch engineering normal priority.
+
+assistant channel=commentary to=tool.verify_safe_status:
+{"room_number":"1410"}
+
+tool.verify_safe_status channel=commentary to=assistant:
+{"status":"locked","error_code":"low_battery"}
+
+assistant channel=commentary to=tool.dispatch_engineering:
+{"room_number":"1410","issue_code":"low_battery","priority":"normal"}
+
+tool.dispatch_engineering channel=commentary to=assistant:
+{"ticket":"GM-ENG-1410-LB","eta_minutes":40}
+
+assistant channel=final:
+It’s safe to use briefly, but I’ve scheduled a battery swap (GM-ENG-1410-LB) with an ETA of about 40 minutes.
+
+user:
+Thanks—lounge opens at five, right?
+
+assistant channel=final:
+Yes, the harbor-view lounge opens at 17:00.
+
+user:
+Can you email me the safe’s access logs?
+
+assistant channel=final:
+[ATTENTION] Reviewing options not covered by our current resources.
+

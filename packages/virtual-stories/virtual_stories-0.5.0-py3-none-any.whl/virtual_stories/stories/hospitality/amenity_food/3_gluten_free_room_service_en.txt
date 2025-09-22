@@ -1,0 +1,87 @@
+"""
+Guest requests gluten-free dinner options via room service.
+Provide safe menu choices and order placement.
+
+ROLES: user (guest with gluten sensitivity), assistant (in-room dining specialist aware of dietary flags)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_kitchen_availability","description":"Check room service window.","parameters":{"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["room_service"]},"time_requested":{"type":"string"}},"required":["service_type"]},"strict":true},
+  {"name":"get_available_menu_items","description":"Query menu by type and dietary restriction.","parameters":{"type":"object","additionalProperties":false,"properties":{"menu_type":{"type":"string","enum":["room_service","healthy_options"]},"dietary_restrictions":{"type":"array","items":{"type":"string","enum":["gluten_free","dairy_free","vegetarian","vegan","none"]}},"portion_size":{"type":"string","enum":["regular_meal","light_snack"]}},"required":["menu_type"]},"strict":true},
+  {"name":"place_food_order","description":"Place room service order.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"special_instructions":{"type":"string"},"estimated_delivery":{"type":"string"},"total_cost":{"type":"number"}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverside Grand (hotel_id: rsg_06)
+Address: 950 Riverwalk Blvd, San Antonio, TX 78205
+Timezone: America/Chicago
+
+Dining Overview:
+- Room service: 6 AM – 2 AM
+- Allergy procedures: flagged tickets, dedicated prep area for gluten-free
+- Average delivery: 25–35 minutes
+- Delivery fee waived for dietary-restriction orders
+- Contact in-room dining: ext. 2211
+
+Gluten-Free Highlights:
+- Grilled salmon with quinoa and asparagus ($34)
+- Herb chicken with roasted sweet potatoes ($29)
+- Zucchini noodles with basil pesto (no pine nuts) ($24)
+
+user:
+Do you have gluten-free dinner options available now?
+
+assistant channel=analysis:
+Check room service availability, then list gluten-free items.
+
+assistant channel=commentary to=tool.check_kitchen_availability:
+{"service_type":"room_service","time_requested":"current"}
+
+tool.check_kitchen_availability channel=commentary to=assistant:
+{"available":true,"until":"2 AM","eta":"25–35 minutes"}
+
+assistant channel=commentary to=tool.get_available_menu_items:
+{"menu_type":"room_service","dietary_restrictions":["gluten_free"],"portion_size":"regular_meal"}
+
+tool.get_available_menu_items channel=commentary to=assistant:
+{"menu_items":[{"name":"grilled_salmon_quinoa","price":34},{"name":"herb_chicken_sweet_potatoes","price":29},{"name":"zoodles_basil_pesto","price":24}],"notes":"prepared in gluten-free prep area"}
+
+assistant channel=final:
+Yes—room service is open. Gluten‑free options include grilled salmon with quinoa ($34), herb chicken with roasted sweet potatoes ($29), and zucchini noodles with basil pesto ($24). What sounds good?
+
+user:
+The salmon please. Room 915.
+
+assistant channel=analysis:
+Place order for salmon to room 915; delivery ETA 25–35 minutes.
+
+assistant channel=commentary to=tool.place_food_order:
+{"room_number":"915","items":["grilled_salmon_quinoa"],"special_instructions":"gluten-free prep area","estimated_delivery":"~30 minutes","total_cost":34}
+
+tool.place_food_order channel=commentary to=assistant:
+{"order_confirmed":true,"order_id":"RSG-915-118","eta":"30 minutes","items":["grilled_salmon_quinoa"],"total":34}
+
+assistant channel=final:
+Order RSG-915-118 is confirmed—the grilled salmon with quinoa will arrive in about 30 minutes. The delivery fee is waived for dietary‑restriction orders.
+
+user:
+Is the Riverwalk lively tonight?
+
+assistant channel=analysis:
+Small talk; keep neutral and tied to hotel location.
+
+assistant channel=final:
+Our Riverwalk side stays active into the evening with music from nearby patios.
+
+user:
+Could you get me tickets for the boat cruise tomorrow?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

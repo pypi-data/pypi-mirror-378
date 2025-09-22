@@ -1,0 +1,59 @@
+"""
+Guest requests a board just before midnight; includes small talk and confirms urgent window.
+
+ROLES: user (guest in room 2213 requesting a board near midnight), assistant (night runner arranging urgent delivery and confirming hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Verify amenity availability","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Schedule delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Highline Court — North Tower
+Room: 2213 (Executive Corner)
+Policy: One board per room upon request
+Hours: 07:00–23:00 normal; 23:00–01:00 urgent
+SLA to floors 20–24: normal 12–18 minutes
+Staging: NT-22 pantry; S3 after 22:00
+Lines: 0 | 7960 | 7961
+
+user:
+It’s almost midnight—can I get an ironing board to 2213?
+
+assistant channel=analysis:
+Since within urgent hours, confirm availability then schedule urgent delivery.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board","available":true,"in_stock":9}
+
+assistant channel=analysis:
+Place urgent delivery to room 2213 with staging note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2213","amenity_name":"ironing board","quantity":1,"priority":"urgent","note":"From NT-22 via S3"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-2213-2202","eta_minutes":11}
+
+assistant channel=final:
+All set—an ironing board is scheduled as urgent to room 2213 with an ETA of about 11 minutes.
+
+user:
+Thanks! So urgent runs until 1am?
+
+assistant channel=final:
+Yes—urgent service runs 23:00–01:00.
+
+user:
+Is it a dual-leg T-frame?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

@@ -1,0 +1,93 @@
+"""
+Guest requests bath salts with a specific scent; confirm available scents and arrange delivery using tools; include chit-chat and the special flag.
+
+ROLES: user (guest selecting bath salt scent), assistant (spa/amenities desk coordinating in-room delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "list_bath_salt_scents",
+    "description": "List available bath salt scents and stock counts.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "strict": true
+  },
+  {
+    "name": "request_bath_salt_delivery",
+    "description": "Deliver bath salt to a room with specified scent and quantity.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "scent": { "type": "string" },
+        "quantity": { "type": "integer", "minimum": 1 },
+        "priority": { "type": "string", "enum": ["normal", "high"] }
+      },
+      "required": ["room_number", "scent", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Resort: Azure Cove Spa & Resort (hotel_id: ac_sr_05)
+Address: 9 Coral Crescent, Clearwater Bay, FL 33767
+Amenity delivery window: 09:00–22:00
+
+Bath salt program (single-use pouches, 80 g each):
+1) lavender (stock 22)
+2) eucalyptus (stock 14)
+3) unscented (stock 30)
+Notes: Scents are skin-safe and dye-free; no medical claims are made. Delivery ETA typically 10–15 minutes.
+
+user:
+Could I get eucalyptus bath salts sent to 605? One packet is enough.
+
+assistant channel=analysis:
+Confirm scents list and stock, then request delivery for eucalyptus x1 to room 605 with normal priority.
+
+assistant channel=commentary to=tool.list_bath_salt_scents:
+{}
+
+tool.list_bath_salt_scents channel=commentary to=assistant:
+{"scents":[{"name":"lavender","stock":22},{"name":"eucalyptus","stock":14},{"name":"unscented","stock":30}]}
+
+assistant channel=analysis:
+Eucalyptus is in stock. Place delivery request.
+
+assistant channel=commentary to=tool.request_bath_salt_delivery:
+{"room_number":"605","scent":"eucalyptus","quantity":1,"priority":"normal"}
+
+tool.request_bath_salt_delivery channel=commentary to=assistant:
+{"ticket_id":"SPA-605-3412","eta_minutes":12}
+
+assistant channel=final:
+Eucalyptus bath salts are on the way to room 605. Ticket SPA-605-3412 is confirmed with an estimated arrival of 12 minutes.
+
+user:
+The pool area lighting looks relaxing tonight.
+
+assistant channel=analysis:
+Provide small talk referencing the resort identity only; avoid new facts.
+
+assistant channel=final:
+I’m glad it feels relaxing at Azure Cove.
+
+user:
+Do you have details on the ingredients list and sourcing?
+
+assistant channel=analysis:
+Ingredient-level sourcing isn’t provided in the system details and no tool is available for that depth. Use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking about ingredients. Reviewing the documentation.
+
+user:
+Perfect—thanks.

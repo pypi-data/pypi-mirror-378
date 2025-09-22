@@ -1,0 +1,87 @@
+"""
+Guest asks about magnification level and requests a mirror; answer using system features and deliver. Include small talk and an [ATTENTION] ask.
+
+ROLES: user (guest confirming specs), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"mirror_stock","description":"Check mirror inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string"}},"required":["item_code"]},"strict":true},
+  {"name":"mirror_deliver","description":"Deliver mirror.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1}} ,"required":["room_number","item_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Indigo Wharf (hotel_id: tiw_ma_73)
+Address: 18 Seaport Ln, Boston, MA 02210
+Timezone: America/New_York
+Amenity Runs: 08:00–22:00
+
+Mirror Specs:
+- bath_mirror_magnifying: 5x magnification, stock 8
+- table_led_mirror: daylight LED, stock 3
+
+Spaces:
+1) Harbor overlook steps
+2) Tea counter 06:30–12:00
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Map mural
+
+Dining:
+- Tea counter 06:30–12:00; light snacks 16:00–20:00
+
+Accessibility:
+- Step-free routes; ADA rooms available
+
+Sustainability:
+- Water refill stations; refillable amenities
+
+Transportation:
+- Harbor shuttle stop nearby; rideshare pickup at Seaport Ln
+
+user:
+Do your magnifying mirrors have 5x magnification? If yes, please send one to 1512.
+
+assistant channel=analysis:
+Answer spec from system, check stock, and deliver one.
+
+assistant channel=commentary to=tool.mirror_stock:
+{"item_code":"bath_mirror_magnifying"}
+
+tool.mirror_stock channel=commentary to=assistant:
+{"item_code":"bath_mirror_magnifying","on_hand":8}
+
+assistant channel=final:
+Yes—our magnifying mirrors are 5x. I can send one to 1512 now.
+
+assistant channel=commentary to=tool.mirror_deliver:
+{"room_number":"1512","item_code":"bath_mirror_magnifying","quantity":1}
+
+tool.mirror_deliver channel=commentary to=assistant:
+{"ticket":"TIW-1512-555","eta_minutes":11}
+
+assistant channel=final:
+I’ve dispatched one to 1512 under ticket TIW-1512-555. ETA is about 11 minutes.
+
+user:
+The map mural by the lobby is neat.
+
+assistant channel=analysis:
+Chit-chat referencing spaces.
+
+assistant channel=final:
+It is—the map mural highlights the harbor routes.
+
+user:
+Could you reserve two seats for a harbor cruise tomorrow?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] Retrieving information.
+
+user:
+Thanks!

@@ -1,0 +1,51 @@
+"""
+Guest asks for a full clean with timing and confirms DND handling.
+
+ROLES: user (guest planning room cleaning), assistant (housekeeping coordinator confirming policy and scheduling)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_housekeeping","description":"Schedule housekeeping service for a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["full_clean","refresh","turn_down"]},"preferred_window":{"type":"string"}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+The Portico Hotel — Housekeeping
+Operating Hours: 08:00–20:00
+Services:
+- full_clean: linen change, bathroom deep clean, vacuum, trash
+- refresh: towels, trash, wipe‑down
+- turn_down: evening setup and water
+Policies: DND honored; windows in 60‑min blocks
+Elevators: Housekeeping base near Elevators A‑B
+Amenity Note: Top‑ups during refresh/full clean
+
+user:
+Can you do a full clean for 1509 between 15:00 and 16:00? Also, will you skip if I put DND up?
+
+assistant channel=analysis:
+Confirm DND policy and schedule full_clean in the requested window.
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"1509","service_type":"full_clean","preferred_window":"15:00-16:00"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_1509","status":"scheduled","window":"15:00-16:00"}
+
+assistant channel=final:
+Full clean is scheduled for 1509 (hk_1509) in the 15:00–16:00 window. DND signs are always honored, and we operate 08:00–20:00.
+
+user:
+Thanks—nice lobby plants.
+
+assistant channel=final:
+Amenities are topped up during full cleans.
+
+user:
+Do you steam clean curtains on request?
+
+assistant channel=final:
+[ATTENTION] Curtain steam cleaning isn’t listed in our services. Reviewing the documentation.
+

@@ -1,0 +1,122 @@
+"""
+Student group leader needs address information for academic conference registration and transportation coordination with multiple universities.
+
+ROLES: user (student conference organizer), assistant (enthusiastic student services coordinator providing group accommodation support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "lookup_hotel_address",
+    "description": "Get the official mailing and visiting address with geo details.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "include_coords": {"type":"boolean"}
+      },
+      "required": ["hotel_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_student_group_services",
+    "description": "Get information about student group accommodations and academic services.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "group_size": {"type":"number"},
+        "service_type": {"type":"string", "enum": ["accommodation", "meeting_space", "catering", "transportation", "all"]}
+      },
+      "required": ["service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+University Plaza Student Conference Center (hotel_id: university_plaza_student)
+Budget-friendly accommodation specializing in student groups and academic conferences
+Address lines:
+  - Street: 2100 Scholar's Avenue, Campus District
+  - Building: Student Residence Tower, Academic Wing
+  - City/Region: College Town, CT 47906
+  - Country: United States
+  - Group bookings: "ATTN: Student Group Services - Academic Conference"
+Student group services:
+  - Discounted group rates for 10+ students with academic institution verification
+  - Meeting rooms equipped with presentation technology and Wi-Fi
+  - Study lounges open 24/7 with quiet zones and collaborative spaces
+  - Group catering options including dietary restrictions and budget-friendly meals
+  - Transportation coordination for campus visits and conference venues
+  - Luggage storage for early arrivals and late departures
+  - Group check-in and check-out processing to minimize wait times
+  - Academic conference registration assistance and information packets
+Academic support amenities:
+  - Business center with printing, copying, and poster printing services
+  - High-speed internet throughout the property with study bandwidth priority
+  - Coffee stations on every floor for late-night studying
+  - Laundry facilities with group-rate wash cards
+  - Recreation area with ping pong, pool table, and gaming stations
+  - Kitchen facilities for groups to prepare their own meals
+  - Mail and package receiving services for conference materials
+Conference coordination:
+  - Partnership with local universities for campus tours
+  - Shuttle service to major academic conference venues within 10-mile radius
+  - Group dining reservations at budget-friendly local restaurants
+  - Academic advisor and faculty accommodation coordination
+  - Conference badge and material distribution assistance
+  - Audio/visual equipment rental for student presentations
+Safety and supervision:
+  - 24/7 front desk with student-trained staff
+  - Floor supervisors available for group management assistance  
+  - Emergency contact coordination with home institutions
+  - Medical assistance coordination with campus health centers
+  - Curfew and noise policy enforcement for group bookings
+Coordinates: 40.4237, -86.9212
+
+user:
+Hi! I'm organizing a student group for the Midwest Academic Conference next week. We have 25 students coming from three different universities and I need the hotel address for our transportation coordinator.
+
+assistant channel=analysis:
+Student group leader needs address information for conference coordination. They have a large group from multiple universities, so I should provide comprehensive address and group services information.
+
+assistant channel=commentary to=tool.lookup_hotel_address:
+{"hotel_id":"university_plaza_student","include_coords":true}
+
+tool.lookup_hotel_address channel=commentary to=assistant:
+{"street":"2100 Scholar's Avenue, Campus District","building":"Student Residence Tower, Academic Wing","city_region":"College Town, CT 47906","country":"United States","group_bookings":"ATTN: Student Group Services - Academic Conference","coordinates":"40.4237,-86.9212"}
+
+assistant channel=final:
+Perfect! For your transportation coordinator, our address is: University Plaza Student Conference Center, 2100 Scholar's Avenue, Campus District, Student Residence Tower, Academic Wing, College Town, CT 47906, United States. Include "ATTN: Student Group Services - Academic Conference" for your group booking.
+
+user:
+Awesome! With 25 students from different schools, what kind of group services do you have?
+
+assistant channel=commentary to=tool.get_student_group_services:
+{"group_size":25,"service_type":"all"}
+
+tool.get_student_group_services channel=commentary to=assistant:
+{"accommodation":"discounted group rates for 10+ students","meeting_space":"presentation technology and Wi-Fi equipped","catering":"budget-friendly meals with dietary accommodations","transportation":"shuttle service to conference venues within 10 miles","check_in":"group processing to minimize wait times"}
+
+assistant channel=final:
+Great! For your 25-student group, we offer discounted group rates, meeting rooms with presentation tech, budget-friendly catering with dietary options, and shuttle service to conference venues within 10 miles. Plus group check-in processing to get everyone settled quickly.
+
+user:
+This is exactly what we need! The students are going to be so excited about this conference.
+
+assistant channel=final:
+That's wonderful! Academic conferences are such great opportunities for students. What field of study is the conference focusing on?
+
+user:
+It's a interdisciplinary research conference covering environmental science, policy, and engineering. Actually, do you know what the local weather patterns have been like this time of year? Some of our students are planning field research components.
+
+assistant channel=analysis:
+Student is asking about local weather patterns for field research planning, which is external meteorological information not related to hotel services. This requires the [ATTENTION] flag.
+
+assistant channel=final:
+[ATTENTION] I'm researching local weather pattern information for your field research planning.

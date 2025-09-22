@@ -1,0 +1,51 @@
+"""
+Guest requests multiple maps for a group and asks about curated routes; log the set‑aside. Include small talk and [ATTENTION].
+
+ROLES: user (group coordinator), assistant (concierge preparing bundle pickup and summarizing routes)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"bundle_hold","description":"Hold multiple maps for group pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"quantity":{"type":"integer","minimum":1},"room":{"type":"string"},"pickup":{"type":"string"}},"required":["hotel_id","quantity","room","pickup"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Copperleaf Austin (CPLA-55)
+Address: 200 W 2nd St, Austin, TX 78701
+Map service:
+- Complimentary maps (EN/ES); stock ~300
+- Curated routes: Congress Ave loop (45m), Lady Bird Lake trail (60–90m)
+- Pickup: Concierge desk near mural wall; Front Desk after 22:00
+- Hours: Concierge 08:00–22:00; Front Desk 24/7
+- Waterproof sleeve available upon request
+
+user:
+Can I get 6 maps for my group? Room 909.
+
+assistant channel=analysis:
+Hold 6 maps at Concierge and note two curated options.
+
+assistant channel=commentary to=tool.bundle_hold:
+{"hotel_id":"CPLA-55","quantity":6,"room":"909","pickup":"Concierge desk near mural wall"}
+
+tool.bundle_hold channel=commentary to=assistant:
+{"ticket":"MAP-909-6"}
+
+assistant channel=final:
+Yes—six maps are set aside under ticket MAP-909-6 at the Concierge desk by the mural wall. Curated options include the Congress Ave loop (~45m) and the Lady Bird Lake trail (60–90m).
+
+user:
+Looks lively here.
+
+assistant channel=final:
+Enjoy the music scene downtown.
+
+user:
+Do you have a GIS layer file I can load?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

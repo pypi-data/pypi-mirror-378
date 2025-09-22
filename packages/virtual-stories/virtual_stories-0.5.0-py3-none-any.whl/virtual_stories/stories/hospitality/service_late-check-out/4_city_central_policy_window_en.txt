@@ -1,0 +1,69 @@
+"""
+Late checkout ask; assistant uses tool and relays tool result; then answers a system question. Include small talk and an [ATTENTION] request beyond scope.
+
+ROLES: user (guest), assistant (City Central Hotel desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_late_checkout",
+    "description": "Request a late checkout within policy and return approval and fee.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "requested_time": {"type": "string", "description": "24h time, e.g., 14:00"}
+      },
+      "required": ["room_number", "requested_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+City Central Hotel — Downtown
+Checkout: 12:00 | Late window: up to 15:00
+Fee tiers: $25 until 13:00; $50 until 14:00; $75 until 15:00
+Posting: Fees post to folio upon approval
+Fitness: 24/7
+Wi‑Fi: 250 Mbps
+Parking: Self $28/night; Valet $42/night
+Quiet Hours: 22:00–07:00
+
+user:
+Room 1908—can I leave at 15:00?
+
+assistant channel=analysis:
+15:00 is the latest available with a $75 fee if approved.
+
+assistant channel=commentary to=tool.request_late_checkout:
+{"room_number":"1908","requested_time":"15:00"}
+
+tool.request_late_checkout channel=commentary to=assistant:
+{"approved":true,"fee":75,"currency":"USD","note":"Hold until 15:00 firm"}
+
+assistant channel=final:
+Approved—late checkout for room 1908 is set for 15:00 with a $75 USD fee (hold until 15:00 firm). It will be added to your folio.
+
+user:
+Thanks. How’s the lobby coffee today?
+
+assistant channel=final:
+Glad to assist at City Central.
+
+user:
+Is the gym open all night?
+
+assistant channel=final:
+Yes—fitness is open 24/7.
+
+user:
+Could you extend beyond 15:00 if my meeting runs late?
+
+assistant channel=final:
+[ATTENTION] Extensions past 15:00 aren’t available in the provided details. Processing your request.
+

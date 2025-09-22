@@ -1,0 +1,75 @@
+"""
+Guest requests a teal crossover nursing top for a city walk.
+Provide size availability and arrange delivery.
+
+ROLES: user (mother planning a city walk), assistant (family concierge desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_family_amenities","description":"Check availability of family and maternal support amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["nursing_tops","nursing_pillow","privacy_screen","comfortable_chair","baby_supplies"]},"size_needed":{"type":"string","enum":["XS","S","M","L","XL","XXL"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_maternal_support","description":"Coordinate maternal wellness and nursing support services.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["nursing_clothing","privacy_setup","comfort_furniture","feeding_supplies"]},"size_specifications":{"type":"string"},"delivery_urgency":{"type":"string","enum":["standard","priority","immediate"]}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverbend Urban Suites (hotel_id: rus_pdx_24)
+Address: 700 SW Broadway, Portland, OR 97205
+Timezone: America/Los_Angeles
+
+Nursing Apparel Board:
+- Crossover tops: colors—teal, charcoal; sizes S–XL
+- Fabric: bamboo‑blend for breathability
+- Complimentary: nursing pads sample
+- Delivery: 8–12 minutes
+- Wellness: stroller route maps at concierge
+
+user:
+Hi—room 1106. Do you have a teal crossover top?
+
+assistant channel=analysis:
+Check nursing_tops then deliver.
+
+assistant channel=commentary to=tool.check_family_amenities:
+{"amenity_type":"nursing_tops"}
+
+tool.check_family_amenities channel=commentary to=assistant:
+{"available":true,"styles":["crossover"],"colors":["teal","charcoal"],"stock_levels":{"S":3,"M":5,"L":4,"XL":3}}
+
+assistant channel=final:
+Yes—teal crossover is available. What size would you like for room 1106?
+
+user:
+XL, please.
+
+assistant channel=analysis:
+Arrange delivery of XL teal crossover top with pads sample.
+
+assistant channel=commentary to=tool.arrange_maternal_support:
+{"room_number":"1106","service_type":"nursing_clothing","size_specifications":"crossover, teal, XL","delivery_urgency":"standard"}
+
+tool.arrange_maternal_support channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":10,"items_included":["crossover_teal_XL","nursing_pads_sample"],"delivery_team":"family_concierge"}
+
+assistant channel=final:
+All set—one teal crossover top (XL) with a nursing pads sample will arrive at room 1106 in about 10 minutes.
+
+user:
+Thanks! The coffee downstairs smells amazing.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+Perfect for a city stroll.
+
+user:
+Can you arrange a last-minute museum tour this afternoon?
+
+assistant channel=analysis:
+Museum tour arrangement not defined; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Exploring different approaches.
+

@@ -1,0 +1,103 @@
+"""
+Guest requests an hourly charter with multiple stops and needs a quote.
+
+ROLES: user (guest planning multiple downtown stops), assistant (concierge handling limousine quotes and bookings)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "quote_hourly_charter",
+    "description": "Provide quote for hourly limousine charter with selected vehicle class.
+Includes hourly rate, minimum hours, included mileage, and overage fees.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_class": {"type": "string", "enum": ["sedan", "suv", "van", "limo"]},
+        "start_time": {"type": "string", "description": "Local time 24h e.g. 18:30"},
+        "hours": {"type": "integer", "minimum": 1}
+      },
+      "required": ["vehicle_class", "start_time", "hours"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_fleet_availability",
+    "description": "Check live availability for specified vehicle class and time window.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_class": {"type": "string", "enum": ["sedan", "suv", "van", "limo"]},
+        "start_time": {"type": "string"},
+        "hours": {"type": "integer"}
+      },
+      "required": ["vehicle_class", "start_time", "hours"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Citystone Boutique Hotel (hotel_id: cst_bos_02)
+Address: 88 Kingston St, Boston, MA 02111
+Timezone: America/New_York
+Concierge Desk: 06:00–23:00 daily | Extension 9
+
+Limousine Program (Downtown Charters):
+- Vehicle Classes: sedan, suv, van, limo
+- Hourly Rates (incl. taxes): sedan $85/h, suv $105/h, van $120/h, limo $150/h
+- Minimums: 2-hour minimum for all charters
+- Included: Up to 20 miles per hour; water; phone chargers
+- Overage: $2.25 per mile beyond included mileage
+- Grace Time: 10 minutes per stop; excess waiting charged at hourly pro‑rata
+- Billing: Charge to room or major credit cards on file
+- Accessibility: Wheelchair ramp available for van class (pre-request required)
+
+Notes:
+1) No airport runs under hourly program (use flat transfer rates only)
+2) Child seats available upon request (no extra fee; request during booking)
+3) Cancellations: Free up to 2 hours before start; then 1-hour fee
+
+user:
+Could I get a 3-hour SUV charter starting 7pm tonight for a few downtown stops?
+
+assistant channel=analysis:
+Confirm SUV hourly quote against published rates; check availability for 3 hours starting 19:00. Provide facts only from tools/system.
+
+assistant channel=commentary to=tool.quote_hourly_charter:
+{"vehicle_class":"suv","start_time":"19:00","hours":3}
+
+tool.quote_hourly_charter channel=commentary to=assistant:
+{"vehicle_class":"suv","rate_per_hour":105,"minimum_hours":2,"included_miles_per_hour":20,"over_mile_fee":2.25,"est_total_before_overage":315,"currency":"USD"}
+
+assistant channel=commentary to=tool.check_fleet_availability:
+{"vehicle_class":"suv","start_time":"19:00","hours":3}
+
+tool.check_fleet_availability channel=commentary to=assistant:
+{"available":true,"fleet_units":3}
+
+assistant channel=final:
+We can do an SUV charter from 19:00 for 3 hours. The hourly rate is $105 (2‑hour minimum). Estimate before mileage overage: $315 USD, with 20 miles included per hour and $2.25/mile beyond that. We currently have availability.
+
+user:
+Nice—do you include child seats?
+
+assistant channel=analysis:
+Answer is in system notes: child seats available upon request at no extra fee.
+
+assistant channel=final:
+Yes—child seats are available on request at no extra charge. Just let me know the type needed and I’ll add it to the booking.
+
+user:
+Can the SUV be a Tesla specifically?
+
+assistant channel=analysis:
+Tesla request is beyond stated fleet specifics; not in system or tool outputs. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Noted. Checking available options.
+

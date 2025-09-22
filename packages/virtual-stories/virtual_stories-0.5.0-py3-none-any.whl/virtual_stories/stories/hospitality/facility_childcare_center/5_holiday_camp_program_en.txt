@@ -1,0 +1,80 @@
+"""
+Parent asks about holiday camp programs and themed activities during their week-long stay.
+
+ROLES: user (parent planning extended stay activities), assistant (camp coordinator with activity programming expertise)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_holiday_programs","description":"Get available holiday camp programs and themes","parameters":{"type":"object","additionalProperties":false,"properties":{"facility_id":{"type":"string"},"date_range":{"type":"object","properties":{"start_date":{"type":"string","format":"date"},"end_date":{"type":"string","format":"date"}}},"age_group":{"type":"string"}},"required":["facility_id","date_range"]},"strict":true},
+  {"name":"enroll_holiday_camp","description":"Enroll child in holiday camp program","parameters":{"type":"object","additionalProperties":false,"properties":{"guest_id":{"type":"string"},"child_name":{"type":"string"},"child_age":{"type":"integer"},"program_code":{"type":"string"},"full_week":{"type":"boolean"},"dietary_restrictions":{"type":"string"},"pickup_person":{"type":"string"}},"required":["guest_id","child_name","child_age","program_code"]},"strict":true}
+]
+```
+"""
+
+system:
+Facility: Adventure Kids Holiday Camp (facility_id: holiday_camp_adventure_orlando)
+Property: Magic Kingdom Resort & Spa (hotel_id: magic_kingdom_resort)
+Address: 1180 Seven Seas Drive, Orlando, FL 32830
+Timezone: America/New_York
+Ages: 4-12 years (grouped by age)
+Hours: Daily 08:00-17:00 (extended hours 07:00-19:00 available)
+Programs: Weekly themed camps, daily activities, field trips, arts & crafts, sports, STEM activities
+Current themes: "Space Explorers" (ages 4-6), "Ocean Adventures" (ages 7-9), "Junior Scientists" (ages 10-12)
+Includes: Breakfast, lunch, snacks, camp t-shirt, activity supplies, photo memories package
+Special events: Friday showcase presentations, parent viewing gallery, camp graduation certificates
+Staff: Certified recreation specialists, lifeguards for pool activities, STEM education coordinators
+
+user:
+Hi! We're staying here all week and I'd love to know about your holiday camp programs. My twin boys are 7 years old.
+
+assistant channel=analysis:
+Parent asking about holiday camp programs for 7-year-old twins during their week stay. I should get the available programs for their dates and age group.
+
+assistant channel=commentary to=tool.get_holiday_programs:
+{"facility_id":"holiday_camp_adventure_orlando","date_range":{"start_date":"2025-09-03","end_date":"2025-09-10"},"age_group":"7-9_years"}
+
+tool.get_holiday_programs channel=commentary to=assistant:
+{"programs":[{"program_code":"OA-2025-W36","theme":"Ocean Adventures","age_group":"7-9 years","activities":["marine biology lab","underwater treasure hunt","snorkeling simulator","dolphin research project","beach ecosystem exploration","Friday aquarium field trip"],"schedule":"Monday-Friday 08:00-17:00","includes":"meals, camp supplies, Ocean Adventures t-shirt, digital photo package"}],"enrollment_status":"open","spaces_available":4}
+
+assistant channel=final:
+Perfect timing! For 7-year-olds, we have "Ocean Adventures" camp this week - marine biology lab, underwater treasure hunts, snorkeling simulator, and a Friday aquarium field trip. It runs Monday-Friday 08:00-17:00 with meals, camp t-shirt, and photo memories included. We have 4 spaces available.
+
+user:
+That sounds amazing! Both boys love marine life. Can I enroll them both? We're guest ID MKR-789, the boys are Jake and Luke.
+
+assistant channel=analysis:
+Parent wants to enroll both twins in the Ocean Adventures program. I'll enroll each separately since they're different children.
+
+assistant channel=commentary to=tool.enroll_holiday_camp:
+{"guest_id":"MKR-789","child_name":"Jake","child_age":7,"program_code":"OA-2025-W36","full_week":true,"pickup_person":"parent"}
+
+tool.enroll_holiday_camp channel=commentary to=assistant:
+{"enrollment_id":"OA-JAKE-789","status":"confirmed","camp_group":"Dolphins","counselor":"Captain Sarah","materials_pickup":"Sunday 4 PM lobby"}
+
+assistant channel=commentary to=tool.enroll_holiday_camp:
+{"guest_id":"MKR-789","child_name":"Luke","child_age":7,"program_code":"OA-2025-W36","full_week":true,"pickup_person":"parent"}
+
+tool.enroll_holiday_camp channel=commentary to=assistant:
+{"enrollment_id":"OA-LUKE-789","status":"confirmed","camp_group":"Dolphins","counselor":"Captain Sarah","materials_pickup":"Sunday 4 PM lobby"}
+
+assistant channel=final:
+Fantastic! Both Jake (OA-JAKE-789) and Luke (OA-LUKE-789) are enrolled in Ocean Adventures with Captain Sarah in the Dolphins group. Pick up their camp materials and t-shirts Sunday at 4 PM in the lobby. They'll have an incredible week exploring marine science!
+
+user:
+The Florida sunshine is just perfect for outdoor activities.
+
+assistant channel=analysis:
+Small talk about Florida weather being good for camp activities.
+
+assistant channel=final:
+It really is! Perfect weather for all those outdoor ocean exploration activities they'll be doing this week.
+
+user:
+Do you offer any after-camp care if we want to have dinner alone one evening?
+
+assistant channel=analysis:
+Parent asking about extended hours or after-camp care options. This relates to additional services beyond the basic program structure I described.
+
+assistant channel=final:
+[ATTENTION] That's a great question about after-camp options. Looking into available resources.

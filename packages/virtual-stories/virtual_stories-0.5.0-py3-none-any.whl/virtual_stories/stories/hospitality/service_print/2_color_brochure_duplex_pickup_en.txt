@@ -1,0 +1,73 @@
+"""
+Guest requests color brochure printing with duplex and front desk pickup; includes small talk and an unsupported follow-up.
+
+ROLES: user (guest preparing for a meeting), assistant (business center staff managing print queue and billing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "submit_print_job",
+    "description": "Queue a print job and return job id and estimated cost.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "color": {"type": "boolean"},
+        "pickup": {"type": "string", "enum": ["front_desk", "business_center"]}
+      },
+      "required": ["room", "pages", "color", "pickup"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Cascadia Harbor Hotel
+Address: 18 Pierfront Way, Seattle, WA 98101
+Business Center: Level 2, Suite 204
+Hours: 06:00–23:00 daily
+Accepted Formats: PDF only (no Word/Images)
+Per‑Page Rates: B/W $0.15; Color $0.45
+Pickup Spots: Front Desk or Business Center counter
+Billing: Charges post to room folio at pickup
+Turnaround: Typical 5–10 minutes per job
+Queue Note: Peak queue 08:00–09:00 and 17:00–18:00
+
+user:
+I need 8 pages in color for room 1422. I’ll pick them up at the front desk.
+
+assistant channel=analysis:
+Use the tool to queue 8 color pages for room 1422, pickup front desk. Keep reply factual and brief.
+
+assistant channel=commentary to=tool.submit_print_job:
+{"room":"1422","pages":8,"color":true,"pickup":"front_desk"}
+
+tool.submit_print_job channel=commentary to=assistant:
+{"job_id":"csh_9142","estimated_cost":3.60,"currency":"USD"}
+
+assistant channel=final:
+All set—8 color pages are queued for room 1422 (job csh_9142). Estimated cost is $3.60 USD. Pick up at the Front Desk; it should be ready in about 5–10 minutes and will post to your folio.
+
+user:
+Smells like fresh coffee in the lobby.
+
+assistant channel=analysis:
+Offer friendly acknowledgment; do not add policy details beyond system.
+
+assistant channel=final:
+It’s a nice touch before early meetings.
+
+user:
+Can you staple the brochure and add a clear cover?
+
+assistant channel=analysis:
+Stapling/clear covers aren’t defined. Flag as attention without inventing details.
+
+assistant channel=final:
+[ATTENTION] Thanks for the request. Reviewing available finishing options.
+

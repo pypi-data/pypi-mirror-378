@@ -1,0 +1,69 @@
+"""
+Late checkout inquiry; assistant calls tool and shares tool result; then answers a policy detail from system. Include small talk and an [ATTENTION] request beyond system.
+
+ROLES: user (guest), assistant (Bayview Resort concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_late_checkout",
+    "description": "Request a late checkout within policy and return approval and fee.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "requested_time": {"type": "string", "description": "24h time, e.g., 14:00"}
+      },
+      "required": ["room_number", "requested_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Bayview Resort — Monterey
+Std Checkout: 12:00
+Late Window: up to 16:00
+Fees: $20 (≤13:00) / $45 (≤15:00) / $80 (≤16:00)
+Posting: Charges post to folio when approved
+Wi‑Fi: 300 Mbps included
+Pool: 07:00–21:00
+Quiet: 22:00–07:00
+
+user:
+Room 504—can I check out at 15:15?
+
+assistant channel=analysis:
+Past 15:00 but ≤16:00, so $80 if approved.
+
+assistant channel=commentary to=tool.request_late_checkout:
+{"room_number":"504","requested_time":"15:15"}
+
+tool.request_late_checkout channel=commentary to=assistant:
+{"approved":true,"fee":80,"currency":"USD","note":"Key active until 16:00"}
+
+assistant channel=final:
+Approved—late checkout for room 504 is set for 15:15 with an $80 USD fee. Your key remains active until 16:00.
+
+user:
+Thanks! Calm seas today?
+
+assistant channel=final:
+Glad to help at Bayview.
+
+user:
+When is standard checkout?
+
+assistant channel=final:
+Standard checkout is 12:00.
+
+user:
+Could you extend the pool hours?
+
+assistant channel=final:
+[ATTENTION] Extending pool hours isn’t covered by the provided details. Processing your request.
+

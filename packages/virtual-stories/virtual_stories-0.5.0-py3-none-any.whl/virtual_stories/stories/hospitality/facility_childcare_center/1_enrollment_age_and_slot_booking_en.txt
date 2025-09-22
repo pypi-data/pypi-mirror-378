@@ -1,0 +1,74 @@
+"""
+Guest asks about childcare center ages and hours, then books a slot.
+
+ROLES: user (parent guest arranging supervised childcare), assistant (family services coordinator confirming eligibility and reserving a slot)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_facility_hours","description":"Return operating hours for a facility by ID.","parameters":{"type":"object","additionalProperties":false,"properties":{"facility_id":{"type":"string"}},"required":["facility_id"]},"strict":true},
+  {"name":"book_childcare_slot","description":"Book a supervised childcare slot for an eligible child.","parameters":{"type":"object","additionalProperties":false,"properties":{"guest_id":{"type":"string"},"child_age":{"type":"integer","minimum":1},"date":{"type":"string","format":"date"},"start_time":{"type":"string"},"duration_minutes":{"type":"integer","minimum":30}},"required":["guest_id","child_age","date","start_time","duration_minutes"]},"strict":true}
+]
+```
+"""
+
+system:
+Facility: Little Mariners Childcare Center (facility_id: childcare_mariners_syd)
+Property: Harbour Quay Suites (hotel_id: harbour_quay_sydney)
+Address: 7 Circular Quay W, The Rocks NSW 2000
+Timezone: Australia/Sydney
+Ages accepted: 3–8 years
+Hours: Daily 09:00–18:00
+Policies: Parent/guardian must remain on property; snack provided; photo ID required at pickup
+
+user:
+Hi—what ages do you take at your childcare center, and what are the hours?
+
+assistant channel=analysis:
+Answer ages from system facts and fetch hours via tool.
+
+assistant channel=commentary to=tool.check_facility_hours:
+{"facility_id":"childcare_mariners_syd"}
+
+tool.check_facility_hours channel=commentary to=assistant:
+{"hours":"Daily 09:00–18:00"}
+
+assistant channel=final:
+We welcome children ages 3–8. The center operates Daily 09:00–18:00.
+
+user:
+Could I book 90 minutes tomorrow starting 14:30 for my 5-year-old? Guest ID HQ-55.
+
+assistant channel=analysis:
+Book slot with child_age 5.
+
+assistant channel=commentary to=tool.book_childcare_slot:
+{"guest_id":"HQ-55","child_age":5,"date":"2025-09-04","start_time":"14:30","duration_minutes":90}
+
+tool.book_childcare_slot channel=commentary to=assistant:
+{"status":"booked","confirmation":"CC-SYD-8842"}
+
+assistant channel=analysis:
+Confirm booking and policy note.
+
+assistant channel=final:
+All set—CC-SYD-8842 is booked for 2025-09-04 from 14:30 for 90 minutes. Please remain on property and bring photo ID for pickup.
+
+user:
+By the way, the harbor breeze is lovely today.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+It really adds to a pleasant afternoon.
+
+user:
+Do your staff speak Polish?
+
+assistant channel=analysis:
+Language capabilities aren’t specified; no tool—use special flag.
+
+assistant channel=final:
+[ATTENTION] I see the interest in languages. Verifying information.
+

@@ -1,0 +1,40 @@
+"""
+Guest has 90 pages of invoices; include in-context batching rule and [ATTENTION] proceed with first batch tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"scan_document","description":"Scan","parameters":{"type":"object","properties":{"pages":{"type":"integer"},"dpi":{"type":"integer"},"color":{"type":"string","enum":["b&w","color"]},"duplex":{"type":"boolean"},"ocr":{"type":"boolean"}},"required":["pages","dpi","color","duplex","ocr"]}}
+]
+"""
+
+system:
+Business Center – Harbor Quay (hotel_id: harbor_quay_syd)
+Limit: 50 pages per job; larger stacks must be split into batches.
+Recommended: 300 dpi b&w for invoices; OCR available.
+
+user:
+I have about 90 pages of invoices—can you scan them with OCR?
+
+assistant channel=analysis:
+Explain batching requirement; propose two batches (50 + 40).
+
+assistant channel=final:
+Yes—we’ll split into two batches due to the 50-page limit (Batch 1: 50 pages, Batch 2: 40 pages), all at 300 dpi with OCR.
+
+user:
+[ATTENTION] Please start batch 1 now (50 pages, b&w, OCR).
+
+assistant channel=analysis:
+Run batch 1 scan.
+
+assistant channel=commentary to=scan_document:
+{"pages":50,"dpi":300,"color":"b&w","duplex":false,"ocr":true}
+
+tool.scan_document:
+{"status":"scanned","filename":"invoices_batch1_50_bw_ocr.pdf"}
+
+assistant channel=final:
+Batch 1 complete—file invoices_batch1_50_bw_ocr.pdf is ready. We can proceed with batch 2 when you’re set.
+

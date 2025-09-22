@@ -1,0 +1,97 @@
+"""
+Guest requests a table-top LED vanity mirror; verify inventory and arrange delivery. Include small talk, an in-context question, and an [ATTENTION] request.
+
+ROLES: user (guest needing detailed makeup lighting), assistant (concierge coordinating portable amenity delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"inventory_check","description":"Check inventory by item_code.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string"}},"required":["item_code"]},"strict":true},
+  {"name":"amenity_deliver","description":"Deliver amenity to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","item_code","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Aurora Glass Tower (hotel_id: agt_ny_33)
+Address: 300 W 44th St, New York, NY 10036
+Timezone: America/New_York
+Amenity Runs: 08:00–22:30
+
+Portable Mirrors Catalog:
+- bath_mirror_magnifying: stock 7
+- table_led_mirror: stock 5
+
+Facilities:
+1) Skyline lounge
+2) Espresso bar 06:30–12:00
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Theater district map wall
+
+Design:
+- Glass-and-steel atrium with light wells
+
+Dining:
+- Lobby espresso bar 06:30–12:00; small plates 17:00–21:00
+
+Accessibility:
+- Step-free access; ADA rooms available
+- Portable vanity stools on request
+
+Sustainability:
+- LED lighting throughout; refillable amenities
+
+Transportation:
+- Subway entrance within one block; rideshare pickup on 44th St
+
+user:
+Hi—could I get a table-top LED mirror in 2318? The lighting here is soft.
+
+assistant channel=analysis:
+Check stock for table_led_mirror, then deliver 1 with normal priority.
+
+assistant channel=commentary to=tool.inventory_check:
+{"item_code":"table_led_mirror"}
+
+tool.inventory_check channel=commentary to=assistant:
+{"item_code":"table_led_mirror","on_hand":5}
+
+assistant channel=commentary to=tool.amenity_deliver:
+{"room_number":"2318","item_code":"table_led_mirror","quantity":1,"priority":"normal"}
+
+tool.amenity_deliver channel=commentary to=assistant:
+{"ticket_id":"AGT-2318-LED-441","eta_minutes":14}
+
+assistant channel=final:
+One table-top LED mirror is on its way to 2318 (AGT-2318-LED-441). ETA is about 14 minutes.
+
+user:
+Is the espresso bar still open?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—the espresso bar runs 06:30–12:00.
+
+user:
+The glass atrium is spectacular in the morning.
+
+assistant channel=analysis:
+Chit-chat referencing design.
+
+assistant channel=final:
+Those light wells make the atrium glow in the morning.
+
+user:
+Could you secure same-day theater tickets for me?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] Analyzing the situation.
+
+user:
+Thanks!

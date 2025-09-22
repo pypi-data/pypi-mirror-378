@@ -1,0 +1,50 @@
+"""
+Guest asks to resend folio after checkout to a verified email; include small talk and an ATTENTION beyond-scope query.
+
+ROLES: user (guest who already checked out), assistant (front desk or back office re-sending folio)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"resend_folio","description":"Resend final folio PDF to email","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"email":{"type":"string"}},"required":["room","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Blue Horizon Resort & Spa
+Folio Policy:
+- Final folio available after checkout; reissue within 30 days
+- Delivery: Email PDF or Front Desk print
+- Data: nightly room, taxes, incidentals by date, payment method
+- Privacy: Verified guest email on file or provided at desk
+- Printer: PRN-BH-02
+- Time Zone: Pacific Time (PT)
+- Languages: English-only folio layout
+
+user:
+Can you resend my folio for room 324 to my email, alex@blue.example?
+
+assistant channel=analysis:
+Resend final folio to provided email.
+
+assistant channel=commentary to=tool.resend_folio:
+{"room":"324","email":"alex@blue.example"}
+
+tool.resend_folio channel=commentary to=assistant:
+{"request_id":"BH-324-RS1","status":"sent","filename":"BHR_324_folio.pdf"}
+
+assistant channel=final:
+Sent—request BH-324-RS1. The PDF (BHR_324_folio.pdf) has been emailed to alex@blue.example.
+
+user:
+Nice breeze coming off the water today.
+
+assistant channel=final:
+Thanks for the note.
+
+user:
+Can you include my loyalty points summary inside the folio PDF?
+
+assistant channel=final:
+[ATTENTION] Loyalty summaries aren’t included in the folio format here. Checking available options.

@@ -1,0 +1,68 @@
+"""
+Guest needs child seats and a van; include system-answered child seat policy and [ATTENTION] ETA via tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"get_taxi_eta","description":"ETA","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"vehicle_type":{"type":"string","enum":["van"]}},"required":["pickup_point","vehicle_type"]}},
+  {"name":"request_taxi","description":"Dispatch","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"destination":{"type":"string"},"passengers":{"type":"integer"},"vehicle_type":{"type":"string","enum":["van"]}},"required":["pickup_point","destination","passengers","vehicle_type"]}}
+]
+"""
+
+system:
+Hotel: Seaside Family Hotel (hotel_id: seaside_family_bri)
+Address: 1 Marine Parade, Brighton BN2 1TL | Timezone: Europe/London
+Taxi help: concierge 07:00–23:00; after-hours street hail only.
+Pickups: "Marine Porch" (sedan/eco), "Coach Turnaround" (van).
+Child seats: available but limited; for two seats, a van must be requested.
+Payments: cards accepted; no room charge for taxis.
+
+user:
+We need a van with two child seats to the pier.
+
+assistant channel=analysis:
+Confirm policy and pickup; offer ETA.
+
+assistant channel=final:
+We can arrange a van with two child seats from the Coach Turnaround. Want me to check the live ETA?
+
+user:
+Are child seats allowed in sedans here?
+
+assistant channel=analysis:
+Answer from system: two seats require a van.
+
+assistant channel=final:
+For two child seats we must request a van.
+
+user:
+[ATTENTION] What’s the live ETA for that van now?
+
+assistant channel=analysis:
+Call get_taxi_eta.
+
+assistant channel=commentary to=get_taxi_eta:
+{"pickup_point":"Coach Turnaround","vehicle_type":"van"}
+
+tool.get_taxi_eta:
+{"eta_minutes": 12, "provider":"South Coast Cabs","vehicle":"Blue Vito SC-77"}
+
+assistant channel=final:
+ETA is 12 minutes (Blue Vito SC-77) via South Coast Cabs.
+
+user:
+Please book it to Brighton Palace Pier.
+
+assistant channel=analysis:
+Dispatch van.
+
+assistant channel=commentary to=request_taxi:
+{"pickup_point":"Coach Turnaround","destination":"Brighton Palace Pier","passengers":4,"vehicle_type":"van"}
+
+tool.request_taxi:
+{"status":"confirmed","dispatch_id":"SF-6011","eta_minutes":12}
+
+assistant channel=final:
+Confirmed—Dispatch SF-6011, van to the pier, ETA 12 minutes at Coach Turnaround. Enjoy your day!
+

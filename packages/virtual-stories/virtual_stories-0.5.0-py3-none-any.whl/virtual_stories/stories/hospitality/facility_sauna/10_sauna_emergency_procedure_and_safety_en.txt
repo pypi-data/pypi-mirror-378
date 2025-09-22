@@ -1,0 +1,67 @@
+"""
+Guest verifies emergency procedures, asks about safety equipment, and includes small talk.
+
+ROLES: user (safety-conscious guest), assistant (spa lead clarifying on-site procedures)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"ack_safety_brief","description":"Acknowledge that the safety brief has been provided to the guest.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"ack":{"type":"boolean"}},"required":["hotel_id","ack"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Granite Peak Lodge (hotel_id: gpl_boz_01)
+Address: 510 Bridger Canyon Rd, Bozeman, MT 59715, USA
+Timezone: America/Denver
+Sauna: Dry; 2 bench tiers; tempered glass door
+Hours: 08:00–22:00; final sweep 22:05
+Safety Equipment: Emergency pull cord; wall intercom to front desk; AED at lobby wall; first-aid kit at spa counter
+Procedures: Pull cord then speak via intercom; staff dispatched immediately; remain seated until help arrives
+Notices: Hydrate before/after; towel on bench; no oils on stones
+Capacity: 3; 20-minute sessions; quiet zone
+Cooldown: Corridor fans and cool mist spray
+
+user:
+If I feel dizzy, what’s the emergency procedure?
+
+assistant channel=analysis:
+Answer strictly from the system’s procedures.
+
+assistant channel=final:
+Pull the cord and use the wall intercom to speak with the front desk—staff are dispatched immediately. Please remain seated until help arrives.
+
+user:
+Could you note that I’ve read the safety brief?
+
+assistant channel=analysis:
+Acknowledge via tool output.
+
+assistant channel=commentary to=tool.ack_safety_brief:
+{"hotel_id":"gpl_boz_01","ack":true}
+
+tool.ack_safety_brief channel=commentary to=assistant:
+{"recorded":true}
+
+assistant channel=final:
+Noted—your acknowledgment is recorded.
+
+user:
+The tempered glass gives it a modern look.
+
+assistant channel=analysis:
+Small talk reply without adding facts beyond system context.
+
+assistant channel=final:
+It keeps the room feeling open while maintaining heat.
+
+user:
+Is the AED brand Zoll or Philips?
+
+assistant channel=analysis:
+Brand isn’t listed; use attention flag.
+
+assistant channel=final:
+[ATTENTION] Your AED brand question is noted. Checking available options.
+

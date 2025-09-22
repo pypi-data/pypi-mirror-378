@@ -1,0 +1,82 @@
+"""
+Guest requests fluoride-free toothpaste; confirm variant and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (guest), assistant (amenity runner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"tp_variant_check","description":"Check which variants are fluoride-free and in stock.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"preference":{"type":"string","enum":["fluoride_free"]}},
+     "required":["preference"]},"strict":true},
+  {"name":"tp_deliver","description":"Deliver the selected fluoride-free option.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"variant":{"type":"string"}},
+     "required":["room_number","variant"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Highline Market Hotel (hotel_id: HMH_nyc_06)
+Address: 520 Tenth Ave, New York, NY 10018 | TZ: America/New_York
+
+Toothpaste Inventory Snapshot:
+- Fluoride-free: kids_strawberry (SLS-free)
+- Fluoride: mint (30 mL), herbal (30 mL low-foam)
+- Delivery: 06:30–23:00 | Fee: none
+- Lobby detail: Highline terrace access
+- Runner tags: hm-1..4
+
+user:
+Do you have a fluoride-free option for room 1422?
+
+assistant channel=analysis:
+Check fluoride-free variant and deliver to 1422.
+
+assistant channel=commentary to=tool.tp_variant_check:
+{"preference":"fluoride_free"}
+
+tool.tp_variant_check channel=commentary to=assistant:
+{"available":true,"variant":"kids_strawberry","sls_free":true}
+
+assistant channel=analysis:
+Proceed to deliver kids_strawberry.
+
+assistant channel=commentary to=tool.tp_deliver:
+{"room_number":"1422","variant":"kids_strawberry"}
+
+tool.tp_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":8,"runner":"hm-2","ticket":"HMH-1422-FF"}
+
+assistant channel=final:
+Yes—our fluoride-free option is kids’ strawberry (SLS-free). It’s headed to 1422 in about 8 minutes (runner hm-2, ticket HMH-1422-FF).
+
+user:
+Is the herbal one low-foam?
+
+assistant channel=analysis:
+Answer from Inventory Snapshot.
+
+assistant channel=final:
+Yes—herbal is low-foam with fluoride.
+
+user:
+The terrace by the Highline was lovely.
+
+assistant channel=analysis:
+Chitchat based on Lobby detail.
+
+assistant channel=final:
+We’re glad you enjoyed the terrace access—it’s a quiet spot above the avenue.
+
+user:
+Do you carry charcoal whitening pastes?
+
+assistant channel=analysis:
+Not listed in system—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check if charcoal whitening pastes are available.
+

@@ -1,0 +1,76 @@
+"""
+Guest requests removal of temporary mirror setup after an event and asks about timing.
+Provide confirmation and timing details.
+
+ROLES: user (guest post-event), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_mirror_options", "description": "Confirm installed type to schedule removal.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "mirror_type": { "type": "string", "enum": ["vanity", "hollywood_style", "backlit", "full_length", "magnifying", "all"] }, "lighting_needed": { "type": "boolean" } }, "required": ["mirror_type"] }, "strict": true },
+  { "name": "install_mirror_setup", "description": "Used for removal scheduling (service id reference).", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mirror_type": { "type": "string", "enum": ["vanity", "hollywood_style", "backlit", "full_length", "magnifying"] }, "lighting_type": { "type": "string", "enum": ["adjustable_led", "hollywood_bulbs", "natural_daylight", "warm_white"] }, "placement_location": { "type": "string", "enum": ["bedroom", "bathroom", "closet", "near_window"] }, "power_source": { "type": "string", "enum": ["plug_in", "battery", "hardwired"] } }, "required": ["room_number", "mirror_type"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Skyline View Hotel (hotel_id: svh_nyc_06)
+Address: 600 10th Ave, New York, NY 10036
+Timezone: America/New_York
+
+Amenity Removal:
+- Temporary setups removed at checkout or on request
+- Removal windows: 08:00–12:00 and 16:00–20:00
+- Cable cleanup and surface wipe down
+- Quick room reset after removal
+- Confirmation with service ID
+
+user:
+Room 3408—we’re done with the Hollywood mirror. Please remove tonight.
+
+assistant channel=analysis:
+Confirm type and schedule removal within evening window; share timing.
+
+assistant channel=commentary to=tool.check_mirror_options:
+{"mirror_type":"hollywood_style","lighting_needed":false}
+
+tool.check_mirror_options channel=commentary to=assistant:
+{"available_types":["hollywood_style"],"inventory_status":"removal_schedulable"}
+
+assistant channel=commentary to=tool.install_mirror_setup:
+{"room_number":"3408","mirror_type":"hollywood_style","lighting_type":"hollywood_bulbs","placement_location":"bedroom","power_source":"plug_in"}
+
+tool.install_mirror_setup channel=commentary to=assistant:
+{"service_id":"MIR_REM3408","installation_time":"scheduled for removal","placement":"bedroom","notes":"evening window"}
+
+assistant channel=final:
+We’ll remove the Hollywood‑style mirror from 3408 this evening between 16:00–20:00 and reset the area; your service ID is MIR_REM3408.
+
+user:
+Thanks! Is removal always in those windows?
+
+assistant channel=analysis:
+From system: 08:00–12:00 and 16:00–20:00.
+
+assistant channel=final:
+Yes—08:00–12:00 and 16:00–20:00.
+
+user:
+The skyline is gorgeous.
+
+assistant channel=analysis:
+Small talk short reply.
+
+assistant channel=final:
+One of the perks of this side of the building.
+
+user:
+Could you arrange a late-night snack delivery?
+
+assistant channel=analysis:
+Outside mirror scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with in‑room dining about late‑night options.
+"""
+

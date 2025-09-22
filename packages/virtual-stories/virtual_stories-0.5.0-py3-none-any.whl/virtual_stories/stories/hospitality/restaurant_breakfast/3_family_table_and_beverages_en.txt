@@ -1,0 +1,90 @@
+"""
+Family asks for a breakfast table and beverage preview; include small talk and an ATTENTION ask.
+
+ROLES: user (family of 4), assistant (host managing breakfast seating and beverages preview)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List breakfast venues","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string"}},"required":["hotel_id","meal_period"]},"strict":true},
+  {"name":"check_table_availability","description":"Check table availability","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book a table","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Fetch beverages section","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"section":{"type":"string"}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Midtown Arcadia (hotel_id: midtown_arcadia)
+Breakfast: Arcadia Kitchen (restaurant_id: rest_arcadia_kitchen) 06:45–10:45
+
+Seating & Layout:
+- Booths for families; counter seats for solos
+- Highchairs available
+
+Accessibility:
+- Step‑free path via Lobby East
+- Wide aisles for strollers
+
+Family Notes:
+- Kids’ menu and crayons on request
+- Warm milk available
+
+Dietary Options:
+- Gluten‑free toast
+- Oat/soy milk
+
+Billing & Policies:
+- Room charge available
+- No outside food in dining room
+
+user:
+Can you book breakfast for 4 at 9:15 under the Lee family and show me a few beverages?
+
+assistant channel=analysis:
+Confirm venue, check/hold 09:15 for 4, book, then fetch beverages preview.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"midtown_arcadia","meal_period":"breakfast"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_arcadia_kitchen","name":"Arcadia Kitchen","hours":"06:45-10:45"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_arcadia_kitchen","party_size":4,"datetime":"2025-09-02T09:15:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"B03"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_arcadia_kitchen","guest_name":"Lee","contact":"","party_size":4,"datetime":"2025-09-02T09:15:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"AK-BRK-4417"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_arcadia_kitchen","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"Fresh apple juice"},{"name":"Cappuccino"},{"name":"Arcadia herbal tea"}]}
+
+assistant channel=final:
+Your 9:15 table for 4 at Arcadia Kitchen is confirmed (AK-BRK-4417). Beverages preview: Fresh apple juice, Cappuccino, Arcadia herbal tea.
+
+user:
+Great—love the mural by the entrance.
+
+assistant channel=final:
+It’s a fun spot for a family photo.
+
+user:
+Is the path step‑free for our stroller?
+
+assistant channel=final:
+Yes—the route is step‑free via Lobby East with wide aisles.
+
+user:
+Can we get the corner booth specifically?
+
+assistant channel=final:
+[ATTENTION] Specific booth requests aren’t handled here. Checking available options.

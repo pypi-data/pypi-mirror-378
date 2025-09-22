@@ -1,0 +1,74 @@
+"""
+Guest needs quick touch-up for conference blazer; confirm anti-static option and deliver.
+
+ROLES: user (speaker en route to keynote), assistant (guest services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"list_garment_care_items","description":"List brushes and accessories",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"category":{"type":"string","enum":["clothes_brush"]}},"required":["category"]},"strict":true},
+  {"name":"deliver_garment_care_item","description":"Deliver items",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"priority":{"type":"string","enum":["normal","express"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborview Convention Hotel (hotel_id: hch_boston)
+Address: 1 Seaport Blvd, Boston, MA 02210
+Timezone: America/New_York
+
+Event Wing Notes:
+- Anti-static brushes staged near conference floors for fast dispatch
+- Suggested order: anti-static first for blends, then lint roller if needed
+
+Inventory:
+- nylon_anti_static_wide
+- boar_bristle_classic
+- lint_roller
+
+SLA: Floors 20–24 in 6–12 minutes
+
+user:
+I’m on 2207—need a quick pass on a poly-wool blend blazer before my keynote. Suggestions?
+
+assistant channel=analysis:
+Recommend nylon_anti_static_wide for blend first, offer delivery.
+
+assistant channel=commentary to=tool.list_garment_care_items:
+{"category":"clothes_brush"}
+
+tool.list_garment_care_items channel=commentary to=assistant:
+{"items":["nylon_anti_static_wide","boar_bristle_classic","lint_roller"],"eta":"6-12"}
+
+assistant channel=final:
+Start with the wide anti‑static brush for your poly‑wool blend; add a quick lint roller if needed. Shall I send the anti‑static brush to 2207?
+
+user:
+Yes, and your lobby art is eye‑catching.
+
+assistant channel=final:
+Thanks—those are rotating installations from local waterfront artists.
+
+assistant channel=commentary to=tool.deliver_garment_care_item:
+{"room_number":"2207","items":["nylon_anti_static_wide"],"priority":"express"}
+
+tool.deliver_garment_care_item channel=commentary to=assistant:
+{"request_id":"HCH-2207-88","eta_minutes":7}
+
+assistant channel=final:
+Confirmed—HCH-2207-88, arriving in about 7 minutes.
+
+user:
+Do you know the keynote hall Wi‑Fi password?
+
+assistant channel=analysis:
+Out of system scope; flag.
+
+assistant channel=final:
+[ATTENTION] Let me check what’s available.
+

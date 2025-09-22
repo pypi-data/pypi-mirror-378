@@ -1,0 +1,82 @@
+"""
+Guest has SLS allergy; confirm SLS-free variant and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (guest with sensitivity), assistant (personal care desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"sls_free_check","description":"Check SLS-free toothpaste availability.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"need_sls_free":{"type":"boolean"}},
+     "required":["need_sls_free"]},"strict":true},
+  {"name":"sls_free_deliver","description":"Deliver SLS-free toothpaste.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"variant":{"type":"string"}},
+     "required":["room_number","variant"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Desert Bloom Retreat (hotel_id: DBR_phx_13)
+Address: 77 Cactus Row, Phoenix, AZ 85004 | TZ: America/Phoenix
+
+Allergy Considerations:
+- SLS-free variant: kids_strawberry (fluoride-free)
+- Low-foam herbal (contains SLS alternative, not SLS-free)
+- Mint (standard foam)
+- Delivery: 24/7 | Fee: none
+- Oasis courtyard with shade sails
+
+user:
+I’m allergic to SLS—can you send an SLS-free toothpaste to room 1006?
+
+assistant channel=analysis:
+Check SLS-free availability and deliver to 1006.
+
+assistant channel=commentary to=tool.sls_free_check:
+{"need_sls_free":true}
+
+tool.sls_free_check channel=commentary to=assistant:
+{"available":true,"variant":"kids_strawberry","fluoride":false}
+
+assistant channel=analysis:
+Proceed to deliver kids_strawberry.
+
+assistant channel=commentary to=tool.sls_free_deliver:
+{"room_number":"1006","variant":"kids_strawberry"}
+
+tool.sls_free_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":6,"runner":"aria","ticket":"DBR-1006-SLS"}
+
+assistant channel=final:
+Yes—our SLS-free option is kids’ strawberry (fluoride-free). It’s on the way to 1006, about 6 minutes (runner Aria, ticket DBR-1006-SLS).
+
+user:
+Is the herbal one SLS-free too?
+
+assistant channel=analysis:
+Answer from Allergy Considerations.
+
+assistant channel=final:
+Herbal is low-foam but not SLS-free.
+
+user:
+The courtyard shade is a lifesaver.
+
+assistant channel=analysis:
+Chitchat referencing Oasis courtyard.
+
+assistant channel=final:
+Those shade sails keep the space cool even in midday heat.
+
+user:
+Do you have pediatric fluoride varnish kits?
+
+assistant channel=analysis:
+Out of scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability of pediatric fluoride varnish kits.
+

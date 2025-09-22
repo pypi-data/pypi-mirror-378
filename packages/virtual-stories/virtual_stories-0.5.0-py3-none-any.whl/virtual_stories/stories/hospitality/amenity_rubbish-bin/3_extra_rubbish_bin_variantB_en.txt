@@ -1,0 +1,74 @@
+"""
+Guest requests a standard 12 L open bin at the desk with standard liner; verify and deliver; include small talk and an [ATTENTION] query.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bin_availability","description":"Check availability for rubbish bin types.","parameters":{"type":"object","properties":{"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]}},"required":["bin_type"],"additionalProperties":false},"strict":true},
+  {"name":"request_additional_bin","description":"Deliver an additional bin with placement and liner selection.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]},"placement":{"type":"string","enum":["bathroom","bedside","desk"]},"liner_type":{"type":"string","enum":["standard","compostable"]}},"required":["room_number","bin_type","placement","liner_type"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Property: Old Wharf Heritage (hotel_id: owh_liv_02)
+Address: 7 Albert Dock Row, Liverpool L3
+Housekeeping hours: 07:30–21:30; bin deliveries ETA 9–15 minutes
+
+Bin catalog snapshot
+- compact_6L_lid(6)
+- standard_12L_open(9)
+- Liners: standard(default), compostable(optional)
+
+Additional notes
+• Check-in 15:00; Check-out 11:00
+• Breakfast 06:30–10:30
+• Hall acoustics softened with wool panels
+• Loading bay shutter closes 22:00
+• Staff languages: EN
+• Porter bell rings at 20:45 nightly
+
+user:
+Could you add a standard bin by the desk in 324 with a standard liner?
+
+assistant channel=analysis:
+Check standard_12L_open availability, then request delivery to desk with standard liner.
+
+assistant channel=commentary to=tool.check_bin_availability:
+{"bin_type":"standard_12L_open"}
+
+tool.check_bin_availability channel=commentary to=assistant:
+{"available":true,"bin_type":"standard_12L_open","on_hand":9}
+
+assistant channel=analysis:
+Place the delivery request.
+
+assistant channel=commentary to=tool.request_additional_bin:
+{"room_number":"324","bin_type":"standard_12L_open","placement":"desk","liner_type":"standard"}
+
+tool.request_additional_bin channel=commentary to=assistant:
+{"ticket_id":"HK-324-2207","eta_minutes":11}
+
+assistant channel=final:
+Done—one standard 12 L open bin with a standard liner will be placed by the desk in 324. Ticket HK-324-2207, ETA around 11 minutes.
+
+user:
+The hall feels quiet thanks to the panels.
+
+assistant channel=analysis:
+Use additional notes.
+
+assistant channel=final:
+We softened the hall acoustics with wool panels.
+
+user:
+Could you deliver after 22:00?
+
+assistant channel=analysis:
+Deliveries after 21:30 not defined; flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking late delivery options after 22:00. Coordinating with housekeeping.
+

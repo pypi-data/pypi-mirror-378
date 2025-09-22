@@ -1,0 +1,82 @@
+"""
+Family checks availability; assistant searches via tool and relays the result, then answers a policy question from system. Include small talk and an [ATTENTION] request outside system.
+
+ROLES: user (family planner), assistant (Coastal Inn reservations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+; COASTAL INN — SEA BREEZE WING
+[Basics]
+Address=12 Driftwood Ave, Santa Cruz, CA 95060, USA
+CheckIn=15:00
+CheckOut=11:00
+[Dining]
+Breakfast=07:00-10:00 (continental + hot station)
+KidMenu=Available
+[Parking]
+Self=Free for 1 car per room
+EV=2 ports (7kW)
+[Amenities]
+Pool=Outdoor heated 08:00-20:00
+Laundry=Coin-operated 24/7
+BeachTowels=At front desk
+[Policies]
+QuietHours=22:00-07:00
+Pets=Not permitted (service animals allowed)
+Deposit=$75 hold
+
+user:
+Looking for 2 adults, 2 kids from 2025-07-03 to 2025-07-05. Anything open?
+
+assistant channel=analysis:
+Run search and provide only returned inventory.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-07-03","check_out":"2025-07-05","adults":2,"children":2}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"FAM_DS","name":"Family Double Suite","rate":"USD 239/night"}]}
+
+assistant channel=final:
+Family Double Suite is open at USD 239/night. Check‑in 15:00; checkout 11:00.
+
+user:
+Nice. Sun out today?
+
+assistant channel=final:
+Welcome to Coastal Inn.
+
+user:
+Is parking free for one car?
+
+assistant channel=final:
+Yes—self‑parking is free for one car per room.
+
+user:
+Can you guarantee adjacent rooms with our friends?
+
+assistant channel=final:
+[ATTENTION] Adjacent‑room guarantees aren’t listed in the provided details. Processing your request.
+

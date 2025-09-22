@@ -1,0 +1,50 @@
+"""
+Guest wants express checkout; initiate express process via tool and recap drop box and receipt policy. Include small talk and a background handoff for a minibar charge dispute.
+
+ROLES: user (guest preferring express checkout), assistant (front office enabling express flow and summarizing policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "initiate_express_checkout",
+    "description": "Start express checkout and email a digital receipt.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"email":{"type":"string"}},"required":["reservation_id","email"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Pinecrest Hotel — Front Office
+Express checkout: Return keys to lobby drop box labeled “Express Checkout”
+Receipts: Digital receipts issued after folio closes
+
+user:
+Can I do express checkout for PC-33918 and get the receipt by email to ann@sample.com?
+
+assistant channel=analysis:
+Initiate express checkout via tool with email; confirm drop box and receipt policy from system.
+
+assistant channel=commentary to=tool.initiate_express_checkout:
+{"reservation_id":"PC-33918","email":"ann@sample.com"}
+
+tool.initiate_express_checkout channel=commentary to=assistant:
+{"status":"initiated","receipt":"queued"}
+
+assistant channel=final:
+Express checkout is initiated. Please return your keys to the lobby drop box labeled “Express Checkout.” A digital receipt is queued and will be issued after the folio closes.
+
+user:
+Thanks! You having a good day?
+
+assistant channel=final:
+Yes—appreciate you asking. Safe travels ahead.
+
+user:
+There’s a minibar charge I don’t recognize—can you remove it?
+
+assistant channel=final:
+[ATTENTION] Charge adjustments aren’t supported through these resources. Checking available options.
+

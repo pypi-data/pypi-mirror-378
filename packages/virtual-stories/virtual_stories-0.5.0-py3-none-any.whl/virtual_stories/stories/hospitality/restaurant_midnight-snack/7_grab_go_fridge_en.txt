@@ -1,0 +1,60 @@
+"""
+Guest asks about grab-and-go fridge contents and payment at night.
+
+ROLES: user (guest seeking quick snack), assistant (front desk directing to grab-and-go)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_grabgo_inventory","description":"Return current grab-and-go items.","parameters":{"type":"object","additionalProperties":false,"properties":{"location_id":{"type":"string"}},"required":["location_id"]}},
+  {"name":"get_overnight_payment_rules","description":"Return how to pay overnight.","parameters":{"type":"object","additionalProperties":false,"properties":{"location_id":{"type":"string"}},"required":["location_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Lakeview Madison (hotel_id: lkm_msn)
+Address: 1 Lakeshore Dr, Madison, WI 53703
+Timezone: America/Chicago
+
+Grab-and-Go (location_id: gg_lobby)
+- Hours: 24/7
+- Payment Overnight: Charge to room only
+- Stock: sandwiches, yogurt, salads, sparkling water, chips
+
+user:
+What’s in the grab-and-go right now? Can I pay there?
+
+assistant channel=analysis:
+Use tools to fetch inventory and payment rules. Overnight payment is room charge only per system.
+
+assistant channel=commentary to=tool.get_grabgo_inventory:
+{"location_id":"gg_lobby"}
+
+tool.get_grabgo_inventory channel=commentary to=assistant:
+{"items":["sandwiches","yogurt","salads","sparkling water","chips"]}
+
+assistant channel=commentary to=tool.get_overnight_payment_rules:
+{"location_id":"gg_lobby"}
+
+tool.get_overnight_payment_rules channel=commentary to=assistant:
+{"overnight_payment":"room_charge_only"}
+
+assistant channel=final:
+Our lobby grab‑and‑go is 24/7 and currently has sandwiches, yogurt, salads, sparkling water, and chips. Overnight, purchases are charged to your room.
+
+user:
+The lobby plants look fresh.
+
+assistant channel=final:
+They do—help yourself to a snack.
+
+user:
+Do you have vegan pastries?
+
+assistant channel=analysis:
+Vegan pastries not listed. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] I see the request. Checking availability.
+

@@ -1,0 +1,95 @@
+"""
+Guest requests sanitary bags for the bathroom; confirm availability and deliver with placement; include a small talk turn and one background-acknowledgment message.
+
+ROLES: user (guest requesting sanitary bags), assistant (front desk arranging bathroom supplies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_bathroom_supplies",
+    "description": "Check availability for bathroom supplies including sanitary bags.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "enum": ["sanitary_bag"] }
+      },
+      "required": ["item_code"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_bathroom_supplies",
+    "description": "Deliver bathroom supplies to a room with placement.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "quantity": { "type": "integer", "minimum": 1 },
+        "placement": { "type": "string", "enum": ["bathroom_counter", "under_sink"] }
+      },
+      "required": ["room_number", "item_code", "quantity", "placement"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Magnolia Park Hotel (hotel_id: mp_atl_05)
+Address: 410 Magnolia Walk, Atlanta, GA 30309
+Bathroom supply hours: 07:00–23:30; ETA typically 10–18 minutes
+
+Sanitary bag program:
+- Packaging: biodegradable film; discrete white sleeves
+- Stock snapshot: sanitary_bag(180 sleeves)
+
+Scent note:
+- The lobby diffuser carries a light magnolia fragrance.
+
+user:
+Could I have two sanitary bags delivered to room 1207 and placed on the bathroom counter?
+
+assistant channel=analysis:
+Check sanitary_bag availability, then deliver 2 to the bathroom counter.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"item_code":"sanitary_bag"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_bag","on_hand":180}
+
+assistant channel=analysis:
+Proceed to deliver 2 sleeves to 1207, bathroom_counter.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"1207","item_code":"sanitary_bag","quantity":2,"placement":"bathroom_counter"}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"ticket_id":"BS-1207-7710","eta_minutes":14}
+
+assistant channel=final:
+Certainly—two sanitary bag sleeves will be on your bathroom counter in 1207. Ticket BS-1207-7710, estimated 14 minutes.
+
+user:
+The lobby smells subtly floral—nice touch.
+
+assistant channel=analysis:
+Respond referencing the magnolia diffuser.
+
+assistant channel=final:
+Thank you—we keep a light magnolia diffuser running in the lobby.
+
+user:
+What brand is the biodegradable film made by?
+
+assistant channel=analysis:
+Brand detail isn’t in tools or system; use the special flag.
+
+assistant channel=final:
+[ATTENTION] I’m checking supplier details. Compiling available data.
+

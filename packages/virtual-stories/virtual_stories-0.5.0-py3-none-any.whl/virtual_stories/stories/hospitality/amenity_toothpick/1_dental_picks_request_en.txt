@@ -1,0 +1,90 @@
+"""
+Guest requests toothpicks after dining; confirm availability and deliver, include small talk, and one background acknowledgment.
+
+ROLES: user (guest wanting toothpicks), assistant (dining liaison and amenity runner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_toothpick_availability",
+    "description": "Check if wooden toothpicks are available for guest rooms.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_toothpicks",
+    "description": "Deliver a sleeve of wooden toothpicks to the room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "quantity": { "type": "integer", "minimum": 10, "maximum": 200 }
+      },
+      "required": ["room_number", "quantity"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Sunbar Harbor Resort (hotel_id: shr_mia_06)
+Address: 300 Ocean Dr, Miami Beach, FL 33139
+Timezone: America/New_York
+
+Dining & Amenities:
+- Wooden toothpicks available on request via dining liaison
+- Delivery size: sleeves of ~50
+
+Public Space Detail:
+- Palm court with evening string lights
+
+user:
+Could I have some toothpicks sent to room 908? Maybe around 50.
+
+assistant channel=analysis:
+Confirm availability; deliver one sleeve (≈50) to 908.
+
+assistant channel=commentary to=tool.check_toothpick_availability:
+{}
+
+tool.check_toothpick_availability channel=commentary to=assistant:
+{"available":true,"unit":"sleeve","approx_count":50}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_toothpicks:
+{"room_number":"908","quantity":50}
+
+tool.deliver_toothpicks channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":9,"runner":"maya"}
+
+assistant channel=final:
+On the way—one sleeve of wooden toothpicks (~50) will reach room 908 in about 9 minutes with Maya.
+
+user:
+The palm court looked magical last night.
+
+assistant channel=analysis:
+Offer a brief acknowledgment tied to system detail.
+
+assistant channel=final:
+It’s lovely with the evening string lights in the palm court.
+
+user:
+Do you have metal reusable toothpicks?
+
+assistant channel=analysis:
+Not listed in tools/system; use background acknowledgment.
+
+assistant channel=final:
+[ATTENTION] Understood. Checking available options.
+

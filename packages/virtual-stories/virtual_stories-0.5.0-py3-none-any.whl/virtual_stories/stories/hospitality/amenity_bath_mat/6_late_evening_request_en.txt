@@ -1,0 +1,97 @@
+"""
+Guest places a late-evening request for one bath mat; verify within dispatch hours and arrange delivery. Include small talk, an in-context amenity hours confirmation, and an [ATTENTION] request.
+
+ROLES: user (late-evening guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stock","description":"Check stock by SKU.","parameters":{"type":"object","additionalProperties":false,"properties":{"sku":{"type":"string"}},"required":["sku"]},"strict":true},
+  {"name":"dispatch_delivery","description":"Dispatch an amenity delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"sku":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","sku","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Riverbank City Hotel (hotel_id: rch_tx_12)
+Address: 300 Trinity Walk, Austin, TX 78701
+Timezone: America/Chicago
+Check-in/Out: 16:00 / 11:00
+Amenity Dispatch Hours: 07:00–22:00
+
+Facilities:
+1) Terrace Pool 08:00–21:00
+2) 24/7 Fitness with keycard
+3) Lobby café 06:30–14:00
+4) Live music on Fridays in the atrium
+5) Quiet hours 22:00–07:00
+
+Bath Linens:
+- bath_mat, bath_towel; typical ETA 10–15 minutes
+
+Dining:
+- Lobby café 06:30–14:00
+- Terrace snacks 16:00–20:00 (select days)
+
+Accessibility:
+- Elevators to all floors; ADA rooms available
+- Portable bath benches on request
+
+Sustainability:
+- Water refill stations; recycling program
+- Linen reuse program
+
+Transportation:
+- Rideshare pickup on Trinity Walk
+- Bike racks by main entrance
+
+user:
+Hi there—room 415. Can I get one bath mat sent up now?
+
+assistant channel=analysis:
+Check stock and dispatch 1 bath_mat. The request must be within dispatch hours.
+
+assistant channel=commentary to=tool.check_stock:
+{"sku":"bath_mat"}
+
+tool.check_stock channel=commentary to=assistant:
+{"sku":"bath_mat","on_hand":12}
+
+assistant channel=commentary to=tool.dispatch_delivery:
+{"room":"415","sku":"bath_mat","qty":1}
+
+tool.dispatch_delivery channel=commentary to=assistant:
+{"job_id":"RCH-HK-415-771","eta_minutes":11}
+
+assistant channel=final:
+All set—one bath mat is on its way to room 415 (job RCH-HK-415-771). ETA is about 11 minutes.
+
+user:
+The atrium has great acoustics for the music nights.
+
+assistant channel=analysis:
+Small talk with system info.
+
+assistant channel=final:
+The Friday live music in the atrium does sound great in that space.
+
+user:
+Until what time do you dispatch amenities this evening?
+
+assistant channel=analysis:
+Answer from system dispatch hours.
+
+assistant channel=final:
+We dispatch amenities until 22:00.
+
+user:
+Also, could you arrange a river kayaking rental for tomorrow morning?
+
+assistant channel=analysis:
+Outside scope; flag.
+
+assistant channel=final:
+[ATTENTION] Accessing relevant resources.
+
+user:
+Thanks a lot.

@@ -1,0 +1,60 @@
+"""
+Guest with a service animal asks about coordinating housekeeping visits.
+
+ROLES: user (guest with trained service dog), assistant (front desk coordinating housekeeping presence)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_housekeeping_guidelines","description":"Return housekeeping coordination rules with service animals.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}},
+  {"name":"request_housekeeping_window","description":"Request a housekeeping time window when guest will be present.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"window":{"type":"string"}},"required":["room","window"]}}
+]
+```
+"""
+
+system:
+Hotel: Lakeside Grand (hotel_id: lsg_msp)
+Address: 225 S 6th St, Minneapolis, MN 55402
+Timezone: America/Chicago
+
+Guidelines:
+- Service animals welcome; must remain under control
+- Housekeeping can be scheduled when the guest is present
+- Staff do not handle animals
+
+user:
+Can housekeeping come while I’m in the room with my service dog?
+
+assistant channel=analysis:
+Yes—allowed by guidelines. Use tool to return rules and offer a window request.
+
+assistant channel=commentary to=tool.get_housekeeping_guidelines:
+{"hotel_id":"lsg_msp"}
+
+tool.get_housekeeping_guidelines channel=commentary to=assistant:
+{"schedule_with_guest_present":true,"staff_handle_animals":false}
+
+assistant channel=commentary to=tool.request_housekeeping_window:
+{"room":"927","window":"14:00-15:00"}
+
+tool.request_housekeeping_window channel=commentary to=assistant:
+{"accepted":true,"window":"14:00-15:00"}
+
+assistant channel=final:
+Yes—that’s fine. I can schedule housekeeping when you’re present; I’ve noted 14:00–15:00 for room 927.
+
+user:
+Thanks—the lake view is relaxing.
+
+assistant channel=final:
+Glad you’re enjoying it.
+
+user:
+Can housekeeping walk the dog if I step out briefly?
+
+assistant channel=analysis:
+Staff do not handle animals per guideline. Decline accordingly.
+
+assistant channel=final:
+Our staff don’t handle animals, so we can’t walk your dog. We can time service while you’re in the room.
+

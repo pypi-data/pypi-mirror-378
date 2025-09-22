@@ -1,0 +1,58 @@
+"""
+Guest requests a room change to a higher floor and away from elevators; surface available alternatives via tool and restate policy. Include small talk and a background handoff for a fee waiver request.
+
+ROLES: user (guest asking to change rooms), assistant (front desk checking availability and summarizing policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "find_alternative_rooms",
+    "description": "List available alternative rooms for a current reservation based on preferences.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reservation_id": {"type":"string"},
+        "preferences": {"type":"object","additionalProperties":false,"properties":{"high_floor":{"type":"boolean"},"away_from_elevator":{"type":"boolean"}}}
+      },
+      "required": ["reservation_id","preferences"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Parkline West Hotel — Front Desk
+Room move policy: Complimentary within same category when available; upgrades may incur rate differences
+Quiet-zone floors: 18–22
+Elevator banks: East and West; corner rooms typically farthest from lifts
+
+user:
+Could I move to a higher floor, preferably away from the elevators?
+
+assistant channel=analysis:
+Retrieve alternatives for the reservation and highlight any quiet-zone options.
+
+assistant channel=commentary to=tool.find_alternative_rooms:
+{"reservation_id":"PLW-77821","preferences":{"high_floor":true,"away_from_elevator":true}}
+
+tool.find_alternative_rooms channel=commentary to=assistant:
+{"alternatives":[{"room_id":"2208","category":"Deluxe King","floor":22,"near_elevator":false},{"room_id":"1902","category":"Deluxe King","floor":19,"near_elevator":false}]}
+
+assistant channel=final:
+I can offer Deluxe King 2208 on floor 22 and 1902 on floor 19; both are away from the elevators. Moves within the same category are complimentary when available; upgrades may carry a rate difference. Would you like either of these?
+
+user:
+Thanks—appreciate the help. How’s your day?
+
+assistant channel=final:
+Happy to fine‑tune your stay at Parkline West.
+
+user:
+Could you waive any upgrade fees if I switch to a suite?
+
+assistant channel=final:
+[ATTENTION] Fee adjustments aren’t available through the provided resources. Examining the possibilities.

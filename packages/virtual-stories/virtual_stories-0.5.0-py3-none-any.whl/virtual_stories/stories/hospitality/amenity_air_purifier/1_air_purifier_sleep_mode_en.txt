@@ -1,0 +1,107 @@
+"""
+Guest requests air purifier status and sleep mode with timer; confirm filter state.
+Provide precise control and timing via tools and keep facts tool- or system-derived.
+
+ROLES: user (guest asking to adjust air purifier), assistant (guest services with device control)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_air_purifier_status",
+    "description": "Get current status of the in-room air purifier.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "room_number": { "type": "string" } },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "set_air_purifier_mode",
+    "description": "Set air purifier mode and optional timer.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "mode": { "type": "string", "enum": ["auto", "sleep", "turbo"] },
+        "timer_minutes": { "type": "integer" }
+      },
+      "required": ["room_number", "mode"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_unit_swap",
+    "description": "Request a replacement air purifier unit for the room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "required": ["room_number", "reason"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Evergreen Lake Lodge (hotel_id: evg_seattle)
+Address: 88 Lakeside Ave, Seattle, WA 98112
+Timezone: America/Los_Angeles
+
+In-Room Air Purifier Notes:
+- Model: BlueAir-series unit with modes: auto, sleep, turbo.
+- Ionizer function is disabled property-wide.
+- Timer can be set from 30 to 240 minutes; otherwise runs continuously.
+- Filters are checked weekly and swapped if status indicates replacement needed.
+
+user:
+Hi there—could you put my room’s air purifier (room 708) into sleep mode for 3 hours? Also, is the filter okay?
+
+assistant channel=analysis:
+Check status first, then set sleep with a 180-minute timer if supported, and report filter state.
+
+assistant channel=commentary to=tool.get_air_purifier_status:
+{"room_number":"708"}
+
+tool.get_air_purifier_status channel=commentary to=assistant:
+{"room_number":"708","mode":"auto","filter_status":"good","last_service_days":5}
+
+assistant channel=analysis:
+Filter is reported good. Set sleep mode with 180 minutes.
+
+assistant channel=commentary to=tool.set_air_purifier_mode:
+{"room_number":"708","mode":"sleep","timer_minutes":180}
+
+tool.set_air_purifier_mode channel=commentary to=assistant:
+{"applied":true,"mode":"sleep","timer_minutes":180}
+
+assistant channel=final:
+Done—room 708’s purifier is now in sleep mode for 180 minutes. The filter status is reported as “good,” with last service 5 days ago.
+
+user:
+It’s been raining all day—cozy vibes with the lake right outside.
+
+assistant channel=analysis:
+Respond with setting-appropriate small talk; no tool needed.
+
+assistant channel=final:
+Rain by the lake here brings a calm, cozy mood—perfect for winding down.
+
+user:
+By the way, does the purifier remove viruses specifically?
+
+assistant channel=analysis:
+Scientific claims are outside the system scope and tools; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for the question. Verifying information.
+
+

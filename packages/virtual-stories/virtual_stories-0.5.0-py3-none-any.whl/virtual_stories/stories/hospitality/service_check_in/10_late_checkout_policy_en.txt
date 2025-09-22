@@ -1,0 +1,58 @@
+"""
+Guest asks about late checkout at check‑in; confirm room and share policy from system; include chitchat and ATTENTION follow‑up.
+
+ROLES: user (guest planning departure), assistant (front desk clarifying checkout policy and issuing keys)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_in_guest","description":"Assign room and key","parameters":{"type":"object","properties":{"reservation_code":{"type":"string"},"last_name":{"type":"string"}},"required":["reservation_code","last_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Tidecrest Hotel — Reception
+Check‑in 15:00; Check‑out 12:00
+ID: Government ID must match booking name
+Deposit: Card preauthorization at check‑in
+
+Late Checkout Notes:
+- Express checkout available
+- Requests depend on availability on departure day
+
+Dining & Fitness:
+- Breakfast 06:30–10:30; gym 24/7
+
+user:
+TC-33771 under O’Connor. Is late checkout possible?
+
+assistant channel=analysis:
+Assign room; summarize late checkout note from system.
+
+assistant channel=commentary to=tool.check_in_guest:
+{"reservation_code":"TC-33771","last_name":"O’Connor"}
+
+tool.check_in_guest channel=commentary to=assistant:
+{"room":"1704","key_id":"K-661044"}
+
+assistant channel=final:
+Welcome to Tidecrest—room 1704, key K-661044. Late checkout depends on availability on the day of departure; standard checkout is 12:00.
+
+user:
+Great lobby art.
+
+assistant channel=final:
+It’s one of our favorite rotating exhibits.
+
+user:
+Is express checkout available?
+
+assistant channel=final:
+Yes—express checkout is available.
+
+user:
+Can you guarantee 15:00 checkout now?
+
+assistant channel=final:
+[ATTENTION] Advance guarantees aren’t available here. Reviewing available options.

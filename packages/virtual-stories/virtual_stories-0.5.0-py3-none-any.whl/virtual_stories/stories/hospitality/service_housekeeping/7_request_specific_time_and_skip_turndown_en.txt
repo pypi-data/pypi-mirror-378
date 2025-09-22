@@ -1,0 +1,49 @@
+"""
+Guest wants a specific afternoon refresh and to skip turndown.
+
+ROLES: user (guest with preferences), assistant (housekeeping coordinator scheduling and noting no turndown)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_housekeeping","description":"Schedule housekeeping service for a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["full_clean","refresh","turn_down"]},"preferred_window":{"type":"string"}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Pinnacle Plaza Hotel — Housekeeping
+Hours: 09:00–21:00
+Services: full_clean, refresh, turn_down
+Notes: Guests may opt out of turn_down
+DND: Always honored
+Windows: 60‑minute blocks
+Location: Service corridor 12F near Core D
+
+user:
+Please refresh room 1211 at 14:00 and skip turndown tonight.
+
+assistant channel=analysis:
+Schedule a refresh in a 14:00–15:00 window; acknowledge opt‑out of turndown in final.
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"1211","service_type":"refresh","preferred_window":"14:00-15:00"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_1211","status":"scheduled","window":"14:00-15:00"}
+
+assistant channel=final:
+Refresh is booked for room 1211 (hk_1211) in the 14:00–15:00 window. We’ll skip turndown this evening per your preference; DND is always respected.
+
+user:
+Nice hallway art on 12F.
+
+assistant channel=final:
+Housekeeping operates 09:00–21:00 from Core D.
+
+user:
+Do you press suits as part of housekeeping?
+
+assistant channel=final:
+[ATTENTION] Garment pressing isn’t listed under housekeeping. Checking available options.
+

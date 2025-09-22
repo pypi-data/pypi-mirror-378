@@ -1,0 +1,91 @@
+"""
+Suite guests request two magnifying mirrors; verify stock and deliver two. Include small talk, an in-context amenity window question, and an [ATTENTION] salon booking ask.
+
+ROLES: user (suite guests), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"mirror_inv","description":"Check mirror inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string"}},"required":["item_code"]},"strict":true},
+  {"name":"mirror_send","description":"Send mirror(s) to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1}} ,"required":["room_number","item_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Silver Quay Residences (hotel_id: sqr_wa_58)
+Address: 900 Elliott Ave W, Seattle, WA 98119
+Timezone: America/Los_Angeles
+Amenity Runs: 08:00–22:00
+
+Mirror SKUs:
+- bath_mirror_magnifying: 9 units
+- table_led_mirror: 3 units
+
+Features:
+1) Rooftop herb garden
+2) Coffee bar 06:30–12:00
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Waterfront path
+
+Accessibility:
+- Step-free access; ADA residences available
+- Vanity stools on request
+
+Sustainability:
+- Rooftop herbs used in on-site menu; refillable amenities
+
+Transportation:
+- Waterfront trail access; bike storage in garage
+
+user:
+Could we have two magnifying mirrors brought to 1902?
+
+assistant channel=analysis:
+Check bath_mirror_magnifying stock and deliver two.
+
+assistant channel=commentary to=tool.mirror_inv:
+{"item_code":"bath_mirror_magnifying"}
+
+tool.mirror_inv channel=commentary to=assistant:
+{"item_code":"bath_mirror_magnifying","on_hand":9}
+
+assistant channel=commentary to=tool.mirror_send:
+{"room_number":"1902","item_code":"bath_mirror_magnifying","quantity":2}
+
+tool.mirror_send channel=commentary to=assistant:
+{"ticket":"SQR-1902-441","eta_minutes":15}
+
+assistant channel=final:
+Two magnifying mirrors are heading to 1902 (ticket SQR-1902-441), ETA about 15 minutes.
+
+user:
+Is amenity delivery available tonight?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—amenity runs operate 08:00–22:00.
+
+user:
+The rooftop herb garden smells amazing.
+
+assistant channel=analysis:
+Chit-chat referencing features.
+
+assistant channel=final:
+It does—the rooftop herb garden is a pleasant stop.
+
+user:
+Could you book a salon appointment for tomorrow morning?
+
+assistant channel=analysis:
+Out of scope; use flag.
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+
+user:
+Thanks.

@@ -1,0 +1,59 @@
+"""
+Late-night razor request; guest checks 24/7 availability and delivery time, plus a brief small talk.
+
+ROLES: user (Night owl guest.), assistant (Always-on front desk.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "send_complimentary_item",
+    "description": "Sends a complimentary item to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"}
+      },
+      "required": ["room_number", "item_name"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel ID: Nightfall Suites
+Complimentary: Razor, Dental Kit, Sewing Kit
+Service Hours: 24/7
+Delivery ETA: 10–15 minutes
+Quantity Rule: Max 2/room/day
+Contact: 0
+
+user:
+Hey, 909 here—can I get a razor this late?
+
+assistant channel=analysis:
+Service is 24/7; deliver in 10–15 minutes. I’ll dispatch now.
+
+assistant channel=commentary to=tool.send_complimentary_item:
+{"room_number": "909", "item_name": "razor"}
+
+tool.send_complimentary_item channel=commentary to=assistant:
+{"status": "success", "message": "Razor sent to 909. ETA 10–15 min."}
+
+assistant channel=final:
+Yes—on its way now. Expect it in about 10–15 minutes.
+
+user:
+Nice. Quiet night?
+
+assistant channel=final:
+Pretty calm—our night team’s here all the way through.
+
+user:
+[ATTENTION] Could you arrange a 6 a.m. taxi?
+
+assistant channel=final:
+I don’t have transportation arrangements in my system. I can help with the complimentary amenity kits only.
+

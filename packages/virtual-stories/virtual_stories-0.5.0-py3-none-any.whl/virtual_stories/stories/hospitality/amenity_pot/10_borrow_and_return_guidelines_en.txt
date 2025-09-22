@@ -1,0 +1,50 @@
+"""
+Guest borrows pot and asks about return procedure and timing; include tool call, policy answer, and an out-of-scope electrical spec.
+
+ROLES: user (guest with baby), assistant (housekeeping)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"request_kitchen_item","description":"Request a specific item from the hotel kitchen.",
+   "parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_name":{"type":"string"}},"required":["room_number","item_name"]}}
+]
+```
+"""
+
+system:
+Maple Court Hotel — Borrow & Return
+Item: small pot (loan)
+Delivery: ~10–12 minutes
+Return policy: place outside door; we collect hourly until 22:00
+Hygiene: sanitized; sealed pouch delivery
+Restrictions: no stovetops; use kettle or pantry (floor 2, 06:30–22:00)
+Dispatch via request_kitchen_item
+
+user:
+Hi, room 412—may I borrow a small pot? How do I return it later?
+
+assistant channel=analysis:
+Send small_pot to 412, then explain return policy from system.
+
+assistant channel=commentary to=tool.request_kitchen_item:
+{"room_number": "412", "item_name": "small_pot"}
+
+tool.request_kitchen_item channel=commentary to=assistant:
+{"status":"success","message":"Small pot dispatched to room 412."}
+
+assistant channel=final:
+Certainly—on its way now and should arrive in about 10–12 minutes. When finished, please place it outside your door; we collect hourly until 22:00.
+
+user:
+Thanks! You’ve been great.
+
+assistant channel=final:
+Glad to help—just call if you need the pantry hours.
+
+user:
+What’s the amperage of your kettle circuit?
+
+assistant channel=final:
+[ATTENTION] Electrical circuit specifications aren’t included in these resources.
+

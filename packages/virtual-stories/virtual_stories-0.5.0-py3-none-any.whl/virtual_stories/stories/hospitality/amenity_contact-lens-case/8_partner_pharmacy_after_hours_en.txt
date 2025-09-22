@@ -1,0 +1,43 @@
+"""
+Guest needs late-night solution; check partner pharmacy after hours.
+
+ROLES: user (after-hours need), assistant (guest services coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_amenities","description":"Check availability of personal care and optical amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["contact_lens_case","lens_solution","eye_drops","complete_kit","travel_size"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"check_nearby_pharmacy","description":"Check nearby pharmacy locations and contact lens product availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_type":{"type":"string","enum":["daily_disposables","lens_solution","lens_case","complete_care_kit"]},"emergency_hours":{"type":"boolean"}},"required":["product_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Midtown Transit Suites (hotel_id: mts_new_york)
+Address: 45 W 39th St, New York, NY
+Timezone: America/New_York
+
+In-House Stock Hours:
+- Standard amenity desk: 06:00–23:00
+
+user:
+It’s 1am and I ran out of solution—any after-hours options?
+
+assistant channel=analysis:
+Check partner pharmacy for after-hours lens solution.
+
+assistant channel=commentary to=tool.check_nearby_pharmacy:
+{"product_type":"lens_solution","emergency_hours":true}
+
+tool.check_nearby_pharmacy channel=commentary to=assistant:
+{"availability":"open_24h_partner","note":"concierge can assist with pickup"}
+
+assistant channel=final:
+Our partner pharmacy operates 24/7; concierge can assist with pickup right away. Would you like me to coordinate?
+
+user:
+Yes please. And if possible, a case too.
+
+assistant channel=final:
+I’ll coordinate both the solution and a case through our concierge.
+

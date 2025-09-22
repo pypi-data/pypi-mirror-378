@@ -1,0 +1,75 @@
+"""
+Guest asks about children’s outdoor playground hours and rules, then requests wristbands.
+
+ROLES: user (parent guest visiting playground), assistant (guest services explaining rules and issuing wristbands)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_facility_hours","description":"Return operating hours for a facility by ID.","parameters":{"type":"object","additionalProperties":false,"properties":{"facility_id":{"type":"string"}},"required":["facility_id"]},"strict":true},
+  {"name":"issue_playground_wristband","description":"Issue playground wristbands for a family group.","parameters":{"type":"object","additionalProperties":false,"properties":{"guest_id":{"type":"string"},"children_count":{"type":"integer","minimum":1}},"required":["guest_id","children_count"]},"strict":true}
+]
+```
+"""
+
+system:
+Facility: Skyline Garden Children’s Playground (facility_id: kids_play_skyline_tpe)
+Property: Beacon City Hotel (hotel_id: beacon_city_taipei)
+Address: 10 Civic Blvd, Taipei 100
+Timezone: Asia/Taipei
+Type: Outdoor play area with slides, climbing net, and shaded seating
+Hours: Daily 08:00–19:00 (weather permitting)
+Rules: Adult supervision required; recommended for ages 4–10; soft-soled shoes only
+Entry: Complimentary for registered guests; wristbands issued at Guest Services
+
+user:
+Hello! What are the hours for the children’s playground, and are there any age rules?
+
+assistant channel=analysis:
+Provide rules from system facts and fetch hours via tool.
+
+assistant channel=commentary to=tool.check_facility_hours:
+{"facility_id":"kids_play_skyline_tpe"}
+
+tool.check_facility_hours channel=commentary to=assistant:
+{"hours":"Daily 08:00–19:00 (weather permitting)"}
+
+assistant channel=final:
+The playground is open Daily 08:00–19:00 (weather permitting). It’s recommended for ages 4–10 with adult supervision, and soft‑soled shoes are required.
+
+user:
+Could you issue wristbands for two children? Guest ID BC-221.
+
+assistant channel=analysis:
+Issue wristbands for children_count=2.
+
+assistant channel=commentary to=tool.issue_playground_wristband:
+{"guest_id":"BC-221","children_count":2}
+
+tool.issue_playground_wristband channel=commentary to=assistant:
+{"status":"issued","pickup_location":"Guest Services desk"}
+
+assistant channel=analysis:
+Confirm issuance and pickup location.
+
+assistant channel=final:
+Wristbands are issued—please pick them up at the Guest Services desk.
+
+user:
+By the way, the rooftop garden is lovely.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+Happy it feels welcoming for the family.
+
+user:
+Is there a lifeguard at a splash pad nearby?
+
+assistant channel=analysis:
+Splash pad staffing isn’t in system facts and no tool covers it—special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking. Accessing relevant resources.
+

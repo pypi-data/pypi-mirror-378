@@ -1,0 +1,48 @@
+"""
+Guest has paper originals; staff will scan to PDF then fax; submit job and clarify scanning is handled by staff; include chitchat and ATTENTION for color faxing.
+
+ROLES: user (guest with paper documents), assistant (business center scanning to PDF then faxing per policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"send_fax","description":"Submit a fax job after staff scanning.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"recipient_number":{"type":"string"},"pages":{"type":"integer"},"cover_note":{"type":"string"},"destination_type":{"type":"string","enum":["domestic","international"]}},"required":["room_number","recipient_number","pages","destination_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Seaside Meridian — Business Services (Level 2)
+Hours: 07:00–23:00; after‑hours via Front Desk
+Policy: Staff can scan paper to PDF prior to faxing
+Rates: Domestic USD 2/page; International USD 5/page; cover complimentary
+Limit: 20 pages per job (cover excluded)
+Privacy: Shredded after confirmation
+
+user:
+I only have paper—can you scan to PDF and fax 9 pages domestically to +1-206-555-0134 with a short cover?
+
+assistant channel=analysis:
+Scanning by staff is allowed; submit domestic fax for 9 pages.
+
+assistant channel=commentary to=tool.send_fax:
+{"room_number":"1022","recipient_number":"+1-206-555-0134","pages":9,"cover_note":"Please see attached","destination_type":"domestic"}
+
+tool.send_fax channel=commentary to=assistant:
+{"job_id":"fax_2025_09_07_517","status":"queued","billed_pages":9,"rate_per_page":2,"currency":"USD"}
+
+assistant channel=final:
+We’ll scan to PDF and transmit 9 domestic pages under job fax_2025_09_07_517, billed to room 1022 per USD 2/page. The cover page is complimentary, and documents are shredded after confirmation.
+
+user:
+Thanks—waves sound great tonight.
+
+assistant channel=final:
+We’ll proceed right away.
+
+user:
+Can you send it in color so the charts look better?
+
+assistant channel=final:
+[ATTENTION] Color faxing isn’t available through these resources. Checking available options.
+

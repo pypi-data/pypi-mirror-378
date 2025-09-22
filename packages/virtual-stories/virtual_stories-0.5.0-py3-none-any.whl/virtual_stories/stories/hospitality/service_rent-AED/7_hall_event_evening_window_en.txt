@@ -1,0 +1,51 @@
+"""
+Evening hall event AED standby; confirm supervision and rate; include small talk and out-of-scope [ATTENTION] request.
+
+ROLES: user (evening event planner), assistant (duty manager coordinating AED placement with Security)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_aed","description":"Reserve AED for supervised on-property standby.","parameters":{"type":"object","additionalProperties":false,"properties":{"event_space":{"type":"string"},"start_time":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":8}},"required":["event_space","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Parkline Pavilion
+AED Overview:
+- Units: 2; Security placement and retrieval required; pre-use briefing.
+- Scope: On-property only; max 8 hours; $27/hour.
+- Security Base: Lobby level next to Business Center printers.
+Spaces: Pavilion Hall, Garden Room, Arcade Salon.
+
+user:
+Reserve AED for Pavilion Hall from 18:30 for 5 hours.
+
+assistant channel=analysis:
+Book via tool; confirm rate and supervision.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"Pavilion Hall","start_time":"18:30","duration_hours":5}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_pp_631","hourly_rate":27,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+AED standby confirmed for Pavilion Hall 18:30 for 5 hours (aed_pp_631). Security will place and brief; rate is $27/hour and units remain on property.
+
+user:
+The Business Center printers came in handy.
+
+assistant channel=final:
+Security is based next to the Business Center on the lobby level.
+
+user:
+Can you certify our staff on AED use tonight?
+
+assistant channel=analysis:
+No certification service in system or tools; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood about certification. Checking available options.
+

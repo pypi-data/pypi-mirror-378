@@ -1,0 +1,55 @@
+"""
+Corporate guest asks to ensure the restaurant reservation is under their invoice name; confirm booking.
+
+ROLES: user (corporate traveler), assistant (concierge placing booking using partner; naming per request)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"search_restaurant_availability","description":"Search availability","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","party_size","date","time"]},"strict":true},
+  {"name":"create_restaurant_booking","description":"Create booking","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","guest_name","party_size","date","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Summit Gate Zurich (SGZH-61)
+Address: Bahnhofstrasse 75, 8001 Zürich, Switzerland
+Concierge 08:00–22:00; Front Desk 24/7; Partner: OpenDine (partner_id ODN-905)
+Nearby: "Zürisee Terrace" (Swiss), "Trattoria Ponte" (Italian)
+Only services listed are available.
+
+user:
+Please book for 2 at 7:15 PM under "AlphaCorp Consulting". Room 2210.
+
+assistant channel=analysis:
+Search 19:15 for 2 via ODN-905; then book using the requested name as guest_name.
+
+assistant channel=commentary to=tool.search_restaurant_availability:
+{"partner_id":"ODN-905","party_size":2,"date":"2025-08-29","time":"19:15"}
+
+tool.search_restaurant_availability channel=commentary to=assistant:
+{"available":true,"options":[{"restaurant":"Zürisee Terrace","time":"19:15"}]}
+
+assistant channel=commentary to=tool.create_restaurant_booking:
+{"partner_id":"ODN-905","guest_name":"AlphaCorp Consulting","party_size":2,"date":"2025-08-29","time":"19:15"}
+
+tool.create_restaurant_booking channel=commentary to=assistant:
+{"reservation_id":"ODN-RES-8815","restaurant":"Zürisee Terrace","status":"confirmed"}
+
+assistant channel=final:
+Your table at 7:15 PM is confirmed at Zürisee Terrace under reservation ODN-RES-8815 with the name AlphaCorp Consulting.
+
+user:
+What are concierge hours?
+
+assistant channel=final:
+08:00 to 22:00.
+
+user:
+Could you provide the restaurant’s master service agreement?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

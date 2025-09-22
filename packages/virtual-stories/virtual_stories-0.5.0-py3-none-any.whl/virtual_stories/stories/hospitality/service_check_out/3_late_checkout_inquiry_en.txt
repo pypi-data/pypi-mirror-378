@@ -1,0 +1,51 @@
+"""
+Guest requests checkout and asks about late checkout; include small talk, confirm policies from system, and an out-of-scope prior-invoice change.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"calculate_folio","description":"Return current folio summary for a reservation before checkout.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Willow Court Hotel — Front Office
+Address: 14 Linden Ave, Nashville, TN 37203, USA
+Standard checkout: 11:00
+Late checkout: Based on availability; fees may apply
+Express checkout: Drop keys at Concierge podium
+Wi‑Fi: SSID "WillowCourt-Guest"; 5 devices per room
+Parking: Self‑parking P2; height limit 2.0 m
+Gym: 24/7 with keycard
+Payment: USD; accepts major cards
+Accessibility: Step‑free route via South Entrance
+
+user:
+Check me out for WC-99812, and can I do late checkout?
+
+assistant channel=analysis:
+Return folio; restate checkout times/policy from system.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"WC-99812"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 520","taxes":"USD 46.80","incidentals":"USD 18","total":"USD 584.80"}
+
+assistant channel=final:
+Your total is USD 584.80 (room USD 520, taxes USD 46.80, incidentals USD 18). Standard checkout is 11:00; late checkout is subject to availability and may incur fees.
+
+user:
+Thanks—nice folks here.
+
+assistant channel=final:
+Appreciate it—happy to help.
+
+user:
+Can you change the company name on last month’s invoice?
+
+assistant channel=final:
+[ATTENTION] Editing prior invoices isn’t supported in these resources. Reviewing.

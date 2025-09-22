@@ -1,0 +1,58 @@
+"""
+Guest specifically asks for black velvet non-slip hangers; confirms hours and casual chat.
+
+ROLES: user (guest in room 617 requesting black velvet hangers), assistant (concierge coordinating amenity delivery and confirming hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check stock","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel= Arcade & Finch — Garden Tower
+Room= 617 (Deluxe Twin)
+Amenity= Non-slip hangers (black velvet) available; cap 10/night
+Window= 06:30–22:30 normal; 22:30–00:30 urgent
+Ext= 0 | 7760 | 7761
+SLA floors 5–8= 8–14 minutes
+Pantry= GT-6 service closet; use Service Lift S1
+
+user:
+Could I get 5 black velvet hangers to 617?
+
+assistant channel=analysis:
+Check availability for 5 non-slip hangers (black velvet); then request normal delivery to 617.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"non-slip hanger (black velvet)","quantity":5}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"non-slip hanger (black velvet)","available":true,"in_stock":120}
+
+assistant channel=analysis:
+Schedule normal delivery with a pantry note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"617","amenity_name":"non-slip hanger (black velvet)","quantity":5,"priority":"normal","note":"Dispatch from GT-6 pantry via S1"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HNG-617-9413","eta_minutes":9}
+
+assistant channel=final:
+Confirmed—5 black velvet hangers are scheduled for room 617 with an ETA of about 9 minutes.
+
+user:
+Appreciate it. Do you close service early tonight?
+
+assistant channel=final:
+Normal service runs until 22:30, with urgent coverage 22:30–00:30.
+
+user:
+Are these recycled-fiber frames?
+
+assistant channel=final:
+[ATTENTION] Examining the possibilities.

@@ -1,0 +1,71 @@
+"""
+Late-night guest requests a spare; assistant verifies identity, issues spare for pickup, and clarifies 24/7 desk; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 2008 requesting spare after midnight), assistant (night auditor issuing spare after verification)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_guest_identity","description":"Verify guest identity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"last_name":{"type":"string"},"id_last4":{"type":"string"}},"required":["room_number","last_name","id_last4"]}},
+  {"name":"issue_spare_key","description":"Issue spare key (front desk pickup only)","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pickup_location":{"type":"string","enum":["front_desk"]}},"required":["room_number","pickup_location"]}},
+  {"name":"log_lost_key","description":"Log key issuance","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"note":{"type":"string"}},"required":["room_number","note"]}}
+]
+```
+"""
+
+system:
+Hotel: Airport Link Hotel — Terminal Annex
+Front desk: 24 hours
+Room 2008: Runway View King
+Spare key policy:
+- Verify last name + ID last four
+- Pickup location: front_desk only
+- Limits: up to 2 spares; auto-deactivate at 00:00
+Notes: Annex elevator A1 to 20th floor; skybridge access 05:00–00:00
+Contacts: Front Desk 0
+
+user:
+Hi, I’m Rivera in 2008, ID ends 4410—can I get a spare key?
+
+assistant channel=analysis:
+Verify identity then issue spare for front desk pickup; log event.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"2008","last_name":"Rivera","id_last4":"4410"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"2008"}
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"2008","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-2008-1201","pickup_location":"front_desk"}
+
+assistant channel=commentary to=tool.log_lost_key:
+{"room_number":"2008","note":"spare key issued SP-2008-1201 at night"}
+
+tool.log_lost_key channel=commentary to=assistant:
+{"logged":true}
+
+assistant channel=final:
+Thanks, verification complete. Your spare (SP-2008-1201) is ready at the front desk—open 24 hours.
+
+user:
+Is the skybridge open right now?
+
+assistant channel=final:
+Skybridge access runs 05:00–00:00.
+
+user:
+Quiet night?
+
+assistant channel=final:
+Pretty quiet—thanks for asking.
+
+user:
+Could security escort the key to my door?
+
+assistant channel=final:
+[ATTENTION] Door delivery isn’t permitted under the provided policy.
+

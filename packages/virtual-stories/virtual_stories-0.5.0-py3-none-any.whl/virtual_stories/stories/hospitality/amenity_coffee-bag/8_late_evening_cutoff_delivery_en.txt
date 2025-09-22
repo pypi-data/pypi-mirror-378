@@ -1,0 +1,51 @@
+"""
+Guest tries to order coffee near delivery cutoff; confirm timing and arrange if within window.
+
+ROLES: user (late-night buyer), assistant (boutique)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_coffee_inventory","description":"List coffees","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["all"]}},"required":[]},"strict":true},
+  {"name":"place_boutique_order","description":"Place delivery order","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"qty":{"type":"integer"}},"required":["sku","qty"],"additionalProperties":false}},"delivery_option":{"type":"string","enum":["room_delivery"]}},"required":["room_number","items","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Sunstone Gallery Hotel (hotel_id: sgh_phoenix)
+Address: 250 Desert Vista Rd, Phoenix, AZ 85004
+Timezone: America/Phoenix
+
+Boutique hours 10:00–20:00; room delivery until 21:00.
+
+user:
+It’s 20:45—can I still get a House Balanced bag to room 612 tonight?
+
+assistant channel=analysis:
+Within system: delivery allowed until 21:00. Arrange order.
+
+assistant channel=commentary to=tool.get_coffee_inventory:
+{"category":"all"}
+
+tool.get_coffee_inventory channel=commentary to=assistant:
+{"products":[{"sku":"COF_HOUSE_BALANCED_12","name":"House Balanced 12oz","price":21}]}
+
+assistant channel=commentary to=tool.place_boutique_order:
+{"room_number":"612","items":[{"sku":"COF_HOUSE_BALANCED_12","qty":1}],"delivery_option":"room_delivery"}
+
+tool.place_boutique_order channel=commentary to=assistant:
+{"order_id":"SGH-COF-640","total_amount":21,"delivery_eta_minutes":14}
+
+assistant channel=final:
+Yes—you’re just within the window. Order SGH-COF-640 is set; arrival in about 14 minutes.
+
+user:
+Do you sell grinders too?
+
+assistant channel=analysis:
+Not defined; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on grinder availability.
+

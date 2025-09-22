@@ -1,0 +1,70 @@
+"""
+Guest under polar night conditions requests long-lasting body lotion; asks about immediate delivery.
+
+ROLES: user (research visitor), assistant (spa amenity staff)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_skincare_inventory","description":"Long-wear hydration body lotions","parameters":{"type":"object","properties":{"product_type":{"type":"string","enum":["body_lotion"]},"skin_type":{"type":"string","enum":["dry","all"]}},"required":["product_type"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_spa_amenities","description":"Immediate delivery","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"product_id":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_time":{"type":"string","enum":["immediate","evening_turndown","morning_refresh"]}},"required":["room_number","products"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Aurora Fjord Research Lodge (hotel_id: afrl_tromso_01)
+Address: Strandvegen 50, Tromsø 9007, Norway
+Timezone: Europe/Oslo
+
+Environment & Service:
+- Very low daylight; indoor humidity low in winter
+- Delivery: immediate available 08:00–22:00
+- Sauna cabins by appointment; no onsen
+- Midnight snack station in lobby
+- Polar fleece robes in-room
+
+Hydration Picks (table):
+| ID | Name |
+| FJORD_LOCK | Fjord Moisture Lock Lotion |
+| NIGHTSEAL | Night-Seal Body Balm |
+
+user:
+Hi—do you have a long-lasting body lotion? Can you deliver immediately to 305?
+
+assistant channel=analysis:
+Confirm immediate delivery window; list options; schedule.
+
+assistant channel=final:
+Yes—immediate delivery is available from 08:00–22:00. Our long-wear options include Fjord Moisture Lock and Night-Seal Body Balm.
+
+assistant channel=commentary to=tool.get_skincare_inventory:
+{"product_type":"body_lotion","skin_type":"dry"}
+
+tool.get_skincare_inventory channel=commentary to=assistant:
+{"available_products":[{"id":"FJORD_LOCK","name":"Fjord Moisture Lock Lotion","description":"Long-wear hydration"}]}
+
+assistant channel=commentary to=tool.deliver_spa_amenities:
+{"room_number":"305","products":[{"product_id":"FJORD_LOCK","quantity":1}],"delivery_time":"immediate"}
+
+tool.deliver_spa_amenities channel=commentary to=assistant:
+{"ticket_id":"AFRL-305-IMM-12","scheduled":"immediate","items":["Fjord Moisture Lock x1"],"charge":"bill_to_room"}
+
+assistant channel=final:
+Done—Fjord Moisture Lock is heading up now (AFRL-305-IMM-12).
+
+user:
+Thank you! The polar fleece robe is cozy.
+
+assistant channel=final:
+We include them for extra warmth during polar nights.
+
+user:
+Any aurora forecasts for tonight?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the latest aurora forecast with the concierge.
+

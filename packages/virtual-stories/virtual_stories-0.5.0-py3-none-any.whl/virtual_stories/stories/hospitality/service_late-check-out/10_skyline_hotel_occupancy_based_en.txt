@@ -1,0 +1,68 @@
+"""
+Occupancy-based late checkout; assistant runs tool and returns tool result; then answers a system detail. Include small talk and an [ATTENTION] request beyond system.
+
+ROLES: user (guest), assistant (Skyline Hotel front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_late_checkout",
+    "description": "Request a late checkout within policy and return approval and fee.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "requested_time": {"type": "string", "description": "24h time, e.g., 14:00"}
+      },
+      "required": ["room_number", "requested_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Skyline Hotel — Seattle
+Checkout: 12:00
+Late Window: up to 15:00 (subject to occupancy)
+Fees: $30 (≤13:00), $60 (≤14:00), $90 (≤15:00)
+Wi‑Fi: 300 Mbps
+Parking: Valet $50/night
+Quiet: 22:00–07:00
+
+user:
+Room 1510—can I set checkout to 13:20?
+
+assistant channel=analysis:
+Within ≤14:00 tier: $60 if approved.
+
+assistant channel=commentary to=tool.request_late_checkout:
+{"room_number":"1510","requested_time":"13:20"}
+
+tool.request_late_checkout channel=commentary to=assistant:
+{"approved":true,"fee":60,"currency":"USD","note":"Key valid until 14:00"}
+
+assistant channel=final:
+Approved—late checkout for room 1510 is 13:20 with a $60 USD fee.
+
+user:
+Thanks—how’s everything on your side?
+
+assistant channel=final:
+Appreciate you staying at Skyline.
+
+user:
+What are quiet hours?
+
+assistant channel=final:
+Quiet hours are 22:00–07:00.
+
+user:
+Could you comp the valet fee?
+
+assistant channel=final:
+[ATTENTION] Complimentary valet isn’t covered by the provided details. Processing your request.
+

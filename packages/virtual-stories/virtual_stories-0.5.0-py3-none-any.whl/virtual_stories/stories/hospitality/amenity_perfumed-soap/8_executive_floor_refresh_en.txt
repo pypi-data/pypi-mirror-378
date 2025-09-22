@@ -1,0 +1,61 @@
+"""
+Offer executive floor soap refresh with green tea scent and quick drop.
+
+ROLES: user (executive floor guest), assistant (executive lounge coordinator fulfilling amenity refresh)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"exec_check","description":"Check executive floor amenity stock.","parameters":{"type":"object","additionalProperties":false,"properties":{"scent":{"type":"string"}},"required":[]},"strict":true},
+  {"name":"exec_deliver","description":"Deliver amenity to executive room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"amenity":{"type":"string"}},"required":["room","amenity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Capital View Tower (hotel_id: cvt_wdc_03)
+Address: 1000 H St NW, Washington, DC 20001
+Timezone: America/New_York
+Executive Lounge: 07:00–22:00; amenity delivery 10–16 min
+Executive Amenity: green_tea perfumed soap
+Ext: x7700
+
+user:
+Green tea soap to 2124, please.
+
+assistant channel=analysis:
+Check executive amenity and deliver to 2124.
+
+assistant channel=commentary to=tool.exec_check:
+{"scent":"green_tea"}
+
+tool.exec_check channel=commentary to=assistant:
+{"ok":true,"item":"soap_green_tea"}
+
+assistant channel=commentary to=tool.exec_deliver:
+{"room":"2124","amenity":"soap_green_tea"}
+
+tool.exec_deliver channel=commentary to=assistant:
+{"queued":true,"eta":12}
+
+assistant channel=final:
+All set—green tea soap is queued for 2124, ETA about 12 minutes.
+
+user:
+Is the Executive Lounge still open?
+
+assistant channel=analysis:
+Use system hours 07:00–22:00.
+
+assistant channel=final:
+Yes—it operates 07:00–22:00.
+
+user:
+Could you arrange a Capitol dome tour after hours?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

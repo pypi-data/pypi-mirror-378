@@ -1,0 +1,90 @@
+"""
+Hiker guest requests blister care supplies; confirm availability at front desk and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (hiker), assistant (concierge with medical supply access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"first_aid_check","description":"Check blister care supplies in inventory (bandages, moleskin, antiseptic).",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"location":{"type":"string","enum":["front_desk","trail_kiosk","spa"]},
+                  "item_type":{"type":"string","enum":["blister","complete_kit"]}},
+     "required":["location","item_type"]},"strict":true},
+  {"name":"medical_deliver","description":"Deliver medical supplies to a room with priority.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},
+                  "priority":{"type":"string","enum":["standard","urgent"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Trailhead Lodge & Spa (hotel_id: TLS_jhm_02)
+Address: 12 Switchback Rd, Jackson Hole, WY 83001 | TZ: America/Denver
+
+Medical Stations:
+- Front desk: complete kits + blister care (moleskin, hydrocolloid, antiseptic wipes)
+- Trail kiosk: small blister packs (day use)
+- Spa: ice packs and elastic wraps
+
+Protocols:
+1) Minor injuries: supply delivery and optional log
+2) Serious injuries: call 911
+3) Quiet hours: 22:00–06:00
+
+Extras:
+Boot dryer room | Trail maps wall | Hot cocoa in lobby
+
+user:
+Hi—do you have blister supplies? Room 416; long hike today.
+
+assistant channel=analysis:
+Check blister care at front desk, then deliver urgently.
+
+assistant channel=commentary to=tool.first_aid_check:
+{"location":"front_desk","item_type":"blister"}
+
+tool.first_aid_check channel=commentary to=assistant:
+{"available":true,"items":["moleskin","hydrocolloid bandages","antiseptic wipes","gauze"],"kit_id":"fd_blister_07"}
+
+assistant channel=analysis:
+Proceed to deliver items to room 416 with urgent priority.
+
+assistant channel=commentary to=tool.medical_deliver:
+{"room_number":"416","items":["moleskin","hydrocolloid bandages","antiseptic wipes"],"priority":"urgent"}
+
+tool.medical_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":8,"runner":"bell-2","ticket":"TLS-416-BL"}
+
+assistant channel=final:
+Yes—we’ve got blister care kits. Moleskin, hydrocolloid bandages, and antiseptic wipes are en route to room 416. ETA ~8 minutes (bell-2, ticket TLS-416-BL).
+
+user:
+Do you also provide trail maps?
+
+assistant channel=analysis:
+Answer from Extras.
+
+assistant channel=final:
+Yes—there’s a trail maps wall in the lobby; I can bring a print with your delivery.
+
+user:
+The hot cocoa after the hike was perfect.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+It’s our favorite post-trail warm-up at the lodge.
+
+user:
+Can you book a backcountry guide for sunrise?
+
+assistant channel=analysis:
+Out of scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for a sunrise backcountry guide.
+

@@ -1,0 +1,108 @@
+"""
+Large family requests multiple tooth mugs for their extended stay, includes chitchat about hotel amenities and an ATTENTION case for special dietary restrictions.
+
+ROLES: user (large family requesting multiple tooth mugs for extended stay), assistant (extended stay coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_tooth_mug_options",
+    "description": "Check available tooth mug materials and stock.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "material": { "type": "string", "enum": ["ceramic", "glass"] }
+      },
+      "required": ["material"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_tooth_mug",
+    "description": "Deliver a tooth mug to the specified room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "material": { "type": "string" }
+      },
+      "required": ["room_number", "material"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Extended Stay Grand Hotel (hotel_id: esgh_chi_03)
+Address: 3456 Lake Shore Drive, Chicago, IL 60611
+Timezone: America/Chicago
+
+Bathroom Amenity Notes:
+- Tooth mugs: ceramic (durable white with hotel logo) and glass (tempered safety glass)
+- Extended stay guests receive bulk amenity packages
+- Weekly amenity refresh service available for long-term stays
+
+Design Details:
+- Spacious bathroom layouts with double vanities
+- Full-size bathroom storage cabinets for extended stays
+- In-room laundry facilities with detergent provided
+- Kitchenette with full-size refrigerator and microwave
+
+user:
+Hi there! We're the Johnson family in the Extended Stay Suite 1505. We're here for three weeks and need six tooth mugs - four ceramic ones for the adults and two glass ones for the teenagers. The kids are excited about having their own space!
+
+assistant channel=analysis:
+Large family in Extended Stay Suite 1505 requesting 6 tooth mugs - 4 ceramic for adults, 2 glass for teenagers. Check both materials and deliver to room.
+
+assistant channel=commentary to=tool.check_tooth_mug_options:
+{"material":"ceramic"}
+
+tool.check_tooth_mug_options channel=commentary to=assistant:
+{"available":true,"finish":"durable white with hotel logo","stock":25}
+
+assistant channel=commentary to=tool.check_tooth_mug_options:
+{"material":"glass"}
+
+tool.check_tooth_mug_options channel=commentary to=assistant:
+{"available":true,"finish":"tempered safety glass","stock":20}
+
+assistant channel=analysis:
+Both materials available. Deliver 4 ceramic mugs and 2 glass mugs to Extended Stay Suite 1505.
+
+assistant channel=commentary to=tool.deliver_tooth_mug:
+{"room_number":"1505","material":"ceramic"}
+
+tool.deliver_tooth_mug channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":10,"runner":"extended_stay_services","quantity":4}
+
+assistant channel=commentary to=tool.deliver_tooth_mug:
+{"room_number":"1505","material":"glass"}
+
+tool.deliver_tooth_mug channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":10,"runner":"extended_stay_services","quantity":2}
+
+assistant channel=final:
+Excellent! Four durable ceramic tooth mugs with our hotel logo and two tempered glass mugs for the teenagers are being delivered to your Extended Stay Suite 1505. They should arrive within 10 minutes.
+
+user:
+The double vanities are perfect for our large family! Do you offer any special services for extended stay guests?
+
+assistant channel=analysis:
+Family asking about extended stay services. Acknowledge based on system details about weekly amenity refresh service and extended stay amenities.
+
+assistant channel=final:
+Absolutely! We offer weekly amenity refresh service for extended stay guests, and your suite includes full-size bathroom storage cabinets and in-room laundry facilities with detergent provided. The kitchenette with full-size refrigerator and microwave makes it feel like home.
+
+user:
+One of our teenagers has celiac disease and needs to ensure all bathroom amenities are gluten-free. Could you verify the tooth mugs and any other bathroom products are safe?
+
+assistant channel=analysis:
+Family asking about gluten-free verification for bathroom amenities due to celiac disease. This detailed dietary restriction information goes beyond available system knowledge.
+
+assistant channel=final:
+[ATTENTION] I understand your gluten-free requirements for celiac disease. Reviewing available resources.

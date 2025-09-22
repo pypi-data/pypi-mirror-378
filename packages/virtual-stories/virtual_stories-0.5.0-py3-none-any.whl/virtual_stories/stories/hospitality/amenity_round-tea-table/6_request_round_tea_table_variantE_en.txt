@@ -1,0 +1,73 @@
+"""
+Guest requests 60 cm walnut round tea table by sofa; verify and schedule; include casual remark and an [ATTENTION] question.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_furniture_inventory","description":"Check stock for round tea tables.","parameters":{"type":"object","properties":{"item_code":{"type":"string","enum":["round_tea_table"]},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]}},"required":["item_code","size_cm","finish"],"additionalProperties":false},"strict":true},
+  {"name":"request_in_room_setup","description":"Deliver and place furniture.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]},"placement":{"type":"string","enum":["near_window","center","sofa_side"]},"surface_protectors":{"type":"boolean"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","item_code","size_cm","finish","placement","surface_protectors","priority"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cedarline Urban Retreat (hotel_id: cur_sea_09)
+Address: 210 Pine Terrace, Seattle, WA 98101
+Desk hours: 24h; furniture runs 08:00–22:00; ETA 10–16 minutes
+
+Round tea table inventory
+60/walnut(5), 60/birch(4), 80/walnut(1), 80/birch(2)
+Placement: sofa_side recommended for duplex lofts
+
+Operations quicklist
+• Check-in 15:00 / Check-out 12:00
+• Ice machines: floors 7 and 15
+• Water refill: lobby bar tap
+• Bike storage: level B2
+• Fire drills: first Tuesday 11:00
+• Quiet hours 22:00–07:00
+
+user:
+Could you place a 60 cm walnut tea table beside the sofa in 1521?
+
+assistant channel=analysis:
+Check 60/walnut, then request sofa_side placement to 1521 with protectors.
+
+assistant channel=commentary to=tool.check_furniture_inventory:
+{"item_code":"round_tea_table","size_cm":60,"finish":"walnut"}
+
+tool.check_furniture_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":5,"item_code":"round_tea_table","size_cm":60,"finish":"walnut"}
+
+assistant channel=analysis:
+Create setup request.
+
+assistant channel=commentary to=tool.request_in_room_setup:
+{"room_number":"1521","item_code":"round_tea_table","size_cm":60,"finish":"walnut","placement":"sofa_side","surface_protectors":true,"priority":"normal"}
+
+tool.request_in_room_setup channel=commentary to=assistant:
+{"ticket_id":"FN-1521-3388","eta_minutes":13}
+
+assistant channel=final:
+Scheduled—60 cm walnut tea table to the sofa side in 1521. Ticket FN-1521-3388, ETA around 13 minutes.
+
+user:
+Is the lobby bar tap for water only?
+
+assistant channel=analysis:
+Answer using operations quicklist.
+
+assistant channel=final:
+Yes—the lobby bar tap is for water refills.
+
+user:
+Can you waive tomorrow’s late checkout fee?
+
+assistant channel=analysis:
+Fee policy isn’t in system; flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking late checkout options. Following up on the fee.
+

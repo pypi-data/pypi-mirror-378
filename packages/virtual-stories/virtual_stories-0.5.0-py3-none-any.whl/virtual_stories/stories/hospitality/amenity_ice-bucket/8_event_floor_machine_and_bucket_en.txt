@@ -1,0 +1,52 @@
+"""
+Event-floor guest asks for ice machine location and a replacement bucket; include chat and [ATTENTION].
+
+ROLES: user (guest 510E), assistant (event level concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"get_in_room_item_location","description":"Standard location for item.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver amenity item.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Civic Center Hotel (hotel_id: cch_sfo)
+Address: 50 Grove St, San Francisco, CA 94102
+Timezone: America/Los_Angeles
+Event Level E:
+- Rooms labeled with E suffix
+- Ice machine: E foyer near coat check
+- Buckets standard placement: credenza cabinet
+Service: 09:00–22:00; ETA 10–18 min
+Contact: Events Concierge x88
+
+user:
+I’m in 510E. Where’s the ice machine on this floor, and can I get a new bucket?
+
+assistant channel=analysis:
+Provide floor machine location; arrange normal replacement.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"510E","amenity_name":"ice bucket","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ok":true,"eta_minutes":14,"ref":"CCH-ICE-510E-1"}
+
+assistant channel=final:
+The ice machine is in the Event foyer near the coat check. I’ve also arranged a replacement bucket to 510E—ETA about 14 minutes. Ref CCH-ICE-510E-1.
+
+user:
+The auditorium lighting looked dramatic earlier.
+
+assistant channel=final:
+It sets a great tone for evening sessions.
+
+user:
+Are the event buckets different from guest room ones?
+
+assistant channel=final:
+[ATTENTION] I’ll check if there’s a difference in models.
+

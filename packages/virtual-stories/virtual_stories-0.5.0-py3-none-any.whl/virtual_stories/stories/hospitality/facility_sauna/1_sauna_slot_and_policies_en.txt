@@ -1,0 +1,87 @@
+"""
+Guest asks about sauna hours, books a slot, and checks amenities.
+
+ROLES: user (guest planning an evening sauna), assistant (wellness desk agent managing heat facilities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_sauna_hours","description":"Get sauna open/close times.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"date":{"type":"string","format":"date"}},"required":["hotel_id","date"]},"strict":true},
+  {"name":"reserve_sauna_slot","description":"Reserve a 30-minute sauna slot.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"start_time":{"type":"string","format":"date-time"},"guests":{"type":"integer","minimum":1,"maximum":2}},"required":["hotel_id","start_time","guests"]},"strict":true},
+  {"name":"request_sauna_accessory","description":"Request sauna accessories (e.g., eucalyptus towel).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string","enum":["eucalyptus_towel","water_carafe","cooling_gel"]}},"required":["hotel_id","item"]},"strict":true}
+]
+```
+"""
+
+system:
+[Wellness Annex | Hotel: Northern Pines Lodge | hotel_id: nplodge_den]
+Address: 214 Summit Way, Denver, CO 80202
+Timezone: America/Denver
+Facilities:
+  Sauna (cedar, dry heat), capacity 2, 30-minute slots,
+  Cooldown lounge (iced towels on request), filtered water at station.
+Rules: Ages 16+; hydrate before/after; max 60 minutes per day.
+
+user:
+Is the sauna open tonight? I'd like a slot around 8:00 PM for one.
+
+assistant channel=analysis:
+Check hours for today; if open until after 20:30, reserve 20:00.
+
+assistant channel=commentary to=tool.check_sauna_hours:
+{"hotel_id":"nplodge_den","date":"2025-08-29"}
+
+tool.check_sauna_hours channel=commentary to=assistant:
+{"open":true,"hours":"16:00-22:00"}
+
+assistant channel=commentary to=tool.reserve_sauna_slot:
+{"hotel_id":"nplodge_den","start_time":"2025-08-29T20:00:00","guests":1}
+
+tool.reserve_sauna_slot channel=commentary to=assistant:
+{"status":"reserved","slot_id":"SAUNA-2000-2030"}
+
+assistant channel=analysis:
+Confirm reservation and offer accessory.
+
+assistant channel=final:
+The sauna is open 4:00–10:00 PM. I’ve reserved 8:00–8:30 PM for you (SAUNA-2000-2030). Would you like an eucalyptus towel readied?
+
+user:
+Yes please—could you also place a water carafe in the cooldown lounge?
+
+assistant channel=analysis:
+Request accessory items.
+
+assistant channel=commentary to=tool.request_sauna_accessory:
+{"hotel_id":"nplodge_den","item":"eucalyptus_towel"}
+
+tool.request_sauna_accessory channel=commentary to=assistant:
+{"status":"queued"}
+
+assistant channel=commentary to=tool.request_sauna_accessory:
+{"hotel_id":"nplodge_den","item":"water_carafe"}
+
+tool.request_sauna_accessory channel=commentary to=assistant:
+{"status":"queued"}
+
+assistant channel=final:
+Eucalyptus towel and water carafe are queued for your session. Enjoy the heat and the cooldown lounge.
+
+user:
+Nice vibe here—love the cedar scent.
+
+assistant channel=analysis:
+Friendly acknowledgment without tools.
+
+assistant channel=final:
+We’re glad you’re enjoying it—cedar does set a calming tone.
+
+user:
+Is the cedar sourced sustainably from specific forests?
+
+assistant channel=analysis:
+No tool or system detail on sourcing provenance—use the acknowledgment flag.
+
+assistant channel=final:
+[ATTENTION] Appreciate the thoughtful question on sourcing. Looking up the latest information.
+

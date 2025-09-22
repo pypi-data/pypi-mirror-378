@@ -1,0 +1,70 @@
+"""
+Guest requests left/right split firmness changes on a smart bed.
+
+ROLES: user (guest wanting asymmetric firmness), assistant (sleep tech concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_bed_configuration","description":"Check smart bed zones and current firmness.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"adjust_mattress_firmness","description":"Adjust firmness in specified zone.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"firmness_level":{"type":"integer","minimum":1,"maximum":10},"zone":{"type":"string","enum":["left_side","right_side","head_section","foot_section","full_bed"]}},"required":["room_number","firmness_level","zone"]},"strict":true}
+]
+```
+"""
+
+system:
+Skyline Panoramic Hotel (hotel_id: sph_den_sky)
+Address: 1401 Broadway, Denver, CO 80203
+Timezone: America/Denver
+
+Smart Bed Profile:
+1) King beds allow left/right zone control levels 1–10.
+2) Left/right changes apply within 3–5 minutes; minor settling is normal.
+3) Recommended couple settings: 3–4 soft, 6–7 firm.
+4) Pillow menu available upon request for neck alignment.
+5) Quiet adjustments can be made during sleep without audible pumps.
+
+user:
+Hey, can you make the left side of bed in 340 softer and the right side a tad firmer?
+
+assistant channel=analysis:
+Check zones; then set left to 3 and right to 7 for contrast.
+
+assistant channel=commentary to=tool.check_bed_configuration:
+{"room_number":"340"}
+
+tool.check_bed_configuration channel=commentary to=assistant:
+{"room_number":"340","bed_type":"king_smart","zones":["left_side","right_side"],"current_left":5,"current_right":5}
+
+assistant channel=commentary to=tool.adjust_mattress_firmness:
+{"room_number":"340","firmness_level":3,"zone":"left_side"}
+
+tool.adjust_mattress_firmness channel=commentary to=assistant:
+{"adjustment_applied":true,"zone":"left_side","new_level":3}
+
+assistant channel=commentary to=tool.adjust_mattress_firmness:
+{"room_number":"340","firmness_level":7,"zone":"right_side"}
+
+tool.adjust_mattress_firmness channel=commentary to=assistant:
+{"adjustment_applied":true,"zone":"right_side","new_level":7}
+
+assistant channel=final:
+Done—left is set to 3, right to 7. They’ll settle in a few minutes for a balanced feel.
+
+user:
+Nice, thanks! The mountain silhouette at dusk looked amazing.
+
+assistant channel=analysis:
+Chit-chat response.
+
+assistant channel=final:
+Sounds like a lovely evening view.
+
+user:
+Can you also add aromatherapy to the room?
+
+assistant channel=analysis:
+Not in system scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check if aromatherapy can be arranged.

@@ -1,0 +1,65 @@
+"""
+Suite guest requests multiple bowls for a small gathering; asks about maximum loan policy.
+
+ROLES: user (suite guest), assistant (VIP services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_inventory","description":"Check porcelain and bamboo","parameters":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["item_code"],"additionalProperties":false},"strict":true},
+  {"name":"request_amenity_delivery","description":"Schedule multi-item delivery","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"quantity_map":{"type":"object","additionalProperties":{"type":"integer"}},"priority":{"type":"string","enum":["normal","express"]},"sanitized":{"type":"boolean"}},"required":["room_number","items"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Grand Arcade Tower (hotel_id: gat_dal_01)
+Address: 1717 Elm St, Dallas, TX 75201
+Timezone: America/Chicago
+
+VIP Amenity Policy:
+- Max loan per room: 8 bowls without deposit
+- Delivery: 10–20 minutes
+- Options: porcelain 16 oz, bamboo 14 oz
+- Sanitization: available on request
+- Event trays available for loan
+
+user:
+Hi—could I borrow 6 bowls to 3102 for a small snack spread? What’s the max loan without a deposit?
+
+assistant channel=analysis:
+Answer policy from system; check porcelain stock; create delivery.
+
+assistant channel=final:
+Up to 8 bowls can be loaned without a deposit. I’ll check porcelain availability for six.
+
+assistant channel=commentary to=tool.check_amenity_inventory:
+{"item_code":"bowl_porcelain","quantity":6}
+
+tool.check_amenity_inventory channel=commentary to=assistant:
+{"item_code":"bowl_porcelain","on_hand":22,"can_fulfill":true,"notes":"microwave_safe"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"3102","items":["bowl_porcelain"],"quantity_map":{"bowl_porcelain":6},"priority":"normal","sanitized":true}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ticket_id":"GAT-3102-882","estimated_minutes":13,"items":[{"code":"bowl_porcelain","qty":6}],"sanitized":"re_sanitized"}
+
+assistant channel=final:
+Confirmed—six porcelain bowls are on the way (GAT-3102-882), ETA ~13 minutes.
+
+user:
+Thanks! Event trays sound useful.
+
+assistant channel=final:
+We can loan trays as well—just say the word.
+
+user:
+Any jazz bars you’d recommend nearby?
+
+assistant channel=analysis:
+Out of scope—flag attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check with the concierge for jazz spots.
+

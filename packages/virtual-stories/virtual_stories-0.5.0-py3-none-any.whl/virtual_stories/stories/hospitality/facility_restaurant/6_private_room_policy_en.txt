@@ -1,0 +1,66 @@
+"""
+Party asks about Private Dining Room (PDR) availability, deposit, and policies.
+
+ROLES: user (organizer seeking a private room), assistant (restaurant concierge sharing PDR availability and terms)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_pdr_availability","description":"Check PDR availability for Azure Quay.","parameters":{"type":"object","properties":{"date":{"type":"string","format":"date"},"time":{"type":"string","pattern":"^([01]?\n?\n?\n?\n?\d|2[0-3]):[0-5]\d$"},"party_size":{"type":"integer","minimum":8,"maximum":14}},"required":["date","time","party_size"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Venue: Azure Quay — Private Dining Room (PDR)
+Capacity: 10–14 seated (one oval table)
+Minimum spend: $1,200 food & beverage (before tax/service)
+Deposit: $300 to confirm; applied to final bill
+Cancellation: 72‑hour notice to avoid deposit forfeiture
+AV: 55" display with HDMI; in‑ceiling speaker (background only)
+Decor: Small floral arrangements allowed; no confetti, no open flames
+Accessibility: Step‑free; 36" doorway; adjacent ADA restroom
+Service: 20% service charge added
+
+user:
+Is the private room available this Saturday at 7 pm for 10?
+
+assistant channel=analysis:
+Use tool to check availability for 10 at 19:00; answer directly from tool.
+
+assistant channel=commentary to=tool.check_pdr_availability:
+{"date":"2025-08-30","time":"19:00","party_size":10}
+
+tool.check_pdr_availability channel=commentary to=assistant:
+{"available":true,"hold_until":"2025-08-28"}
+
+assistant channel=final:
+Yes—the PDR is available for 10 at 7:00 PM on Saturday, with a complimentary hold through 2025‑08‑28.
+
+user:
+Do you require a deposit?
+
+assistant channel=analysis:
+Answer from system: $300 deposit.
+
+assistant channel=final:
+We require a $300 deposit, which is applied to the final bill.
+
+user:
+Great, thanks.
+
+assistant channel=analysis:
+Offer a brief friendly note—no tools.
+
+assistant channel=final:
+Happy to help—let me know if you’d like to proceed.
+
+user:
+Can you waive the minimum spend for us?
+
+assistant channel=analysis:
+Policy changes not defined—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Your request about minimum spend is noted. Reviewing the policy.
+

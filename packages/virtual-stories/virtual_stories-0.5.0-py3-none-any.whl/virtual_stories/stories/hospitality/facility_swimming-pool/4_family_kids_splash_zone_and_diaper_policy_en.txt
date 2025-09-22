@@ -1,0 +1,85 @@
+"""
+Guest asks about kids splash zone hours, swim diaper policy, and requests a diaper.
+
+ROLES: user (parent with toddler), assistant (family pool host)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_splash_zone_hours","description":"Return hours and capacity for the kids splash zone.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"check_swim_diaper_policy","description":"Provide swim diaper requirements and on-site availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"request_swim_diaper","description":"Request a complimentary swim diaper for pickup.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"size":{"type":"string","enum":["S","M","L"]}},"required":["hotel_id","size"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Coral Bay Family Resort (hotel_id: coral_bay_hnl)
+Address: 77 Kalapaki Ave, Honolulu, HI 96815
+Timezone: Pacific/Honolulu
+Pool & Splash:
+  - Lagoon Pool 28 m freeform; depth 0.8–1.4 m; waterfall wall; shaded loungers
+  - Kids Splash Zone: jets + tipping bucket; padded deck; max depth 0.2 m
+  - Lifeguards: 09:00–17:00; first-aid at splash gate
+  - Family Cabanas: 4 units with fans and USB; book at Activity Desk
+  - Towels: RFID wristband check-out; return bins near gate
+Health & Hygiene:
+  • Swim diapers required for non-toilet-trained children
+  • Complimentary sizes S/M/L at Splash Hut while supplies last
+  • Rest breaks: 10 minutes each hour for water quality
+  • Rinse before entry; outdoor showers along palm path
+
+user:
+When is the splash zone open? My toddler needs a swim diaper—do you provide them?
+
+assistant channel=analysis:
+Get splash hours; confirm diaper policy; then offer a diaper size.
+
+assistant channel=commentary to=tool.get_splash_zone_hours:
+{"hotel_id":"coral_bay_hnl"}
+
+tool.get_splash_zone_hours channel=commentary to=assistant:
+{"hours":"09:00-17:00","capacity":35}
+
+assistant channel=commentary to=tool.check_swim_diaper_policy:
+{"hotel_id":"coral_bay_hnl"}
+
+tool.check_swim_diaper_policy channel=commentary to=assistant:
+{"required":true,"sizes":["S","M","L"],"pickup":"Splash Hut"}
+
+assistant channel=final:
+Splash Zone hours are 09:00–17:00 (capacity 35). Swim diapers are required; sizes S/M/L are complimentary at the Splash Hut.
+
+user:
+Great—can I pick up a size M?
+
+assistant channel=analysis:
+Queue a size M diaper for pickup.
+
+assistant channel=commentary to=tool.request_swim_diaper:
+{"hotel_id":"coral_bay_hnl","size":"M"}
+
+tool.request_swim_diaper channel=commentary to=assistant:
+{"status":"ready","pickup_location":"Splash Hut","hold_minutes":20}
+
+assistant channel=final:
+Ready at Splash Hut: size M swim diaper, held for 20 minutes.
+
+user:
+Do you allow inflatable arm floaties in the lagoon?
+
+assistant channel=analysis:
+No floatation policy not described—flag attention to avoid assumptions.
+
+assistant channel=final:
+[ATTENTION] I’ll confirm the flotation device policy and get back to you.
+
+user:
+The waterfall looks fun!
+
+assistant channel=analysis:
+Add chitchat acknowledgment.
+
+assistant channel=final:
+Kids love it—it’s gentle and great for photos.
+

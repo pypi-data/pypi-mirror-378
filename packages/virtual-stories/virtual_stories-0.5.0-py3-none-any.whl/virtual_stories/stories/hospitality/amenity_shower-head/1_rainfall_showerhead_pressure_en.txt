@@ -1,0 +1,138 @@
+"""
+Guest reports low water pressure and requests shower head adjustment or replacement.
+Provide maintenance assistance with premium shower systems and pressure optimization.
+
+ROLES: user (guest experiencing low shower pressure), assistant (engineering coordinator with plumbing system access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_water_pressure",
+    "description": "Check water pressure and flow rate for room fixtures.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string", "description": "Guest room number" },
+        "fixture_type": { "type": "string", "enum": ["shower", "sink", "bathtub", "all_fixtures"] },
+        "measurement_type": { "type": "string", "enum": ["pressure_psi", "flow_rate", "temperature"] }
+      },
+      "required": ["room_number", "fixture_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "adjust_shower_settings",
+    "description": "Adjust shower head settings and water flow parameters.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "shower_type": { "type": "string", "enum": ["rainfall", "handheld", "body_jets", "combination"] },
+        "pressure_setting": { "type": "string", "enum": ["gentle", "medium", "high", "massage"] },
+        "spray_pattern": { "type": "string", "enum": ["wide_rainfall", "focused_stream", "massage_pulse", "mist"] }
+      },
+      "required": ["room_number", "shower_type", "pressure_setting"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_maintenance",
+    "description": "Schedule maintenance or repair for room fixtures.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "issue_type": { "type": "string", "enum": ["low_pressure", "clogged_filter", "valve_adjustment", "showerhead_replacement"] },
+        "urgency": { "type": "string", "enum": ["routine", "same_day", "urgent", "emergency"] },
+        "description": { "type": "string" }
+      },
+      "required": ["room_number", "issue_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Cascade Mountain Lodge (hotel_id: cml_den_01)
+Address: 1750 Welton Street, Denver, CO 80202
+Timezone: America/Denver
+
+Shower Systems:
+- Premium rainfall shower heads with 8-inch diameter and brass construction
+- Adjustable pressure settings: gentle mist, medium flow, high pressure, and therapeutic massage
+- Dual-function systems: overhead rainfall and handheld combination options
+- Water filtration system reduces mineral buildup and improves pressure consistency
+
+Water System:
+- Building pressure range: 45-65 PSI optimal, 35-75 PSI acceptable operating range
+- Daily pressure monitoring and flow rate calibration at 6 AM
+- Immediate pressure adjustments available remotely via building automation
+- Emergency maintenance response within 45 minutes during business hours
+
+Room Features:
+- Oversized walk-in showers with natural stone tile and glass enclosures
+- Heated bathroom floors and towel warmers for comfort after high-pressure showers
+- Premium bath amenity dispensers integrated with shower design
+- Backup handheld shower heads for accessibility and cleaning
+
+Engineering:
+- On-site engineering team 7 AM–10 PM; after-hours on-call service available
+- Real-time monitoring of water pressure and flow throughout building
+- Preventive maintenance schedule for shower head cleaning and calibration
+
+user:
+Good morning! The shower pressure in my room feels quite low today. I was hoping for that nice rainfall effect, but it's more like a gentle drizzle. Can you help adjust it?
+
+assistant channel=analysis:
+Guest reports low shower pressure. Check current pressure readings and adjust settings for optimal rainfall experience.
+
+assistant channel=commentary to=tool.check_water_pressure:
+{"room_number": "pending", "fixture_type": "shower", "measurement_type": "pressure_psi"}
+
+tool.check_water_pressure channel=commentary to=assistant:
+{"room_number": "2214", "fixture_type": "shower", "current_pressure_psi": 38, "flow_rate_gpm": 1.8, "optimal_pressure_psi": 55, "status": "below_optimal"}
+
+assistant channel=analysis:
+Pressure is 38 PSI, below optimal 55 PSI. Adjust shower settings to high pressure with wide rainfall pattern.
+
+assistant channel=commentary to=tool.adjust_shower_settings:
+{"room_number": "2214", "shower_type": "rainfall", "pressure_setting": "high", "spray_pattern": "wide_rainfall"}
+
+tool.adjust_shower_settings channel=commentary to=assistant:
+{"adjusted": true, "room_number": "2214", "new_pressure_psi": 52, "spray_pattern": "wide_rainfall", "estimated_improvement": "significant", "test_recommended": true}
+
+assistant channel=final:
+I've adjusted your shower to high pressure with wide rainfall pattern—pressure increased from 38 to 52 PSI. Please test it now, and let me know if the rainfall effect is better!
+
+user:
+That's much better! The pressure feels perfect now. I love these mountain lodge showers. How do you keep the water so clean up here?
+
+assistant channel=analysis:
+Guest satisfied with pressure adjustment. Question about water quality system is small talk about hotel features.
+
+assistant channel=final:
+So glad that worked! We have an advanced filtration system that removes minerals from the mountain water, keeping both pressure consistent and water crystal clear.
+
+user:
+Amazing! One more question—can you recommend any good hiking trails nearby for tomorrow?
+
+assistant channel=analysis:
+Hiking trail recommendations are outside my plumbing and shower system tools. Use special flag.
+
+assistant channel=final:
+[ATTENTION] Looking into trail information for you.
+
+user:
+No worries, I'll ask the concierge later. Thanks for fixing the shower!
+
+assistant channel=analysis:
+Guest acknowledges and thanks for shower service; brief appreciation response.
+
+assistant channel=final:
+You're welcome! Enjoy your mountain lodge shower and your stay with us.

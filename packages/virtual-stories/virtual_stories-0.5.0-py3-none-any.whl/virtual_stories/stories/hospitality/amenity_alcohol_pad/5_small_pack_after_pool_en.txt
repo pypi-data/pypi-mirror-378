@@ -1,0 +1,94 @@
+"""
+Guest requests a small pack of alcohol pads after pool use; confirm availability and deliver. Include small talk, in-context café hours answer, and an [ATTENTION] case.
+
+ROLES: user (guest), assistant (front desk with first-aid tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"aid_stock","description":"Check first-aid stock for item.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"aid_deliver","description":"Deliver first-aid item to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","item","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Pierhouse Forty-Two (hotel_id: ph42_wa_13)
+Address: 42 Alaskan Way, Seattle, WA 98101
+Timezone: America/Los_Angeles
+Check-in/Out: 16:00 / 11:00
+Delivery Window: 08:00–22:00
+
+Amenities:
+- alcohol pads, bandages, gauze; typical ETA 10–15 minutes
+
+Facilities:
+1) Heated pool 08:00–20:00
+2) Espresso hatch 06:30–12:30
+3) Rooftop lookout deck
+4) Fitness 24/7
+5) Quiet hours 22:00–07:00
+
+Dining:
+- Lobby bites 16:00–20:00
+
+Accessibility:
+- Step-free routes to all public spaces
+- Shower seats available on request
+
+Sustainability:
+- Recycling on guest floors; refillable amenities
+
+Design:
+- Timber and nautical steel accents
+
+user:
+Hi—could I get 6 alcohol pads to room 709? We just got back from the pool.
+
+assistant channel=analysis:
+Check stock and deliver 6.
+
+assistant channel=commentary to=tool.aid_stock:
+{"item":"alcohol pads"}
+
+tool.aid_stock channel=commentary to=assistant:
+{"item":"alcohol pads","available":true}
+
+assistant channel=commentary to=tool.aid_deliver:
+{"room":"709","item":"alcohol pads","qty":6}
+
+tool.aid_deliver channel=commentary to=assistant:
+{"ref":"PH42-709-FA-552","eta_minutes":12}
+
+assistant channel=final:
+I’ve arranged 6 alcohol pads for room 709 under PH42-709-FA-552. ETA is about 12 minutes.
+
+user:
+Is the espresso hatch still open if we swing by at noon?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—the espresso hatch runs 06:30–12:30.
+
+user:
+The rooftop lookout is a great sunset spot.
+
+assistant channel=analysis:
+Chit-chat referencing system.
+
+assistant channel=final:
+It is—the rooftop lookout deck has wide views over the bay.
+
+user:
+Could you recommend and book a dermatologist for tomorrow?
+
+assistant channel=analysis:
+Beyond scope; use flag.
+
+assistant channel=final:
+[ATTENTION] Verifying information.
+
+user:
+Thanks!

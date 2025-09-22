@@ -1,0 +1,52 @@
+"""
+Guest requests a comb for early morning departure; arrange front desk pickup.
+
+ROLES: user (departing guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_grooming_amenities","description":"List combs","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["combs"]}},"required":[]},"strict":true},
+  {"name":"deliver_amenities","description":"Stage pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}},"required":["sku","quantity"],"additionalProperties":false}},"delivery_time":{"type":"string","enum":["immediate","with_turndown","next_housekeeping"]}},"required":["room_number","items","delivery_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Runway Vista Hotel (hotel_id: rvh_atl)
+Address: 200 Concourse Pkwy, Atlanta, GA 30337
+Timezone: America/New_York
+
+Pickup: Items can be staged under the room number for early collection.
+SKUs: COMB_WIDE_BAMBOO, COMB_FINE_STYLING
+
+user:
+I fly at 5am tomorrow. Can you stage a comb at the desk under room 843?
+
+assistant channel=analysis:
+Offer staging for pickup with COMB_FINE_STYLING by default.
+
+assistant channel=commentary to=tool.get_grooming_amenities:
+{"category":"combs"}
+
+tool.get_grooming_amenities channel=commentary to=assistant:
+{"available_items":[{"sku":"COMB_WIDE_BAMBOO"},{"sku":"COMB_FINE_STYLING"}]}
+
+assistant channel=commentary to=tool.deliver_amenities:
+{"room_number":"FRONTDESK-843","items":[{"sku":"COMB_FINE_STYLING","quantity":1}],"delivery_time":"immediate"}
+
+tool.deliver_amenities channel=commentary to=assistant:
+{"delivery_id":"RVH-FRONT-15","eta_minutes":6}
+
+assistant channel=final:
+Done—RVH-FRONT-15 will stage a fine‑tooth comb at the front desk in about 6 minutes under room 843.
+
+user:
+Is the airport train running at 4:30am?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the early train schedule.
+

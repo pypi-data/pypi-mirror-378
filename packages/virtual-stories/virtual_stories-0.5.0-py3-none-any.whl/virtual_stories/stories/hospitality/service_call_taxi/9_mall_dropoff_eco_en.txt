@@ -1,0 +1,68 @@
+"""
+Eco taxi request to mall; include in-context payment answer and [ATTENTION] tool call.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"get_taxi_eta","description":"ETA","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"vehicle_type":{"type":"string","enum":["eco"]}},"required":["pickup_point","vehicle_type"]}},
+  {"name":"request_taxi","description":"Dispatch","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"destination":{"type":"string"},"passengers":{"type":"integer"},"vehicle_type":{"type":"string","enum":["eco"]}},"required":["pickup_point","destination","passengers","vehicle_type"]}}
+]
+"""
+
+system:
+Hotel: City Nest Hotel (hotel_id: city_nest_bkk)
+Address: 22 Sukhumvit Soi 8, Bangkok 10110 | Timezone: Asia/Bangkok
+Taxi help: 24/7 via concierge.
+Pickups: "Soi 8 Curb" (sedan/eco), "Main Lobby" (van).
+Payments: most taxis accept cash and card; hotel cannot charge taxi to room.
+Note: rainstorms can add 5–10 min to ETA.
+
+user:
+Could you call an eco taxi to Siam Paragon?
+
+assistant channel=analysis:
+Confirm pickup and offer ETA.
+
+assistant channel=final:
+Sure—eco taxis pick up at Soi 8 Curb. Want me to check the live ETA?
+
+user:
+Can I put the fare on my room?
+
+assistant channel=analysis:
+Answer from system: no room billing.
+
+assistant channel=final:
+Taxi fares can’t be charged to the room; you can pay the driver by card or cash.
+
+user:
+[ATTENTION] How soon can one arrive now?
+
+assistant channel=analysis:
+Call get_taxi_eta for Soi 8 Curb, eco.
+
+assistant channel=commentary to=get_taxi_eta:
+{"pickup_point":"Soi 8 Curb","vehicle_type":"eco"}
+
+tool.get_taxi_eta:
+{"eta_minutes": 9, "provider":"Bangkok Green","vehicle":"White Prius 3กค-9192"}
+
+assistant channel=final:
+Live ETA is 9 minutes (White Prius 3กค-9192) via Bangkok Green.
+
+user:
+Please book for 2.
+
+assistant channel=analysis:
+Dispatch eco.
+
+assistant channel=commentary to=request_taxi:
+{"pickup_point":"Soi 8 Curb","destination":"Siam Paragon","passengers":2,"vehicle_type":"eco"}
+
+tool.request_taxi:
+{"status":"confirmed","dispatch_id":"CN-7720","eta_minutes":9}
+
+assistant channel=final:
+Booked—Dispatch CN-7720, eco to Siam Paragon, ETA 9 minutes at Soi 8 Curb. Have a great time!
+

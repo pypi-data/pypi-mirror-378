@@ -1,0 +1,79 @@
+"""
+Guest reports a faulty kettle and requests a replacement plus quick-use guidance. Include small talk and one [ATTENTION] query.
+
+ROLES: user (guest reporting faulty kettle), assistant (hotel amenities coordinator handling appliance swap and guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"swap_appliance","description":"Replace an in-room appliance","parameters":{"type":"object","properties":{"appliance":{"type":"string","enum":["kettle"]},"room_number":{"type":"string"}},"required":["appliance","room_number"],"additionalProperties":false},"strict":true},
+  {"name":"provide_appliance_guide","description":"Return quick guidance for an appliance","parameters":{"type":"object","properties":{"appliance":{"type":"string","enum":["kettle"]},"mode":{"type":"string","enum":["quick_start","safety"]}},"required":["appliance","mode"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Fjordlight Coastal Retreat (hotel_id: fcr_bergen_03)
+Address: Bryggen 5, 5003 Bergen, Norway
+Timezone: Europe/Oslo
+
+Basic Info:
+- Electric kettles: on request or swap if faulty
+- Voltage: 230V; Schuko sockets; universal adapter at desk
+- Delivery ETA: 12–18 minutes
+
+YAML Safety:
+---
+fire_sprinklers: true
+smoke_detectors: true
+max_fill_mark_required: true
+child_lock_available: false
+---
+
+JSON Inventory:
+{"kettles_ready": 14, "qc_checked_today": 7, "runner": "Liv"}
+
+CSV Nearby (site,walk_min):
+Bryggen,2
+Fish_Market,6
+
+user:
+Hi—my in-room kettle won’t turn on. Could you replace it in 604 and tell me the basics to use it safely?
+
+assistant channel=analysis:
+Arrange a swap to 604, then provide safety tips.
+
+assistant channel=commentary to=tool.swap_appliance:
+{"appliance":"kettle","room_number":"604"}
+
+tool.swap_appliance channel=commentary to=assistant:
+{"status":"scheduled","eta_minutes":15,"runner":"Liv","qc_tag":"FCR-KTL-OK"}
+
+assistant channel=commentary to=tool.provide_appliance_guide:
+{"appliance":"kettle","mode":"safety"}
+
+tool.provide_appliance_guide channel=commentary to=assistant:
+{"appliance":"kettle","mode":"safety","tips":["Fill only to the MAX line.","Set on base before switching on.","Keep cord/base dry; unplug after boiling."]}
+
+assistant channel=final:
+On it—a replacement kettle is scheduled for room 604 in about 15 minutes (runner: Liv; QC tag FCR-KTL-OK).
+Safety tips: Fill only to the MAX line, set it firmly on the base before switching on, and keep the cord/base dry—unplug after boiling.
+
+user:
+The Schuko sockets look different from back home.
+
+assistant channel=analysis:
+Chit-chat acknowledgment referencing voltage/socket note.
+
+assistant channel=final:
+They’re 230V Schuko; a universal adapter is available at the desk.
+
+user:
+Could you also book a fjord cruise for tomorrow morning?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Analyzing the situation.
+

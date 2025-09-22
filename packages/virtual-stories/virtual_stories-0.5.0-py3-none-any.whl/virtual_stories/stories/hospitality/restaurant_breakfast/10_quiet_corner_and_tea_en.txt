@@ -1,0 +1,86 @@
+"""
+Guest seeks a quiet corner and tea options; include chitchat and ATTENTION case.
+
+ROLES: user (solo reader), assistant (host scheduling seating and tea preview)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List breakfast venues","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string"}},"required":["hotel_id","meal_period"]},"strict":true},
+  {"name":"check_table_availability","description":"Check availability","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Get beverages (tea) preview","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"section":{"type":"string"}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Old Port House (hotel_id: old_port_house)
+Breakfast: Portside Kitchen (restaurant_id: rest_portside) 07:00–10:30
+
+Seating & Quiet Corners:
+- Quieter two‑tops near bookshelves
+- Softer lighting in the back alcove
+
+Access & Layout:
+- Step‑free from Lobby South
+- Narrower aisle near shelves; staff can assist
+
+Beverages:
+- Teas: English Breakfast, Earl Grey, Mint
+- Coffee bar on request
+
+Billing & Notes:
+- Room charge supported
+- Paperless receipts available
+
+user:
+Table for 1 at 9:00 under Avery; what teas do you serve?
+
+assistant channel=analysis:
+List venue, check 09:00 for 1, book, fetch beverages section.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"old_port_house","meal_period":"breakfast"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_portside","name":"Portside Kitchen","hours":"07:00-10:30"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_portside","party_size":1,"datetime":"2025-09-02T09:00:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_portside","guest_name":"Avery","contact":"","party_size":1,"datetime":"2025-09-02T09:00:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"PS-BRK-9001"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_portside","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"English Breakfast"},{"name":"Earl Grey"},{"name":"Mint"}]}
+
+assistant channel=final:
+Your 9:00 table for 1 at Portside Kitchen is confirmed (PS-BRK-9001). Tea options include English Breakfast, Earl Grey, and Mint.
+
+user:
+Cozy vibe by the bookshelves.
+
+assistant channel=final:
+It’s a pleasant corner for a quiet breakfast.
+
+user:
+Is the path step‑free from the lobby?
+
+assistant channel=final:
+Yes—access is step‑free from Lobby South.
+
+user:
+Can you keep that corner entirely silent during my slot?
+
+assistant channel=final:
+[ATTENTION] Enforcing silence policies isn’t handled here. Reviewing available options.

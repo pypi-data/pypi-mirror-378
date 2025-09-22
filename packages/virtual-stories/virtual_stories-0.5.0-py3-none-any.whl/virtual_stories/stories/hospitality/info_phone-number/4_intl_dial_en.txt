@@ -1,0 +1,53 @@
+"""
+Guest asks for the phone number and how to dial internationally; include a beyond-scope roaming charge query.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Saffron Orchard (hotel_id: saffron_orchard)
+Main phone: +81 75 555 6400 | Email hi@saffronorchard.jp | Web https://saffronorchard.jp
+Tip: For international dialing, include your country’s exit code, then 81, then 75 555 6400
+Hours: Operator 06:00–23:30 JST; emergency line routes after hours
+Extras: Tea salon 1F; Courtyard lantern walk 20:00.
+
+user:
+What’s your main number, and how do I dial from abroad?
+
+assistant channel=analysis:
+Provide number via tool and dialing tip from system.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"saffron_orchard","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+81 75 555 6400"}
+
+assistant channel=final:
+Our main line is +81 75 555 6400. From abroad, dial your exit code, then 81, then 75 555 6400.
+
+user:
+The lantern walk was magical.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+We’re delighted you enjoyed it—starts nightly at 20:00.
+
+user:
+How much will my carrier charge me for the call?
+
+assistant channel=analysis:
+Out of scope—carrier charges unknown.
+
+assistant channel=final:
+[ATTENTION] We don’t have access to carrier charging information.
+

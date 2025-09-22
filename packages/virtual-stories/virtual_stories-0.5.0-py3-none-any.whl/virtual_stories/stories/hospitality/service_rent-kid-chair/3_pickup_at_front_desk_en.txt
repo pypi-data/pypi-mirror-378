@@ -1,0 +1,72 @@
+"""
+Guest prefers to pick up a high chair at the front desk; confirm hold window and no-charge policy.
+
+ROLES: user (guest coordinating self-pickup), assistant (front desk arranging item hold and instructions)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"place_hold","description":"Place a timed hold on high chair(s)","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"quantity":{"type":"integer"},"pickup_location":{"type":"string","enum":["front_desk","bell_desk"]},"hold_minutes":{"type":"integer"}},"required":["hotel_id","quantity","pickup_location","hold_minutes"]},"strict":true},
+  {"name":"confirm_pickup_window","description":"Confirm pickup code and window","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"pickup_location":{"type":"string"}},"required":["hotel_id","pickup_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Bayview Marina Miami (BVMM-05)
+Address: 1501 Ocean Dr, Miami Beach, FL 33139, USA
+Front Desk: 24/7; Bell Desk: 07:00–23:00
+Kids’ High Chairs: 15 units; complimentary; no deposit; sanitization with NSF-certified solution; straps inspected daily.
+Pickup Options: Front desk or bell desk; default hold window 20 minutes; extension upon request.
+Delivery: In-room delivery 10–15 minutes when requested; runners avoid crowded corridors during peak hours.
+Notes: Storage alcove width 82 cm; folded chair height 95 cm; weight 5.6 kg.
+
+user:
+Can I just pick up a high chair at the front desk in about 10 minutes?
+
+assistant channel=analysis:
+Place a 20-minute hold for 1 unit at front desk; confirm pickup window/code.
+
+assistant channel=commentary to=tool.place_hold:
+{"hotel_id":"BVMM-05","quantity":1,"pickup_location":"front_desk","hold_minutes":20}
+
+tool.place_hold channel=commentary to=assistant:
+{"hold_id":"FD-HOLD-732","expires_in_minutes":20}
+
+assistant channel=commentary to=tool.confirm_pickup_window:
+{"hotel_id":"BVMM-05","pickup_location":"front_desk"}
+
+tool.confirm_pickup_window channel=commentary to=assistant:
+{"pickup_code":"MARINA-264","window":"Now–+20 min"}
+
+assistant channel=final:
+Absolutely—one high chair is on hold at the front desk for 20 minutes. Use pickup code MARINA-264.
+
+user:
+Is there any charge for that?
+
+assistant channel=analysis:
+Answer from system: complimentary.
+
+assistant channel=final:
+It’s complimentary—no charge or deposit applies.
+
+user:
+The lobby art is stunning.
+
+assistant channel=analysis:
+Brief, friendly acknowledgement.
+
+assistant channel=final:
+It does add a nice coastal vibe—enjoy your evening.
+
+user:
+Can you share the supplier contract for these chairs?
+
+assistant channel=analysis:
+Outside system scope; respond with ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

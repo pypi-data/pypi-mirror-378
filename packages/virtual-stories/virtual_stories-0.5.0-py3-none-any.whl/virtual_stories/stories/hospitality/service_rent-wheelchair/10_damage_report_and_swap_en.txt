@@ -1,0 +1,46 @@
+"""
+Guest reports minor damage and requests a swap; record and dispatch replacement.
+
+ROLES: user (guest reporting issue), assistant (front desk accessibility coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"record_damage","description":"Record equipment damage note","parameters":{"type":"object","additionalProperties":false,"properties":{"order_id":{"type":"string"},"note":{"type":"string"}},"required":["order_id","note"]},"strict":true},
+  {"name":"dispatch_replacement","description":"Dispatch replacement unit","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverside Executive Hotel (RSEH-22)
+Support: Replacement units available; runner dispatch 10–15 minutes
+Front Desk: 24/7; Runner: 07:00–23:00
+Time Zone: Pacific Time (PT)
+
+user:
+The wheel is squeaking—can I swap it? I’m with order WHL-422-319 in room 422.
+
+assistant channel=analysis:
+Record damage and dispatch replacement to room 422.
+
+assistant channel=commentary to=tool.record_damage:
+{"order_id":"WHL-422-319","note":"Wheel squeak reported by guest"}
+
+tool.record_damage channel=commentary to=assistant:
+{"status":"noted"}
+
+assistant channel=commentary to=tool.dispatch_replacement:
+{"hotel_id":"RSEH-22","room":"422"}
+
+tool.dispatch_replacement channel=commentary to=assistant:
+{"eta_minutes":13,"runner":"Owen"}
+
+assistant channel=final:
+Thanks for flagging that—replacement is on the way; Owen will arrive at 422 in about 13 minutes.
+
+user:
+Can you confirm the maintenance vendor’s certification details?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

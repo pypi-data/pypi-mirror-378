@@ -1,0 +1,61 @@
+"""
+Guest requests a kid’s high chair for in-room dining; confirm availability and schedule delivery.
+
+ROLES: user (guest dining with toddler), assistant (guest services coordinating delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check kid chair stock and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"schedule_delivery","description":"Schedule delivery to room with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true},
+  {"name":"create_rental_order","description":"Create non-billable loan","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Garden Pavilion Singapore (GPSG-08), 6 Raffles Blvd, Singapore 039594.
+Family-friendly; Front Desk 24/7; Service Team 7:00–23:00.
+Kids’ high chairs: 20 units; complimentary; sanitized between uses; delivery ETA 10–20 minutes.
+Other facts: In-room dining 24/7; Cribs available on request.
+
+user:
+Could we have a kid’s high chair sent to 1912?
+
+assistant channel=analysis:
+Hold one chair, create a complimentary loan, then schedule delivery.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"GPSG-08","item":"kids_high_chair","quantity":1,"room":"1912"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["KCH-12"],"notes":"Sanitized"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"GPSG-08","room":"1912","item":"kids_high_chair","duration_hours":6,"charge_code":"COMP-FAM","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"KID-1912-441","status":"created","charge":"comp"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"GPSG-08","room":"1912","order_id":"KID-1912-441"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":15,"runner":"Anand","order_id":"KID-1912-441"}
+
+assistant channel=final:
+We’ve arranged a sanitized high chair (order KID-1912-441). Anand will bring it to 1912 in about 15 minutes.
+
+user:
+Thanks! The room is very comfortable.
+
+assistant channel=final:
+That’s wonderful to hear—enjoy your meal together.
+
+user:
+Could you share certification records for the chair manufacturer?
+
+assistant channel=final:
+[ATTENTION] Verifying information.
+

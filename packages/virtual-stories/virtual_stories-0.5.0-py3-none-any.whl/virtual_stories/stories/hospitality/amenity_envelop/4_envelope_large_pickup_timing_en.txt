@@ -1,0 +1,59 @@
+"""
+Guest requests a large envelope and asks about pickup timing; include chit-chat and [ATTENTION].
+
+ROLES: user (guest 726), assistant (front office)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_stationery_item","description":"Deliver stationery items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_name":{"type":"string","enum":["envelope_standard","envelope_large","letterhead"]},"quantity":{"type":"integer","minimum":1}},"required":["room_number","item_name","quantity"]},"strict":true},
+  {"name":"get_mail_drop_info","description":"Mail drop details.","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true}
+]
+```
+"""
+
+system:
+Granite City Center (hotel_id: gcc_msp)
+Address: 400 Nicollet Mall, Minneapolis, MN 55401
+Timezone: America/Chicago
+Mail & Stationery:
+- Large envelopes stocked at front desk, complimentary
+- Mail drop: behind front desk; pickup weekdays 15:45
+- Delivery window: 06:30–22:00; ETA 8–15 min
+- Letterhead available on request
+- Contact: Front Office x101
+JSON: {"pickup_time":"15:45","large_envelope":true}
+
+user:
+Could I have one large envelope to 726? Also, what time is mail collected?
+
+assistant channel=analysis:
+Deliver one large envelope; state pickup time from system or tool. Use tool for consistency.
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"726","item_name":"envelope_large","quantity":1}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"ok":true,"eta_minutes":9}
+
+assistant channel=commentary to=tool.get_mail_drop_info:
+{}
+
+tool.get_mail_drop_info channel=commentary to=assistant:
+{"location":"Behind Front Desk","pickup_time":"weekdays 15:45"}
+
+assistant channel=final:
+One large envelope is on its way to 726—about 9 minutes. Mail is collected from the drop behind the Front Desk on weekdays at 15:45.
+
+user:
+The skyway network is handy in this weather.
+
+assistant channel=final:
+It makes getting around much easier downtown.
+
+user:
+Can you notarize documents here?
+
+assistant channel=final:
+[ATTENTION] I’ll see if notary service is available.
+

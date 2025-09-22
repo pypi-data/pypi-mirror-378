@@ -1,0 +1,58 @@
+"""
+Guest in executive suite requests multiple grooming items for a team photoshoot; deliver combined set.
+
+ROLES: user (team lead), assistant (amenities)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_grooming_amenities","description":"List all grooming SKUs","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["all_grooming"]}},"required":[]},"strict":true},
+  {"name":"deliver_amenities","description":"Deliver combined set","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}},"required":["sku","quantity"],"additionalProperties":false}},"delivery_time":{"type":"string","enum":["immediate","with_turndown","next_housekeeping"]}},"required":["room_number","items","delivery_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Forum — West Tower (hotel_id: sfw_dallas)
+Address: 700 Commerce Square, Dallas, TX 75201
+Timezone: America/Chicago
+
+SKUs: COMB_WIDE_BAMBOO, COMB_FINE_STYLING, BRUSH_PADDLE, CLIPS_TRAVEL_SET
+SLA penthouse: 8–14 minutes
+
+user:
+We’ve got a quick photoshoot in PH‑W. Can you send two wide-tooth combs, one fine styling comb, and a clips set?
+
+assistant channel=analysis:
+Deliver the requested items as one combined set.
+
+assistant channel=commentary to=tool.get_grooming_amenities:
+{"category":"all_grooming"}
+
+tool.get_grooming_amenities channel=commentary to=assistant:
+{"available_items":[{"sku":"COMB_WIDE_BAMBOO"},{"sku":"COMB_FINE_STYLING"},{"sku":"BRUSH_PADDLE"},{"sku":"CLIPS_TRAVEL_SET"}]}
+
+assistant channel=commentary to=tool.deliver_amenities:
+{"room_number":"PH-W","items":[{"sku":"COMB_WIDE_BAMBOO","quantity":2},{"sku":"COMB_FINE_STYLING","quantity":1},{"sku":"CLIPS_TRAVEL_SET","quantity":1}],"delivery_time":"immediate"}
+
+tool.deliver_amenities channel=commentary to=assistant:
+{"delivery_id":"SFW-PHW-09","eta_minutes":10}
+
+assistant channel=final:
+All set—delivery SFW-PHW-09 arrives in about 10 minutes with the requested items.
+
+user:
+The west tower lobby ceiling is striking.
+
+assistant channel=final:
+It’s a coffered design with brass inlays above the forum seating.
+
+user:
+Can we reserve a private makeup room?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on private room reservations.
+

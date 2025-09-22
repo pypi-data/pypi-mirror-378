@@ -1,0 +1,146 @@
+"""
+Guest asks about restaurant availability and a menu preview; then books.
+
+ROLES: user (hotel guest planning dinner), assistant (restaurant concierge handling availability and reservations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "list_restaurants",
+    "description": "List on-property restaurants with cuisine and hours.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": { "type": "string" },
+        "meal_period": { "type": "string", "enum": ["breakfast","lunch","dinner","late_night"] }
+      },
+      "required": ["hotel_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_table_availability",
+    "description": "Check table availability for a restaurant.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "restaurant_id": { "type": "string" },
+        "party_size": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "datetime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["restaurant_id","party_size","datetime"]
+    },
+    "strict": true
+  },
+  {
+    "name": "book_table",
+    "description": "Book a table when availability exists.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "restaurant_id": { "type": "string" },
+        "guest_name": { "type": "string" },
+        "contact": { "type": "string" },
+        "party_size": { "type": "integer" },
+        "datetime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["restaurant_id","guest_name","contact","party_size","datetime"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_menu_section",
+    "description": "Fetch a menu section preview for a restaurant.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "restaurant_id": { "type": "string" },
+        "section": { "type": "string", "enum": ["starters","mains","desserts","beverages"] }
+      },
+      "required": ["restaurant_id","section"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Bayview Grand Hotel (hotel_id: bayview_grand_sfo)
+Address: 88 Embarcadero Blvd, San Francisco, CA 94105
+Timezone: America/Los_Angeles
+Dining Venues:
+- Azure Quay (restaurant_id: rest_azure_quay) — Seafood-focused dining; dinner 17:00–22:00; smart casual.
+- Garden Hearth (restaurant_id: rest_garden_hearth) — Californian farm-to-table; breakfast & lunch 07:00–14:30; family friendly.
+Notes:
+• Reservations recommended for Azure Quay on weekends.
+• All venues are on Level 3; step-free access available.
+
+user:
+Hi! Do you have a seafood restaurant on property for dinner tonight around 7:30 for two?
+
+assistant channel=analysis:
+List restaurants for dinner, then check Azure Quay availability for 19:30 party of 2.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"bayview_grand_sfo","meal_period":"dinner"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_azure_quay","name":"Azure Quay","hours":"17:00-22:00","cuisine":"seafood"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_azure_quay","party_size":2,"datetime":"2025-08-29T19:30:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"T14","hold_until":"2025-08-29T19:40:00"}]}
+
+assistant channel=analysis:
+Availability exists; confirm guest name and contact, then book.
+
+assistant channel=final:
+We can host you at Azure Quay at 7:30 PM for two. May I have your name and a contact number to place the reservation?
+
+user:
+Sure—it's Jamie Lin, +1-415-555-0101. Also, could I glance at your starters?
+
+assistant channel=analysis:
+Book table, then fetch starters section preview.
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_azure_quay","guest_name":"Jamie Lin","contact":"+14155550101","party_size":2,"datetime":"2025-08-29T19:30:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"AZQ-RES-7731"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_azure_quay","section":"starters"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"starters","items":[{"name":"Dungeness Crab Cakes"},{"name":"Citrus-Cured Hamachi"},{"name":"Charred Octopus"}]}
+
+assistant channel=final:
+Your reservation is confirmed (AZQ-RES-7731). Starters preview: Dungeness Crab Cakes, Citrus-Cured Hamachi, Charred Octopus. Anything else I can arrange?
+
+user:
+By the way, the lobby smells amazing—what a nice touch!
+
+assistant channel=analysis:
+Offer a friendly acknowledgment without tools.
+
+assistant channel=final:
+Thanks for the kind words—wishing you a lovely evening.
+
+user:
+Do you play live jazz in the restaurant on Fridays?
+
+assistant channel=analysis:
+No tool or system knowledge for entertainment programming specifics; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking about live performances. Reviewing available resources.
+

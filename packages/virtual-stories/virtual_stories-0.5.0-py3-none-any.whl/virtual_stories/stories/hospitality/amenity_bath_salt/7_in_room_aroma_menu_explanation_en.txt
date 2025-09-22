@@ -1,0 +1,63 @@
+"""
+Guest asks what each scent is like and chooses based on mood.
+
+ROLES: user (curious guest), assistant (amenities desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "list_bath_salt_scents", "description": "List scents and stock.", "parameters": {"type":"object","additionalProperties":false,"properties":{}}, "strict": true },
+  { "name": "request_bath_salt_delivery", "description": "Deliver bath salt.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"scent":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","scent","quantity","priority"]}, "strict": true }
+]
+```
+"""
+
+system:
+Lakeview Thermal Spa (hotel_id: lts_geneva)
+Address: 19 Quai du Mont-Blanc, Geneva 1201, Switzerland
+Timezone: Europe/Zurich
+
+Program:
+- Scents: lavender, eucalyptus, unscented (no medical claims)
+- Delivery: 09:00–21:00
+Thermal Pools: 10:00–20:00
+Accessibility: Multilingual labels (EN/FR/DE)
+Sustainability: Recyclable packaging
+House Rules: Skin‑safe formulations
+
+user:
+What are the options for bath salts at Lakeview? I’m in 318 and want something calming.
+
+assistant channel=analysis:
+List options, then offer lavender as commonly used calming scent per system list (no claims), and deliver if chosen.
+
+assistant channel=commentary to=tool.list_bath_salt_scents:
+{}
+
+tool.list_bath_salt_scents channel=commentary to=assistant:
+{"scents":[{"name":"lavender","stock":16},{"name":"eucalyptus","stock":10},{"name":"unscented","stock":24}]}
+
+assistant channel=final:
+We have lavender, eucalyptus, and unscented. Would you like a lavender packet for a calming bath in room 318?
+
+user:
+Yes, lavender please—just one.
+
+assistant channel=commentary to=tool.request_bath_salt_delivery:
+{"room_number":"318","scent":"lavender","quantity":1,"priority":"normal"}
+
+tool.request_bath_salt_delivery channel=commentary to=assistant:
+{"ticket_id":"SPA-318-7715","eta_minutes":12}
+
+assistant channel=final:
+Lavender is on its way to 318 (SPA-318-7715) with an ETA of about 12 minutes.
+
+user:
+Is the thermal pool water mineral-rich?
+
+assistant channel=analysis:
+Mineral composition not in system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check for details on the pool’s mineral composition.
+

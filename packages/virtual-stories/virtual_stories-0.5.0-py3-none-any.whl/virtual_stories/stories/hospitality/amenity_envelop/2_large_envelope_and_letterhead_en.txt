@@ -1,0 +1,84 @@
+"""
+Guest requests a large envelope and asks about letterhead; include small talk and an out-of-scope question.
+
+ROLES: user (guest in 415), assistant (front desk stationery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_stationery_item",
+    "description": "Deliver stationery items to a room (envelopes, letterhead).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type":"string"},
+        "item_name": {"type":"string", "enum":["envelope_standard","envelope_large","letterhead"]},
+        "quantity": {"type":"integer","minimum":1}
+      },
+      "required": ["room_number","item_name","quantity"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_mail_drop_info",
+    "description": "Return lobby mail drop location and pickup time.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+The Beacon at Park (hotel_id: tbp_bos)
+Address: 120 Beacon St, Boston, MA 02116
+Timezone: America/New_York
+Stationery Overview:
+- Envelopes: standard, large (catalog)
+- Letterhead: A4 hotel letterhead
+- Delivery: 07:00–22:00; ETA 10–15 min
+- Mail drop: concierge desk slot; pickup weekdays 17:00
+- Notes: Complimentary stationery upon request
+Inline JSON: {"envelopes":{"standard":true,"large":true},"letterhead":true}
+
+user:
+Hi, 415 here. Could I get one large envelope, and do you have letterhead?
+
+assistant channel=analysis:
+Deliver one large envelope; confirm letterhead availability.
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"415","item_name":"envelope_large","quantity":1}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":12}
+
+assistant channel=final:
+One large envelope is on its way to 415—about 12 minutes. Letterhead is available if you’d like sheets as well.
+
+user:
+Great, please send two letterhead sheets too.
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"415","item_name":"letterhead","quantity":2}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":12}
+
+assistant channel=final:
+Added—two letterhead sheets will arrive together.
+
+user:
+The brownstone facade outside looks charming.
+
+assistant channel=final:
+It gives the block a classic feel.
+
+user:
+Is postage included if I leave it at the desk?
+
+assistant channel=final:
+[ATTENTION] I’ll confirm postage details.
+

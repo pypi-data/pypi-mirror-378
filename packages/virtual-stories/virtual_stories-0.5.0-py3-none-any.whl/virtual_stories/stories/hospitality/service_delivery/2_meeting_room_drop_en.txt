@@ -1,0 +1,48 @@
+"""
+Guest requests an on‑property delivery to a meeting room; schedule via tool and cite delivery scope, hours, and signature policy; include small talk and an ATTENTION case for alcohol transfer.
+
+ROLES: user (guest arranging delivery), assistant (service center scheduling in‑house delivery and confirming policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_inhouse_delivery","description":"Arrange an on‑property delivery between rooms or facilities.","parameters":{"type":"object","additionalProperties":false,"properties":{"from_room":{"type":"string"},"to_location":{"type":"string"},"item":{"type":"string"}},"required":["from_room","to_location","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Skyline Central Hotel — Service Center
+Coverage: Guestrooms, meeting rooms, and restaurants on property only
+Hours: 24/7 dispatch; typical ETA 10–20 minutes
+Signature: Recipient signature upon delivery; staff will not leave items unattended
+Fragile items: Hand-carried; please specify “fragile” if needed
+Restricted: Alcohol transfers are not handled by Service Center
+
+user:
+Please send a projector remote from 1512 to the Oak Room meeting space.
+
+assistant channel=analysis:
+Schedule on‑property delivery from room to meeting space; confirm ETA and signature policy.
+
+assistant channel=commentary to=tool.schedule_inhouse_delivery:
+{"from_room":"1512","to_location":"Oak Room (Meeting Level)","item":"projector remote"}
+
+tool.schedule_inhouse_delivery channel=commentary to=assistant:
+{"delivery_id":"DLV-6101","status":"scheduled","eta_minutes":15}
+
+assistant channel=final:
+Delivery DLV-6101 is scheduled from 1512 to Oak Room with an ETA of about 15 minutes. We obtain a recipient signature and do not leave items unattended.
+
+user:
+Thanks—nice conference area you have.
+
+assistant channel=final:
+We’ll dispatch right away.
+
+user:
+Can you take a bottle of wine to that room too?
+
+assistant channel=final:
+[ATTENTION] Alcohol transfers aren’t handled through these resources. Checking available options.
+

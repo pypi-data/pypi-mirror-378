@@ -1,0 +1,76 @@
+"""
+Guest asks for a replacement spill-proof cup lid; confirm availability and timing.
+
+ROLES: user (parent), assistant (family services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_lid_stock","description":"Check stock for spill-cup lids.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"deliver_lid","description":"Deliver replacement lid to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string"},"required":["room"]}}
+]
+```
+"""
+
+system:
+Harbor Lights Inn (hotel_id: hli_bal_09)
+Address: 2000 Light St, Baltimore, MD 21230
+Timezone: America/New_York
+
+Replacement Parts:
+- Spill-cup lids (small)
+- Soft-tip spoon heads
+
+Delivery Window:
+- 10–18 minutes typical
+
+Policy:
+- Loan program; no charge for lid replacements
+
+Hygiene:
+- New lids supplied sealed
+
+Contact:
+- Family services ext. 88
+
+user:
+Our toddler chewed the spill-cup lid—can we get a replacement to room 340?
+
+assistant channel=analysis:
+Check stock and deliver.
+
+assistant channel=commentary to=tool.check_lid_stock:
+{}
+
+tool.check_lid_stock channel=commentary to=assistant:
+{"spill_cup_lids_small":12}
+
+assistant channel=final:
+Yes—we have small spill-cup lids in stock. I’ll send one to room 340; typical delivery is 10–18 minutes.
+
+assistant channel=commentary to=tool.deliver_lid:
+{"room":"340"}
+
+tool.deliver_lid channel=commentary to=assistant:
+{"ticket":"HLI-340-774","eta_minutes":11}
+
+assistant channel=final:
+Confirmed—ticket HLI-340-774. Arrival in about 11 minutes.
+
+user:
+Thanks—the lighthouse mural is cute!
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+We’re glad you like it—it’s a nod to the harbor.
+
+user:
+Do you have children’s bedtime storybooks to borrow?
+
+assistant channel=analysis:
+Not listed; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on bedtime storybooks beyond the tableware program.

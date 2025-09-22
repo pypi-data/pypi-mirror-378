@@ -1,0 +1,104 @@
+"""
+Corporate executive plans annual company gala with AV requirements and networking setup.
+Provide business event coordination with professional presentation equipment and seating arrangements.
+
+ROLES: user (corporate event planner organizing company gala), assistant (corporate events specialist with ballroom AV expertise)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_facility_availability",
+    "description": "Check availability for a facility with date and time window.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "facility_id": {"type": "string"},
+        "date": {"type": "string", "format": "date"},
+        "start_time": {"type": "string"},
+        "end_time": {"type": "string"}
+      },
+      "required": ["facility_id", "date", "start_time", "end_time"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_ballroom_quote",
+    "description": "Return a preliminary quote for ballroom rental with setup.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "setup": {"type": "string"},
+        "guests": {"type": "integer", "minimum": 1},
+        "hours": {"type": "number", "minimum": 1}
+      },
+      "required": ["setup", "guests", "hours"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Venue: Executive Grand Ballroom (facility_id: ballroom_executive_lax)
+Property: Beverly Hills Plaza Hotel (hotel_id: beverly_hills_plaza)
+Address: 9500 Wilshire Boulevard, Beverly Hills, CA 90212
+Timezone: America/Los_Angeles
+Specs: 1500 sqm; ceiling 9.0 m; built-in projection screens (3x 4K displays); wireless presentation system; executive lounge adjacent; private bar area
+Capacity: Corporate Gala 500 guests; Board Meeting 200 guests; Product Launch 400 guests
+Corporate Packages: Executive (full AV), Professional (standard setup), Basic (rental only); All include business center access, WiFi, presentation equipment
+Policies: Corporate events minimum 5 hours; AV technician included; Networking breaks complimentary; Executive parking available
+
+user:
+Good afternoon. We're planning our annual company gala and need a venue with excellent AV capabilities. What presentation equipment do you have in the Executive Grand Ballroom?
+
+assistant channel=analysis:
+Provide AV equipment details from system facts - 4K displays, wireless presentation, technician included.
+
+assistant channel=final:
+Our Executive Grand Ballroom features three built-in 4K projection screens, wireless presentation systems, and an included AV technician. We also have a private executive lounge adjacent to the ballroom for VIP networking and a dedicated business center for any last-minute preparations.
+
+user:
+Impressive! Is the ballroom available on 2025-11-20 from 19:00 to 24:00?
+
+assistant channel=analysis:
+Check availability for corporate gala date and time.
+
+assistant channel=commentary to=tool.check_facility_availability:
+{"facility_id":"ballroom_executive_lax","date":"2025-11-20","start_time":"19:00","end_time":"24:00"}
+
+assistant channel=final:
+Yes, the Executive Grand Ballroom is available for your company gala on 2025-11-20 from 19:00 to 24:00. This 5-hour window meets our corporate event minimum and includes complimentary networking breaks.
+
+user:
+Excellent! Could I get a quote for 400 guests with the Executive package for 5 hours?
+
+assistant channel=analysis:
+Generate quote for Executive corporate package with 400 guests and 5 hours.
+
+assistant channel=commentary to=tool.get_ballroom_quote:
+{"setup":"corporate_executive","guests":400,"hours":5}
+
+assistant channel=final:
+For the Executive corporate package with 400 guests for 5 hours, the total is $55,000. This includes full AV setup with 4K projections, wireless presentation, AV technician, executive lounge access, and complimentary networking breaks with refreshments.
+
+user:
+By the way, the hotel's business center looked very well-equipped during our site visit.
+
+assistant channel=analysis:
+Acknowledge positive feedback about business facilities.
+
+assistant channel=final:
+Thank you for the compliment! Our business center is designed specifically for corporate clients like you, with high-speed connections, printing services, and executive workstations. It's perfect for last-minute gala preparations.
+
+user:
+Do you have partnerships with specific catering companies for corporate events?
+
+assistant channel=analysis:
+Catering partnerships go beyond system facts - use special flag for vendor recommendations.
+
+assistant channel=final:
+[ATTENTION] We work with several premium caterers for corporate events. Reviewing our current partnership options.

@@ -1,0 +1,74 @@
+"""
+Guest requests LED strip lighting near closet mirror for outfit checks.
+Provide options, install, and adjust.
+
+ROLES: user (guest optimizing closet area), assistant (amenity/engineering coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_mirror_options", "description": "Check LED strip compatible mirror options.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "mirror_type": { "type": "string", "enum": ["full_length", "vanity"] }, "lighting_needed": { "type": "boolean" } }, "required": ["mirror_type"] }, "strict": true },
+  { "name": "install_mirror_setup", "description": "Install LED strip and align with mirror.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mirror_type": { "type": "string", "enum": ["full_length"] }, "lighting_type": { "type": "string", "enum": ["adjustable_led"] }, "placement_location": { "type": "string", "enum": ["closet"] }, "power_source": { "type": "string", "enum": ["plug_in"] } }, "required": ["room_number", "mirror_type", "placement_location"] }, "strict": true },
+  { "name": "adjust_mirror_lighting", "description": "Set brightness and temp for color fidelity.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "brightness_level": { "type": "integer", "minimum": 1, "maximum": 10 }, "color_temp": { "type": "string", "enum": ["neutral_4000k", "daylight_5000k"] } }, "required": ["room_number", "brightness_level", "color_temp"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Harborview Suites (hotel_id: hvs_bos_01)
+Address: 200 Atlantic Ave, Boston, MA 02110
+Timezone: America/New_York
+
+Closet Lighting:
+- LED strip upgrades near full-length mirrors
+- Install 45–60 minutes
+- Neutral/daylight modes for color fidelity
+- Plug‑in power with cable management
+- Removal at checkout
+
+user:
+Room 1411—can you add LED strip lighting by the closet mirror?
+
+assistant channel=analysis:
+Check compatibility; install LED strip with neutral 4000K; set brightness 6.
+
+assistant channel=commentary to=tool.check_mirror_options:
+{"mirror_type":"full_length","lighting_needed":true}
+
+tool.check_mirror_options channel=commentary to=assistant:
+{"available_types":["full_length"],"lighting_options":["adjustable_led"],"inventory_status":"available"}
+
+assistant channel=commentary to=tool.install_mirror_setup:
+{"room_number":"1411","mirror_type":"full_length","lighting_type":"adjustable_led","placement_location":"closet","power_source":"plug_in"}
+
+tool.install_mirror_setup channel=commentary to=assistant:
+{"service_id":"MIR_BOS1411","installation_time":"within 55 minutes","placement":"closet jamb","notes":"adhesive track; cable hidden"}
+
+assistant channel=commentary to=tool.adjust_mirror_lighting:
+{"room_number":"1411","brightness_level":6,"color_temp":"neutral_4000k"}
+
+tool.adjust_mirror_lighting channel=commentary to=assistant:
+{"adjustment_completed":true,"brightness":6,"color_temp":"neutral_4000k"}
+
+assistant channel=final:
+We’ll add neutral 4000K LED strip lighting by your closet mirror within ~55 minutes and set brightness to level 6.
+
+user:
+The harbor is calm tonight.
+
+assistant channel=analysis:
+Small talk reply.
+
+assistant channel=final:
+It makes outfit prep feel unhurried—enjoy the view.
+
+user:
+Could you arrange a harbor cruise?
+
+assistant channel=analysis:
+Outside mirror scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with concierge on harbor cruise options.
+"""
+

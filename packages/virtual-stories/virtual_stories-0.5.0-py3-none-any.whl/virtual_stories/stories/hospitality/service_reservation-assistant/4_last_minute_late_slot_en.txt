@@ -1,0 +1,55 @@
+"""
+Guest requests a last-minute late slot after 9:30 PM; search and confirm.
+
+ROLES: user (late diner), assistant (concierge finding a late seating via partner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"search_restaurant_availability","description":"Search availability","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","party_size","date","time"]},"strict":true},
+  {"name":"create_restaurant_booking","description":"Create booking","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","guest_name","party_size","date","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Pierline Hotel Lisbon (PHLB-23)
+Address: Av. da Liberdade 160, 1250-146 Lisboa, Portugal
+Concierge: 08:00–22:00; Partner: OpenDine (partner_id ODN-451)
+Nearby: "Tasquinha Luz" (Portuguese), "Atlântico 28" (seafood)
+Only services listed are available.
+
+user:
+Anything open for two after 9:30 PM tonight? Room 709.
+
+assistant channel=analysis:
+Search for a 21:45 slot for 2 via ODN-451; if available, book under room 709.
+
+assistant channel=commentary to=tool.search_restaurant_availability:
+{"partner_id":"ODN-451","party_size":2,"date":"2025-08-29","time":"21:45"}
+
+tool.search_restaurant_availability channel=commentary to=assistant:
+{"available":true,"options":[{"restaurant":"Atlântico 28","time":"21:45"}]}
+
+assistant channel=commentary to=tool.create_restaurant_booking:
+{"partner_id":"ODN-451","guest_name":"Guest 709","party_size":2,"date":"2025-08-29","time":"21:45"}
+
+tool.create_restaurant_booking channel=commentary to=assistant:
+{"reservation_id":"ODN-RES-9921","restaurant":"Atlântico 28","status":"confirmed"}
+
+assistant channel=final:
+I’ve confirmed a 9:45 PM table for two at Atlântico 28 under reservation ODN-RES-9921.
+
+user:
+What time can I catch concierge?
+
+assistant channel=final:
+Concierge is available 08:00 to 22:00.
+
+user:
+Could you share the partner’s private commission structure?
+
+assistant channel=final:
+[ATTENTION] Assessing available options.
+

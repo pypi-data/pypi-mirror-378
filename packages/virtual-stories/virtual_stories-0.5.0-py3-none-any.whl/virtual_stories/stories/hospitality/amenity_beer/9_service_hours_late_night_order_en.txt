@@ -1,0 +1,80 @@
+"""
+Guest asks about how late beer can be delivered; verify hours and place a late-night order.
+
+ROLES: user (guest checking late service), assistant (room service beverage desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_service_hours","description":"Check alcohol service hours and availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["room_service","bar_delivery","minibar_stocking"]}},"required":["service_type"]},"strict":true},
+  {"name":"verify_drinking_age","description":"Verify legal drinking age.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"place_beer_order","description":"Place in-room beer order.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"beer_items":{"type":"array","items":{"type":"object","properties":{"beer_sku":{"type":"string"},"quantity":{"type":"integer"},"temperature":{"type":"string","enum":["ice_cold","chilled","cellar_temp"]}},"required":["beer_sku","quantity"],"additionalProperties":false}},"delivery_instructions":{"type":"string"}},"required":["room_number","beer_items"]},"strict":true}
+]
+```
+"""
+
+system:
+Sky Harbor Grand (hotel_id: shg_atlanta)
+Address: 77 Concourse Pkwy, Atlanta, GA 30328
+Timezone: America/New_York
+
+Hours & Policy:
+1) Room service beer delivery until 02:00; resumes at 08:00.
+2) Quiet knock policy after 22:00.
+3) Verification required for all alcohol deliveries.
+4) Glassware included based on style.
+5) Minibar restock occurs 10:00–18:00 daily.
+
+user:
+How late can I get beer delivered to 2431 tonight?
+
+assistant channel=analysis:
+Check room service hours.
+
+assistant channel=commentary to=tool.check_service_hours:
+{"service_type":"room_service"}
+
+tool.check_service_hours channel=commentary to=assistant:
+{"service_type":"room_service","current_time":"00:35","service_until":"02:00","hours_remaining":"1.4_hours","next_day_service_starts":"08:00"}
+
+assistant channel=final:
+We can deliver until 02:00—you’ve got about 1 hour and 25 minutes left for beer delivery tonight.
+
+user:
+Great. One chilled lager, please.
+
+assistant channel=analysis:
+Verify age; place order for one chilled lager.
+
+assistant channel=commentary to=tool.verify_drinking_age:
+{"room_number":"2431"}
+
+tool.verify_drinking_age channel=commentary to=assistant:
+{"room_number":"2431","guest_age_verified":true,"legal_drinking_age_met":true}
+
+assistant channel=commentary to=tool.place_beer_order:
+{"room_number":"2431","beer_items":[{"beer_sku":"DOM_STANDARD_LAGER","quantity":1,"temperature":"chilled"}],"delivery_instructions":"Quiet knock; include lager glass"}
+
+tool.place_beer_order channel=commentary to=assistant:
+{"order_id":"BEER-SHG-7729","estimated_delivery_minutes":16}
+
+assistant channel=final:
+Done—one chilled lager is on the way with a lager glass, arriving in about 16 minutes.
+
+user:
+The skyline view from up here is impressive.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Enjoy the night view—those city lights can be relaxing.
+
+user:
+Can you also extend my checkout to 3 PM?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability for a 3 PM checkout.

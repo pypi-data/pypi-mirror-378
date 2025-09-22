@@ -1,0 +1,104 @@
+"""
+Guest urgently needs sanitary pads late at night; verify available options and arrange immediate delivery; includes small talk about hotel comfort.
+
+ROLES: user (guest needing emergency sanitary supplies), assistant (night concierge providing urgent personal care assistance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_personal_care_inventory",
+    "description": "Check availability for sanitary pads by absorbency and wings style.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "enum": ["sanitary_pad"] },
+        "absorbency": { "type": "string", "enum": ["light", "regular", "super"] },
+        "with_wings": { "type": "boolean" }
+      },
+      "required": ["item_code", "absorbency", "with_wings"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_personal_care",
+    "description": "Deliver personal care items discreetly in a paper bag.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "absorbency": { "type": "string", "enum": ["light", "regular", "super"] },
+        "with_wings": { "type": "boolean" },
+        "quantity": { "type": "integer", "minimum": 1 },
+        "bag_type": { "type": "string", "enum": ["discreet_paper"] }
+      },
+      "required": ["room_number", "item_code", "absorbency", "with_wings", "quantity", "bag_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Grand Marina Resort (hotel_id: gmr_mia_45)
+Address: 1250 Ocean Boulevard, Miami Beach, FL 33139
+Personal care coverage: 24/7; night service delivery ETA 5–15 minutes
+Location: Beachfront property with panoramic ocean views
+
+Sanitary pads inventory:
+- Absorbency levels: light, regular, super
+- Wings configuration: yes/no available
+- Current stock: regular/with_wings(42 packs), super/no_wings(31), light/with_wings(29)
+- Packaging: discreet_paper bag for all deliveries
+- Night shift always maintains emergency stock
+
+Ambiance details:
+- The hotel lobby features soft jazz background music during evening hours
+- Ocean breeze flows through the open-air sections
+- 24-hour room service available
+
+user:
+Hi, I'm in room 1204 and I really need sanitary pads urgently. Do you have any available now?
+
+assistant channel=analysis:
+Guest needs urgent sanitary pad delivery. I should check available options and provide quick service. No specific preference mentioned, so I'll check regular absorbency with wings as most common preference.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"item_code":"sanitary_pad","absorbency":"regular","with_wings":true}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_pad","absorbency":"regular","with_wings":true,"on_hand_packs":42}
+
+assistant channel=analysis:
+We have regular with wings available. I'll arrange immediate delivery to room 1204.
+
+assistant channel=commentary to=tool.deliver_personal_care:
+{"room_number":"1204","item_code":"sanitary_pad","absorbency":"regular","with_wings":true,"quantity":3,"bag_type":"discreet_paper"}
+
+tool.deliver_personal_care channel=commentary to=assistant:
+{"ticket_id":"PC-1204-2847","eta_minutes":8}
+
+assistant channel=final:
+Absolutely—I'm sending three packs of regular pads with wings to room 1204 right away. Ticket PC-1204-2847, they'll arrive in about 8 minutes in a discreet bag.
+
+user:
+That's perfect, thank you! The ocean view from my balcony is incredible.
+
+assistant channel=analysis:
+Guest appreciating the ocean view - acknowledge this positive aspect of their stay.
+
+assistant channel=final:
+You picked a wonderful room—the ocean views are stunning from that side of the building, especially at night with the moonlight on the water.
+
+user:
+Do you have overnight absorbency options for heavy flow days?
+
+assistant channel=analysis:
+The guest is asking about overnight or heavy flow options. This would be beyond our available categories in the system, which only offers light, regular, and super.
+
+assistant channel=final:
+[ATTENTION] Let me research our specialized options. Gathering relevant information.

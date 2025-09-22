@@ -1,0 +1,71 @@
+"""
+Guest requests extra ice for champagne cooling; includes small talk and SLA query.
+
+ROLES: user (guest in room 2612 requesting extra ice for an ice bath), assistant (services arranging multiple buckets and quoting SLA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Schedule amenity delivery",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Resort: Marina Promenade — South Tower
+Room: 2612 (Grand Suite)
+Ice: Up to 3 buckets per run for beverage cooling
+Hours: 07:15–23:00 normal; 23:00–00:45 urgent
+SLA floors 25–28: 14–20 minutes
+Dispatch: ST-26 pantry; Service Lift S5 after 22:00
+Lines: 0 | 7840 | 7841
+
+user:
+Could I get 3 buckets of ice to 2612 for chilling champagne?
+
+assistant channel=analysis:
+Place normal-priority delivery for 3 buckets to room 2612 with note for beverage cooling.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2612","amenity_name":"ice (bucket)","quantity":3,"priority":"normal","note":"Beverage cooling requested; dispatch from ST-26"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-2612-2218","eta_minutes":17}
+
+assistant channel=final:
+Confirmed—3 buckets of ice are scheduled for room 2612 with an ETA of about 17 minutes.
+
+user:
+Perfect, thanks. Busy night?
+
+assistant channel=final:
+We’re moving right along—just say if you need anything else.
+
+user:
+What’s the normal timeframe for 25–28?
+
+assistant channel=final:
+Normal deliveries to floors 25–28 run about 14–20 minutes.
+
+user:
+Are the buckets stainless steel?
+
+assistant channel=final:
+[ATTENTION] Analyzing the situation.
+

@@ -1,0 +1,61 @@
+"""
+Guest wants artsy postcards; include inventory check, small talk, and out-of-scope query.
+
+ROLES: user (art-loving guest), assistant (gallery shop associate)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "get_gift_shop_inventory",
+    "description": "Checks the inventory of the hotel gift shop.",
+    "parameters": {
+      "type": "object",
+      "properties": {"item_name": {"type": "string"}},
+      "required": ["item_name"]
+    }
+  }
+]
+```
+"""
+
+system:
+ArtHouse Residences — Lobby Gallery Shop
+Curations:
+  - Skyline lithograph miniatures (A6)
+  - Atrium stained-glass series (foil-stamped)
+  - Night concierge sketch series (limited 300)
+Hours: Mon–Thu 10:00–20:00; Fri–Sun 10:00–22:00
+Prices: standard $2.50; foil-stamped $3.50; limited $4.00
+Location: mezzanine landing, beside atrium lift
+Services: stamp sales; protective sleeves; gift notes
+Materials: acid-free cardstock, museum-grade coatings
+Note: use get_gift_shop_inventory for counts
+
+user:
+Do you have the atrium stained-glass postcards in stock?
+
+assistant channel=analysis:
+Check inventory for atrium_stained_glass_postcard; then quote price and hours from system.
+
+assistant channel=commentary to=tool.get_gift_shop_inventory:
+{"item_name": "atrium_stained_glass_postcard"}
+
+tool.get_gift_shop_inventory channel=commentary to=assistant:
+{"item_name": "atrium_stained_glass_postcard", "quantity": 42, "price": 3.5}
+
+assistant channel=final:
+Yes—42 are available. They’re $3.50 each. The gallery shop is open today 10:00–22:00 on the mezzanine beside the atrium lift.
+
+user:
+Thanks! Also, love how the light hits the mezzanine.
+
+assistant channel=final:
+It’s a favorite spot for quick photos—great eye.
+
+user:
+What was the artist’s exact Pantone code for the blue glass?
+
+assistant channel=final:
+[ATTENTION] That color specification isn’t provided in the current resources.
+

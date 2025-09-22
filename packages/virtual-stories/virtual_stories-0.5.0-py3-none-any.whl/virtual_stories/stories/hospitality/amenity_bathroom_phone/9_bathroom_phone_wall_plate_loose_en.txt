@@ -1,0 +1,64 @@
+"""
+Guest reports loose bathroom phone wall plate; create work order and provide timing.
+
+ROLES: user (guest noticing loose wall plate), assistant (front desk scheduling repair)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"create_engineering_ticket","description":"Open an engineering ticket.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"category":{"type":"string"},"priority":{"type":"string","enum":["low","medium","high","urgent"]},"note":{"type":"string"}},"required":["room_number","category","priority"]},"strict":true},
+  {"name":"schedule_engineering_visit","description":"Schedule an engineering visit.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"window_minutes":{"type":"integer","minimum":10}},"required":["room_number","window_minutes"]},"strict":true}
+]
+```
+"""
+
+system:
+Highline Business Hotel (hotel_id: hbh_seattle)
+Address: 707 5th Ave, Seattle, WA 98104
+Timezone: America/Los_Angeles
+
+Maintenance Standards:
+- Bathroom low-voltage wall plates must be secured with gasket to prevent moisture ingress.
+- Loose plates are repaired within same day during engineering hours.
+- Visit windows typically 25–35 minutes.
+- Engineering hours: 07:00–21:00; urgent after-hours via security.
+- Desk phone remains operational and should be used if bathroom unit is unstable.
+
+user:
+Hi, the bathroom phone wall plate in 1915 wiggles when I touch it.
+
+assistant channel=analysis:
+Create ticket and schedule fix within 35 minutes if possible.
+
+assistant channel=commentary to=tool.create_engineering_ticket:
+{"room_number":"1915","category":"bathroom_phone_wall_plate","priority":"high","note":"Wall plate loose; reseat with gasket"}
+
+tool.create_engineering_ticket channel=commentary to=assistant:
+{"ticket_id":"ENG-HBH-1915-6634","status":"open"}
+
+assistant channel=commentary to=tool.schedule_engineering_visit:
+{"room_number":"1915","window_minutes":30}
+
+tool.schedule_engineering_visit channel=commentary to=assistant:
+{"ticket_id":"ENG-HBH-1915-6634","visit_window_minutes":30,"eta_minutes":28}
+
+assistant channel=final:
+Thanks for reporting it. I’ve opened ticket ENG-HBH-1915-6634 and scheduled engineering—arrival in about 28 minutes to reseat and secure the plate.
+
+user:
+Appreciate it. The rain sounds cozy against the windows.
+
+assistant channel=analysis:
+Small talk reply.
+
+assistant channel=final:
+Rainy evenings can feel very cozy—enjoy your night.
+
+user:
+Can I get a late checkout tomorrow due to this?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll review late checkout availability with the team.

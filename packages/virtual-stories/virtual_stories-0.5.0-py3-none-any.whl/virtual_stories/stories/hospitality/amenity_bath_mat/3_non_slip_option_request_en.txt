@@ -1,0 +1,95 @@
+"""
+Guest asks specifically for non-slip bath mats; verify non-slip SKU stock and arrange delivery; include small talk, an in-context facility question, and an [ATTENTION] request.
+
+ROLES: user (guest requesting non-slip mats), assistant (guest services coordinating inventory and delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check stock for an amenity SKU.","parameters":{"type":"object","additionalProperties":false,"properties":{"sku":{"type":"string"}},"required":["sku"]},"strict":true},
+  {"name":"create_delivery","description":"Submit amenity delivery to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"sku":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","sku","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: The Maple Courtyard (hotel_id: tmc_tor_04)
+Address: 122 Wellington St W, Toronto, ON M5K 1A1, Canada
+Timezone: America/Toronto
+Check-in/Out: 15:00 / 12:00
+Amenity Dispatch: 07:00–23:00
+
+Bath Amenity Catalog:
+- bath_mat: cotton, 60x90 cm
+- bath_mat_non_slip: rubber-backed, 55x85 cm (preferred for tiled floors)
+- bath_towel: 500 GSM white
+
+Family Features:
+1) Cribs and bed rails by request
+2) Interconnecting rooms on floors 8–12
+3) Kids’ welcome kit at front desk
+4) Microwave access via pantry rooms (floors 6 & 10)
+5) Booster steps available on request
+
+Accessibility:
+- ADA/Accessible rooms with roll-in showers on floors 5 and 9
+- Grab bars available upon request
+
+Dining:
+- Breakfast lounge 06:30–10:30
+- Lobby coffee cart 06:30–12:30
+
+Sustainability:
+- Linen reuse program; bulk amenities where possible
+- Recycling stations on each guest floor
+
+user:
+Hello—room 1017 here. Do you have non-slip bath mats? If yes, please send one up.
+
+assistant channel=analysis:
+Confirm stock for bath_mat_non_slip, then create a delivery for 1 unit.
+
+assistant channel=commentary to=tool.check_inventory:
+{"sku":"bath_mat_non_slip"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"sku":"bath_mat_non_slip","on_hand":7}
+
+assistant channel=commentary to=tool.create_delivery:
+{"room":"1017","sku":"bath_mat_non_slip","qty":1}
+
+tool.create_delivery channel=commentary to=assistant:
+{"ticket":"TMC-HK-9015","eta_minutes":13}
+
+assistant channel=final:
+Yes—non-slip mats are available. I’ve sent one to room 1017 under ticket TMC-HK-9015 with an ETA of about 13 minutes.
+
+user:
+Your interconnecting rooms were handy for our family last time.
+
+assistant channel=analysis:
+Small talk referencing Family Features.
+
+assistant channel=final:
+I’m glad they helped—interconnecting rooms are available on floors 8 through 12.
+
+user:
+Does your pantry on 10 have a microwave right now?
+
+assistant channel=analysis:
+Answer from system pantry note.
+
+assistant channel=final:
+Yes—there’s microwave access via the pantry on floor 10.
+
+user:
+Can you recommend a pediatrician nearby and make an appointment for tomorrow?
+
+assistant channel=analysis:
+Beyond scope of tools and system; use special flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+
+user:
+Thanks—delivery timing works for us.

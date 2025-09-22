@@ -1,0 +1,53 @@
+"""
+Guest wants copies and asks about scan-to-email; create job and answer policy from system; include chitchat and ATTENTION for OCR.
+
+ROLES: user (guest copying and asking about scanning), assistant (business center agent creating job and stating scan policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "create_copy_job",
+    "description": "Create a copy job and return identifiers.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"},"color":{"type":"boolean"},"paper_size":{"type":"string","enum":["A4","Letter"]}},"required":["pages","color","paper_size"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Rivermark Suites — Business Hub (Mezzanine)
+Hours: 24/7 via Front Desk access
+Copy rates: B/W 0.15 USD; Color 0.50 USD per page
+Scan‑to‑email: Available at no charge for up to 30 pages; handled by staff
+Pickup: Typical 10–15 minutes for small copy jobs
+Payment: Room charge or card; receipts available
+
+user:
+Please copy 10 pages black and white on A4. Also, can you scan a set to my email?
+
+assistant channel=analysis:
+Create B/W copy job 10 pages A4; then confirm scan‑to‑email is available per system.
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":10,"color":false,"paper_size":"A4"}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-5459","price":"USD 1.50"}
+
+assistant channel=final:
+Your copy job CPY-5459 is queued at USD 1.50 for 10 A4 B/W pages. Scan‑to‑email is available at no charge for up to 30 pages through the Mezzanine Business Hub.
+
+user:
+Thanks—appreciate the quick help.
+
+assistant channel=final:
+Happy to help; pickup is typically 10–15 minutes.
+
+user:
+Can you run OCR on the scans so they’re searchable?
+
+assistant channel=final:
+[ATTENTION] OCR isn’t provided in these resources. Reviewing the documentation.
+

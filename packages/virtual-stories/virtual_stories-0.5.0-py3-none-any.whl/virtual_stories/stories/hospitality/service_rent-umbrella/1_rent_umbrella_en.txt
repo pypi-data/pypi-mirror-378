@@ -1,0 +1,53 @@
+"""
+Guest requests an umbrella; confirm availability and pickup.
+
+ROLES: user (guest heading out in rain), assistant (front desk lending umbrellas)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check umbrella stock and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create umbrella loan","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Parkside Regent London (PRLN-12), 1 Piccadilly, London W1.
+Front Desk 24/7.
+Umbrellas: 40 units; complimentary for same-day use; pick up at Front Desk recommended.
+
+user:
+Do you have umbrellas to borrow? I’m in 723.
+
+assistant channel=analysis:
+Reserve one umbrella and create a complimentary same-day loan for pickup at desk.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"PRLN-12","item":"umbrella","quantity":1,"room":"723"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["UMB-27"],"notes":"Same-day complimentary"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"PRLN-12","room":"723","item":"umbrella","duration_hours":12,"charge_code":"COMP-GUEST","delivery_option":"pick_up_at_desk"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"UMB-723-144","status":"created","charge":"comp"}
+
+assistant channel=final:
+Yes—umbrella reserved (UMB-723-144). Please pick it up at the Front Desk for same‑day complimentary use.
+
+user:
+Thanks! The lobby is cozy.
+
+assistant channel=final:
+We’re glad it feels welcoming—stay dry out there.
+
+user:
+Do you have archival brand guidelines for the umbrellas?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

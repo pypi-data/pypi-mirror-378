@@ -1,0 +1,63 @@
+"""
+Guest in accessible suite requests soft-brush and asks about grip-assist availability; check stock and deliver.
+
+ROLES: user (guest in accessible suite), assistant (housekeeping supply coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_supply_stock","description":"Check stock for soft brush.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_code":{"type":"string","enum":["shower_scrubber_soft_brush"]}},"required":["supply_code"]},"strict":true},
+  {"name":"deliver_supply","description":"Deliver item to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"supply_code":{"type":"string"},"quantity":{"type":"integer","minimum":1,"maximum":1}},"required":["room_number","supply_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborview Accessible Suites (hotel_id: has_bos_13)
+Address: 300 Atlantic Ave, Boston, MA 02110
+Timezone: America/New_York
+
+Accessibility:
+- Roll-in showers and grab bars standard
+- Soft-brush scrubbers available on request
+- Non-slip grips available via housekeeping
+
+user:
+Hi—could I get a soft-brush scrubber to 507? Also, do you have non-slip grips?
+
+assistant channel=analysis:
+Check stock and deliver soft-brush; answer grip availability from Accessibility.
+
+assistant channel=commentary to=tool.check_supply_stock:
+{"supply_code":"shower_scrubber_soft_brush"}
+
+tool.check_supply_stock channel=commentary to=assistant:
+{"supply_code":"shower_scrubber_soft_brush","on_hand":4,"estimated_delivery_minutes":10}
+
+assistant channel=commentary to=tool.deliver_supply:
+{"room_number":"507","supply_code":"shower_scrubber_soft_brush","quantity":1}
+
+tool.deliver_supply channel=commentary to=assistant:
+{"delivery_id":"SUP-DEL-9921","room_number":"507","supply_code":"shower_scrubber_soft_brush","quantity":1,"eta_minutes":10}
+
+assistant channel=final:
+One soft-brush scrubber is on its way to 507 (SUP-DEL-9921) with an ETA of about 10 minutes. Non-slip grips are also available via housekeeping if you’d like them.
+
+user:
+Thanks—the harbor view is lovely today!
+
+assistant channel=analysis:
+Small talk; acknowledge without adding facts beyond system.
+
+assistant channel=final:
+Glad you’re enjoying it—just let us know if you need any additional accessories.
+
+user:
+Is the harbor ferry running late?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about the ferry schedule and will review external info.
+

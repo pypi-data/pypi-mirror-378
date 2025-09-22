@@ -1,0 +1,60 @@
+"""
+Guest needs urgent ice bucket replacement before an event; include machine info, chat, and [ATTENTION].
+
+ROLES: user (guest 2006), assistant (amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"get_in_room_item_location","description":"Standard location for item.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver replacement item.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Cityline Atrium (hotel_id: cla_tor)
+Address: 440 Bay St, Toronto, ON M5H 2Y4, Canada
+Timezone: America/Toronto
+Placement:
+- Ice bucket: minibar drawer, right side
+Service: Urgent runs supported 10:00–22:00
+SLA: urgent 8–12 min
+Ice Machine Notes:
+- Machines: floors 12, 18, 24, 30
+- Signage in elevator lobby
+Contact: Service x12
+
+user:
+I need an ice bucket urgently in 2006—ours is cracked.
+
+assistant channel=analysis:
+Arrange urgent replacement.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2006","amenity_name":"ice bucket","quantity":1,"priority":"urgent"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"accepted":true,"eta_minutes":9,"ticket":"CLA-ICE-2006-U1"}
+
+assistant channel=final:
+On it—an ice bucket is headed to 2006 with an ETA of about 9 minutes. Ref CLA-ICE-2006-U1.
+
+user:
+Is there an ice machine on 20?
+
+assistant channel=final:
+Machines are on floors 12, 18, 24, and 30; none on 20.
+
+user:
+The atrium looks beautiful at night.
+
+assistant channel=final:
+It’s especially bright under the glass roof after dark.
+
+user:
+Do you have metal tongs instead of plastic?
+
+assistant channel=final:
+[ATTENTION] I’ll confirm the tongs material options.
+

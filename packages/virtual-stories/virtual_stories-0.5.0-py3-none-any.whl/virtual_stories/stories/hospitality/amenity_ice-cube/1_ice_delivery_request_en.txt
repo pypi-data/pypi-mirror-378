@@ -1,0 +1,62 @@
+"""
+Guest requests a bucket of ice cubes to the room and asks a casual unrelated question.
+
+ROLES: user (guest in room 914 needing ice cubes), assistant (guest services coordinating ice delivery and guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Create a fulfillment for an amenity delivery to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harborline Atrium — City Tower
+Room 914 (Premier King)
+Ice service: Bagged ice and fresh scooped ice available on request; typical quantity 1 bucket per request
+Service hours: 07:00–23:00 (normal), urgent 23:00–01:00 limited
+SLA to floors 7–12: normal 10–18 minutes
+
+user:
+Could I get a bucket of ice to 914?
+
+assistant channel=analysis:
+Place a normal-priority delivery for one bucket of ice to room 914.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"914","amenity_name":"ice (one bucket)","quantity":1,"priority":"normal","note":"Scooped fresh ice"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-914-4410","eta_minutes":12}
+
+assistant channel=final:
+Done—one bucket of fresh ice is scheduled for room 914 with an ETA of about 12 minutes.
+
+user:
+Thanks! Also, that lobby art is interesting.
+
+assistant channel=final:
+It does catch the eye—if you need anything else, I’m here to help.
+
+user:
+Who is the artist of the lobby mural?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.

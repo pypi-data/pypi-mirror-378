@@ -1,0 +1,116 @@
+"""
+Guest requests toilet cleaning supplies; check inventory, deliver products, include small talk, and one background acknowledgment.
+
+ROLES: user (guest needing bathroom cleaning products), assistant (housekeeping coordinator for guest supplies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_bathroom_supplies",
+    "description": "Check availability of bathroom supplies including toilet paper, tissues, and cleaning products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "supply_type": { "type": "string", "enum": ["toilet_paper", "tissues", "cleaning_wipes", "hand_towels"] }
+      },
+      "required": ["supply_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_bathroom_supplies",
+    "description": "Deliver bathroom supplies to the guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "supply_type": { "type": "string" },
+        "quantity": { "type": "integer" }
+      },
+      "required": ["room_number", "supply_type", "quantity"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Pacific Tranquil Tower (hotel_id: ptt_la_09)
+Address: 901 Ocean Ave, Santa Monica, CA 90401
+Timezone: America/Los_Angeles
+
+Bathroom Fixtures:
+- Smart Toilet: TOTO with dual-flush, heated seat, and bidet functions
+- Water pressure: Stabilized regulators per floor; diagnostics accessible to maintenance
+
+Design Details:
+- Sea-glass mosaic tiles in guest bathrooms
+- Premium 3-ply toilet paper with aloe vera infusion
+- Eco-friendly bamboo hand towels in all guest bathrooms
+- Aromatherapy diffusers with lavender and eucalyptus scents
+- Heated towel racks with temperature control
+- Rainfall showerheads with adjustable pressure settings
+- Non-slip bath mats with memory foam backing
+- LED vanity mirrors with adjustable brightness and color temperature
+
+Smart Toilet Features:
+- Bidet function: Adjustable water pressure and temperature (warm/cool)
+- Heated seat: 3 temperature settings (low/medium/high)
+- Dual-flush: Light flush for liquid waste, full flush for solid waste
+- Auto-flush: Motion sensor activation with manual override
+- Night light: Soft LED illumination for nighttime use
+- Deodorizer: Built-in air purification system
+
+Housekeeping Standards:
+- Daily restocking of all bathroom amenities
+- Premium toilet paper: 2 rolls per room, additional on request
+- Luxury bath products: organic shampoo, conditioner, body wash, and lotion
+- Fresh towels: 4 bath towels, 2 hand towels, 2 washcloths per room
+- Cleaning supplies: Eco-friendly disinfectant wipes, toilet bowl cleaner, and surface spray
+- Maintenance products: Non-abrasive cleaners safe for sea-glass tiles and smart toilet surfaces
+
+user:
+Hi! Could I get some cleaning supplies for the toilet in room 1110? I'd like to give it a quick clean.
+
+assistant channel=analysis:
+Check availability of cleaning supplies and deliver them to the guest room.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"supply_type":"cleaning_wipes"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"brand":"EcoClean_Disinfectant","stock_level":"high","notes":"safe_for_smart_toilets_and_sea_glass_tiles"}
+
+assistant channel=analysis:
+Deliver cleaning supplies to the guest room.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"1110","supply_type":"cleaning_wipes","quantity":2}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":6,"items":["EcoClean_Disinfectant_Wipes"],"quantity":2,"additional_items":["toilet_bowl_cleaner","surface_spray"]}
+
+assistant channel=final:
+Absolutely! I'm sending up EcoClean disinfectant wipes that are safe for smart toilets and sea-glass tiles, plus toilet bowl cleaner and surface spray. They'll arrive at room 1110 in about 6 minutes.
+
+user:
+The LED vanity mirror is so convenient—I can adjust the brightness perfectly for applying makeup.
+
+assistant channel=analysis:
+Acknowledge the positive feedback about the LED vanity mirror feature.
+
+assistant channel=final:
+I'm glad you're finding it helpful! The LED vanity mirrors with adjustable brightness and color temperature are designed to provide the perfect lighting for any task.
+
+user:
+Could you provide a steam cleaner for deep cleaning the toilet?
+
+assistant channel=analysis:
+Steam cleaners aren't available through the standard supply system; use background acknowledgment flag.
+
+assistant channel=final:
+[ATTENTION] I understand you'd like more thorough cleaning options. Reviewing available resources.

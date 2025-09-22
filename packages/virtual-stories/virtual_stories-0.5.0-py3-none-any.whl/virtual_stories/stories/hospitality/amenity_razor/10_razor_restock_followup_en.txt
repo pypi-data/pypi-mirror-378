@@ -1,0 +1,59 @@
+"""
+Guest asks if more razors can be requested tomorrow and checks service hours; includes brief small talk.
+
+ROLES: user (Planning ahead.), assistant (Concise front desk.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "send_complimentary_item",
+    "description": "Sends a complimentary item to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"}
+      },
+      "required": ["room_number", "item_name"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Skyline Tower Hotel
+Complimentary: Razor, Dental, Sewing kits
+Hours: 24/7
+Limit: Two per room per day (resets daily)
+Average ETA: 10 minutes
+Contact: 0
+
+user:
+Hi—2006. Can I get a razor now and another tomorrow?
+
+assistant channel=analysis:
+Limit is two per room per day, resets daily. I’ll send one now and confirm policy.
+
+assistant channel=commentary to=tool.send_complimentary_item:
+{"room_number": "2006", "item_name": "razor"}
+
+tool.send_complimentary_item channel=commentary to=assistant:
+{"status": "success", "message": "Razor sent to 2006."}
+
+assistant channel=final:
+Sent. You can request up to two today and the count resets tomorrow. We’re 24/7 if you need anything.
+
+user:
+Nice—thanks. Busy night up there?
+
+assistant channel=final:
+Steady, but fully staffed. Happy to help anytime.
+
+user:
+[ATTENTION] Could you bring a lint roller too?
+
+assistant channel=final:
+That item isn’t in my system. I can provide the listed complimentary kits only.
+

@@ -1,0 +1,63 @@
+"""
+Parent wants pre-bed gentle window and temp cap for toddler routine.
+
+ROLES: user (parent), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_anti_scald_limit","description":"Set anti-scald limit (°F).","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"max_temp_f":{"type":"integer","minimum":95,"maximum":110}},"required":["room_number","max_temp_f"]},"strict":true},
+  {"name":"set_gentle_window","description":"Configure a gentle pressure window for bedtime.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"window":{"type":"string"}},"required":["room_number","window"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Maple Grove Suites (hotel_id: mgs_yul_06)
+Address: 700 Rue Stanley, Montréal, QC H3B 3K9
+Timezone: America/Toronto
+
+Kid Routine Support:
+- Bedtime gentle window can be set per room
+- Anti-scald adjustable 95–110°F
+- Kids storytime 18:30 in the lobby
+
+user:
+Hi—please cap 1604 at 100°F and set gentle pressure from 19:00–20:00.
+
+assistant channel=analysis:
+Set anti-scald and configure gentle window as requested.
+
+assistant channel=commentary to=tool.set_anti_scald_limit:
+{"room_number":"1604","max_temp_f":100}
+
+tool.set_anti_scald_limit channel=commentary to=assistant:
+{"room_number":"1604","max_temp_f":100,"applied":true}
+
+assistant channel=commentary to=tool.set_gentle_window:
+{"room_number":"1604","window":"19:00-20:00:gentle"}
+
+tool.set_gentle_window channel=commentary to=assistant:
+{"room_number":"1604","window":"19:00-20:00:gentle","applied":true}
+
+assistant channel=final:
+Configured: 1604 now has a 100°F cap and a gentle pressure window from 19:00–20:00.
+
+user:
+Thanks—what time is storytime tonight?
+
+assistant channel=analysis:
+Use Kid Routine Support.
+
+assistant channel=final:
+Storytime begins at 18:30 in the lobby.
+
+user:
+Is the metro stroller-friendly at rush hour?
+
+assistant channel=analysis:
+Transit details are beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about metro stroller access and will review external info.
+

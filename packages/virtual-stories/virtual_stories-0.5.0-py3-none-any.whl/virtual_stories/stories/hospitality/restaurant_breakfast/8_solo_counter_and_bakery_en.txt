@@ -1,0 +1,86 @@
+"""
+Guest asks for counter seating and a bakery preview; include small talk and ATTENTION follow‑up.
+
+ROLES: user (solo diner), assistant (host confirming counter seating and bakery preview)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List breakfast venues","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string"}},"required":["hotel_id","meal_period"]},"strict":true},
+  {"name":"check_table_availability","description":"Check availability","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book seat","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Get bakery preview","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"section":{"type":"string"}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cityline Central (hotel_id: cityline_central)
+Breakfast: Central Pantry (restaurant_id: rest_central_pantry) 06:00–10:00
+
+Seating & Flow:
+- Counter seats near coffee bar
+- High‑tops available
+
+Access & Convenience:
+- Ground‑floor entry; step‑free
+- Grab‑and‑go case by the host stand
+
+Bakery Notes:
+- Daily croissants and muffins
+- Sourdough toast
+
+Drinks & Billing:
+- Barista bar for espresso drinks
+- Room charge supported
+
+user:
+Seat for 1 at 8:00 under Jordan at Central Pantry, and what bakery items are there?
+
+assistant channel=analysis:
+Verify venue, check 08:00 solo, book, fetch bakery preview.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"cityline_central","meal_period":"breakfast"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_central_pantry","name":"Central Pantry","hours":"06:00-10:00"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_central_pantry","party_size":1,"datetime":"2025-09-02T08:00:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_central_pantry","guest_name":"Jordan","contact":"","party_size":1,"datetime":"2025-09-02T08:00:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"CP-BRK-8003"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_central_pantry","section":"bakery"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"bakery","items":[{"name":"Croissant"},{"name":"Banana muffin"},{"name":"Sourdough toast"}]}
+
+assistant channel=final:
+Your 8:00 counter seat for 1 at Central Pantry is confirmed (CP-BRK-8003). Bakery preview: Croissant, Banana muffin, Sourdough toast.
+
+user:
+Smells like fresh coffee in the lobby.
+
+assistant channel=final:
+The counter is right beside the coffee bar.
+
+user:
+Is there step‑free entry to the pantry?
+
+assistant channel=final:
+Yes—entry is on the ground floor with a step‑free route.
+
+user:
+Can you set aside a croissant in advance?
+
+assistant channel=final:
+[ATTENTION] Advance item holds aren’t handled here. Reviewing available options.

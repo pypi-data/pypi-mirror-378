@@ -1,0 +1,59 @@
+"""
+Guest asks about color print quotas and how payment works; we confirm via tools, include chitchat, and flag an out‑of‑scope request.
+
+ROLES: user (guest planning high‑volume color printing), assistant (business center attendant clarifying quotas and payment)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_print_quota","description":"Return remaining color/mono print quota for a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]}},
+  {"name":"get_payment_methods","description":"List accepted payment methods at Business Center.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"required":[]}
+]
+```
+"""
+
+system:
+Harborline Suites — Business Center
+Key info:
+- Hours 06:45–22:15 | Location: Level M foyer
+- Printing: pay‑per‑page; charges posted to room or card at desk
+- Quotas: Track remaining pages per room; top‑ups allowed at desk
+- PCs: Windows 11; USB allowed; auto‑wipe enabled
+Contact: Ext. 9 from any house phone
+
+user:
+Room 1508 here—how many color pages do I have left, and how do I pay?
+
+assistant channel=analysis:
+Fetch quota for room 1508 and list payment methods; then answer.
+
+assistant channel=commentary to=tool.get_print_quota:
+{"room":"1508"}
+
+tool.get_print_quota channel=commentary to=assistant:
+{"room":"1508","remaining":{"color":18,"mono":42}}
+
+assistant channel=commentary to=tool.get_payment_methods:
+{}
+
+tool.get_payment_methods channel=commentary to=assistant:
+{"methods":["post_to_room","credit_card"]}
+
+assistant channel=final:
+Room 1508 has 18 color pages and 42 mono pages remaining. You can post charges to the room or use a credit card at the desk.
+
+user:
+The foyer location is convenient.
+
+assistant channel=final:
+Glad Level M works well.
+
+user:
+Can you waive all print charges for my group today?
+
+assistant channel=analysis:
+No waiver policy provided; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Charge waivers aren’t defined in these resources. Checking available options.
+

@@ -1,0 +1,63 @@
+"""
+Guest asks for the official LINE ID; deliver via tool with small talk and a background flag case.
+
+ROLES: user (guest seeking LINE contact), assistant (guest services returning social/contact IDs)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Coral Vista Hotel (hotel_id: coral_vista_hotel)
+Contacts directory snapshot:
+  Email: stay@coralvista.hotel
+  Phone: +81 3 5550 0199
+  Fax: +81 3 5550 0200
+  LINE: @coralvista
+  WeChat: coral_vista
+  Website: https://www.coralvista.hotel
+
+user:
+What’s your official LINE ID?
+
+assistant channel=analysis:
+Use contact channel tool for line.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"coral_vista_hotel","channel":"line"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"line":"@coralvista"}
+
+assistant channel=final:
+Our LINE ID is @coralvista.
+
+user:
+Thanks! Hope your day’s going fine.
+
+assistant channel=final:
+Appreciate it—how else may I assist?
+
+user:
+Do you track message response latency on LINE in real time right now?
+
+assistant channel=final:
+[ATTENTION] That metric isn’t available within the provided resources. Reviewing the documentation.
+

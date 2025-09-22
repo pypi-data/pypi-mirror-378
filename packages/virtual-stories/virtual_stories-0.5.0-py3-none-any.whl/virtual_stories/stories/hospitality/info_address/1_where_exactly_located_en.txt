@@ -1,0 +1,64 @@
+"""
+Guest asks for the hotel address; include small talk and an out-of-scope follow-up. Uses tool for authoritative address.
+
+ROLES: user (guest confirming address details), assistant (front desk agent returning official address and directions)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "lookup_hotel_address",
+    "description": "Get the official mailing and visiting address with geo details.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "include_coords": {"type":"boolean"}
+      },
+      "required": ["hotel_id"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborlight Quay Hotel (hotel_id: harborlight_quay_hotel)
+Address lines:
+  - Street: 88 Marina Esplanade, Quay District
+  - City/Region: Portwell, PW 40219
+  - Country: United Kingdom
+Access:
+  - 350 m to Quay District Station (Metro Line A)
+  - Set-down bay on Esplanade side; overnight parking at Quay Garage P3
+Coordinates: 51.50788, -0.12839
+
+user:
+Could you give me the exact address for Harborlight Quay Hotel?
+
+assistant channel=analysis:
+Return address via tool with coordinates.
+
+assistant channel=commentary to=tool.lookup_hotel_address:
+{"hotel_id":"harborlight_quay_hotel","include_coords":true}
+
+tool.lookup_hotel_address channel=commentary to=assistant:
+{"street":"88 Marina Esplanade, Quay District","city_region":"Portwell, PW 40219","country":"United Kingdom","coordinates":"51.50788,-0.12839"}
+
+assistant channel=final:
+Our address is 88 Marina Esplanade, Quay District, Portwell, PW 40219, United Kingdom. Coordinates: 51.50788, -0.12839.
+
+user:
+Great, thanks! Busy day for you?
+
+assistant channel=final:
+Thanks for checking in—how can I assist further?
+
+user:
+Can you tell me the current road closures around the Quay District right now?
+
+assistant channel=final:
+[ATTENTION] This isn’t within the available resources here. Working on your request.
+

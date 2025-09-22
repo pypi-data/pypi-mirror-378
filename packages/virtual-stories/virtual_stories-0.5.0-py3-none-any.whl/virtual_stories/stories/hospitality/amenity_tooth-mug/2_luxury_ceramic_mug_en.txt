@@ -1,0 +1,95 @@
+"""
+Guest requests a ceramic tooth mug for their luxury suite, includes small talk about hotel amenities and an ATTENTION case for customization.
+
+ROLES: user (luxury suite guest requesting ceramic tooth mug), assistant (premium amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_tooth_mug_options",
+    "description": "Check available tooth mug materials and stock.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "material": { "type": "string", "enum": ["ceramic", "glass"] }
+      },
+      "required": ["material"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_tooth_mug",
+    "description": "Deliver a tooth mug to the specified room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "material": { "type": "string" }
+      },
+      "required": ["room_number", "material"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: The Grand Plaza Hotel (hotel_id: gph_nyc_01)
+Address: 1235 Park Avenue, New York, NY 10028
+Timezone: America/New_York
+
+Bathroom Amenity Notes:
+- Tooth mugs: ceramic (bone china with gold trim) and glass (crystal with platinum accents)
+- Premium suites receive complimentary amenity upgrades
+- 24/7 butler service available for luxury accommodations
+
+Design Details:
+- Marble countertops with gold fixtures in premium suites
+- Custom monogrammed amenities available for extended stays
+- Heated bathroom floors in all luxury suites
+
+user:
+Good evening! I'm in the Presidential Suite 1201 and would like a ceramic tooth mug delivered. The glass one in my bathroom seems a bit too delicate for my preference.
+
+assistant channel=analysis:
+Guest in Presidential Suite requesting ceramic mug replacement. Check ceramic availability and deliver to room 1201.
+
+assistant channel=commentary to=tool.check_tooth_mug_options:
+{"material":"ceramic"}
+
+tool.check_tooth_mug_options channel=commentary to=assistant:
+{"available":true,"finish":"bone china with gold trim","stock":12}
+
+assistant channel=analysis:
+Ceramic mugs available in bone china with gold trim. Proceed with delivery to Presidential Suite 1201.
+
+assistant channel=commentary to=tool.deliver_tooth_mug:
+{"room_number":"1201","material":"ceramic"}
+
+tool.deliver_tooth_mug channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":5,"runner":"butler_service","premium_delivery":true}
+
+assistant channel=final:
+Perfect! A bone china tooth mug with gold trim is being delivered to your Presidential Suite by our butler service. It should arrive within 5 minutes.
+
+user:
+The marble countertops in this suite are absolutely stunning. Is this Carrara marble?
+
+assistant channel=analysis:
+Guest complimenting the marble countertops. Acknowledge based on system design details about marble countertops with gold fixtures.
+
+assistant channel=final:
+Thank you! Yes, we use premium marble countertops with gold fixtures in all our luxury suites. The heated bathroom floors add an extra touch of comfort.
+
+user:
+Could you have the tooth mug engraved with my initials before delivery? I'm staying for two weeks.
+
+assistant channel=analysis:
+Guest requesting custom engraving on tooth mug. This goes beyond available tools and system capabilities - need to use ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] I understand you'd like personalized engraving. Checking available options.

@@ -1,0 +1,60 @@
+"""
+Guest requests a wheelchair; confirm availability, size, and delivery timeframe.
+
+ROLES: user (guest needing mobility support), assistant (accessibility coordinator at front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check wheelchair availability and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create wheelchair loan","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true},
+  {"name":"schedule_delivery","description":"Schedule delivery to room","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Mountain Lodge Aspen (MLAS-13), 501 E Dean St, Aspen, CO 81611, USA.
+Front Desk 24/7; Bell/Runner 7:00–23:00.
+Wheelchairs: 4 standard units; complimentary for on-property use up to 48 hours; delivery ETA 10–20 minutes.
+
+user:
+Hi, could I borrow a wheelchair? I’m in 422.
+
+assistant channel=analysis:
+Hold one standard wheelchair and arrange a complimentary 24-hour loan with delivery to 422.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"MLAS-13","item":"wheelchair_standard","quantity":1,"room":"422"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["WHL-02"],"notes":"Complimentary up to 48h"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"MLAS-13","room":"422","item":"wheelchair_standard","duration_hours":24,"charge_code":"COMP-ACCESS","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"WHL-422-319","status":"created","charge":"comp"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"MLAS-13","room":"422","order_id":"WHL-422-319"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":11,"runner":"Owen","order_id":"WHL-422-319"}
+
+assistant channel=final:
+We’ve reserved one standard wheelchair (order WHL-422-319). Owen will deliver to 422 in about 11 minutes.
+
+user:
+Thanks for the quick help.
+
+assistant channel=final:
+You’re very welcome—please let us know if you need adjustments.
+
+user:
+Can you provide FDA registration documents for the wheelchair?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

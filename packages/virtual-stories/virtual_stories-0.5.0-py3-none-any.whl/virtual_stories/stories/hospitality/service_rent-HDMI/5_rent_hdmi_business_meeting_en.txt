@@ -1,0 +1,112 @@
+"""
+Business professional needs HDMI cable for video conference meeting; confirm business-grade options, discuss meeting support, and arrange delivery.
+
+ROLES: user (business professional conducting video conference meeting), assistant (front desk supporting business meetings)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {
+    "name": "check_inventory",
+    "description": "Check availability of rentable items and hold stock if available.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "item": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "room": {"type": "string"}
+      },
+      "required": ["hotel_id", "item", "quantity", "room"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_rental_order",
+    "description": "Create a rental order and charge or comp to room folio as configured.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "item": {"type": "string"},
+        "duration_hours": {"type": "integer", "minimum": 1},
+        "charge_code": {"type": "string", "description": "comp or a billable code"},
+        "delivery_option": {"type": "string", "enum": ["room_drop", "pick_up_at_desk"]}
+      },
+      "required": ["hotel_id", "room", "item", "duration_hours", "charge_code", "delivery_option"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_delivery",
+    "description": "Schedule runner delivery to a room with ETA.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "order_id": {"type": "string"}
+      },
+      "required": ["hotel_id", "room", "order_id"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborview Grand Boston (HVGR-01), 1 Seaport Blvd, Boston, MA 02210.
+5-star waterfront property; 42 floors; 24/7 front desk and runners.
+Check-in 3:00 PM; check-out 12:00 PM; late check-out on availability.
+Complimentary in-room HDMI cables (10 units total); no deposit; first-come, first-served; typical delivery ETA 10–15 minutes.
+Business support: Business-grade HDMI cables available; Video conference optimization; Meeting room access; Technical support for business meetings.
+Other facts: Gym 24/7 (keycard access); Business Center 7:00–22:00; In-room TVs support HDMI on input 2; Room folio comp code: COMP-IT-ACC.
+Executive meeting rooms; Video conference facilities; Business concierge; High-speed internet for meetings.
+
+user:
+I have an important video conference call in an hour and need an HDMI cable to connect my laptop to the TV for a larger display. Room 1507.
+
+assistant channel=analysis:
+The guest has an urgent business meeting and needs an HDMI cable for video conference display. I should prioritize business-grade cables and discuss meeting support services.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"HVGR-01","item":"HDMI_cable_business","quantity":1,"room":"1507"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["HDMI-BUS-2875"],"notes":"Business-grade; video conference optimized; reliable signal"}
+
+assistant channel=analysis:
+Business HDMI cable is available and reserved. Now I'll create a comp order and schedule urgent delivery for the meeting.
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"HVGR-01","room":"1507","item":"HDMI_cable_business","duration_hours":4,"charge_code":"COMP-IT-ACC","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"RNT-1507-98319","status":"created","charge":"comp","business_priority":"urgent meeting"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"HVGR-01","room":"1507","order_id":"RNT-1507-98319"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":5,"runner":"David","order_id":"RNT-1507-98319"}
+
+assistant channel=final:
+Urgent delivery arranged! Business HDMI cable HDMI-BUS-2875 is optimized for video conferences with reliable signal transmission. Order RNT-1507-98319 is complimentary and David will deliver it to room 1507 in about 5 minutes. Our technical support team is available if you need any meeting assistance.
+
+user:
+Perfect! The business support here is exceptional.
+
+assistant channel=final:
+Thank you—we understand how important business meetings are and ensure everything runs smoothly.
+
+user:
+Do you have any partnerships with video conference platforms for enhanced meeting features?
+
+assistant channel=final:
+[ATTENTION] Checking available video conference partnerships.

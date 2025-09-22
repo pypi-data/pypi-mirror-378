@@ -1,0 +1,61 @@
+"""
+Guest books a limousine to the airport with pickup details and rate quote.
+
+ROLES: user (guest needing private transfer), assistant (concierge coordinating limousine service with fixed rates)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "book_limousine",
+    "description": "Book a limousine transfer with pickup time and destination.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "pickup_time": {"type": "string"},
+        "destination": {"type": "string"}
+      },
+      "required": ["room_number", "pickup_time", "destination"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Capital Crescent Hotel
+Limousine Service:
+- Flat rates: Airport (International Terminal) $95 each way; Downtown $65
+- Inclusions: 2 suitcases + 2 carry-ons; extra luggage by request
+- Meeting point: Front Drive canopy; 10-minute grace period
+- Billing: Charge to room or card on file
+
+user:
+I need a limo to the international terminal at 5:30 am from room 602.
+
+assistant channel=analysis:
+Book to Airport at 05:30; confirm flat rate.
+
+assistant channel=commentary to=tool.book_limousine:
+{"room_number":"602","pickup_time":"05:30","destination":"Airport International Terminal"}
+
+tool.book_limousine channel=commentary to=assistant:
+{"booking_id":"limo_7710","rate":95,"currency":"USD","pickup_point":"Front Drive canopy"}
+
+assistant channel=final:
+Your limousine is booked (limo_7710) for 05:30 at the Front Drive canopy to the International Terminal. The flat rate is $95 USD and can be charged to room 602.
+
+user:
+Nice—your driveway lighting is cool.
+
+assistant channel=final:
+Pickups meet at the Front Drive canopy with a 10‑minute grace period.
+
+user:
+Can I request a specific driver by name?
+
+assistant channel=final:
+[ATTENTION] Driver selection by name isn’t shown in our service options. Reviewing the documentation.

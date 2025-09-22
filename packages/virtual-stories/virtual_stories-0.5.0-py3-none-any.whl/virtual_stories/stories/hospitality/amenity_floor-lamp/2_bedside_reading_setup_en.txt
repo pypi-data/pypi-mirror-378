@@ -1,0 +1,63 @@
+"""
+Guest wants a bedside reading setup with warm light and asks for recommended brightness.
+
+ROLES: user (reader in bed), assistant (housekeeping lighting coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"status","description":"Get current lamp settings.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]},"strict":true},
+  {"name":"adjust","description":"Adjust floor lamp.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"brightness":{"type":"number","minimum":10,"maximum":100},"position":{"type":"string","enum":["bedside_left","bedside_right","reading_chair","desk_area","window_corner"]},"temperature":{"type":"string","enum":["warm_2700k","neutral_3000k","daylight_5000k"]}},"required":["room","brightness","position"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cedar Court Suites (hotel_id: ccs_or_02)
+Address: 320 Park Ave, Bend, OR 97703
+Lighting reference:
+- Bedside reading: 40–60% brightness, warm 2700K–3000K
+- Desk work: 85–95% brightness, daylight 5000K
+- Evening ambiance: 30–50% brightness, warm 2700K
+- Two floor lamps per suite; relocatable
+- Housekeeping hours: 07:00–23:00; ETA 10–18 minutes
+
+user:
+Hi, in 612. What brightness do you recommend for bedside reading? Please set it up on the right side, warm light.
+
+assistant channel=analysis:
+Use system recommendation 40–60% and warm. Check status, then set 55% warm at bedside_right for room 612.
+
+assistant channel=commentary to=tool.status:
+{"room":"612"}
+
+tool.status channel=commentary to=assistant:
+{"room":"612","current":{"brightness":30,"position":"window_corner","temperature":"neutral_3000k"}}
+
+assistant channel=commentary to=tool.adjust:
+{"room":"612","brightness":55,"position":"bedside_right","temperature":"warm_2700k"}
+
+tool.adjust channel=commentary to=assistant:
+{"ticket":"CCS-612-LGT-210","eta_minutes":12}
+
+assistant channel=final:
+For bedside reading we recommend about 40–60% with warm light. I’ve set yours to 55% at bedside right with warm 2700K (ticket CCS-612-LGT-210), ETA about 12 minutes within 07:00–23:00.
+
+user:
+Thanks—the wood paneling looks cozy.
+
+assistant channel=analysis:
+Chitchat reply only.
+
+assistant channel=final:
+It creates a nice cabin feel.
+
+user:
+Can you also bring herbal tea?
+
+assistant channel=analysis:
+Tea delivery isn’t part of these lighting tools.
+
+assistant channel=final:
+[ATTENTION] I’ll check on herbal tea availability.
+

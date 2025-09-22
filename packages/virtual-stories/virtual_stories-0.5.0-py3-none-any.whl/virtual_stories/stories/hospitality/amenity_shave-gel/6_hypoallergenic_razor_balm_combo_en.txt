@@ -1,0 +1,112 @@
+"""
+Guest requests hypoallergenic gel and aftershave for sensitive skin; verify stock and deliver quickly.
+
+ROLES: user (guest with sensitive skin), assistant (housekeeping amenity runner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Pacific Shoreline Hotel Santa Monica (hotel_id: psh_lax_06)
+Address: 1700 Ocean Ave, Santa Monica, CA 90401
+Timezone: America/Los_Angeles
+
+Sensitive Care Shelf:
+- Hypoallergenic gel: fragrance-free, alcohol-free
+- Aftershave balm: soothing, no dyes, aloe + oat
+- Pre-shave oil: neutral base (optional)
+- Complete kit: gel + balm bundle
+- Sizes: 100 ml gel, 60 ml balm
+
+Service & Policy:
+- Delivery: 15–30 minutes, 07:00–22:00
+- Evening service available during turndown 19:00–21:30
+- Swap policy: first sensitivity swap complimentary
+- Contact: Guest Services ext 5
+- Packaging: sealed pouches
+
+user:
+Hello, could I get your hypoallergenic shaving gel with a soothing aftershave? Room 1003.
+
+assistant channel=analysis:
+Check shaving_gel for sensitive hypoallergenic; then deliver gel + balm to 1003.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type":"shaving_gel","skin_type":"sensitive","brand_preference":"hypoallergenic"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available":true,"recommended_products":["HypoGel_100ml","SoothingBalm_60ml"],"bundle":true}
+
+assistant channel=analysis:
+Schedule immediate delivery.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number":"1003","products":["HypoGel_100ml","SoothingBalm_60ml"],"delivery_window":"immediate","include_instructions":true}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled":true,"arrival_time":"18_minutes","instructions":"sensitive_skin_care_tips"}
+
+assistant channel=final:
+Yes—we have a fragrance-free, alcohol-free gel and a soothing aloe + oat balm. They’re on the way to 1003 and should arrive in about 18 minutes with care tips.
+
+user:
+Is the first sensitivity swap complimentary?
+
+assistant channel=analysis:
+System policy: first sensitivity swap complimentary.
+
+assistant channel=final:
+Yes—the first sensitivity-related swap is complimentary.
+
+user:
+Thanks! The ocean breeze is wonderful.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+It’s lovely—enjoy your evening.
+
+user:
+Do you rent bikes along the beach path?
+
+assistant channel=analysis:
+Beyond grooming scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check bike rental options on the path and share details.

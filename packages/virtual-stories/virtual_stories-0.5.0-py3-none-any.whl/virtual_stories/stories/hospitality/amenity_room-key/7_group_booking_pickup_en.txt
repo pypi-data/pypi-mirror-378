@@ -1,0 +1,61 @@
+"""
+Group booking guest needs a spare; assistant verifies identity and issues spare; includes small talk and out-of-scope query.
+
+ROLES: user (guest in room 1003 under a group block requesting spare), assistant (front desk issuing within policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_guest_identity","description":"Verify identity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"last_name":{"type":"string"},"id_last4":{"type":"string"}},"required":["room_number","last_name","id_last4"]}},
+  {"name":"issue_spare_key","description":"Issue spare for pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pickup_location":{"type":"string","enum":["front_desk"]}},"required":["room_number","pickup_location"]}}
+]
+```
+"""
+
+system:
+Hotel: Cascade Plaza — Conference Tower
+Front desk: 24/7
+Room 1003: Group block "TechCon"
+Policy: Verify last name + ID last four; pickup front_desk only; up to 2 active spares; auto-deactivate at 00:00
+Notes: Conference Tower elevator CT2 to 10th floor; coffee kiosk 06:00–12:00
+Contacts: Front Desk 0
+
+user:
+Hi, Lee in 1003 (ID 3309). Can I get a spare key?
+
+assistant channel=analysis:
+Verify identity and issue spare for front desk pickup; confirm within policy.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"1003","last_name":"Lee","id_last4":"3309"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"1003"}
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"1003","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-1003-7715","pickup_location":"front_desk"}
+
+assistant channel=final:
+Verified—your spare key (SP-1003-7715) is ready at the front desk.
+
+user:
+Thanks! Is the coffee kiosk still open?
+
+assistant channel=final:
+The kiosk operates 06:00–12:00.
+
+user:
+How’s everything going with TechCon?
+
+assistant channel=final:
+Running smoothly so far—thanks for asking!
+
+user:
+Can the spare be left at the kiosk for pickup?
+
+assistant channel=final:
+[ATTENTION] Pickup is front desk only per the provided policy.
+

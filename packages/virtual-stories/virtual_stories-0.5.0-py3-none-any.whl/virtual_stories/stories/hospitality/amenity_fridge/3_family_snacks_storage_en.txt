@@ -1,0 +1,110 @@
+"""
+Family requests mini-fridge for snacks and beverages; confirm fee, capacity, noise, and delivery ETA. Include small talk and one background acknowledgment.
+
+ROLES: user (family traveler), assistant (guest services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_fridge_inventory",
+    "description": "Check standard mini-fridge availability and fee policy for a given room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "use_case": { "type": "string", "enum": ["standard","medical","events"] }
+      },
+      "required": ["room_number","use_case"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_fridge",
+    "description": "Arrange delivery of a standard mini-fridge.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "model": { "type": "string" },
+        "priority": { "type": "string", "enum": ["standard","urgent"] }
+      },
+      "required": ["room_number","model","priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel Name: Cedar Valley Lodge (hotel_id: CVL_park_07)
+Address: 88 Ridge Trail, Estes Park, CO 80517
+Timezone: America/Denver
+
+Mini-Fridge Program (Standard Use):
+- Fee: $10 per stay (refundable deposit $25)
+- Capacity: 50 L | 3 shelves + can rack
+- Noise: 34 dB | Energy: A+ rating
+- Delivery hours: 06:00–23:00 (after-hours on-call if urgent)
+- Inventory: 22 units, model CVL-50L
+
+Park Access Notes:
+Shuttle: every 20 min | Trailheads: Pine Loop, Eagle Crest | Map at front desk
+
+Reference Codes:
+FRIDGE_STD, DEPOSIT_25, QUIET_34DB, PARK_SHUTTLE_20M
+
+user:
+Hi! We’d like a mini-fridge for snacks and juice in room 327.
+
+assistant channel=analysis:
+Check standard inventory for room 327, then schedule standard delivery.
+
+assistant channel=commentary to=tool.check_fridge_inventory:
+{"room_number":"327","use_case":"standard"}
+
+tool.check_fridge_inventory channel=commentary to=assistant:
+{"available":true,"model":"CVL-50L","fee":"$10_per_stay","deposit":"$25_refundable","notes":"Standard program"}
+
+assistant channel=analysis:
+Available with known fee/deposit. Proceed to deliver.
+
+assistant channel=commentary to=tool.deliver_fridge:
+{"room_number":"327","model":"CVL-50L","priority":"standard"}
+
+tool.deliver_fridge channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":14,"runner":"lena","ticket":"CVL-327-1432"}
+
+assistant channel=final:
+Got it—one CVL-50L mini-fridge is on the way to room 327. ETA ~14 minutes with Lena (ticket CVL-327-1432). The program fee is $10 per stay with a $25 refundable deposit.
+
+user:
+Is it noisy at night?
+
+assistant channel=analysis:
+Answer from system Mini-Fridge Program: 34 dB.
+
+assistant channel=final:
+It runs at 34 dB—quiet enough for nighttime.
+
+user:
+The shuttle timing has been super convenient today.
+
+assistant channel=analysis:
+Reply with Park Access Notes.
+
+assistant channel=final:
+Great to hear—our park shuttle runs every 20 minutes to the Pine Loop and Eagle Crest trailheads.
+
+user:
+Can you hold a table at the lodge restaurant for 7 PM?
+
+assistant channel=analysis:
+Out of current scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Noted—checking dinner seating options.
+

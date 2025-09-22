@@ -1,0 +1,66 @@
+"""
+Guest requests a fork for poolside snack.
+Provide quick delivery.
+
+ROLES: user (poolside guest), assistant (amenity runner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_amenity","description":"Deliver to poolside under room ticket.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","room_number","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Coral Bay Hotel (hotel_id: cbh_37)
+Address: 77 Ocean Ave, San Diego, CA 92109
+Timezone: America/Los_Angeles
+
+Poolside Service:
+- Amenity runs from pool desk
+- Typical ETA: 6–10 minutes
+- Complimentary
+
+user:
+Can I get a fork to the pool? Room 512.
+
+assistant channel=analysis:
+Send a fork to poolside under room 512.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name":"fork","room_number":"512","quantity":1}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status":"success","eta":"7 minutes","ticket":"CBH-512-POOL"}
+
+assistant channel=final:
+Yes—one fork is heading to the pool deck (ticket CBH-512-POOL). ETA about 7 minutes.
+
+user:
+Is poolside service quick?
+
+assistant channel=analysis:
+Answer with ETA policy.
+
+assistant channel=final:
+Yes—poolside amenity runs usually take 6–10 minutes.
+
+user:
+Waves sound relaxing tonight.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Ocean breeze and soft surf make for a calm evening.
+
+user:
+Can you book a surf lesson tomorrow morning?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

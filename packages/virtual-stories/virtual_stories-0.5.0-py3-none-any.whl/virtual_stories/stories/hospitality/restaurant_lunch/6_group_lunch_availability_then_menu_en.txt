@@ -1,0 +1,53 @@
+"""
+Group asks about lunch availability and a preview of vegetarian options; includes chitchat and [ATTENTION].
+
+ROLES: user (small group), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+[{"name":"avail","description":"Check group availability","parameters":{"type":"object","properties":{"rid":{"type":"string"},"size":{"type":"integer"}},"required":["rid","size"],"additionalProperties":false},"strict":true},{"name":"menu","description":"Get vegetarian items","parameters":{"type":"object","properties":{"rid":{"type":"string"},"tag":{"type":"string","enum":["vegetarian"]}},"required":["rid","tag"],"additionalProperties":false},"strict":true}]
+"""
+
+system:
+SITE: Lakehouse Pavilion
+VENUE: Willow Bistro (rid: willow_bistro)
+Lunch: 11:45–14:00; tables up to 6 accommodated without split
+Details:
+- Lake-view banquettes; sun blinds
+- Lemon water carafes pre-set
+- Walk path loop 1.2 km—visible from dining room
+- Kids’ cutlery available
+- Charging ledge at the bar
+
+user:
+Can you seat 5 for lunch and any vegetarian picks?
+
+assistant channel=analysis:
+Check availability for size 5, then fetch vegetarian items.
+
+assistant channel=commentary to=tool.avail:
+{"rid":"willow_bistro","size":5}
+
+tool.avail channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.menu:
+{"rid":"willow_bistro","tag":"vegetarian"}
+
+tool.menu channel=commentary to=assistant:
+{"items":[{"name":"Roasted vegetable tart"},{"name":"Lentil-herb salad"}]}
+
+assistant channel=final:
+We can seat 5 during lunch (11:45–14:00). Vegetarian picks include Roasted vegetable tart and Lentil-herb salad.
+
+user:
+The lake path looks inviting.
+
+assistant channel=final:
+It loops 1.2 km and you can see it right from the dining room.
+
+user:
+What’s the exact recipe for the tart?
+
+assistant channel=final:
+[ATTENTION] Recipe details aren’t available in the current context.
+

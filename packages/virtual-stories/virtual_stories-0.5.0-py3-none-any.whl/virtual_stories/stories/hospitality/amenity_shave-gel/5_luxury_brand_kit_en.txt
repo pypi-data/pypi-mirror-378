@@ -1,0 +1,112 @@
+"""
+Guest requests luxury brand shaving cream and balm; confirm availability and deliver as a kit.
+
+ROLES: user (guest preferring luxury grooming), assistant (butler service with amenity access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Nordic Lights Hotel Reykjavik (hotel_id: nlh_kev_05)
+Address: Hverfisgata 55, 101 Reykjavík, Iceland
+Timezone: Atlantic/Reykjavik
+
+Luxury Grooming Shelf:
+- Brands: Acqua di Parma, Tom Ford, L’Occitane
+- Formats: creams (75 ml), gels (100 ml), balm (60 ml)
+- Sets: premium duo (cream + balm)
+- Fragrance level: discreet, hotel-approved
+- Policy: luxury sets billed unless included in suite perks
+
+Service Logistics:
+- Delivery 10–20 minutes, 07:30–22:00
+- Night kit upon request 22:00–00:00 (limited)
+- Suite perk: 1 premium duo complimentary for Aurora Suites
+- Contact: Butler ext 11
+- Packaging: wrapped with amenities card
+
+user:
+Hello—could I have a Tom Ford shaving cream with the matching balm sent to 914?
+
+assistant channel=analysis:
+Luxury brand request; check shaving_cream normal skin luxury; then deliver duo set to 914 immediately.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type":"shaving_cream","skin_type":"normal","brand_preference":"luxury"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available":true,"recommended_products":["TomFord_Cream_75ml","TomFord_Balm_60ml"],"set_available":true}
+
+assistant channel=analysis:
+Schedule immediate delivery with packaging note.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number":"914","products":["TomFord_Cream_75ml","TomFord_Balm_60ml"],"delivery_window":"immediate","include_instructions":false}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled":true,"arrival_time":"12_minutes","packaging":"amenities_card_wrapped"}
+
+assistant channel=final:
+Certainly—we have Tom Ford cream and the matching balm. I’ve arranged immediate delivery to 914; they should arrive in about 12 minutes.
+
+user:
+Is that included with Aurora Suite perks?
+
+assistant channel=analysis:
+System: Aurora Suites get 1 premium duo complimentary.
+
+assistant channel=final:
+Aurora Suites include one complimentary premium duo; additional sets are billed.
+
+user:
+The lobby fireplace is cozy.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+It’s a favorite spot—enjoy the warmth.
+
+user:
+Could you also arrange a northern lights wake-up call?
+
+assistant channel=analysis:
+Beyond grooming scope; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check if aurora alerts are available and coordinate for you.

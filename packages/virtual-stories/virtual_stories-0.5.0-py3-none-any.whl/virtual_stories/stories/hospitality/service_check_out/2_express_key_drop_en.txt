@@ -1,0 +1,51 @@
+"""
+Guest asks to check out and requests express key drop info; include small talk, confirm standard checkout from system, and an out-of-scope receipt format change.
+
+ROLES: user (departing guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"calculate_folio","description":"Return current folio summary for a reservation before checkout.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Harbor Crest Hotel — Front Desk
+Address: 220 Seabreeze Blvd, Fort Lauderdale, FL 33316, USA
+Standard checkout: 12:00 noon
+Express checkout: Key drop at Lobby desk; receipt emailed
+Late checkout: Subject to availability and fees
+Wi‑Fi: SSID "HarborCrest-Guest" (rooms and lobby)
+Parking: Valet only; EV chargers (2× J1772)
+Elevators: 4 cars; keycard required after 22:00
+Payment: USD; major cards accepted
+Accessibility: Step‑free Lobby access; ADA rooms available
+
+user:
+Please check me out for HC-77102 and is key drop okay?
+
+assistant channel=analysis:
+Return folio and mention express key drop and standard time.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"HC-77102"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 360","taxes":"USD 32.40","incidentals":"USD 0","total":"USD 392.40"}
+
+assistant channel=final:
+Your total is USD 392.40 (room USD 360, taxes USD 32.40). Express checkout with key drop at the Lobby desk is okay; standard checkout is 12:00.
+
+user:
+Thanks—hope your shift’s smooth.
+
+assistant channel=final:
+Appreciate it—safe travels.
+
+user:
+Could you send a stamped paper receipt instead of email?
+
+assistant channel=final:
+[ATTENTION] Paper receipt handling isn’t listed in these resources. Reviewing.

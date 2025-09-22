@@ -1,0 +1,40 @@
+"""
+Guest returns a wheelchair and requests a receipt to be emailed; confirm receipt email and close order.
+
+ROLES: user (guest returning equipment), assistant (front desk accessibility coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"close_order","description":"Close the loan order and generate receipt","parameters":{"type":"object","additionalProperties":false,"properties":{"order_id":{"type":"string"},"email":{"type":"string"}},"required":["order_id","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverside Executive Hotel (RSEH-22)
+Receipts: Email PDF available on return; printed copy at Front Desk
+Hours: Front Desk 24/7
+Retention: Receipts reprint window 30 days
+Time Zone: Pacific Time (PT)
+
+user:
+I’m returning the chair—can you email me a receipt? Order TC-903-01.
+
+assistant channel=analysis:
+Close the order and email the receipt.
+
+assistant channel=commentary to=tool.close_order:
+{"order_id":"TC-903-01","email":"guest903@example.com"}
+
+tool.close_order channel=commentary to=assistant:
+{"status":"closed","receipt_id":"RSEH-RCPT-903-01","delivery":"email"}
+
+assistant channel=final:
+Closed—receipt RSEH-RCPT-903-01 has been emailed to guest903@example.com.
+
+user:
+Do you archive these receipts for a year?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

@@ -1,0 +1,67 @@
+"""
+Guest checks peak hours and towel availability; include small talk and an out-of-scope follow-up.
+
+ROLES: user (guest timing workouts), assistant (gym desk attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_gym_details","description":"Hours, access, and amenities for gym.","parameters":{"type":"object","properties":{}},"strict":true},
+  {"name":"get_peak_times","description":"Typical busy windows for the gym.","parameters":{"type":"object","properties":{}},"strict":true}
+]
+```
+"""
+
+system:
+Property: Harbor Quay Residences — Fitness Pavilion
+Access: 24/7 with guest keycard
+Amenities: towel station at entrance; water fountain by mirrors
+Rules: quiet zone; sanitize stations provided
+
+Layout & Zones:
+- Cardio row: 5 treadmills, 2 ellipticals, 3 bikes
+- Strength: dumbbells to 80 lb, cable stack, leg curl/extension
+- Floor: mats, medicine balls, stretch bands
+
+Support:
+• On-duty host 06:30–21:30
+• Emergency assistance button near entrance
+
+user:
+When is it usually less busy, and do you provide towels?
+
+assistant channel=analysis:
+Call tools to confirm peak times; answer towels from system.
+
+assistant channel=commentary to=tool.get_peak_times:
+{}
+
+tool.get_peak_times channel=commentary to=assistant:
+{"busy_windows":["06:30–08:30","18:00–20:00"],"quietest":"13:30–16:30"}
+
+assistant channel=commentary to=tool.get_gym_details:
+{}
+
+tool.get_gym_details channel=commentary to=assistant:
+{"hours":"24/7","amenities":["towel station","water fountain"],"rules":["quiet zone","sanitize equipment"]}
+
+assistant channel=final:
+The gym is open 24/7. It’s busiest around 06:30–08:30 and 18:00–20:00; the quietest window is typically 13:30–16:30. Towels are provided at the entrance, and a water fountain is by the mirrors.
+
+user:
+Perfect, thanks! Nice playlist in the lobby, by the way.
+
+assistant channel=final:
+Glad you noticed—enjoy your workout.
+
+user:
+Is the gym open all night?
+
+assistant channel=final:
+Yes—access is 24/7 with your guest keycard.
+
+user:
+Could you reserve two treadmills for 7 PM?
+
+assistant channel=final:
+[ATTENTION] The gym is first-come, first-served. Checking available options.

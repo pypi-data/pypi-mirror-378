@@ -1,0 +1,74 @@
+"""
+Guest asks whether there are department-specific LINE accounts; include handle confirmation and polite chat.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Umber Dune Hotel (hotel_id: umber_dune)
+Time zone: WET (UTC+0) | Languages: EN / FR / PT
+Official contacts:
+  - LINE: @umberdune
+  - Email: contact@umberdune.pt
+  - Phone: +351 21 555 2010
+  - Website: https://www.umberdune.pt
+LINE details:
+  - One official account only (no department sub-accounts)
+  - Hours: 08:00–21:00 local | Typical reply: 15–30 min
+Facilities snapshots:
+  - Cliffside café | Sunrise brew from 06:30
+  - Sauna | 16:00–22:00 daily
+
+user:
+Do you have different LINE accounts for departments?
+
+assistant channel=analysis:
+Answer from system LINE details: one official account only. Optionally confirm handle.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"umber_dune","channel":"line"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"line":"@umberdune"}
+
+assistant channel=final:
+We use a single official LINE account—@umberdune—for all departments.
+
+user:
+The sunrise brew sounds tempting.
+
+assistant channel=analysis:
+Small talk referencing café detail.
+
+assistant channel=final:
+It’s popular—our cliffside café starts pouring from 06:30.
+
+user:
+Can you list the internal routing rules for each department in LINE?
+
+assistant channel=analysis:
+Out of scope—no internal routing rules provided.
+
+assistant channel=final:
+[ATTENTION] Internal routing details aren’t available within the provided resources.
+

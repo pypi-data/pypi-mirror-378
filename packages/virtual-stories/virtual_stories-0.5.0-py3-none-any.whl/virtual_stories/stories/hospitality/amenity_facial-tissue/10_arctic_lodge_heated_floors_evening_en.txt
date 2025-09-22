@@ -1,0 +1,76 @@
+"""
+Guest at arctic lodge requests extra-soft tissues and asks about sauna hours.
+Provide check and delivery.
+
+ROLES: user (cold-climate guest), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_tissue_inventory", "description": "Confirm extra-soft stock.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "tissue_type": { "type": "string", "enum": ["extra_soft"] }, "brand_preference": { "type": "string", "enum": ["any"] }, "quantity_boxes": { "type": "number" } }, "required": ["tissue_type"] }, "strict": true },
+  { "name": "deliver_tissue_amenity", "description": "Deliver to room with bedside placement.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_products": { "type": "array", "items": { "type": "string" } }, "delivery_priority": { "type": "string", "enum": ["standard"] }, "special_placement": { "type": "string" } }, "required": ["room_number", "tissue_products"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Aurora Circle Lodge (hotel_id: acl_rkv_01)
+Address: 15 Nordurvegur, Reykjavik 101, Iceland
+Timezone: Atlantic/Reykjavik
+
+Amenity Program:
+- Extra-soft 3‑ply for cold climates
+- Delivery 10–18 minutes
+- Default placement: bedside and vanity
+- Sauna 17:00–21:00
+- Heated floors in all baths
+
+user:
+Hello—room 214. Two extra-soft boxes please, bedside and vanity.
+
+assistant channel=analysis:
+Check extra-soft; deliver 2 with default placement.
+
+assistant channel=commentary to=tool.check_tissue_inventory:
+{"tissue_type":"extra_soft","brand_preference":"any","quantity_boxes":2}
+
+tool.check_tissue_inventory channel=commentary to=assistant:
+{"available_products":["Hotel Extra-Soft 3-ply"],"stock_levels":{"exsoft":70}}
+
+assistant channel=commentary to=tool.deliver_tissue_amenity:
+{"room_number":"214","tissue_products":["2 boxes Hotel Extra-Soft 3-ply"],"delivery_priority":"standard","special_placement":"bedside + vanity"}
+
+tool.deliver_tissue_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"13 minutes","placement_confirmed":"bedside and vanity","tracking_id":"ACL214_ES2"}
+
+assistant channel=final:
+Coming right up—2 extra‑soft 3‑ply boxes to 214 in ~13 minutes, placed at your bedside and on the vanity.
+
+user:
+Is the sauna open right now?
+
+assistant channel=analysis:
+From system: 17:00–21:00.
+
+assistant channel=final:
+Yes—open 17:00 to 21:00.
+
+user:
+The heated floors are amazing.
+
+assistant channel=analysis:
+Small talk response.
+
+assistant channel=final:
+They’re a guest favorite on cold evenings.
+
+user:
+Could you arrange a Northern Lights wake-up call?
+
+assistant channel=analysis:
+Outside tissue scope; flag.
+
+assistant channel=final:
+[ATTENTION] Checking with front desk for aurora wake-up options.
+"""
+

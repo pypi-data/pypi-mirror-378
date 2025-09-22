@@ -1,0 +1,63 @@
+"""
+Guest asks about spa collection variant and requests delivery; assistant confirms availability and sends; includes small talk and out-of-scope question.
+
+ROLES: user (spa guest in room 1502 requesting spa collection mouthwash), assistant (spa desk coordinating with housekeeping)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_availability","description":"Check variant availability","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"variant":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"variant":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Evergreen Spa Retreat — Cedar Wing
+Room 1502: Spa Level King (Cedar Wing)
+Mouthwash: Brand "EverMint"; Spa Collection 35 ml; alcohol-free
+Standard: Regular 25 ml
+Policy: Up to 3 bottles/day; Spa Collection on spa levels only
+Delivery hours: 07:00–22:00
+Contacts: Spa Desk 300; Housekeeping 200
+Notes: Cedar lift C2 to 15th floor; aromatherapy diffusers on hallway
+
+user:
+Do you have the Spa Collection EverMint? Please send two to 1502.
+
+assistant channel=analysis:
+Verify Spa Collection availability and send 2 bottles to 1502.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"mouthwash","variant":"Spa Collection 35 ml","quantity":2}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"mouthwash","variant":"Spa Collection 35 ml","available":true,"in_stock":22}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1502","amenity_name":"mouthwash","variant":"Spa Collection 35 ml","quantity":2,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MW-1502-4411","eta_minutes":10}
+
+assistant channel=final:
+Yes—Spa Collection EverMint (35 ml, alcohol-free) is available. Two are on their way to 1502 with an ETA of about 10 minutes.
+
+user:
+Thanks! Delivery hours today?
+
+assistant channel=final:
+We deliver from 07:00 to 22:00.
+
+user:
+Hope you’re doing well.
+
+assistant channel=final:
+Thank you—I am!
+
+user:
+Could you book a spa treatment for me?
+
+assistant channel=final:
+[ATTENTION] Spa booking actions aren’t included in the provided system context.
+

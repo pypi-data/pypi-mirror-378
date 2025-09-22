@@ -1,0 +1,69 @@
+"""
+Guest seeks luxury car to convention center; include small talk, in-context Q, and [ATTENTION] answered via tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {"name":"get_taxi_eta","description":"Live ETA","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"vehicle_type":{"type":"string","enum":["luxury"]}},"required":["pickup_point","vehicle_type"]}},
+  {"name":"request_taxi","description":"Dispatch vehicle","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"destination":{"type":"string"},"passengers":{"type":"integer"},"vehicle_type":{"type":"string","enum":["luxury"]}},"required":["pickup_point","destination","passengers","vehicle_type"]}}
+]
+"""
+
+system:
+Hotel: Sapphire Bay Resort (hotel_id: sapphire_bay_sin)
+Address: 12 Marina Blvd, Singapore 018982 | Timezone: Asia/Singapore
+Check-in 3 PM | Check-out 12 PM | Tel: +65 6555 0101
+Chauffeur desk: 08:00–22:00 for luxury sedans; regular taxis available 24/7 via concierge.
+Pickup zones: "Marina Porte" (luxury), "Taxi Rank C" (sedan/eco), "Coach Lobby" (van).
+Attire note: jacket required for chauffeur service vehicles.
+Payment: luxury billed directly to guest by provider; cards accepted.
+
+user:
+Hi, can I get a luxury car to Expo Hall 3?
+
+assistant channel=analysis:
+Acknowledge; confirm luxury pickup zone.
+
+assistant channel=final:
+Yes—luxury sedans depart from Marina Porte. Shall I check the live ETA?
+
+user:
+Is the chauffeur desk open now? It’s 21:10.
+
+assistant channel=analysis:
+From system: desk runs 08:00–22:00; so yes.
+
+assistant channel=final:
+Yes, it’s open until 22:00.
+
+user:
+[ATTENTION] What’s the current ETA for a luxury sedan at Marina Porte?
+
+assistant channel=analysis:
+Call get_taxi_eta with luxury.
+
+assistant channel=commentary to=get_taxi_eta:
+{"pickup_point":"Marina Porte","vehicle_type":"luxury"}
+
+tool.get_taxi_eta:
+{"eta_minutes": 7, "provider":"Prestige Cars","vehicle":"Black S-Class SGP 71X"}
+
+assistant channel=final:
+ETA is 7 minutes at Marina Porte (Black S-Class SGP 71X) via Prestige Cars.
+
+user:
+Please book for 2 passengers.
+
+assistant channel=analysis:
+Dispatch request.
+
+assistant channel=commentary to=request_taxi:
+{"pickup_point":"Marina Porte","destination":"Expo Hall 3","passengers":2,"vehicle_type":"luxury"}
+
+tool.request_taxi:
+{"status":"confirmed","dispatch_id":"SB-3321","eta_minutes":7}
+
+assistant channel=final:
+Confirmed—Dispatch SB-3321, luxury sedan to Expo Hall 3, ETA 7 minutes at Marina Porte. Enjoy the event!
+

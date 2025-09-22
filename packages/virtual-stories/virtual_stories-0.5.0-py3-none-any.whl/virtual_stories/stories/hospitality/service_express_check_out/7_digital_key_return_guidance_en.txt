@@ -1,0 +1,52 @@
+"""
+Express checkout for a digital key user; clarify that no physical return is needed; include small talk and an [ATTENTION] inquiry.
+
+ROLES: user (mobile key user), assistant (front desk clarifying digital vs. physical key return and receipt email timing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"initiate_express_checkout","description":"Start express checkout and email a digital receipt.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"email":{"type":"string"}},"required":["reservation_id","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Blue Lantern Residences
+Highlights:
+- Digital keys supported via mobile app; no physical return required for app-only access.
+- Physical keycards (if issued) go to the lobby drop slot labeled “Express Checkout.”
+- Receipts issued by email after folio closure.
+- Address: 59 Bay Lane; Wi‑Fi: Lantern-Guest; Quiet hours 22:00–07:00.
+- Business Area printers: L1.
+
+user:
+I used only the mobile key—please express checkout BL-10294 and send the receipt to ari@sample.com.
+
+assistant channel=analysis:
+Run the tool and clarify no physical return is needed for app-only keys; confirm receipt policy.
+
+assistant channel=commentary to=tool.initiate_express_checkout:
+{"reservation_id":"BL-10294","email":"ari@sample.com"}
+
+tool.initiate_express_checkout channel=commentary to=assistant:
+{"status":"initiated","receipt":"queued"}
+
+assistant channel=final:
+Express checkout is initiated. Since you used only the mobile key, no physical return is needed. Your receipt will be emailed after the folio closes.
+
+user:
+Thanks—the lobby was quiet.
+
+assistant channel=final:
+We observe quiet hours from 22:00 to 07:00.
+
+user:
+Can you also forward my folio to my company travel portal automatically?
+
+assistant channel=analysis:
+No integration tools provided; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Noted the portal forwarding request. Reviewing available resources.
+

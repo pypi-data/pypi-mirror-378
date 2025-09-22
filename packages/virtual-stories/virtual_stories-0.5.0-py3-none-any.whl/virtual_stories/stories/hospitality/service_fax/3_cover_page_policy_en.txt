@@ -1,0 +1,64 @@
+"""
+Guest asks whether the cover page counts toward billing; submit a domestic fax and clarify cover policy and hours; include chitchat and ATTENTION for receiving inbound faxes.
+
+ROLES: user (guest sending a domestic fax), assistant (concierge handling fax submission and policy questions)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "send_fax",
+    "description": "Submit a fax transmission job.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "recipient_number": {"type": "string"},
+        "pages": {"type": "integer"},
+        "cover_note": {"type": "string"},
+        "destination_type": {"type": "string", "enum": ["domestic", "international"]}
+      },
+      "required": ["room_number", "recipient_number", "pages", "destination_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Rivermark Suites — Business Hub (Level 2)
+Hours: 24/7 via Front Desk dispatch
+Rates: USD 2/page domestic; USD 5/page international
+Cover page: Complimentary; not billed
+Per‑job page limit: 20 (cover page excluded)
+Billing and receipt: Charges posted to room; receipt available
+
+user:
+I’ll fax 5 pages domestically to +1-212-555-0179 with a brief cover. Does the cover count toward billing?
+
+assistant channel=analysis:
+Cover is complimentary per system; submit fax and confirm billing and hours.
+
+assistant channel=commentary to=tool.send_fax:
+{"room_number":"927","recipient_number":"+1-212-555-0179","pages":5,"cover_note":"Project update","destination_type":"domestic"}
+
+tool.send_fax channel=commentary to=assistant:
+{"job_id":"fax_2025_09_07_312","status":"queued","billed_pages":5,"rate_per_page":2,"currency":"USD"}
+
+assistant channel=final:
+Queued as fax_2025_09_07_312 for 5 domestic pages; the cover page is complimentary and not billed. The service runs 24/7 via Front Desk dispatch, billed to your room.
+
+user:
+Thanks—busy evening?
+
+assistant channel=final:
+We’re all set to send it now.
+
+user:
+Can you receive an incoming fax for me too?
+
+assistant channel=final:
+[ATTENTION] Inbound fax handling isn’t available here. Checking available options.
+

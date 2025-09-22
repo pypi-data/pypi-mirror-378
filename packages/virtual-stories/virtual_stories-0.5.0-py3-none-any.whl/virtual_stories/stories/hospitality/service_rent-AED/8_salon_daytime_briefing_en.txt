@@ -1,0 +1,50 @@
+"""
+Daytime salon event AED standby; reiterate Security briefing and return; include chitchat and [ATTENTION] query.
+
+ROLES: user (salon event organizer), assistant (front office/security liaison arranging AED standby)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_aed","description":"Book AED for supervised, on-property standby.","parameters":{"type":"object","additionalProperties":false,"properties":{"event_space":{"type":"string"},"start_time":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":8}},"required":["event_space","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Meadowlane Resort
+AED Policy:
+- 2 units; Security placement; on-property only; briefing required; max 8 hours.
+- Rate: $22/hour; deployment via Security Office (Lobby rear corridor).
+Spaces: Meadow Salon, River Salon, Orchard Hall.
+
+user:
+AED standby for Meadow Salon from 11:00 for 2 hours.
+
+assistant channel=analysis:
+Reserve via tool and confirm terms.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"Meadow Salon","start_time":"11:00","duration_hours":2}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_ml_221","hourly_rate":22,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+Booked AED standby in Meadow Salon 11:00 for 2 hours (aed_ml_221). Security will place and brief; the rate is $22/hour and the unit remains on property.
+
+user:
+The rear corridor is easy to find.
+
+assistant channel=final:
+Deployment is coordinated from the Security Office in the lobby’s rear corridor.
+
+user:
+Can you share serial numbers of the AED units?
+
+assistant channel=analysis:
+Serial details aren’t provided; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Checking available resources regarding device serial details.
+

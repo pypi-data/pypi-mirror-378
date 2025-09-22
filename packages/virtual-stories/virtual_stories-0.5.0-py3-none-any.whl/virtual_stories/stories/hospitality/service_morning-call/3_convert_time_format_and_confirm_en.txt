@@ -1,0 +1,48 @@
+"""
+Guest gives am/pm time; assistant confirms 24‑hour format and sets the call.
+
+ROLES: user (guest scheduling wake‑up), assistant (operator confirming time format and setting call)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_wake_up_call","description":"Set a wake‑up call for a room at a given time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time":{"type":"string"}},"required":["room_number","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Highline View Hotel — Wake‑Up Calls
+System: Automated; up to 3 rings if unanswered
+Time Input: Accepts hh:mm am/pm or 24‑hour format
+Follow‑Up: No courtesy knock
+Desk: Operator near Skybridge entrance
+Availability: 24/7
+
+user:
+Set a wake‑up for 7:10 pm in room 1908.
+
+assistant channel=analysis:
+Convert to 19:10 and schedule the call; then summarize ring behavior per system.
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"1908","time":"19:10"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_1908_1910","time":"19:10"}
+
+assistant channel=final:
+Wake‑up set for room 1908 at 19:10 (wakeup_1908_1910). The system rings up to three times if not answered; no door knock follow‑up.
+
+user:
+The skybridge views are great.
+
+assistant channel=final:
+The operator desk is just by the Skybridge entrance.
+
+user:
+Can you deliver coffee right after the call?
+
+assistant channel=final:
+[ATTENTION] Coffee delivery isn’t part of the wake‑up service. Assessing the available data.
+

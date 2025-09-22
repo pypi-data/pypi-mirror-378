@@ -1,0 +1,98 @@
+"""
+Guest asks about VIP lounge access, hours, and bringing a companion; then verifies access.
+
+ROLES: user (guest curious about VIP lounge access and policies), assistant (lounge concierge checking eligibility and explaining rules)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_facility_hours",
+    "description": "Return operating hours for a facility by ID.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"facility_id": {"type": "string"}},
+      "required": ["facility_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "verify_lounge_access",
+    "description": "Verify VIP lounge access based on room type or loyalty tier.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_type": {"type": "string"},
+        "loyalty_tier": {"type": "string"},
+        "guests": {"type": "integer", "minimum": 1}
+      },
+      "required": ["guests"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Meridian Crest Tower (hotel_id: meridian_crest_sin)
+Address: 18 Marina Esplanade, Singapore 018953
+Timezone: Asia/Singapore
+Facility: VIP Lounge (facility_id: vip_lounge_meridian_sin)
+Hours: Daily 06:30–22:30; Evening canapés 17:30–19:30
+Access rules: Included with Club-level rooms and Platinum & Diamond loyalty tiers; one registered companion admitted without fee
+Dress code: Smart casual; quiet work nooks available; printing on request at concierge desk
+
+user:
+Hello! Does the VIP lounge open early? I might stop by at 7 AM.
+
+assistant channel=analysis:
+Fetch hours via tool; confirm early opening time.
+
+assistant channel=commentary to=tool.check_facility_hours:
+{"facility_id":"vip_lounge_meridian_sin"}
+
+tool.check_facility_hours channel=commentary to=assistant:
+{"hours":"Daily 06:30–22:30; Evening canapés 17:30–19:30"}
+
+assistant channel=final:
+Yes—the VIP Lounge operates Daily 06:30–22:30, so a 7:00 visit works. Evening canapés run 17:30–19:30.
+
+user:
+I’m in a Club Deluxe room and my partner is joining—can we both enter?
+
+assistant channel=analysis:
+Verify access with room_type and guests=2; loyalty tier not required.
+
+assistant channel=commentary to=tool.verify_lounge_access:
+{"room_type":"Club Deluxe","loyalty_tier":"","guests":2}
+
+tool.verify_lounge_access channel=commentary to=assistant:
+{"eligible":true,"notes":"Club-level rooms include lounge; one companion admitted"}
+
+assistant channel=analysis:
+Confirm eligibility and remind dress code.
+
+assistant channel=final:
+You’re eligible—Club-level rooms include access and one registered companion is admitted. Dress is smart casual; quiet work nooks and concierge printing are available.
+
+user:
+By the way, the skyline view from the 30th floor last night was stunning!
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+It’s wonderful to hear you enjoyed the view.
+
+user:
+Do you screen live football matches in the lounge?
+
+assistant channel=analysis:
+Live match screenings aren’t stated and there’s no tool for programming schedules—use special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking about broadcast schedules. Checking available options.
+

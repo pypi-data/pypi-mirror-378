@@ -1,0 +1,76 @@
+"""
+Guest requests anniversary suite setup with bouquet and rose path.
+Provide check and arrangement.
+
+ROLES: user (anniversary guest), assistant (floral coordinator with turndown support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_floral_inventory", "description": "Check romantic bouquets and petals.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "arrangement_type": { "type": "string", "enum": ["celebration", "room_decor"] }, "flower_preference": { "type": "string", "enum": ["roses"] }, "budget_range": { "type": "string", "enum": ["premium_100_200", "luxury_200_plus"] } }, "required": ["arrangement_type"] }, "strict": true },
+  { "name": "create_floral_arrangement", "description": "Create bouquet and coordinate petal path.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "arrangement_style": { "type": "string", "enum": ["romantic_roses"] }, "delivery_time": { "type": "string" }, "special_message": { "type": "string" }, "occasion": { "type": "string", "enum": ["anniversary"] } }, "required": ["room_number", "arrangement_style", "occasion"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Golden Harbor Hotel (hotel_id: ghh_sfo_03)
+Address: 88 Market St, San Francisco, CA 94103
+Timezone: America/Los_Angeles
+
+Romance Services:
+- Rose bouquets and petal paths
+- Delivery/turndown: 18:00–21:00
+- Pricing: $185 bouquet; petal path included
+- Card with custom note
+- Water refresh next day upon request
+
+user:
+Suite 2701—anniversary setup with roses and a petal path at 8 PM.
+
+assistant channel=analysis:
+Check roses; create bouquet; schedule petal path at 20:00.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type":"celebration","flower_preference":"roses","budget_range":"premium_100_200"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available":true,"arrangements":["romantic_roses"],"pricing":{"romantic_roses":185}}
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number":"2701","arrangement_style":"romantic_roses","delivery_time":"8:00 PM","special_message":"Happy Anniversary","occasion":"anniversary"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed":true,"arrangement_id":"GH2701_ROSE","delivery_scheduled":"8:00 PM","includes":["rose_bouquet","petal_path_turndown"],"total_cost":185}
+
+assistant channel=final:
+All set—rose bouquet and a petal path at 8:00 PM in Suite 2701 with your message.
+
+user:
+Can you refresh the water tomorrow?
+
+assistant channel=analysis:
+From system: water refresh on request next day.
+
+assistant channel=final:
+Yes—just let us know your preferred time and we’ll refresh it tomorrow.
+
+user:
+The view is romantic.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’ll pair nicely with the evening setup.
+
+user:
+Could you book a string quartet?
+
+assistant channel=analysis:
+Outside floral scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with events for live music options.
+"""
+

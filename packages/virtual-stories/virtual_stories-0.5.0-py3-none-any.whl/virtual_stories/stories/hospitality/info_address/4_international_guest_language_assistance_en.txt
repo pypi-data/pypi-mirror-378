@@ -1,0 +1,108 @@
+"""
+International guest needs address confirmation for visa documentation and navigation assistance with language translation needs.
+
+ROLES: user (international business traveler with limited English), assistant (multilingual front desk agent providing patient detailed assistance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "lookup_hotel_address",
+    "description": "Get the official mailing and visiting address with geo details.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "include_coords": {"type":"boolean"}
+      },
+      "required": ["hotel_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_translation_services",
+    "description": "Get information about translation and language assistance services.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "language": {"type":"string"},
+        "service_type": {"type":"string", "enum": ["document", "interpretation", "concierge", "all"]}
+      },
+      "required": ["service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+International Business Center Hotel (hotel_id: intl_business_center)
+Global hospitality hotel specializing in international corporate guests
+Address lines:
+  - Street: 2400 Embassy Row, Diplomatic Quarter
+  - Building: Tower A, International Wing
+  - City/Region: Capital Heights, CH 20008
+  - Country: United States
+  - International mailing: Same address with "ATTN: International Guest Services"
+Translation and language services:
+  - On-site interpreters for 12 major languages (Japanese, Mandarin, Korean, Spanish, French, German, Arabic, Hindi, Portuguese, Russian, Italian, Dutch)
+  - 24/7 translation hotline for guest assistance
+  - Document translation services for business materials, visa forms, medical documents
+  - Multilingual concierge staff (minimum 3 languages per staff member)
+  - Cultural liaison services for business etiquette and local customs
+  - Real-time interpretation devices available for rental
+  - Embassy and consulate contact directory with direct phone numbers
+  - International phone and data plans available for purchase
+  - Currency exchange with competitive rates for 25+ currencies
+Navigation assistance:
+  - Multilingual maps and transportation cards
+  - GPS devices pre-programmed with hotel address in multiple languages
+  - Taxi/rideshare request cards in guest's native language
+  - Public transportation guides with English/native language annotations
+  - Walking direction cards to major embassies, business centers, and landmarks
+Coordinates: 38.9072, -77.0369
+
+user:
+Excuse me, I am from Japan. I need hotel address for... how do you say... immigration paper? Very important for visa process.
+
+assistant channel=analysis:
+International guest from Japan needs address for immigration/visa documentation. I should provide complete, precise address information and be patient with language barriers.
+
+assistant channel=commentary to=tool.lookup_hotel_address:
+{"hotel_id":"intl_business_center","include_coords":true}
+
+tool.lookup_hotel_address channel=commentary to=assistant:
+{"street":"2400 Embassy Row, Diplomatic Quarter","building":"Tower A, International Wing","city_region":"Capital Heights, CH 20008","country":"United States","international_mailing":"ATTN: International Guest Services","coordinates":"38.9072,-77.0369"}
+
+assistant channel=final:
+Of course! For your visa documents, our complete address is: International Business Center Hotel, 2400 Embassy Row, Diplomatic Quarter, Tower A, International Wing, Capital Heights, CH 20008, United States. For international mail: ATTN: International Guest Services.
+
+user:
+Thank you very much! You speak very clearly. Also, I need help with... translation service?
+
+assistant channel=commentary to=tool.get_translation_services:
+{"language":"Japanese","service_type":"all"}
+
+tool.get_translation_services channel=commentary to=assistant:
+{"interpreters":"on-site Japanese interpreters available","hotline":"24/7 translation assistance","documents":"business, visa, medical translation services","concierge":"multilingual staff with minimum 3 languages","devices":"real-time interpretation devices for rental"}
+
+assistant channel=final:
+Yes! We have on-site Japanese interpreters, 24/7 translation hotline, and document translation services for business, visa, or medical papers. We also have real-time interpretation devices you can rent.
+
+user:
+This hotel very helpful! My business meeting tomorrow, I feel more comfortable now.
+
+assistant channel=final:
+Wonderful! We're here to help make your business trip successful. Do you need directions to any specific location for your meeting?
+
+user:
+Meeting is at Japanese Embassy. You know how far from here?
+
+assistant channel=analysis:
+Guest is asking about distance to Japanese Embassy. This is local area information beyond my hotel services knowledge and would require specific local navigation data.
+
+assistant channel=final:
+[ATTENTION] I'm checking the distance information to the Japanese Embassy for you.

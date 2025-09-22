@@ -1,0 +1,62 @@
+"""
+Provide a post-workout citrus soap bar to a room after gym use.
+
+ROLES: user (guest returning from gym), assistant (guest services coordinating a quick refresh soap)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"gym_amenities","description":"Check post-workout citrus soap availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"post_workout":{"type":"boolean"}},"required":[]},"strict":true},
+  {"name":"deliver_refresh","description":"Deliver refresh bar to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"bar":{"type":"string"}},"required":["room","bar"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Fitness Hotel (hotel_id: sfh_nyc_12)
+Address: 210 W 55th St, New York, NY 10019
+Timezone: America/New_York
+Guest Services: 07:00–22:00; amenity delivery 10–16 min
+Post-Workout: citrus soap bar
+Note: paraben-free, cold-pressed oils
+Ext: x3306
+
+user:
+Just back from the gym—can I get a citrus soap to 1111?
+
+assistant channel=analysis:
+Confirm post-workout citrus soap; deliver to 1111.
+
+assistant channel=commentary to=tool.gym_amenities:
+{"post_workout":true}
+
+tool.gym_amenities channel=commentary to=assistant:
+{"ok":true,"bar":"soap_citrus"}
+
+assistant channel=commentary to=tool.deliver_refresh:
+{"room":"1111","bar":"soap_citrus"}
+
+tool.deliver_refresh channel=commentary to=assistant:
+{"queued":true,"eta":12}
+
+assistant channel=final:
+On it—your citrus post-workout bar is queued to 1111, ETA around 12 minutes.
+
+user:
+Is Guest Services still open?
+
+assistant channel=analysis:
+Use system hours.
+
+assistant channel=final:
+Yes, it runs 07:00–22:00.
+
+user:
+Could you arrange same-day Broadway tickets?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

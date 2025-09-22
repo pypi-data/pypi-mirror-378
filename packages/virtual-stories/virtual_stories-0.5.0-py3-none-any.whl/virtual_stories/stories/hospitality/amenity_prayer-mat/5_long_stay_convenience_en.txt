@@ -1,0 +1,50 @@
+"""
+Long-stay guest requests a prayer mat and asks about loan duration; include tool dispatch and out-of-scope external event.
+
+ROLES: user (long-stay guest), assistant (front desk)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"provide_religious_item","description":"Provide a religious item to a guest's room.",
+   "parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_name":{"type":"string"}},"required":["room_number","item_name"]}}
+]
+```
+"""
+
+system:
+Maple Crescent Residences — Long-Stay Support
+Prayer mats: available on request; sanitized and sealed
+Loan duration: for the entirety of the stay
+Prayer room: level R (residents’ lounge wing), 06:00–22:00
+Qibla: direction card on request
+Delivery: 8–12 minutes
+Dispatch via provide_religious_item
+
+user:
+Hi, I’m in 1107. Can I borrow a prayer mat for my whole stay?
+
+assistant channel=analysis:
+Send prayer_mat to 1107; confirm loan duration from system.
+
+assistant channel=commentary to=tool.provide_religious_item:
+{"room_number": "1107", "item_name": "prayer_mat"}
+
+tool.provide_religious_item channel=commentary to=assistant:
+{"status":"success","message":"Prayer mat sent to room 1107."}
+
+assistant channel=final:
+Certainly—a prayer mat is on the way and you may keep it for the entirety of your stay. Delivery is typically 8–12 minutes.
+
+user:
+Appreciate it. Lounge view is peaceful.
+
+assistant channel=final:
+It’s a calming spot for many guests.
+
+user:
+Is the interfaith festival schedule posted yet?
+
+assistant channel=final:
+[ATTENTION] External festival schedules aren’t included in these resources.
+

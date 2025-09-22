@@ -1,0 +1,138 @@
+"""
+Guest on extended stay requests two spare standard sets for king bed and confirms remake window; verify inventory, deliver, and schedule.
+
+ROLES: user (extended-stay guest), assistant (linens logistics coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_linen_inventory",
+    "description": "Check availability of sheet collections and sizes.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] }
+      },
+      "required": ["collection", "size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "order_linen_delivery",
+    "description": "Deliver specified sheet collection to room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] },
+        "quantity_sets": { "type": "integer", "minimum": 1, "maximum": 4 }
+      },
+      "required": ["room_number", "collection", "size", "quantity_sets"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_bed_service",
+    "description": "Schedule housekeeping to remake bed with specified sheets.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "preferred_time": { "type": "string", "description": "HH:MM in 24h local time" }
+      },
+      "required": ["room_number", "collection"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Lakeshore Suites Chicago (hotel_id: lsc_ord_05)
+Address: 521 N Columbus Dr, Chicago, IL 60611
+Timezone: America/Chicago
+
+Linen Overview:
+- standard_300tc: crisp hotel cotton
+- luxury_600tc: soft sateen
+- bamboo_eco: hypoallergenic
+- silk_1000tc: premium
+
+Operations & Policy:
+- Same-day changes 08:00–22:00
+- Spare sets: up to 2 per room
+- Delivery ETA: 20–40 minutes
+- Priority window: 15:30–18:00
+- Contact: Service Center ext 9
+
+Notes:
+- Fragrance-free wash available for bamboo_eco
+- Pillowcase refresh on request
+- Inventory counted twice daily
+- Turn-down 19:00–21:00
+- Linen labels color-coded by collection
+
+user:
+Hi, could I get two spare standard_300tc king sets and a bed remake at 17:45? I’m in 3410.
+
+assistant channel=analysis:
+Check standard_300tc king; order 2 sets; schedule 17:45.
+
+assistant channel=commentary to=tool.check_linen_inventory:
+{"collection":"standard_300tc","size":"king"}
+
+tool.check_linen_inventory channel=commentary to=assistant:
+{"collection":"standard_300tc","size":"king","available_sets":22,"estimated_delivery_minutes":22}
+
+assistant channel=analysis:
+Place order and schedule remake.
+
+assistant channel=commentary to=tool.order_linen_delivery:
+{"room_number":"3410","collection":"standard_300tc","size":"king","quantity_sets":2}
+
+tool.order_linen_delivery channel=commentary to=assistant:
+{"room_number":"3410","collection":"standard_300tc","size":"king","quantity_sets":2,"delivery_eta_minutes":22,"delivery_id":"LINEN-SK-3112"}
+
+assistant channel=commentary to=tool.schedule_bed_service:
+{"room_number":"3410","collection":"standard_300tc","preferred_time":"17:45"}
+
+tool.schedule_bed_service channel=commentary to=assistant:
+{"scheduled":true,"room_number":"3410","collection":"standard_300tc","window":"17:35–18:00"}
+
+assistant channel=final:
+Done—two standard_300tc king sets are on their way (ETA ~22 minutes). We’ll remake at 17:45 (window 17:35–18:00) and leave the extra set in your closet.
+
+user:
+Do you offer turn-down this evening?
+
+assistant channel=analysis:
+System: 19:00–21:00.
+
+assistant channel=final:
+Yes—turn-down is available from 19:00 to 21:00 on request.
+
+user:
+Appreciate the quick coordination.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Happy to help—see you at 17:45.
+
+user:
+Also, any recommendations for deep-dish pizza?
+
+assistant channel=analysis:
+Beyond linen scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up nearby deep-dish spots and send you some options.

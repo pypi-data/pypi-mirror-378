@@ -1,0 +1,75 @@
+"""
+Kosher-friendly fruit request with policy references.
+
+ROLES: user (guest in 1621), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service",
+    "description": "Order food and beverages to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "item_name": {"type": "string"},
+        "room_number": {"type": "string"},
+        "quantity": {"type": "integer"},
+        "notes": {"type": "string"}
+      },
+      "required": ["item_name", "room_number", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel Title: The Meridian Port
+Dietary Handling: kosher-friendly whole fruits; sealed items on request
+Hours (Dining): 06:45–22:15
+Fruit Sets:
+- Whole Fruit Trio (apple, banana, orange)
+- Sealed Berries Cup (upon request)
+Delivery ETA: 15–22 min (Floors 15–18)
+Extensions: Dining 51; Front Desk 0
+
+user:
+1621 here—can I get a Whole Fruit Trio, kosher-friendly?
+
+assistant channel=analysis:
+Order Whole Fruit Trio for room 1621 with kosher-friendly note.
+
+assistant channel=commentary to=tool.order_room_service:
+{"item_name":"Whole Fruit Trio","room_number":"1621","quantity":1,"notes":"kosher-friendly handling"}
+
+tool.order_room_service channel=commentary to=assistant:
+{"status":"ok","eta":"18 min"}
+
+assistant channel=final:
+Confirmed—Whole Fruit Trio with kosher-friendly handling to 1621. ETA about 18 minutes.
+
+user:
+Do you have sealed berries cups?
+
+assistant channel=analysis:
+System: Sealed Berries Cup available upon request.
+
+assistant channel=final:
+Yes—Sealed Berries Cup is available on request.
+
+user:
+Thank you!
+
+assistant channel=final:
+My pleasure.
+
+user:
+Is the synagogue within walking distance?
+
+assistant channel=analysis:
+Beyond system context.
+
+assistant channel=final:
+[ATTENTION] I’ll verify nearby walking distances for you.
+

@@ -1,0 +1,65 @@
+"""
+Guest asks about on‑site book collections and whether items can be borrowed to rooms.
+
+ROLES: user (curious reader), assistant (concierge referencing space policies + tool list)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "list_collections",
+    "description": "Return curated shelf categories and notable items available in the reading space.",
+    "parameters": {"type":"object","properties":{},"required":[],"additionalProperties":false},
+    "strict": true
+  }
+]
+"""
+
+system:
+Space: Library Niche (curated shelves and periodicals)
+Location: Ground floor, north corridor between cafe and gallery
+Hours: 06:00–24:00
+Seats: 16 mixed (bar ledge x6, armchairs x6, ottomans x4)
+Rules: Keep items within the space; return to reshelving cart
+Loans: In‑room borrowing not permitted; reading-space use only
+Amenities: Magazine rack, chess sets, reading magnifiers
+Wi‑Fi: SSID "Gallery-Link" (no password)
+Lighting: 400 lux average; spotlight rails for displays
+Security: RFID shelf tags; soft alarm at exit if items removed
+Curation Cycle: Monthly refresh on the first Monday
+
+user:
+What kind of books or magazines are on the shelves?
+
+assistant channel=analysis:
+Use the tool to enumerate collections; then stay within system policy on loans.
+
+assistant channel=commentary to=tool.list_collections:
+{}
+
+tool.list_collections channel=commentary to=assistant:
+{"categories":["Modern travel essays","Architecture & interiors","Local history","Photography annuals","Design journals","Wellness & sleep"],"featured":["City Trails Quarterly – Vol. 12","Photobook: Atriums of the World","Local Legends: Port District","Journal of Minimal Interiors – 2025"]}
+
+assistant channel=analysis:
+Summarize the categories and a few featured items.
+
+assistant channel=final:
+Curated shelves include modern travel essays, architecture and interiors, local history, photography annuals, design journals, plus wellness and sleep. Featured now: City Trails Quarterly (Vol. 12), Photobook: Atriums of the World, Local Legends: Port District, and Journal of Minimal Interiors (2025).
+
+user:
+Can I take the photobook back to my room tonight?
+
+assistant channel=analysis:
+System states loans are not permitted—answer directly from policy.
+
+assistant channel=final:
+Items are for in‑space use only—borrowing to rooms isn’t permitted.
+
+user:
+Could you deliver a copy to my room as a gift purchase?
+
+assistant channel=analysis:
+No purchase/delivery service is defined here—flag attention.
+
+assistant channel=final:
+[ATTENTION] You’d like a gift copy delivered. I’m checking if that can be arranged.
+

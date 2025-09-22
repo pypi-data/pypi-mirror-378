@@ -1,0 +1,160 @@
+"""
+Guest reports toaster malfunction during use; troubleshoot issue, arrange replacement, include small talk, and one background acknowledgment.
+
+ROLES: user (guest experiencing toaster problems), assistant (guest services handling appliance issues)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_appliance_availability",
+    "description": "Check availability of portable kitchen appliances for loan.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "appliance_type": { "type": "string", "enum": ["toaster", "hot_plate", "rice_cooker"] }
+      },
+      "required": ["appliance_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_appliance",
+    "description": "Deliver an available appliance to the guest room with safety card.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "appliance_type": { "type": "string" }
+      },
+      "required": ["room_number", "appliance_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "report_appliance_issue",
+    "description": "Report malfunctioning appliance for maintenance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "appliance_type": { "type": "string" },
+        "issue_description": { "type": "string" }
+      },
+      "required": ["room_number", "appliance_type", "issue_description"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Residence: Garden Court Suites (hotel_id: gc_sfo_21)
+Address: 600 Pine Street, San Francisco, CA 94108
+Timezone: America/Los_Angeles
+
+Kitchenette Policy:
+- Portable toaster loan available on request
+- Safety: Use on the countertop only; keep 6 inches clearance
+- Supply: Limited units; first-come, first-served
+- Models: Dualit Mini Classic (2-slice), Cuisinart Compact (4-slice)
+- Loan duration: Up to 24 hours per request
+- Troubleshooting: Check power connection, crumb tray, and toast settings
+
+Lobby Feature:
+- Morning bakery cart with fresh sourdough slices and croissants
+- Gluten-free bread options available upon request
+- Organic butter and artisanal jams from local suppliers
+
+Room Service:
+- Continental breakfast available 6:00 AM - 11:00 AM
+- Special dietary accommodations: vegan, gluten-free, keto-friendly
+- Fresh fruit platters and yogurt parfaits
+
+Local Attractions:
+- Ferry Building Marketplace (0.3 miles) - artisanal food vendors
+- Union Square (0.4 miles) - shopping and dining district
+- Chinatown (0.6 miles) - authentic Asian cuisine and markets
+
+Hotel Amenities:
+- 24-hour fitness center with cardio equipment
+- Business center with printing and scanning services
+- Concierge desk for local recommendations and reservations
+
+Maintenance:
+- Appliance issues reported to engineering department
+- Replacement units available for malfunctioning equipment
+- Safety inspection required for all returned appliances
+
+user:
+Hi, I'm in room 512 and the toaster you delivered isn't working properly. It's not heating up at all.
+
+assistant channel=analysis:
+Guest reports toaster not heating up in room 512. Need to troubleshoot and arrange replacement if needed.
+
+assistant channel=final:
+I'm sorry to hear the toaster isn't working properly. Let me help troubleshoot this. First, could you check if the power cord is securely plugged in and the toaster is turned on? Also, make sure the crumb tray is properly seated.
+
+user:
+I've checked all that - the power is on and everything looks connected. It just won't heat up.
+
+assistant channel=analysis:
+Basic troubleshooting didn't resolve the issue. Need to report the malfunction and arrange replacement.
+
+assistant channel=commentary to=tool.report_appliance_issue:
+{"room_number":"512","appliance_type":"toaster","issue_description":"Not heating up despite proper power connection"}
+
+tool.report_appliance_issue channel=commentary to=assistant:
+{"reported":true,"maintenance_ticket":"MT-2024-001","replacement_authorized":true}
+
+assistant channel=analysis:
+Issue reported and replacement authorized. Check availability and arrange delivery of replacement toaster.
+
+assistant channel=commentary to=tool.check_appliance_availability:
+{"appliance_type":"toaster"}
+
+tool.check_appliance_availability channel=commentary to=assistant:
+{"available":true,"models":["Dualit_Mini_Classic","Cuisinart_Compact"],"notes":"loan_only_countertop_use"}
+
+assistant channel=analysis:
+Replacement toaster available. Deliver to room 512.
+
+assistant channel=commentary to=tool.deliver_appliance:
+{"room_number":"512","appliance_type":"toaster"}
+
+tool.deliver_appliance channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":12,"model":"Cuisinart_Compact","safety_card_included":true}
+
+assistant channel=final:
+I've reported the malfunction and arranged a replacement. A Cuisinart Compact toaster is on its way to room 512 and should arrive in about 12 minutes. The faulty unit will be collected for maintenance.
+
+user:
+Thank you! I really appreciate the quick response. The weather is beautiful today, isn't it?
+
+assistant channel=analysis:
+Guest is making small talk about the weather, which is not related to toaster service.
+
+assistant channel=final:
+You're very welcome! Yes, San Francisco weather can be quite lovely, especially with the bay breeze. Perfect day for exploring the city or enjoying breakfast on your balcony.
+
+user:
+The replacement toaster works great! Can you tell me about the different toast settings? I want to make sure I'm using it correctly.
+
+assistant channel=analysis:
+Guest is asking about specific toaster settings, which goes beyond our system knowledge of basic safety guidelines.
+
+assistant channel=final:
+[ATTENTION] I'll look into the specific toast settings for that model. Reviewing available resources.
+
+user:
+Actually, I figured it out by trial and error. The medium setting works perfectly for my bagels.
+
+assistant channel=analysis:
+Guest has resolved the toaster settings issue on their own and is sharing their experience.
+
+assistant channel=final:
+That's great! The medium setting is usually perfect for bagels. I'm glad you got it working well. If you need anything else during your stay, just let us know.

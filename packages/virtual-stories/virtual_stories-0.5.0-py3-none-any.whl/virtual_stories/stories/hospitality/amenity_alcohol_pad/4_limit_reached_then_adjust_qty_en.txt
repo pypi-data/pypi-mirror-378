@@ -1,0 +1,96 @@
+"""
+Guest initially requests more than allowed; assistant references max-per-request and adjusts quantity. Include small talk, an in-context quiet hours question, and an [ATTENTION] case.
+
+ROLES: user (guest), assistant (guest services following first-aid limits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"fa_check","description":"Check availability and max per request.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"fa_send","description":"Send first-aid items to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","item","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborline South Wharf (hotel_id: hsw_ma_28)
+Address: 21 Drydock Ave, Boston, MA 02210
+Timezone: America/New_York
+Check-in/Out: 16:00 / 11:00
+Delivery Hours: 07:30–22:00
+
+First-Aid Inventory:
+- alcohol pads (limit 12 per request)
+- bandages (s/m)
+- sterile gauze 4x4
+- cotton swabs
+
+Spaces:
+1) Harbor Terrace 17:00–22:00
+2) Café Dockside 06:30–12:30
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Harbor art wall in lobby
+
+Dining:
+- Café Dockside breakfast 06:30–12:30
+
+Accessibility:
+- Step-free access; ADA guest rooms available
+
+Sustainability:
+- Linen reuse program; water refill stations
+
+Design:
+- Exposed wood and maritime accents
+
+user:
+Hi—can I get 16 alcohol pads to 804?
+
+assistant channel=analysis:
+Check limit; if needed, adjust to max 12 and confirm delivery.
+
+assistant channel=commentary to=tool.fa_check:
+{"item":"alcohol pads"}
+
+tool.fa_check channel=commentary to=assistant:
+{"item":"alcohol pads","available":true,"max_per_request":12}
+
+assistant channel=commentary to=tool.fa_send:
+{"room":"804","item":"alcohol pads","qty":12}
+
+tool.fa_send channel=commentary to=assistant:
+{"delivery_id":"HSW-FA-804-118","eta_minutes":11}
+
+assistant channel=final:
+Alcohol pads are limited to 12 per request. I’ve arranged 12 to room 804 under HSW-FA-804-118, ETA about 11 minutes.
+
+user:
+The harbor art in the lobby is lovely.
+
+assistant channel=analysis:
+Small talk referencing system.
+
+assistant channel=final:
+That harbor art wall is one of our favorite details.
+
+user:
+What time do quiet hours start?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Quiet hours begin at 22:00.
+
+user:
+Could you schedule an urgent clinic visit for me tonight?
+
+assistant channel=analysis:
+Beyond scope; apply flag.
+
+assistant channel=final:
+[ATTENTION] Compiling available data.
+
+user:
+Thanks.

@@ -1,0 +1,54 @@
+"""
+Guest asks about a bike route insert and takes a standard map; include small talk and [ATTENTION].
+
+ROLES: user (cyclist guest), assistant (concierge issuing standard map with bike insert and logging note)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"log_bike_insert","description":"Log standard map with bike route insert","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"insert":{"type":"string"}},"required":["hotel_id","room","insert"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Stonebridge Oxford (SBXO-07)
+Address: 14 High St, Oxford OX1
+Map desk:
+- Standard maps: complimentary; EN only
+- Bike route insert (paper) available on request, no deposit
+- Pickup: Concierge bookshelf near lounge; Front Desk after 21:00
+- Hours: Concierge 09:00–21:00
+- Stock: 180 maps
+
+user:
+Do you have a bike route insert? Room 221.
+
+assistant channel=analysis:
+Confirm availability and log issuance with insert.
+
+assistant channel=final:
+Yes—the bike route insert is available at no deposit.
+
+assistant channel=commentary to=tool.log_bike_insert:
+{"hotel_id":"SBXO-07","room":"221","insert":"Bike route"}
+
+tool.log_bike_insert channel=commentary to=assistant:
+{"ticket":"MAP-221-BIKE"}
+
+assistant channel=final:
+Your map with bike insert is ready under ticket MAP-221-BIKE at the Concierge bookshelf near the lounge.
+
+user:
+Lovely campus feel.
+
+assistant channel=final:
+Enjoy your ride around the colleges.
+
+user:
+Can I get elevation profiles for climbs?
+
+assistant channel=final:
+[ATTENTION] Exploring different approaches.
+

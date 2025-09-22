@@ -1,0 +1,67 @@
+"""
+Guest requests lavender bath salt late evening; confirm delivery window and stock.
+
+ROLES: user (guest requesting bath salt), assistant (amenities desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "list_bath_salt_scents", "description": "List available bath salt scents and stock counts.", "parameters": {"type":"object","additionalProperties":false,"properties":{}}, "strict": true },
+  { "name": "request_bath_salt_delivery", "description": "Deliver bath salt to a room.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"scent":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","scent","quantity","priority"]}, "strict": true }
+]
+```
+"""
+
+system:
+Riverview Spa Hotel (hotel_id: rsh_austin_01)
+Address: 2001 Riverside Dr, Austin, TX 78741
+Timezone: America/Chicago
+
+Bath Rituals Program:
+- Scents: lavender, eucalyptus, unscented; 80 g pouches
+- Delivery window: 09:00–22:00
+- Typical ETA: 10–20 minutes
+Spa: Steam room 16:00–21:00; Dry sauna 16:00–21:00
+Accessibility: Large-type labels on amenity packets
+Sustainability: Recyclable paper sachets
+House Rules: No medical claims; skin-safe formulas
+
+user:
+Hi—could I get two lavender bath salts sent to 921 now?
+
+assistant channel=analysis:
+Confirm time is within delivery window, verify stock, place normal priority order.
+
+assistant channel=commentary to=tool.list_bath_salt_scents:
+{}
+
+tool.list_bath_salt_scents channel=commentary to=assistant:
+{"scents":[{"name":"lavender","stock":18},{"name":"eucalyptus","stock":12},{"name":"unscented","stock":28}]}
+
+assistant channel=commentary to=tool.request_bath_salt_delivery:
+{"room_number":"921","scent":"lavender","quantity":2,"priority":"normal"}
+
+tool.request_bath_salt_delivery channel=commentary to=assistant:
+{"ticket_id":"SPA-921-8821","eta_minutes":14}
+
+assistant channel=final:
+Two lavender bath salts are on the way to room 921. Ticket SPA-921-8821 with an ETA of about 14 minutes.
+
+user:
+Thanks—the steam room looked inviting earlier.
+
+assistant channel=analysis:
+Small talk referencing spa hours.
+
+assistant channel=final:
+Steam room runs 16:00–21:00 here—enjoy when you go.
+
+user:
+Are the salts sourced from the Dead Sea?
+
+assistant channel=analysis:
+Sourcing details not provided; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check on the sourcing details for our bath salts.
+

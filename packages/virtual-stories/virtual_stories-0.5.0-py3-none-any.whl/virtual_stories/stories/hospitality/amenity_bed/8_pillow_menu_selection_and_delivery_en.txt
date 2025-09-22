@@ -1,0 +1,57 @@
+"""
+Guest wants specific pillows from the menu; process selection and delivery.
+
+ROLES: user (guest choosing pillows), assistant (pillow menu coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"order_pillow_menu","description":"Order specialty pillows for delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pillow_types":{"type":"array","items":{"type":"object","properties":{"pillow_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["pillow_code","quantity"],"additionalProperties":false}},"delivery_priority":{"type":"string","enum":["standard","express","tonight"]}},"required":["room_number","pillow_types"]},"strict":true}
+]
+```
+"""
+
+system:
+Marina Gate Hotel (hotel_id: mgh_san_diego)
+Address: 555 Harbor Dr, San Diego, CA 92101
+Timezone: America/Los_Angeles
+
+Pillow Menu Summary:
+1) Codes: MEMORY_FOAM_LOW, DOWN_ALT_SOFT, LATEX_NATURAL, COOLING_GEL, CERVICAL_CONTOUR, BUCKWHEAT_SUPPORT.
+2) Typical delivery: 10–20 minutes, express prioritized.
+3) Mix‑and‑match allowed; collection on departure.
+4) Extra pillow storage bag provided in closet.
+5) Nightly pillow sanitation follows UV‑C protocol between uses.
+
+user:
+Hi, could I get two DOWN_ALT_SOFT and one CERVICAL_CONTOUR to 1722?
+
+assistant channel=analysis:
+Place pillow order with express delivery.
+
+assistant channel=commentary to=tool.order_pillow_menu:
+{"room_number":"1722","pillow_types":[{"pillow_code":"DOWN_ALT_SOFT","quantity":2},{"pillow_code":"CERVICAL_CONTOUR","quantity":1}],"delivery_priority":"express"}
+
+tool.order_pillow_menu channel=commentary to=assistant:
+{"order_id":"PIL-1722-6610","eta_minutes":14}
+
+assistant channel=final:
+On the way—two Down Alternative Soft pillows and one Cervical Contour to 1722, arriving in about 14 minutes.
+
+user:
+Great, thanks! The marina lights look dreamy tonight.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Enjoy the calm harbor lights.
+
+user:
+Could you also bring herbal tea?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on herbal tea options for you.

@@ -1,0 +1,112 @@
+"""
+Guest inquires about spa facilities, seeks a relaxation package with sauna access, and requests a booking.
+
+ROLES: user (hotel guest exploring spa access and treatment booking), assistant (concierge providing facility facts and arranging spa reservations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_facility_hours",
+    "description": "Return operating hours for a facility by ID.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "facility_id": {"type": "string"}
+      },
+      "required": ["facility_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "book_spa_session",
+    "description": "Book a spa session with treatment type and add-ons.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_id": {"type": "string"},
+        "treatment": {"type": "string"},
+        "date": {"type": "string", "format": "date"},
+        "time": {"type": "string"},
+        "add_ons": {"type": "array", "items": {"type": "string"}}
+      },
+      "required": ["guest_id", "treatment", "date", "time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Azure Springs Hotel (hotel_id: azure_springs_hkg)
+Address: 88 Fountain Terrace, Central, Hong Kong
+Timezone: Asia/Hong_Kong
+Facility: SPA & Thermal Suite (facility_id: spa_azure_hkg)
+Hours: Mon–Thu 10:00–20:00; Fri–Sun 09:00–22:00
+Location notes: Level B1 via Garden Elevators; eucalyptus steam; dry sauna seats 12
+Policies: Adults 16+; Quiet zone; Robe and slippers provided; 15‑minute hold after provisional booking
+Fees: Thermal suite day pass HKD 380; Relaxation package (60-min massage + sauna) HKD 980
+
+user:
+Hi there! Do you have a spa with a sauna? What are the hours today?
+
+assistant channel=analysis:
+Confirm facility exists; fetch today's hours via tool; then share sauna availability facts from system prompt.
+
+assistant channel=commentary to=tool.check_facility_hours:
+{"facility_id":"spa_azure_hkg"}
+
+tool.check_facility_hours channel=commentary to=assistant:
+{"hours":"Mon–Thu 10:00–20:00; Fri–Sun 09:00–22:00"}
+
+assistant channel=final:
+Yes—our SPA & Thermal Suite includes a eucalyptus steam room and a dry sauna that seats 12. Hours today are Mon–Thu 10:00–20:00; Fri–Sun 09:00–22:00.
+
+user:
+Sounds perfect. I’d like the relaxation package this Friday at 6 PM. Can you book it?
+
+assistant channel=analysis:
+Proceed to book the relaxation package for Friday 18:00; ask for guest ID if missing, but user did not provide—use a placeholder request first.
+
+assistant channel=final:
+I can arrange that—may I have your guest ID to place the booking and hold it for 15 minutes?
+
+user:
+Guest ID is GUEST-8821. Date 2025-09-12 (Friday) at 18:00.
+
+assistant channel=analysis:
+Book the session with treatment "relaxation package" at specified time; no add-ons mentioned.
+
+assistant channel=commentary to=tool.book_spa_session:
+{"guest_id":"GUEST-8821","treatment":"relaxation package","date":"2025-09-12","time":"18:00","add_ons":[]}
+
+tool.book_spa_session channel=commentary to=assistant:
+{"status":"confirmed","booking_id":"SPA-HKG-3092","price":"HKD 980"}
+
+assistant channel=analysis:
+Confirm booking with price and policies.
+
+assistant channel=final:
+All set—SPA-HKG-3092 is confirmed for 2025-09-12 at 18:00. The relaxation package is HKD 980 and includes sauna access; robes and slippers are provided.
+
+user:
+By the way, the lobby smells amazing today.
+
+assistant channel=analysis:
+Small talk acknowledgment without introducing new facts.
+
+assistant channel=final:
+Thanks for the kind note—glad the ambience feels relaxing.
+
+user:
+Do you also offer on-site acupuncture?
+
+assistant channel=analysis:
+Acupuncture isn’t listed in system info and no tool provides such info—use special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking. Reviewing available resources.
+

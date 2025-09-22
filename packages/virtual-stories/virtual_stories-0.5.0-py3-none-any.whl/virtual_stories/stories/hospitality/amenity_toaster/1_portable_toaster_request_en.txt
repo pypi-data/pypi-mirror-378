@@ -1,0 +1,94 @@
+"""
+Guest requests a portable toaster for in-room use; verify availability, deliver with safety guidance, include small talk, and one background acknowledgment.
+
+ROLES: user (guest requesting a toaster), assistant (guest services arranging kitchen appliance loans)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_appliance_availability",
+    "description": "Check availability of portable kitchen appliances for loan.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "appliance_type": { "type": "string", "enum": ["toaster", "hot_plate", "rice_cooker"] }
+      },
+      "required": ["appliance_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_appliance",
+    "description": "Deliver an available appliance to the guest room with safety card.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "appliance_type": { "type": "string" }
+      },
+      "required": ["room_number", "appliance_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Residence: Garden Court Suites (hotel_id: gc_sfo_21)
+Address: 600 Pine Street, San Francisco, CA 94108
+Timezone: America/Los_Angeles
+
+Kitchenette Policy:
+- Portable toaster loan available on request
+- Safety: Use on the countertop only; keep 6 inches clearance
+- Supply: Limited units; first-come, first-served
+
+Lobby Feature:
+- Morning bakery cart with fresh sourdough slices and croissants
+
+user:
+Hi! Could I get a toaster sent up to room 715?
+
+assistant channel=analysis:
+Confirm toaster availability; then deliver if available.
+
+assistant channel=commentary to=tool.check_appliance_availability:
+{"appliance_type":"toaster"}
+
+tool.check_appliance_availability channel=commentary to=assistant:
+{"available":true,"models":["Dualit_Mini_Classic","Cuisinart_Compact"],"notes":"loan_only_countertop_use"}
+
+assistant channel=analysis:
+Proceed with delivery to room 715.
+
+assistant channel=commentary to=tool.deliver_appliance:
+{"room_number":"715","appliance_type":"toaster"}
+
+tool.deliver_appliance channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":10,"model":"Cuisinart_Compact","safety_card_included":true}
+
+assistant channel=final:
+Great—one Cuisinart Compact toaster is on the way to room 715 with a safety card; arrival in about 10 minutes.
+
+user:
+I love that bakery cart smell in the mornings.
+
+assistant channel=analysis:
+Short small talk reply grounded in system details.
+
+assistant channel=final:
+It’s a treat—our morning bakery cart sets up in the lobby with fresh sourdough and croissants.
+
+user:
+Can you modify the toaster for higher wattage so it toasts faster?
+
+assistant channel=analysis:
+No tool supports modifications; acknowledge with the background flag.
+
+assistant channel=final:
+[ATTENTION] Noted. Reviewing available resources.
+

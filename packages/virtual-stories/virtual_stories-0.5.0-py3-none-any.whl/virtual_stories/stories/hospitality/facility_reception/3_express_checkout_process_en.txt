@@ -1,0 +1,59 @@
+"""
+Guest asks how express check‑out at reception works and what is required.
+
+ROLES: user (guest preparing to depart), assistant (receptionist explaining express check‑out steps and options)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_express_checkout_steps",
+    "description": "Return the step-by-step flow and return locations for express check-out.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+[Reception Overview]
+Desk: Lobby Front Desk (Zone A)
+Coverage: 24/7 | Peak: 07:00–11:00, 17:00–20:00
+Express Box: Left of the desk, lock‑slot with tamper seal
+Receipts: Digital PDF via email upon audit completion (~10 minutes)
+What you need: Room key sleeve + last name + room number
+Extra facts:
+1) Printed city map available on request.
+2) Key sleeves are RFID‑shielded.
+3) Queue screen cycles every 8 seconds.
+4) Desk printers: 2x thermal, 1x laser (for invoices).
+5) Card terminals support contactless (Visa/MC/Amex).
+
+user:
+How does express check‑out work here? What do I need to drop off?
+
+assistant channel=analysis:
+Call tool for the step flow; include system requirements and turnaround.
+
+assistant channel=commentary to=tool.get_express_checkout_steps:
+{}
+
+tool.get_express_checkout_steps channel=commentary to=assistant:
+{"steps":["Place room keys in sleeve","Write last name and room number","Drop into EXPRESS box by desk"],"alternatives":["Scan QR for digital form if you lost the sleeve"],"confirmation":"Invoice emailed within ~10 minutes"}
+
+assistant channel=analysis:
+Summarize steps and requirements.
+
+assistant channel=final:
+Drop your keys in the sleeve, write your last name and room number, then place it in the EXPRESS box by the desk. If you lost the sleeve, you can use the QR digital form. A PDF invoice arrives by email in about 10 minutes.
+
+user:
+Neat setup.
+
+assistant channel=analysis:
+Short small talk.
+
+assistant channel=final:
+Quick exits are kind of our specialty.
+

@@ -1,0 +1,68 @@
+"""
+Guest asks about Wi‑Fi and printing in the reading area; wants pricing and page limits.
+
+ROLES: user (guest needing connectivity), assistant (concierge answering from facts/tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "get_connectivity_and_printing",
+    "description": "Return Wi‑Fi SSID/password, printer queue name, cost per page, and daily cap.
+",
+    "parameters": {"type":"object","properties":{},"required":[],"additionalProperties":false},
+    "strict": true
+  }
+]
+"""
+
+system:
+Space: Writer’s Terrace (indoor alcove, garden view)
+Location: Level 3, south conservatory
+Hours: 08:00–22:00
+Seats: 12 desks; 4 window benches
+Amenities: A4/A3 laser printer, scan-to-email, staplers, tea caddy
+Rules: Whisper only; no phone speakers; cap printing as posted
+Wi‑Fi: SSID "Terrace-Guest"; Captive code rotates daily at 08:00
+Power: Universal sockets + USB-A/USB-C at each desk
+Print Policy: First 10 pages free/day; then per-page fee
+Costs: A4 b/w $0.10; A4 color $0.40; A3 color $0.80
+Queue Name: "L3_Terrace_MFP_01"
+Paper: 80 gsm A4, 100 gsm A3 color stock
+Environment: Target 21.5 °C; humidity 45–55%
+
+user:
+What’s the Wi‑Fi and how much does printing cost here?
+
+assistant channel=analysis:
+Use the tool to provide SSID/password and precise pricing/caps.
+
+assistant channel=commentary to=tool.get_connectivity_and_printing:
+{}
+
+tool.get_connectivity_and_printing channel=commentary to=assistant:
+{"wifi":{"ssid":"Terrace-Guest","access":"Captive code at 08:00"},"printing":{"queue":"L3_Terrace_MFP_01","free_pages":10,"prices":{"A4_bw":0.10,"A4_color":0.40,"A3_color":0.80}}}
+
+assistant channel=analysis:
+Answer succinctly with SSID/access and the costs from tool.
+
+assistant channel=final:
+Wi‑Fi SSID: Terrace‑Guest (access via the daily captive code at 08:00). Printing uses queue L3_Terrace_MFP_01: first 10 pages/day free, then A4 b/w $0.10, A4 color $0.40, A3 color $0.80.
+
+user:
+Love the garden view.
+
+assistant channel=analysis:
+Friendly acknowledgement only.
+
+assistant channel=final:
+It’s a calm backdrop for long reads.
+
+user:
+Can you pre-load 50 free pages to my account?
+
+assistant channel=analysis:
+That override isn’t defined by system/tool—flag attention.
+
+assistant channel=final:
+[ATTENTION] Noted your request to add 50 free pages. Checking what’s possible.
+

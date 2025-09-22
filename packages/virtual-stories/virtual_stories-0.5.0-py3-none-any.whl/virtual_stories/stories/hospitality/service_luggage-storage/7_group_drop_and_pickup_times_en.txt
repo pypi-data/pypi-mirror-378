@@ -1,0 +1,45 @@
+"""
+Group asks about staggered pickups; include [ATTENTION] for overnight.
+
+ROLES: user (group), assistant (clarifies same-day rule and issues tickets)
+CHANNELS: analysis, commentary, final
+TOOLS:
+[{"name":"batch_store","description":"Store multiple sets under one group name","parameters":{"type":"object","properties":{"group":{"type":"string"},"sets":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"items":{"type":"integer"}},"required":["name","items"],"additionalProperties":false}}},"required":["group","sets"],"additionalProperties":false},"strict":true}]
+"""
+
+system:
+RESORT: Dunecrest Villas
+STORAGE:
+- Same-day window: 08:00–21:30
+- ID + tag required
+- No overnight
+- Desk near porte-cochère
+- Complimentary
+
+user:
+We’re a group—can you store 2 under Alex and 3 under Priya?
+
+assistant channel=analysis:
+Use batch store with two sets.
+
+assistant channel=commentary to=tool.batch_store:
+{"group":"Tour-Blue","sets":[{"name":"Alex","items":2},{"name":"Priya","items":3}]}
+
+tool.batch_store channel=commentary to=assistant:
+{"tickets":[{"name":"Alex","ticket":"DC-701","tags":["D221","D222"]},{"name":"Priya","ticket":"DC-702","tags":["D223","D224","D225"]}]}
+
+assistant channel=final:
+Stored for Tour-Blue. Alex: DC-701 (D221, D222). Priya: DC-702 (D223, D224, D225). Same‑day pickup is 08:00–21:30 with ID.
+
+user:
+That porte-cochère drop-off was easy.
+
+assistant channel=final:
+The desk is just inside from the porte‑cochère for quick handoffs.
+
+user:
+What if we need overnight?
+
+assistant channel=final:
+[ATTENTION] Overnight storage isn’t available per the storage policy.
+

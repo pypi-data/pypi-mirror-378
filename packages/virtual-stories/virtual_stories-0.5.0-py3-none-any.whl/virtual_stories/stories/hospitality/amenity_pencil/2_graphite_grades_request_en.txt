@@ -1,0 +1,70 @@
+"""
+Guest requests pencils with specific graphite grades and a sharpener for sketching.
+
+ROLES: user (guest doing quick sketches), assistant (art-friendly concierge providing pencils and sharpener)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_art_supplies","description":"Check available pencil grades and sharpeners.","parameters":{"type":"object","additionalProperties":false,"properties":{"grades":{"type":"array","items":{"type":"string"}},"need_sharpener":{"type":"boolean"}},"required":[]},"strict":true},
+  {"name":"deliver_stationery","description":"Deliver pencils and related items to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"required":["room","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Artline Boutique (hotel_id: alb_por_05)
+Address: 10 NW Davis St, Portland, OR 97209
+Timezone: America/Los_Angeles
+Studio Desk: 08:00–22:00; in-house delivery 10–15 min
+Complimentary (creative floors): sketch pencils (HB/2B/4B/6B), handheld sharpeners, mini sketch pad
+Extension: x4150
+
+user:
+Do you have 2B and 6B pencils with a sharpener for 707?
+
+assistant channel=analysis:
+Confirm grades and sharpener; deliver to 707.
+
+assistant channel=commentary to=tool.check_art_supplies:
+{"grades":["2B","6B"],"need_sharpener":true}
+
+tool.check_art_supplies channel=commentary to=assistant:
+{"ok":true,"available_grades":["HB","2B","4B","6B"],"sharpeners":12}
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room":"707","items":["pencil_2B","pencil_6B","handheld_sharpener","mini_sketch_pad"]}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"sent":true,"eta":12}
+
+assistant channel=final:
+Yes—2B and 6B pencils with a handheld sharpener and mini sketch pad are on their way to 707, about 12 minutes.
+
+user:
+Is the Studio Desk open now?
+
+assistant channel=analysis:
+Answer with hours from system.
+
+assistant channel=final:
+It runs 08:00–22:00.
+
+user:
+Could you reserve front-row seats at a gallery opening tonight?
+
+assistant channel=analysis:
+Out of scope; attention.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+
+user:
+Love the neighborhood vibe here.
+
+assistant channel=analysis:
+Keep small talk grounded.
+
+assistant channel=final:
+Artline Boutique’s Pearl District address adds to that creative feel.
+

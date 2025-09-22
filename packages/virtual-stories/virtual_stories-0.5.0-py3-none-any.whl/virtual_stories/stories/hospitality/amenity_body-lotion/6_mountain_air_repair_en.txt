@@ -1,0 +1,69 @@
+"""
+Guest at high altitude requests restorative body lotion; asks about delivery timing.
+
+ROLES: user (outdoor enthusiast), assistant (spa desk associate)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_skincare_inventory","description":"Body lotions for dry/mature skin","parameters":{"type":"object","properties":{"product_type":{"type":"string","enum":["body_lotion"]},"skin_type":{"type":"string","enum":["dry","mature","all"]}},"required":["product_type"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_spa_amenities","description":"Arrange delivery","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"product_id":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_time":{"type":"string","enum":["immediate","evening_turndown","morning_refresh"]}},"required":["room_number","products"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Alpine Crest Lodge & Spa (hotel_id: acls_den_01)
+Address: 600 17th St, Denver, CO 80202
+Timezone: America/Denver
+
+Altitude Tips:
+- Air is drier at elevation; emollients recommended
+- Sauna + steam on L2; hydration lounge adjacent
+- Delivery windows: immediate, evening turndown, morning refresh
+- Trail maps at concierge (daytime only)
+- Oxygen bars: not available
+
+Selection (bullet):
+- Summit Shield Body Butter (rich)
+- Alpine Silk Lotion (lighter, daily use)
+
+user:
+Hi there—what lotions do you have for dry air? Can you deliver during evening turndown to 1511?
+
+assistant channel=analysis:
+Answer delivery timing from system; list options; schedule delivery of a rich option.
+
+assistant channel=final:
+Evening turndown delivery is available. Our rich options include Summit Shield Body Butter, and for daily use Alpine Silk Lotion. I’ll schedule Summit Shield for your room now.
+
+assistant channel=commentary to=tool.get_skincare_inventory:
+{"product_type":"body_lotion","skin_type":"dry"}
+
+tool.get_skincare_inventory channel=commentary to=assistant:
+{"available_products":[{"id":"SUMMIT_SHIELD","name":"Summit Shield Body Butter","description":"Rich emollient"},{"id":"ALPINE_SILK","name":"Alpine Silk Lotion","description":"Daily hydration"}]}
+
+assistant channel=commentary to=tool.deliver_spa_amenities:
+{"room_number":"1511","products":[{"product_id":"SUMMIT_SHIELD","quantity":1}],"delivery_time":"evening_turndown"}
+
+tool.deliver_spa_amenities channel=commentary to=assistant:
+{"ticket_id":"ACLS-1511-ET-118","scheduled":"evening_turndown","items":["Summit Shield Body Butter x1"],"charge":"bill_to_room"}
+
+assistant channel=final:
+Scheduled—Summit Shield will arrive at evening turndown under ACLS-1511-ET-118.
+
+user:
+Thanks! The hydration lounge is lovely.
+
+assistant channel=final:
+Glad you enjoyed it—perfect after the sauna.
+
+user:
+Any good trail runs you know nearby?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll ask the concierge for trail recommendations.
+

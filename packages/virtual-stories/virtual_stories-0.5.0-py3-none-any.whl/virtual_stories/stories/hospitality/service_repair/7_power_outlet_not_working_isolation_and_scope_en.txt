@@ -1,0 +1,50 @@
+"""
+Guest reports a dead power outlet; asks about electrical isolation and repair scope.
+
+ROLES: user (guest needing power), assistant (front desk clarifying isolation policy, scope, creating ticket, and ETA window)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"log","description":"Log electrical ticket","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"issue":{"type":"string"},"priority":{"type":"string","enum":["low","normal","high","urgent"]}},"required":["hotel_id","room","issue","priority"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Pacific Rim Seattle (PRS-36)
+Address: 123 Pine St, Seattle, WA 98101, USA
+Engineering: 08:00–22:00; on-call overnight
+Electrical Isolation: Engineers isolate circuits only as needed for safety
+Scope: Outlets, lamps, TV inputs, minor plumbing
+Response: Normal 15–30 minutes
+Dispatch: Ticket required
+
+user:
+An outlet in 1732 isn’t working. Do you need to cut power to the room? Can someone check it soon?
+
+assistant channel=analysis:
+Explain isolation only as needed; log a normal ticket.
+
+assistant channel=commentary to=tool.log:
+{"hotel_id":"PRS-36","room":"1732","issue":"One power outlet not working","priority":"normal"}
+
+tool.log channel=commentary to=assistant:
+{"ticket_id":"PRS-ENG-733","status":"open"}
+
+assistant channel=final:
+Our engineers isolate circuits only if it’s needed for safety—they’ll target the specific outlet first. I’ve logged ticket PRS-ENG-733 under normal priority; an engineer will be en route within the standard 15–30 minute window.
+
+user:
+The rain sounds cozy.
+
+assistant channel=final:
+Seattle’s drizzle has its charm.
+
+user:
+Can you provide the electrical safety SOP binder?
+
+assistant channel=final:
+[ATTENTION] Checking available resources.
+

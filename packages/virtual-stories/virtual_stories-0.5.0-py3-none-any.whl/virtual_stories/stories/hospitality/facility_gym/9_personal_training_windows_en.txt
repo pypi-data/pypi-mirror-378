@@ -1,0 +1,58 @@
+"""
+Guest asks about personal training times; include small talk and an ATTENTION ask beyond scope.
+
+ROLES: user (guest seeking quick coaching), assistant (gym host with limited PT info)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_pt_availability","description":"Return when floor staff can provide short form pointers.","parameters":{"type":"object","properties":{}},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lantern Court Hotel
+Gym: Lantern Fit (Level 4)
+Hours: 24/7 key access; staff 06:30–21:00
+
+Quick Coaching Windows:
+- Form checks: 07:00–08:30; 18:00–19:00 at the rack area
+- Treadmill setup help on request
+
+Rules:
+• No spotting for max lifts
+• Headphones only; wipe gear after use
+
+user:
+Do you offer short form checks today?
+
+assistant channel=analysis:
+Return the coaching windows from tool.
+
+assistant channel=commentary to=tool.get_pt_availability:
+{}
+
+tool.get_pt_availability channel=commentary to=assistant:
+{"windows":["07:00–08:30","18:00–19:00"],"location":"rack area"}
+
+assistant channel=final:
+Yes—quick form checks are available 07:00–08:30 and 18:00–19:00 at the rack area.
+
+user:
+Perfect. Music in the elevator was catchy.
+
+assistant channel=final:
+Glad it put some energy in your step.
+
+user:
+Are headphones required inside the gym?
+
+assistant channel=final:
+Yes—headphones only, and please wipe gear after use.
+
+user:
+Can someone spot me for a one‑rep max tonight?
+
+assistant channel=final:
+[ATTENTION] Spotting for max lifts isn’t provided. Checking available options.

@@ -1,0 +1,60 @@
+"""
+Guest asks about on-site parking: rates, clearance, and EV chargers.
+
+ROLES: user (guest arriving by car), assistant (front desk providing parking details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_parking_lot_info",
+    "description": "Return parking clearance, overnight rate, entry, and EV charging details.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Parking: On-site covered garage
+Entry: 14 Quayside Lane (ramp after the glass atrium)
+Validation: Restaurant diners may validate for up to 2 hours
+Security: CCTV monitored; patrolled nightly
+Note: Please display the parking ticket on your dashboard when instructed by the kiosk
+
+user:
+Is there on-site parking? What’s the overnight rate, and do you have EV chargers?
+
+assistant channel=analysis:
+Use parking tool for clearance, rate, entry, and EV chargers; add security note from system facts.
+
+assistant channel=commentary to=tool.get_parking_lot_info:
+{}
+
+tool.get_parking_lot_info channel=commentary to=assistant:
+{"entry":"14 Quayside Lane (garage ramp)","clearance":"2.0 m","overnight_rate":"£28 per night","ev_chargers":{"count":6,"type":"Type 2 (7 kW)"}}
+
+assistant channel=analysis:
+Summarize clearly, including EV details.
+
+assistant channel=final:
+Yes—on-site covered parking enters at 14 Quayside Lane (garage ramp). Clearance is 2.0 m, the overnight rate is £28 per night, and we have 6 Type 2 (7 kW) EV chargers. The garage is CCTV‑monitored with nightly patrols; restaurant diners can validate up to 2 hours.
+
+user:
+Great, thanks.
+
+assistant channel=analysis:
+Friendly acknowledgment.
+
+assistant channel=final:
+Happy to help—safe travels.
+
+user:
+Can you reserve me a space near the elevator?
+
+assistant channel=analysis:
+Space reservations aren’t defined by tools/system—use the special flag.
+
+assistant channel=final:
+[ATTENTION] Noted on proximity to elevators. Checking available options.

@@ -1,0 +1,155 @@
+"""
+Guest requests personal wellness items including protection products with discrete service.
+Includes privacy considerations, product options, and discreet delivery protocols.
+
+ROLES: user (guest requesting personal wellness amenities), assistant (wellness amenities concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_wellness_amenities",
+    "description": "Retrieve available personal wellness and health products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["protection", "personal_care", "health_wellness", "all_wellness"] }
+      },
+      "required": []
+    },
+    "strict": true
+  },
+  {
+    "name": "verify_discreet_delivery_options",
+    "description": "Check available discreet delivery options for personal wellness items.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "time_preference": { "type": "string", "enum": ["immediate", "evening", "specific_time"] }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_wellness_delivery",
+    "description": "Arrange discreet delivery of personal wellness amenities.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": { 
+            "type": "object", 
+            "properties": { 
+              "sku": { "type": "string" }, 
+              "quantity": { "type": "integer" } 
+            }, 
+            "required": ["sku", "quantity"], 
+            "additionalProperties": false 
+          }
+        },
+        "delivery_method": { "type": "string", "enum": ["room_service_tray", "housekeeping_supplies", "front_desk_envelope"] },
+        "delivery_timing": { "type": "string", "enum": ["immediate", "evening_turndown", "next_housekeeping", "specific_time"] }
+      },
+      "required": ["room_number", "items", "delivery_method", "delivery_timing"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Sophisticated Suites Hotel (hotel_id: ssh_miami)
+Address: 1435 Brickell Ave, Miami, FL 33131
+Timezone: America/New_York
+
+Personal Wellness Amenity Services:
+- Discreet, professional service for all personal wellness needs
+- Premium quality products from trusted manufacturers
+- Multiple delivery options to ensure guest privacy and comfort
+- Available 24/7 through concierge services
+- All items individually wrapped and professionally packaged
+
+Wellness Collection Includes:
+- Personal protection products (various brands and types)
+- Personal lubricants and intimate wellness items
+- Health and safety accessories
+- Pregnancy and family planning resources
+
+Available SKUs:
+- WELLNESS_PROTECTION_STANDARD: Standard protection products (3-pack)
+- WELLNESS_PROTECTION_PREMIUM: Premium latex-free products (3-pack)
+- WELLNESS_LUBRICANT_WATER: Water-based personal lubricant
+- WELLNESS_PREGNANCY_KIT: Early detection and information kit
+
+Delivery protocols:
+- Room service tray: discreet covered service
+- Housekeeping supplies: included with standard amenity delivery
+- Front desk envelope: sealed confidential pickup
+
+user:
+Hi, I was wondering if you have any personal protection products available? My partner and I are staying for our anniversary.
+
+assistant channel=analysis:
+Guest is requesting personal protection products for their anniversary stay. I should show available wellness amenities with discretion and professionalism.
+
+assistant channel=commentary to=tool.get_wellness_amenities:
+{"category": "protection"}
+
+tool.get_wellness_amenities channel=commentary to=assistant:
+{"available_products":[{"sku":"WELLNESS_PROTECTION_STANDARD","name":"Standard Protection Products","pack_size":3,"material":"latex"},{"sku":"WELLNESS_PROTECTION_PREMIUM","name":"Premium Latex-Free Protection","pack_size":3,"material":"non_latex","features":["ultra_thin","enhanced_sensitivity"]},{"sku":"WELLNESS_LUBRICANT_WATER","name":"Premium Water-Based Personal Lubricant","size":"50ml","ph_balanced":true}]}
+
+assistant channel=final:
+Congratulations on your anniversary! We have discreet wellness amenities available: Standard Protection Products (3-pack), Premium Latex-Free Protection (3-pack, ultra-thin for enhanced sensitivity), and Premium Water-Based Personal Lubricant (50ml, pH balanced). All items are professionally packaged. What's your room number?
+
+user:
+We're in the honeymoon suite 1205. The premium latex-free option sounds perfect. Can you deliver it discreetly?
+
+assistant channel=analysis:
+Guest in suite 1205 wants the premium protection products with discreet delivery. I should check delivery options and arrange the service.
+
+assistant channel=commentary to=tool.verify_discreet_delivery_options:
+{"room_number": "1205", "time_preference": "evening"}
+
+tool.verify_discreet_delivery_options channel=commentary to=assistant:
+{"room_number":"1205","suite_type":"honeymoon","available_methods":["room_service_tray","evening_turndown_service"],"recommended_timing":"evening_turndown","privacy_level":"maximum_discretion"}
+
+assistant channel=commentary to=tool.arrange_wellness_delivery:
+{"room_number": "1205", "items": [{"sku": "WELLNESS_PROTECTION_PREMIUM", "quantity": 1}], "delivery_method": "room_service_tray", "delivery_timing": "evening_turndown"}
+
+tool.arrange_wellness_delivery channel=commentary to=assistant:
+{"delivery_id":"WELL-1205-16","items":[{"sku":"WELLNESS_PROTECTION_PREMIUM","quantity":1}],"delivery_method":"covered_room_service_tray","delivery_timing":"evening_turndown_service","eta":"19:30-20:00","staff_note":"anniversary_couple_privacy_priority"}
+
+assistant channel=final:
+Absolutely! Delivery WELL-1205-16 is arranged for your Premium Latex-Free Protection products. They'll arrive discreetly with evening turndown service (7:30-8:00 PM) on a covered room service tray for maximum privacy. Perfect for your special anniversary celebration.
+
+user:
+Thank you so much! That's incredibly thoughtful service. By the way, can you recommend any romantic spots for sunset viewing around here?
+
+assistant channel=analysis:
+Guest is asking for romantic location recommendations, which is outside my wellness amenities service scope.
+
+assistant channel=final:
+[ATTENTION] Gathering relevant data.
+
+user:
+Actually, could I also get that water-based lubricant you mentioned? Just to complete the anniversary package.
+
+assistant channel=analysis:
+Guest wants to add the personal lubricant to their wellness amenity order. I should arrange delivery of both items together.
+
+assistant channel=commentary to=tool.arrange_wellness_delivery:
+{"room_number": "1205", "items": [{"sku": "WELLNESS_LUBRICANT_WATER", "quantity": 1}], "delivery_method": "room_service_tray", "delivery_timing": "evening_turndown"}
+
+tool.arrange_wellness_delivery channel=commentary to=assistant:
+{"delivery_id":"WELL-1205-17","items":[{"sku":"WELLNESS_LUBRICANT_WATER","quantity":1}],"combined_with_previous_order":true,"delivery_method":"covered_room_service_tray","delivery_timing":"evening_turndown_service","total_items":"premium_protection_pack_plus_lubricant"}
+
+assistant channel=final:
+Of course! I've added the Premium Water-Based Personal Lubricant to your delivery. Both items will arrive together with evening turndown service as delivery WELL-1205-17. Have a wonderful anniversary celebration!

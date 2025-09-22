@@ -1,0 +1,58 @@
+"""
+Guest asks if event promos are announced on LINE; provide handle and hours; include out-of-scope request about promo conversion rate.
+
+ROLES: user (guest), assistant (marketing concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Pine Lantern Chalet (hotel_id: pine_lantern)
+Contacts: LINE @pinelantern | Email hello@pinelantern.ch | Phone +41 22 555 3002 | Web https://pinelantern.ch
+LINE usage: We announce spa deals and seasonal menus; Hours 07:00–21:00 CET; typical reply 5–15 min
+Other info: Alpine spa 2F; Fondue evenings Wed–Sun; Heated bike storage.
+
+user:
+Do you announce promos on LINE?
+
+assistant channel=analysis:
+Answer from system LINE usage.
+
+assistant channel=final:
+Yes—we post spa deals and seasonal menus on LINE during 07:00–21:00 CET.
+
+user:
+What’s your exact LINE handle?
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"pine_lantern","channel":"line"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"line":"@pinelantern"}
+
+assistant channel=final:
+Please add us at @pinelantern.
+
+user:
+By the way, the fondue night was perfect.
+
+assistant channel=analysis:
+Small talk; acknowledge event.
+
+assistant channel=final:
+Wonderful to hear—fondue evenings run Wednesday through Sunday.
+
+user:
+What’s your average promo conversion rate from LINE last month?
+
+assistant channel=analysis:
+Out of scope—no conversion metrics provided.
+
+assistant channel=final:
+[ATTENTION] Conversion metrics aren’t available within the provided resources.
+

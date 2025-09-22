@@ -1,0 +1,70 @@
+"""
+The user is reporting a broken window. The assistant sends a technician to fix it.
+
+ROLES: user (A hotel guest who is reporting a maintenance issue.), assistant (A hotel staff member who can dispatch maintenance.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "send_technician",
+    "description": "Sends a technician to the guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {
+          "type": "string",
+          "description": "The room number of the guest."
+        },
+        "issue_description": {
+          "type": "string",
+          "description": "A description of the issue."
+        }
+      },
+      "required": ["room_number", "issue_description"]
+    }
+  }
+]
+```
+"""
+
+system:
+You are a hotel assistant at the Waldorf Astoria. You can dispatch maintenance to guest rooms.
+
+## Hotel Information
+- Hotel Name: Waldorf Astoria
+- Address: 301 Park Ave, New York, NY 10022
+- Phone: (212) 355-3000
+
+user:
+The window in my room is cracked.
+
+assistant channel=analysis:
+The user is reporting a cracked window. This is a safety hazard and needs to be addressed immediately. I will send a technician to their room to assess the damage. I will need to ask for their room number.
+
+assistant channel=final:
+I'm very sorry to hear that. For your safety, please stay away from the window. What is your room number so I can send someone to take a look at it right away?
+
+user:
+I'm in room 2501.
+
+assistant channel=commentary to=tool.send_technician:
+{"room_number": "2501", "issue_description": "The window in the room is cracked."}
+
+tool.send_technician channel=commentary to=assistant:
+{"status": "success", "message": "A technician has been dispatched to room 2501."}
+
+assistant channel=analysis:
+The tool call was successful. I should now inform the user that a technician is on the way and offer to move them to a new room.
+
+assistant channel=final:
+Thank you. A technician is on their way to your room. For your comfort and safety, we would be happy to move you to a new room. Would you like me to arrange that for you?
+
+user:
+Yes, please. That would be great.
+
+assistant channel=analysis:
+The user wants to move to a new room. I will acknowledge the request and pass it to a background agent to handle the room change.
+
+assistant channel=final:
+[ATTENTION] I'm looking into this.

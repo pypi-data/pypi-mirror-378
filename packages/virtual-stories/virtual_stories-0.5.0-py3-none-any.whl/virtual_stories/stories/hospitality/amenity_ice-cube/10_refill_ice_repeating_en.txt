@@ -1,0 +1,64 @@
+"""
+Guest requests a refill after an earlier delivery; confirms hours and asks a beyond-context question.
+
+ROLES: user (guest in room 914 asking for a refill), assistant (services placing another delivery and confirming hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Create amenity delivery",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harborline Atrium — City Tower
+Room: 914 (Premier King)
+Ice service: Refill permitted; typical quantity 1 bucket per request
+Service hours: 07:00–23:00 (normal), urgent 23:00–01:00 limited
+SLA to floors 7–12: normal 10–18 minutes
+Dispatch: CT-9 pantry; S2 after 22:00
+
+user:
+Could I get a refill bucket of ice to 914?
+
+assistant channel=analysis:
+Place a normal delivery for one refill bucket to room 914 with dispatch note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"914","amenity_name":"ice (bucket refill)","quantity":1,"priority":"normal","note":"CT-9 pantry via S2"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-914-7721","eta_minutes":12}
+
+assistant channel=final:
+Confirmed—one refill bucket of ice is scheduled for room 914 with an ETA of about 12 minutes.
+
+user:
+Thanks again! Are you open past 11?
+
+assistant channel=final:
+Yes—normal service runs to 23:00, with urgent coverage 23:00–01:00.
+
+user:
+Is the water source mineral or RO?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

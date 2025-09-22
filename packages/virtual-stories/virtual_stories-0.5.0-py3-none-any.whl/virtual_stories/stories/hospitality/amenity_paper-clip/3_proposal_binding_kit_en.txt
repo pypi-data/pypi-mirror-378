@@ -1,0 +1,78 @@
+"""
+Provide clips and presentation aids for binding a printed proposal set.
+
+ROLES: user (guest preparing printed proposals), assistant (business floor attendant supplying binders and clips)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_supplies","description":"Check clip and binder availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"type":{"type":"string","enum":["clips","binders"]},"detail":{"type":"string"}},"required":["type"]},"strict":true},
+  {"name":"deliver","description":"Deliver chosen items to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"list":{"type":"array","items":{"type":"string"}}},"required":["room","list"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Midtown Crest Hotel (hotel_id: mdc_nyc_04)
+Address: 455 Lexington Ave, New York, NY 10017
+Timezone: America/New_York
+Business Floor Hours: 07:00–23:00; delivery window 10–20 minutes
+Complimentary Items (club rooms): paper clips, binder clips, clear sleeves
+Extension: Business Floor x6600
+
+Stock Details:
+- Clips: paper (small/large), binder (19mm/32mm)
+- Binders: 2‑ring slim, 3‑ring standard
+- Extras: clear report covers, spine labels
+
+user:
+Do you have binder clips and some clear report covers for 2310?
+
+assistant channel=analysis:
+Check clips and covers in stock; arrange delivery.
+
+assistant channel=commentary to=tool.check_supplies:
+{"type":"clips","detail":"binder"}
+
+tool.check_supplies channel=commentary to=assistant:
+{"ok":true,"items":{"binder_clips_19mm":24,"binder_clips_32mm":16},"note":"report_covers_available"}
+
+assistant channel=analysis:
+Clips and report covers available; deliver to 2310.
+
+assistant channel=commentary to=tool.deliver:
+{"room":"2310","list":["binder_clips_19mm","binder_clips_32mm","clear_report_covers"]}
+
+tool.deliver channel=commentary to=assistant:
+{"scheduled":true,"eta":15}
+
+assistant channel=final:
+Yes—19mm and 32mm binder clips plus clear report covers are on the way to 2310, about 15 minutes.
+
+user:
+Is the business floor open late?
+
+assistant channel=analysis:
+Answer using system hours.
+
+assistant channel=final:
+Yes, the business floor runs 07:00–23:00.
+
+user:
+Could you get me orchestra tickets tonight?
+
+assistant channel=analysis:
+Out of scope—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+
+user:
+Thanks—Midtown feels lively tonight.
+
+assistant channel=analysis:
+Keep chitchat anchored.
+
+assistant channel=final:
+It does—Midtown Crest’s Lexington Ave address puts you right in it.
+

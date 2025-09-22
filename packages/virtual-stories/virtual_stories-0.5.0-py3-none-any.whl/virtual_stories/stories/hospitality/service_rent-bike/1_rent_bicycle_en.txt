@@ -1,0 +1,55 @@
+"""
+Guest requests to rent a hotel bicycle; confirm availability, rates, and provide lock/helmet; reserve and schedule pickup.
+
+ROLES: user (guest planning a ride), assistant (activities desk handling rentals)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check bike availability and hold units","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create bike rental with rates","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Seaside Promenade Barcelona (SPBC-04), Pg. de Colom 12, 08002 Barcelona, Spain.
+Lifestyle hotel; 20 floors; Concierge 8:00–22:00; Front Desk 24/7.
+City bikes: 18 units; EUR 8 per hour or EUR 25 per day; helmet and lock included; pick up at Concierge only.
+Charge code RENT-BIKE; late returns billed hourly.
+Other facts: Beach towels available; T10 transit cards sold at desk.
+
+user:
+Hi—can I rent two bikes for the afternoon? Room 1110.
+
+assistant channel=analysis:
+Hold two bikes, then create a 6-hour rental for pickup at Concierge, charging RENT-BIKE.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"SPBC-04","item":"city_bike","quantity":2,"room":"1110"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":2,"serials":["BIKE-05","BIKE-09"],"notes":"Helmet+lock included"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"SPBC-04","room":"1110","item":"city_bike","duration_hours":6,"charge_code":"RENT-BIKE","delivery_option":"pick_up_at_desk"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"BIKE-1110-6642","status":"created","rate":"EUR 8/hour"}
+
+assistant channel=final:
+Two bikes are reserved (BIKE-05, BIKE-09). Your order BIKE-1110-6642 is set for 6 hours at EUR 8/hour; please pick up helmets and locks at the Concierge desk.
+
+user:
+Thanks—your lobby looks lovely today.
+
+assistant channel=final:
+Thank you—have a great ride along the promenade.
+
+user:
+Can you share the exact supplier contract for the bicycle maintenance?
+
+assistant channel=final:
+[ATTENTION] Analyzing the situation.
+

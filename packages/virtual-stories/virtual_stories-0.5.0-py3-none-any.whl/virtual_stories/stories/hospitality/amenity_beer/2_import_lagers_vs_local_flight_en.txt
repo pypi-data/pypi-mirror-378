@@ -1,0 +1,86 @@
+"""
+Guest compares imported lagers with local flight; verify age, present options, and place order as flight.
+
+ROLES: user (guest exploring lagers/flight), assistant (beverage concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_drinking_age","description":"Verify legal drinking age for alcohol service.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"get_beer_selection","description":"Get available beer inventory and recommendations.","parameters":{"type":"object","additionalProperties":false,"properties":{"beer_type":{"type":"string","enum":["lager","ipa","stout","wheat","pilsner","sour","local_craft","international","all"]},"region_preference":{"type":"string","enum":["local","domestic","imported","no_preference"]},"alcohol_content":{"type":"string","enum":["light","standard","strong","no_preference"]}},"required":["beer_type"]},"strict":true},
+  {"name":"place_beer_order","description":"Place beer delivery order for in-room service.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"beer_items":{"type":"array","items":{"type":"object","properties":{"beer_sku":{"type":"string"},"quantity":{"type":"integer"},"temperature":{"type":"string","enum":["ice_cold","chilled","cellar_temp"]}},"required":["beer_sku","quantity"],"additionalProperties":false}},"delivery_instructions":{"type":"string"}},"required":["room_number","beer_items"]},"strict":true}
+]
+```
+"""
+
+system:
+Harborline Hotel & Taphouse (hotel_id: hht_portland_me)
+Address: 25 Wharf St, Portland, ME 04101
+Timezone: America/New_York
+
+Beer Program:
+1) Local flight: four 8oz pours from Maine breweries (rotating).
+2) Import lager list includes German Helles, Czech Pilsner, and Japanese rice lager.
+3) Beer flight served chilled with tasting cards and water rinse glass.
+4) Legal service hours: 9:00–1:00; last call 00:45.
+5) Glassware: Nonic pint, tulip, and pilsner flute provided as appropriate.
+
+user:
+Hi! In 708—should I try a local flight or go with an imported lager?
+
+assistant channel=analysis:
+Verify age, then fetch local and imported lager options; offer to deliver a flight.
+
+assistant channel=commentary to=tool.verify_drinking_age:
+{"room_number":"708"}
+
+tool.verify_drinking_age channel=commentary to=assistant:
+{"room_number":"708","guest_age_verified":true,"legal_drinking_age_met":true}
+
+assistant channel=commentary to=tool.get_beer_selection:
+{"beer_type":"local_craft","region_preference":"local","alcohol_content":"no_preference"}
+
+tool.get_beer_selection channel=commentary to=assistant:
+{"selections":[{"sku":"ME_BISS_LAGER","name":"Bissell Brothers Lager","style":"Helles","notes":"Clean malt, crisp finish"},{"sku":"ME_ALLAGASH_WHITE","name":"Allagash White","style":"Wheat","notes":"Coriander, orange peel"},{"sku":"ME_LONE_PINE_SOUR","name":"Lone Pine Sour","style":"Sour","notes":"Tart citrus"},{"sku":"ME_SHIPYARD_AMBER","name":"Shipyard Amber","style":"Amber","notes":"Toasty malt"}]}
+
+assistant channel=commentary to=tool.get_beer_selection:
+{"beer_type":"lager","region_preference":"imported","alcohol_content":"no_preference"}
+
+tool.get_beer_selection channel=commentary to=assistant:
+{"selections":[{"sku":"GERM_HELLES_WEIH","name":"Weihenstephaner Helles","style":"Helles","notes":"Soft malt, herbal hop"},{"sku":"CZE_PILS_URQ","name":"Pilsner Urquell","style":"Pilsner","notes":"Saaz hops, crisp bite"},{"sku":"JPN_ASAHI_SUPER","name":"Asahi Super Dry","style":"Rice Lager","notes":"Ultra dry, light body"}]}
+
+assistant channel=final:
+You’re all set for service. If you’d like variety, the Maine local flight features four chilled 8oz pours with tasting cards. If you prefer imports, Weihenstephaner Helles or Pilsner Urquell are classic crisp options. Which sounds better?
+
+user:
+Let’s do the local flight, please.
+
+assistant channel=analysis:
+Place order as a four‑item flight; deliver chilled with tasting cards.
+
+assistant channel=commentary to=tool.place_beer_order:
+{"room_number":"708","beer_items":[{"beer_sku":"ME_BISS_LAGER","quantity":1,"temperature":"chilled"},{"beer_sku":"ME_ALLAGASH_WHITE","quantity":1,"temperature":"chilled"},{"beer_sku":"ME_LONE_PINE_SOUR","quantity":1,"temperature":"chilled"},{"beer_sku":"ME_SHIPYARD_AMBER","quantity":1,"temperature":"chilled"}],"delivery_instructions":"Serve as flight with tasting cards and rinse glass"}
+
+tool.place_beer_order channel=commentary to=assistant:
+{"order_id":"BEER-PORT-3011","estimated_delivery_minutes":16}
+
+assistant channel=final:
+Perfect—your local flight is on the way (about 16 minutes) with tasting cards and a rinse glass.
+
+user:
+Also, that cobblestone street outside is so charming.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s a charming area to walk around.
+
+user:
+Could you also add a cheese platter to pair?
+
+assistant channel=analysis:
+Food pairing isn’t in this system; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on adding a cheese platter pairing.

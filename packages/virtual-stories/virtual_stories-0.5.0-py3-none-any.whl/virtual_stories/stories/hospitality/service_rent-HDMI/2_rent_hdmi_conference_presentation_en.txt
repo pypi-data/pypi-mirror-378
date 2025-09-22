@@ -1,0 +1,112 @@
+"""
+Business conference presenter needs HDMI cable for presentation setup; confirm availability, discuss presentation support, and arrange delivery.
+
+ROLES: user (conference presenter needing HDMI for presentation equipment), assistant (front desk supporting conference presentations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {
+    "name": "check_inventory",
+    "description": "Check availability of rentable items and hold stock if available.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "item": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "room": {"type": "string"}
+      },
+      "required": ["hotel_id", "item", "quantity", "room"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_rental_order",
+    "description": "Create a rental order and charge or comp to room folio as configured.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "item": {"type": "string"},
+        "duration_hours": {"type": "integer", "minimum": 1},
+        "charge_code": {"type": "string", "description": "comp or a billable code"},
+        "delivery_option": {"type": "string", "enum": ["room_drop", "pick_up_at_desk"]}
+      },
+      "required": ["hotel_id", "room", "item", "duration_hours", "charge_code", "delivery_option"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_delivery",
+    "description": "Schedule runner delivery to a room with ETA.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "order_id": {"type": "string"}
+      },
+      "required": ["hotel_id", "room", "order_id"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborview Grand Boston (HVGR-01), 1 Seaport Blvd, Boston, MA 02210.
+5-star waterfront property; 42 floors; 24/7 front desk and runners.
+Check-in 3:00 PM; check-out 12:00 PM; late check-out on availability.
+Complimentary in-room HDMI cables (10 units total); no deposit; first-come, first-served; typical delivery ETA 10–15 minutes.
+Conference support: Professional-grade HDMI cables available; Conference room technical support; Presentation equipment rental; Business center access.
+Other facts: Gym 24/7 (keycard access); Business Center 7:00–22:00; In-room TVs support HDMI on input 2; Room folio comp code: COMP-IT-ACC.
+Conference facilities floors 15-18; Technical support team available; Presentation equipment partnerships.
+
+user:
+I'm presenting at the tech conference tomorrow and need an HDMI cable for my laptop presentation. I need something reliable for a professional presentation. Room 1825.
+
+assistant channel=analysis:
+The guest is a conference presenter who needs a reliable HDMI cable for professional presentations. I should prioritize professional-grade cables and discuss presentation support services.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"HVGR-01","item":"HDMI_cable_professional","quantity":1,"room":"1825"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["HDMI-PRO-2872"],"notes":"Professional-grade; conference presentation ready; high-quality signal"}
+
+assistant channel=analysis:
+Professional HDMI cable is available and reserved. Now I'll create a comp order and schedule delivery for the conference presenter.
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"HVGR-01","room":"1825","item":"HDMI_cable_professional","duration_hours":24,"charge_code":"COMP-IT-ACC","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"RNT-1825-98316","status":"created","charge":"comp","presentation_support":"included"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"HVGR-01","room":"1825","order_id":"RNT-1825-98316"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":8,"runner":"Sarah","order_id":"RNT-1825-98316"}
+
+assistant channel=final:
+Perfect for your presentation! Professional HDMI cable HDMI-PRO-2872 is reserved with high-quality signal transmission. Order RNT-1825-98316 is complimentary for conference presenters. Sarah will deliver it to room 1825 in about 8 minutes. Our technical support team is available if you need any presentation assistance.
+
+user:
+Excellent! The conference facilities here are world-class.
+
+assistant channel=final:
+Thank you—we're proud to host major tech conferences and ensure presenters have everything they need for successful presentations.
+
+user:
+Do you have any partnerships with presentation software companies for technical support?
+
+assistant channel=final:
+[ATTENTION] Checking available technical partnerships.

@@ -1,0 +1,49 @@
+"""
+Guest hears beeps after closing; verify status and advise; include small talk and an out-of-scope question.
+
+ROLES: user (guest hearing beeps), assistant (front desk troubleshooting safe notification tones)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_safe_status","description":"Check whether safe is locked properly.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Garden Court (hotel_id: tgc_sfo)
+Address: 2 New Montgomery St, San Francisco, CA
+Safe Model: CityVault C320
+Behavior:
+- Three short beeps indicate lock not engaged; press lock until a long tone
+Support: Front desk 24/7; Engineering 07:00–22:00
+Atrium: Glass dome lights on at dusk
+
+user:
+My safe in 543 beeps three times after I close it.
+
+assistant channel=analysis:
+Check status and advise lock button press until long tone.
+
+assistant channel=commentary to=tool.verify_safe_status:
+{"room_number":"543"}
+
+tool.verify_safe_status channel=commentary to=assistant:
+{"status":"door_closed_unlocked","error_code":null}
+
+assistant channel=final:
+Those beeps mean the lock didn’t engage. Close firmly and press the lock button until you hear a long tone.
+
+user:
+That atrium sounds pretty in the evening.
+
+assistant channel=final:
+The glass dome lighting at dusk is a guest favorite.
+
+user:
+Could you arrange airport pickup?
+
+assistant channel=final:
+[ATTENTION] Reviewing options that are outside the current resources.
+

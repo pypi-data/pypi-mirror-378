@@ -1,0 +1,74 @@
+"""
+Guest asks about a mid-size meeting space and AV specifics.
+
+ROLES: user (planner), assistant (hotel events specialist answering only from provided data/tools)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "get_space_overview",
+    "description": "Return room name, capacity by layout, location, dimensions, AV, and booking windows.",
+    "parameters": {"type":"object","properties":{},"required":[]}
+  }
+]
+```
+"""
+
+system:
+Hotel: Harborview Grand
+Meeting space: Mariner Suite
+Location: Level 2, east wing (signposted from elevators)
+Capacity by layout: theater 60; classroom 36; boardroom 20; cabaret 40
+Dimensions: 16m x 8m; 128 sq m; ceiling height 3.2m
+AV package: 98" 4K display; dual ceiling array mics; 6-speaker distributed audio; Barco ClickShare; laser pointer
+Connectivity: HDMI/USB‑C at wall plate; in-room Wi‑Fi SSID: HarborView-Events; 1 Gbps fiber backhaul
+Power: 12 floor boxes; 24 outlets along walls; 2x 20A dedicated circuits
+Lighting: Dimmable LED zones; preset scenes (Presentation, Workshop, Reception)
+Windows: Two east-facing windows with blackout shades
+Climate: Independent thermostat; fresh-air intake 20% above code
+Accessibility: Door width 95cm; level threshold; assisted listening receivers available
+Hours: Bookable 07:00–22:00 daily
+Booking windows: Half-day (4h) or full-day (8h)
+Rates (reference): Half-day $650; Full-day $1100; AV package $250
+Included: Easel x2; flipchart pad; markers; whiteboard; lectern
+Extras: Coffee/tea service from Lobby Bar; pastry add-on; still/sparkling water by the case
+Contact: Events desk +1‑415‑555‑0197; events@harborviewgrand.com
+Policies: Room refresh on 4h+ bookings; no confetti; tape only on provided gaff
+
+user:
+Is the Mariner Suite okay for a 40‑person workshop and does it have a big screen?
+
+assistant channel=analysis:
+Answer with capacity and AV from system; optionally use the overview tool for the same facts to comply with tool diversity.
+
+assistant channel=commentary to=tool.get_space_overview:
+{}
+
+tool.get_space_overview channel=commentary to=assistant:
+{"name":"Mariner Suite","layouts":{"theater":60,"classroom":36,"boardroom":20,"cabaret":40},"av":"98\" 4K display; ceiling array mics; distributed speakers; ClickShare","booking_windows":"Half-day (4h) / Full-day (8h)","hours":"07:00–22:00"}
+
+assistant channel=analysis:
+Use tool output for concise confirmation; keep to provided facts only.
+
+assistant channel=final:
+Yes—the Mariner Suite supports workshops up to 40 in cabaret and includes a 98" 4K display with ceiling array mics and distributed speakers. Booking windows are half‑day (4h) or full‑day (8h), and hours are 07:00–22:00.
+
+user:
+Thanks! Where is it located again?
+
+assistant channel=analysis:
+Location is in system only.
+
+assistant channel=final:
+Level 2, east wing—follow the signs from the elevators.
+
+user:
+[ATTENTION] Can you waive the AV package fee if I book coffee service?
+
+assistant channel=analysis:
+No waiver policy is listed; respond with the attention flag only.
+
+assistant channel=final:
+[ATTENTION] I don’t have authorization for fee waivers here.
+

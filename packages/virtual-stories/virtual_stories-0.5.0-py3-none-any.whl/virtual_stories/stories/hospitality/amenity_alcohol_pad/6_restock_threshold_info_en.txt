@@ -1,0 +1,87 @@
+"""
+Guest asks for alcohol pads and inquires about restock thresholds; confirm availability, deliver, and provide threshold info from system. Include small talk and an [ATTENTION] case.
+
+ROLES: user (curious guest), assistant (guest services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"fa_status","description":"Get availability of item.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"fa_send_item","description":"Send first-aid item to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer"}},"required":["room","item","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Juniper Gate Hotel (hotel_id: jgh_ut_19)
+Address: 88 Canyon Rim Rd, Moab, UT 84532
+Timezone: America/Denver
+Check-in/Out: 16:00 / 11:00
+Delivery: 07:30–22:00
+
+First-Aid Policy:
+- alcohol pads: restock threshold 24 units
+- bandages: assorted sizes
+- gauze 4x4
+- No medical advice provided
+
+Features:
+1) Red-rock terrace
+2) Trail maps stand in lobby
+3) Water refill stations
+4) Fitness 24/7
+5) Quiet hours 22:00–07:00
+
+Dining:
+- Breakfast nook 06:30–10:30
+
+Accessibility:
+- Step-free access; ADA rooms available
+
+Sustainability:
+- Low-flow fixtures; refillable amenities
+
+Design:
+- Desert tones and natural stone accents
+
+user:
+Could I get 8 alcohol pads to room 318? Also, when do you restock if you’re low?
+
+assistant channel=analysis:
+Check availability, deliver 8, and answer threshold from system.
+
+assistant channel=commentary to=tool.fa_status:
+{"item":"alcohol pads"}
+
+tool.fa_status channel=commentary to=assistant:
+{"item":"alcohol pads","available":true}
+
+assistant channel=commentary to=tool.fa_send_item:
+{"room":"318","item":"alcohol pads","qty":8}
+
+tool.fa_send_item channel=commentary to=assistant:
+{"ticket":"JGH-FA-318-229","eta_minutes":13}
+
+assistant channel=final:
+I’ve sent 8 alcohol pads to room 318 under JGH-FA-318-229, arriving in about 13 minutes. We restock alcohol pads when on-hand falls below 24 units.
+
+user:
+The red-rock terrace is gorgeous at sunset.
+
+assistant channel=analysis:
+Chit-chat referencing features.
+
+assistant channel=final:
+It is—the red-rock terrace is a favorite for evening views.
+
+user:
+Could you arrange guided canyon tours for us tomorrow?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] Examining the possibilities.
+
+user:
+Thanks.

@@ -1,0 +1,70 @@
+"""
+Guest (legal team) requests large binder clips for trial exhibits and asks about priority delivery.
+
+ROLES: user (litigation associate), assistant (business center supervisor)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supplies","description":"Check clip sizes","parameters":{"type":"object","properties":{"category":{"type":"string","enum":["clips_fasteners"]}},"required":["category"],"additionalProperties":false},"strict":true},
+  {"name":"request_supply_delivery","description":"Deliver to guest room","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["item_code","quantity"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["room_delivery","business_center_pickup"]},"urgency":{"type":"string","enum":["standard","priority","urgent"]}},"required":["room_number","items","delivery_preference"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Midtown Tech Hub Hotel (hotel_id: mthh_aus_01)
+Address: 700 Brazos St, Austin, TX 78701
+Timezone: America/Chicago
+
+Ops Overview (bulleted):
+- Executive floors: 18–24 same-floor runs
+- SLA: standard 20–30 min; priority 12–18 min; urgent 8–12 min
+- Clips: 19/32/51mm, plus binder clamps (75mm)
+- Night dispatcher on call after 22:00
+- Loaner carts for document boxes
+
+Reference (key/value lines):
+Front Desk Ext: 0
+Biz Center Ext: 71
+Complimentary Clip Limit: 10 per request
+
+user:
+Hi, do you have large 51mm binder clips? I might need priority delivery to 2008.
+
+assistant channel=analysis:
+Check inventory then confirm priority SLA from system.
+
+assistant channel=commentary to=tool.check_office_supplies:
+{"category":"clips_fasteners"}
+
+tool.check_office_supplies channel=commentary to=assistant:
+{"available_items":[{"code":"BINDER_LARGE","name":"Large 51mm","quantity_available":26},{"code":"BINDER_MEDIUM","name":"Medium 32mm","quantity_available":48}]}
+
+assistant channel=final:
+Yes—large 51mm clips are in stock with 26 available. Priority deliveries typically arrive in 12–18 minutes. How many should we send to room 2008?
+
+user:
+Please send 10, thanks. And nice touch having loaner carts here!
+
+assistant channel=final:
+Happy to hear that—those carts save a lot of back-and-forth.
+
+assistant channel=commentary to=tool.request_supply_delivery:
+{"room_number":"2008","items":[{"item_code":"BINDER_LARGE","quantity":10}],"delivery_preference":"room_delivery","urgency":"priority"}
+
+tool.request_supply_delivery channel=commentary to=assistant:
+{"delivery_id":"MTHH-2008-PR-551","estimated_delivery_minutes":15,"items_confirmed":["10x Large 51mm"],"charge":"complimentary_limit_10"}
+
+assistant channel=final:
+Confirmed—MTHH-2008-PR-551 will arrive in about 15 minutes with 10 large clips (complimentary within limit).
+
+user:
+Any favorite BBQ spots you like in Austin?
+
+assistant channel=analysis:
+Out of scope—flag ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Great question—looping in local dining recommendations.
+

@@ -1,0 +1,51 @@
+"""
+Guest checks out and asks about standard time; include small talk, restate checkout time from system, and an out-of-scope airport traffic report.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"calculate_folio","description":"Return current folio summary for a reservation before checkout.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Canopy Row Hotel — Front Office
+Address: 901 Vine St, Philadelphia, PA 19107, USA
+Standard checkout: 12:00
+Express checkout: Key drop at the Lobby
+Late checkout: On request, fees may apply
+Wi‑Fi: SSID "CanopyRow-Guest"; 100 Mbps
+Parking: Garage access via 10th St; 2.1 m clearance
+Business Center: 24/7 printing kiosks
+Payment: USD; major cards accepted
+Accessibility: Step‑free entrance from Vine St
+
+user:
+Check out CR-70121, and remind me the standard checkout time?
+
+assistant channel=analysis:
+Return folio; state standard checkout from system.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"CR-70121"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 275","taxes":"USD 24.75","incidentals":"USD 9","total":"USD 308.75"}
+
+assistant channel=final:
+Your total is USD 308.75 (room USD 275, taxes USD 24.75, incidentals USD 9). Standard checkout is 12:00.
+
+user:
+Thanks—hope your day’s easy.
+
+assistant channel=final:
+Thank you—safe trip.
+
+user:
+Is traffic to the airport clear now?
+
+assistant channel=final:
+[ATTENTION] Live traffic info isn’t included in these resources. Reviewing.

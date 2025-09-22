@@ -1,0 +1,74 @@
+"""
+Guest in humid climate requests a lightweight, non-greasy body lotion and asks about hypoallergenic options.
+
+ROLES: user (conference attendee), assistant (spa retail attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_skincare_inventory","description":"Lightweight body lotions","parameters":{"type":"object","properties":{"product_type":{"type":"string","enum":["body_lotion"]},"skin_type":{"type":"string","enum":["combination","oily","sensitive","all"]}},"required":["product_type"],"additionalProperties":false},"strict":true},
+  {"name":"check_ingredient_allergies","description":"Allergen check","parameters":{"type":"object","properties":{"product_id":{"type":"string"},"allergen_concerns":{"type":"array","items":{"type":"string"}}},"required":["product_id","allergen_concerns"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Rainforest Marina Hotel (hotel_id: rmh_sin_01)
+Address: 10 Collyer Quay, Singapore 049315
+Timezone: Asia/Singapore
+
+Climate Notes:
+- High humidity; guests prefer lightweight, fast-absorbing textures
+- Saltwater pool; after-rinse hydration recommended
+- Spa delivery window: 10:00–22:00
+- Hypoallergenic SKUs labeled “RF-SAFE”
+- Locker room cool towels refreshed hourly
+
+Product Line (JSON):
+{"RF_BREEZE":"Rainforest Breeze Hydro-Lotion","LOTUS_MIST":"Lotus Mist Light Lotion","COCONUT_VELVET":"Coconut Velvet (rich)"}
+
+user:
+Hello! Do you have a non-greasy body lotion that’s allergy-safe? My skin is combination.
+
+assistant channel=analysis:
+List lightweight options for combination skin, then check allergen on a likely fit.
+
+assistant channel=commentary to=tool.get_skincare_inventory:
+{"product_type":"body_lotion","skin_type":"combination"}
+
+tool.get_skincare_inventory channel=commentary to=assistant:
+{"available_products":[{"id":"RF_BREEZE","name":"Rainforest Breeze Hydro-Lotion","description":"Fast-absorbing, RF-SAFE"},{"id":"LOTUS_MIST","name":"Lotus Mist Light Lotion","description":"Sheer hydration"}]}
+
+assistant channel=final:
+Two good fits: Rainforest Breeze Hydro-Lotion (fast-absorbing, marked RF-SAFE) and Lotus Mist Light Lotion (sheer hydration). Any specific allergens I should avoid for you?
+
+user:
+Mostly fragrance. If RF-SAFE covers that, I’ll take one to room 1712 tonight.
+
+assistant channel=analysis:
+Confirm RF_BREEZE is safe for fragrance and note delivery window.
+
+assistant channel=commentary to=tool.check_ingredient_allergies:
+{"product_id":"RF_BREEZE","allergen_concerns":["fragrance"]}
+
+tool.check_ingredient_allergies channel=commentary to=assistant:
+{"product_id":"RF_BREEZE","allergen_status":"safe","ingredients_summary":"fragrance-free, silicone-light, water-gel base"}
+
+assistant channel=final:
+Great—Rainforest Breeze Hydro-Lotion is fragrance-free. Spa deliveries run 10:00–22:00; would you like it sent now or closer to 22:00?
+
+user:
+Now works, thanks! Also, those cool towels are lifesavers.
+
+assistant channel=final:
+Glad to hear—they’re refreshed hourly in the locker rooms.
+
+user:
+Any hawker centers open late nearby?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check late-night hawker options for you.
+

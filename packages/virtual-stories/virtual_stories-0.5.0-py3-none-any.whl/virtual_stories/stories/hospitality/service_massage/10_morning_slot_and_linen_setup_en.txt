@@ -1,0 +1,52 @@
+"""
+Morning in-room massage booking with linen/setup reminder; include chitchat and [ATTENTION] question.
+
+ROLES: user (guest scheduling morning massage), assistant (spa desk confirming booking and setup notes)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"book_in_room_massage","description":"Book an in-room massage.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"duration_minutes":{"type":"integer","enum":[60,90]},"start_time":{"type":"string"}},"required":["room_number","duration_minutes","start_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Highridge Plaza
+Massage Service Basics:
+- Window: 10:00–22:00; last start 20:30 (60‑min)
+- Rates: $120 (60‑min), $170 (90‑min)
+- Arrival: Therapist ~10 minutes early; setup includes table and linens
+- Quiet hours: 22:00–07:00
+Address: 301 Ridge Avenue; Wi‑Fi: Highridge-Guest
+
+user:
+Book 60 minutes at 10:15 in room 1609.
+
+assistant channel=analysis:
+Book and restate morning window and setup.
+
+assistant channel=commentary to=tool.book_in_room_massage:
+{"room_number":"1609","duration_minutes":60,"start_time":"10:15"}
+
+tool.book_in_room_massage channel=commentary to=assistant:
+{"booking_id":"spa_hr_101","rate":120,"currency":"USD","arrival_note":"Therapist arrives ~10 minutes early"}
+
+assistant channel=final:
+Booked: 60‑minute massage at 10:15 in room 1609 (spa_hr_101) at $120 USD. The therapist will arrive about 10 minutes early with the table and linens.
+
+user:
+Good morning.
+
+assistant channel=final:
+Good morning.
+
+user:
+Can you extend the session to 2 hours?
+
+assistant channel=analysis:
+Durations are 60 or 90 only; answer from system.
+
+assistant channel=final:
+Available durations are 60 or 90 minutes.
+

@@ -1,0 +1,151 @@
+"""
+Business traveler needs compact shopping bag for conference materials and local grocery shopping.
+Provide amenity assistance with foldable, portable options and business district guidance.
+
+ROLES: user (business traveler needing compact bag for conference and shopping), assistant (concierge with portable amenity options and urban navigation expertise)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_portable_amenity_stock",
+    "description": "Check availability of compact, portable hotel amenities.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_type": { "type": "string", "description": "Type of portable amenity" },
+        "size_preference": { "type": "string", "description": "Preferred size for portability" },
+        "quantity": { "type": "number", "description": "Quantity needed" }
+      },
+      "required": ["amenity_type", "quantity"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_amenity_delivery",
+    "description": "Arrange delivery of portable amenities with flexible timing.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_type": { "type": "string" },
+        "quantity": { "type": "number" },
+        "room_number": { "type": "string" },
+        "delivery_time": { "type": "string", "description": "Preferred delivery time" },
+        "compact_features": { "type": "string", "description": "Special compact features needed" }
+      },
+      "required": ["amenity_type", "quantity", "room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_business_district_info",
+    "description": "Get information about local business districts and services.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "district_type": { "type": "string", "description": "Type of business district" },
+        "service_category": { "type": "string", "description": "Category of business service" }
+      },
+      "required": ["district_type", "service_category"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Metropolitan Grand Hotel (hotel_id: mgh_nyc_01)
+Address: 135 West 45th Street, New York, NY 10036
+Timezone: America/New_York
+
+Amenities:
+- Compact foldable shopping bags that collapse to wallet-size for travel convenience
+- Business-grade canvas totes with reinforced handles and professional appearance
+- Multi-purpose bags convertible between shopping tote and laptop carrier
+- RFID-blocking compartments for secure business document transport
+- Weather-resistant nylon bags with expandable compartments for conference materials
+
+Business District:
+- Times Square Conference Center: 0.3 miles, hosts major business conferences and exhibitions
+- Rockefeller Center business complex: 0.5 miles with premium office spaces and meeting venues
+- Bryant Park business district: 0.7 miles featuring outdoor workspaces and networking events
+- Hotel partnerships with local business service providers and conference facilities
+
+Conference Facilities:
+- On-site business center with printing, scanning, and conference material preparation
+- Partnership with Times Square Conference Center for seamless material transport
+- Express delivery services for conference documents and presentation materials
+- Business concierge services for last-minute conference preparation
+
+Policies:
+- Complimentary portable amenities for business travelers with conference attendance
+- Maximum 2 compact bags per business guest to maintain professional inventory
+- Bags include business card holders and conference badge attachments
+- 24-hour amenity delivery service for urgent business needs
+
+user:
+Hi! I'm here for the tech conference at Times Square and need a compact bag for my conference materials. Do you have something portable I can fold up easily?
+
+assistant channel=analysis:
+Business guest needs compact foldable bag for conference materials. Check availability of portable options and coordinate with conference schedule.
+
+assistant channel=commentary to=tool.check_portable_amenity_stock:
+{"amenity_type": "compact_folding_shopping_bag", "size_preference": "wallet_foldable", "quantity": 1}
+
+tool.check_portable_amenity_stock channel=commentary to=assistant:
+{"available": true, "amenity_type": "compact_folding_shopping_bag", "stock_count": 30, "sizes": ["wallet_foldable", "briefcase_convertible"], "features": ["rfid_blocking", "weather_resistant", "expandable_compartments"]}
+
+assistant channel=final:
+Absolutely! We have compact foldable shopping bags that collapse to wallet-size, perfect for conference materials. They also feature RFID blocking and weather-resistant nylon. What's your room number and conference start time?
+
+user:
+Room 1524. Conference starts at 9 AM tomorrow. I also need to pick up some groceries after the sessions.
+
+assistant channel=analysis:
+Deliver compact bag to room 1524 with early morning timing. Provide business district shopping information for post-conference needs.
+
+assistant channel=commentary to=tool.arrange_amenity_delivery:
+{"amenity_type": "compact_folding_shopping_bag", "quantity": 1, "room_number": "1524", "delivery_time": "8:00 AM", "compact_features": "rfid_blocking and weather_resistant for conference materials"}
+
+tool.arrange_amenity_delivery channel=commentary to=assistant:
+{"delivered": true, "amenity_type": "compact_folding_shopping_bag", "quantity": 1, "room_number": "1524", "delivery_time": "8:00 AM", "features": ["rfid_blocking_compartment", "expandable_design", "weather_resistant_nylon"]}
+
+assistant channel=commentary to=tool.get_business_district_info:
+{"district_type": "conference_area", "service_category": "grocery_delivery"}
+
+tool.get_business_district_info channel=commentary to=assistant:
+{"district": "Times Square Conference Area", "grocery_options": ["Whole Foods Market - 0.4 miles", "Bryant Park Fresh Market - 0.8 miles"], "delivery_services": ["hotel_concierge_delivery", "conference_center_partners"], "operating_hours": ["Whole Foods: 7 AM - 11 PM", "Bryant Park: 8 AM - 8 PM"]}
+
+assistant channel=final:
+Perfect! Your compact RFID-blocking bag will be delivered to room 1524 by 8 AM tomorrow morning. For post-conference groceries, try Whole Foods Market just 0.4 miles away (open 7 AM-11 PM) or Bryant Park Fresh Market 0.8 miles away. We can arrange delivery if needed.
+
+user:
+That's excellent timing! I love how hotels in NYC are so efficient. What's the best way to get to Bryant Park from here?
+
+assistant channel=analysis:
+Guest compliment on hotel efficiency - acknowledge positively. Transportation query about Bryant Park is within business district knowledge from system prompt.
+
+assistant channel=final:
+Thank you! We pride ourselves on efficiency for our business guests. Bryant Park is just 0.7 miles away - you can walk in about 15 minutes, or take the subway (Times Square station to 42nd Street) for a quick 2-minute ride.
+
+user:
+Great, I think I'll walk. By the way, what's the weather forecast for tomorrow's conference sessions?
+
+assistant channel=analysis:
+Weather inquiry for conference planning is outside defined tools and system knowledge scope. Must use ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Gathering weather information for your conference planning.
+
+user:
+No problem, I can check my phone. Thanks for all the help with the bag and directions!
+
+assistant channel=analysis:
+Guest appreciation for assistance provided; brief acknowledgment response.
+
+assistant channel=final:
+You're most welcome! Enjoy the tech conference tomorrow and have a productive day in our vibrant business district.

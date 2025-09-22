@@ -1,0 +1,93 @@
+"""
+Guest requests extra towels with specific types; verify availability and deliver, include small talk, and one background acknowledgment.
+
+ROLES: user (guest needing more towels), assistant (housekeeping dispatch for linens)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_towel_inventory",
+    "description": "Check towel stock by type.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "types": { "type": "array", "items": { "type": "string", "enum": ["bath", "hand", "face", "pool"] } }
+      },
+      "required": ["types"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_towels",
+    "description": "Deliver towels to the guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "object", "properties": {"type": {"type":"string"}, "count": {"type":"integer","minimum":1,"maximum":8} }, "required": ["type","count"] } }
+      },
+      "required": ["room_number", "items"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Resort: Azure Reef Spa & Pool (hotel_id: ar_cun_15)
+Address: Blvd. Kukulcan Km 12.5, Zona Hotelera, Cancún, MX
+Timezone: America/Cancun
+
+Linen Program:
+- Towels: bath, hand, face, pool
+- Fabric: Egyptian cotton, 600 GSM
+
+Pool Access:
+- Ocean-view infinity pool with cabanas
+
+user:
+Hi, could I get two extra bath towels and two hand towels to room 842?
+
+assistant channel=analysis:
+Check inventory for bath and hand; deliver requested quantities to 842.
+
+assistant channel=commentary to=tool.check_towel_inventory:
+{"types":["bath","hand"]}
+
+tool.check_towel_inventory channel=commentary to=assistant:
+{"available":true,"details":{"bath":{"gsm":600},"hand":{"gsm":600}}}
+
+assistant channel=analysis:
+Proceed to deliver two bath and two hand towels.
+
+assistant channel=commentary to=tool.deliver_towels:
+{"room_number":"842","items":[{"type":"bath","count":2},{"type":"hand","count":2}]}
+
+tool.deliver_towels channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":10,"runner":"leo"}
+
+assistant channel=final:
+All set—two bath and two hand towels (Egyptian cotton, 600 GSM) are headed to room 842 with Leo; about 10 minutes.
+
+user:
+That infinity pool looked beautiful at sunset.
+
+assistant channel=analysis:
+Provide a short acknowledgment grounded in system info.
+
+assistant channel=final:
+Sunset over the ocean-view infinity pool is a favorite.
+
+user:
+Can I reserve a few pool towels to take off property tomorrow?
+
+assistant channel=analysis:
+Off‑property towel reservations aren’t addressed by tools; use background acknowledgment.
+
+assistant channel=final:
+[ATTENTION] Noted. Reviewing available resources.
+

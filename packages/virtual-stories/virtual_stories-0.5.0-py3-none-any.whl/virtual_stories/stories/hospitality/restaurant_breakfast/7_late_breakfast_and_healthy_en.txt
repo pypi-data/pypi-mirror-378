@@ -1,0 +1,87 @@
+"""
+Guest asks for a later breakfast slot and healthy items; include small talk and ATTENTION.
+
+ROLES: user (leisure guest), assistant (host managing later breakfast and healthy preview)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List breakfast venues","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string"}},"required":["hotel_id","meal_period"]},"strict":true},
+  {"name":"check_table_availability","description":"Check availability","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Get healthy items","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"section":{"type":"string"}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeview Landing (hotel_id: lakeview_landing)
+Breakfast: Lakeshore Pantry (restaurant_id: rest_lakeshore) 07:00–11:00
+
+Access & Layout:
+- Lakeside entrance ramp; step‑free
+- Window tables face the lake
+
+Seating & Atmosphere:
+- Two‑tops and fours; banquette run
+- Calmer after 10:00
+
+Healthy Highlights:
+- Seasonal fruit
+- Yogurt parfaits
+- Egg‑white omelet on request
+
+Beverage Notes:
+- Pressed juices
+- Herbal teas
+
+user:
+Book 10:30 for 2 at Lakeshore Pantry under Patel; any healthy options?
+
+assistant channel=analysis:
+List venue, check/hold 10:30 for 2, book, fetch healthy preview.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"lakeview_landing","meal_period":"breakfast"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_lakeshore","name":"Lakeshore Pantry","hours":"07:00-11:00"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_lakeshore","party_size":2,"datetime":"2025-09-02T10:30:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_lakeshore","guest_name":"Patel","contact":"","party_size":2,"datetime":"2025-09-02T10:30:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"LP-BRK-2310"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_lakeshore","section":"healthy"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"healthy","items":[{"name":"Seasonal fruit"},{"name":"Yogurt parfait"},{"name":"Egg‑white omelet"}]}
+
+assistant channel=final:
+Your 10:30 table for 2 at Lakeshore Pantry is confirmed (LP-BRK-2310). Healthy preview: Seasonal fruit, Yogurt parfait, Egg‑white omelet.
+
+user:
+Lovely lake breeze this morning.
+
+assistant channel=final:
+It pairs nicely with a late breakfast.
+
+user:
+Are pressed juices available?
+
+assistant channel=final:
+Yes—pressed juices are listed among the beverages.
+
+user:
+Can you hold a lakeside window specifically?
+
+assistant channel=final:
+[ATTENTION] Specific window holds aren’t handled here. Reviewing available options.

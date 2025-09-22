@@ -1,0 +1,150 @@
+"""
+Guest requests premium hair conditioner and related hair care products.
+Includes product selection, allergy considerations, and delivery arrangements.
+
+ROLES: user (guest requesting hair care amenities), assistant (spa amenities concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_hair_care_products",
+    "description": "Retrieve available premium hair care products including conditioners.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hair_type": { "type": "string", "enum": ["dry", "oily", "normal", "curly", "colored", "damaged", "all"] },
+        "product_type": { "type": "string", "enum": ["conditioner", "deep_treatment", "leave_in", "all_conditioning"] }
+      },
+      "required": []
+    },
+    "strict": true
+  },
+  {
+    "name": "check_ingredient_allergies",
+    "description": "Check if products contain specific ingredients for allergy-sensitive guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_sku": { "type": "string" },
+        "allergens_to_avoid": { 
+          "type": "array",
+          "items": { "type": "string", "enum": ["sulfates", "parabens", "fragrance", "coconut", "tree_nuts", "gluten"] }
+        }
+      },
+      "required": ["product_sku", "allergens_to_avoid"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_hair_care_amenities",
+    "description": "Arrange delivery of hair care products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": {
+          "type": "array",
+          "items": { 
+            "type": "object", 
+            "properties": { 
+              "sku": { "type": "string" },
+              "size": { "type": "string", "enum": ["travel_50ml", "standard_200ml", "luxury_400ml"] }
+            }, 
+            "required": ["sku", "size"], 
+            "additionalProperties": false 
+          }
+        },
+        "delivery_preference": { "type": "string", "enum": ["immediate", "evening_turndown", "morning_service"] }
+      },
+      "required": ["room_number", "products", "delivery_preference"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Villa Serena Luxury Resort (hotel_id: vsl_tuscany)
+Address: Via delle Colline 42, 53045 Montepulciano SI, Italy
+Timezone: Europe/Rome
+
+Premium Spa Hair Care Collection:
+- Organic Italian hair care line featuring local botanicals
+- Sulfate-free, paraben-free formulations available
+- Specialized products for different hair types and concerns
+- Available sizes: travel (50ml), standard (200ml), luxury (400ml)
+- Complimentary delivery for premium suite guests
+- Custom hair care consultations available through spa services
+
+Featured Products:
+- Tuscan Lavender Deep Conditioning Mask (for dry/damaged hair)
+- Mediterranean Olive Oil Leave-In Treatment (for frizzy/curly hair)
+- Rosemary Mint Volumizing Conditioner (for fine/oily hair)
+- Argan & Keratin Repair Conditioner (for colored/chemically treated hair)
+- Sensitive Scalp Gentle Conditioner (fragrance-free, hypoallergenic)
+
+Product SKUs:
+- COND_LAVENDER_DEEP: Tuscan Lavender Deep Conditioning
+- COND_OLIVE_LEAVE_IN: Mediterranean Olive Leave-In
+- COND_ROSEMARY_VOL: Rosemary Mint Volumizing
+- COND_ARGAN_REPAIR: Argan Keratin Repair
+- COND_SENSITIVE_GENTLE: Sensitive Scalp Gentle
+
+user:
+Hello! The conditioner in my bathroom ran out and I have very dry, damaged hair. Do you have anything that could help?
+
+assistant channel=analysis:
+Guest has dry, damaged hair and needs conditioner. I should get appropriate hair care products for their hair type.
+
+assistant channel=commentary to=tool.get_hair_care_products:
+{"hair_type": "damaged", "product_type": "all_conditioning"}
+
+tool.get_hair_care_products channel=commentary to=assistant:
+{"products":[{"sku":"COND_LAVENDER_DEEP","name":"Tuscan Lavender Deep Conditioning Mask","hair_type":"dry_damaged","treatment_type":"intensive_mask"},{"sku":"COND_ARGAN_REPAIR","name":"Argan & Keratin Repair Conditioner","hair_type":"colored_damaged","treatment_type":"daily_conditioner"},{"sku":"COND_OLIVE_LEAVE_IN","name":"Mediterranean Olive Oil Leave-In Treatment","hair_type":"frizzy_dry","treatment_type":"leave_in_treatment"}]}
+
+assistant channel=final:
+Perfect for dry, damaged hair! I have three excellent options: Tuscan Lavender Deep Conditioning Mask (intensive weekly treatment), Argan & Keratin Repair Conditioner (daily use), and Mediterranean Olive Oil Leave-In Treatment (daily protection). All are organic with local Tuscan botanicals. Which would interest you most?
+
+user:
+The lavender deep conditioning mask sounds amazing! I have sensitive skin though - does it contain any harsh chemicals?
+
+assistant channel=analysis:
+Guest is interested in the lavender mask but has sensitive skin. I should check for potential allergens.
+
+assistant channel=commentary to=tool.check_ingredient_allergies:
+{"product_sku": "COND_LAVENDER_DEEP", "allergens_to_avoid": ["sulfates", "parabens", "fragrance"]}
+
+tool.check_ingredient_allergies channel=commentary to=assistant:
+{"product_sku":"COND_LAVENDER_DEEP","safe_for_allergies":true,"ingredient_check":{"sulfates":false,"parabens":false,"fragrance":"natural_lavender_essential_oil"},"certification":"organic_certified","ph_balanced":true}
+
+assistant channel=final:
+Great news! The Tuscan Lavender mask is perfect for sensitive skin - it's sulfate-free, paraben-free, organic certified, and pH balanced. It uses only natural lavender essential oil, no synthetic fragrances. What's your room number and when would you like it delivered?
+
+user:
+I'm in room 205. Could you bring it up now? I'd love to use it tonight.
+
+assistant channel=analysis:
+Guest in room 205 wants immediate delivery of the lavender conditioning mask. I should arrange immediate delivery.
+
+assistant channel=commentary to=tool.deliver_hair_care_amenities:
+{"room_number": "205", "products": [{"sku": "COND_LAVENDER_DEEP", "size": "standard_200ml"}], "delivery_preference": "immediate"}
+
+tool.deliver_hair_care_amenities channel=commentary to=assistant:
+{"delivery_id":"SPA-205-47","products":[{"sku":"COND_LAVENDER_DEEP","size":"standard_200ml","instructions":"Apply to damp hair, leave 10-15 minutes, rinse thoroughly"}],"eta_minutes":10,"delivered_by":"Alessandro - Spa Amenities"}
+
+assistant channel=final:
+Wonderful! Delivery SPA-205-47 is arranged - Alessandro from spa amenities will bring your Tuscan Lavender Deep Conditioning Mask (200ml) to room 205 in about 10 minutes. Apply to damp hair, leave for 10-15 minutes, then rinse thoroughly.
+
+user:
+That's fantastic service! Do you happen to know what the best restaurants are around here for dinner tonight?
+
+assistant channel=analysis:
+Guest is asking about restaurant recommendations, which is outside my spa amenities service scope.
+
+assistant channel=final:
+[ATTENTION] Searching for more information.

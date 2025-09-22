@@ -1,0 +1,46 @@
+"""
+Guest asks if two pickups are okay in the same day; include small talk and [ATTENTION].
+
+ROLES: user (multiple errands), assistant (confirms same-day flexibility and issues ticket)
+CHANNELS: analysis, commentary, final
+TOOLS:
+[{"name":"open","description":"Open storage ticket","parameters":{"type":"object","properties":{"name":{"type":"string"},"items":{"type":"integer"}},"required":["name","items"],"additionalProperties":false},"strict":true}]
+"""
+
+system:
+HOTEL: The Orchard Steps
+STORAGE WINDOW: 07:00–22:00; same-day only; ID + tag required
+NOTES:
+- Re-entry for partial pickups is allowed same day
+- Desk adjacent to front steps landing
+- Complimentary
+- No hazardous items
+- Lemon-mint water at the landing
+
+user:
+Can I grab one bag now and the other later today? Please store 2 under Nina.
+
+assistant channel=analysis:
+Allowed per notes—open a ticket for 2 items and confirm same‑day partial pickups.
+
+assistant channel=commentary to=tool.open:
+{"name":"Nina","items":2}
+
+tool.open channel=commentary to=assistant:
+{"ticket":"OS-744","tags":["O331","O332"]}
+
+assistant channel=final:
+Yes—partial same‑day pickups are allowed. Stored 2 items under Nina—ticket OS-744 with tags O331 and O332. Window: 07:00–22:00 with ID.
+
+user:
+The lemon-mint water is so refreshing.
+
+assistant channel=final:
+It’s set right by the front steps landing for quick sips.
+
+user:
+Could you store a small propane canister?
+
+assistant channel=final:
+[ATTENTION] Hazardous items aren’t accepted under the storage notes.
+

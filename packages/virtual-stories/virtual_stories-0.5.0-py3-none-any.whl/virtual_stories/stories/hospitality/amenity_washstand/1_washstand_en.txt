@@ -1,0 +1,70 @@
+"""
+The user is reporting a leaking washstand. The assistant sends a technician to fix it.
+
+ROLES: user (A hotel guest who is reporting a maintenance issue.), assistant (A hotel staff member who can dispatch maintenance.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "send_technician",
+    "description": "Sends a technician to the guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {
+          "type": "string",
+          "description": "The room number of the guest."
+        },
+        "issue_description": {
+          "type": "string",
+          "description": "A description of the issue."
+        }
+      },
+      "required": ["room_number", "issue_description"]
+    }
+  }
+]
+```
+"""
+
+system:
+You are a hotel assistant at the Park Hyatt. You can dispatch maintenance to guest rooms.
+
+## Hotel Information
+- Hotel Name: Park Hyatt
+- Address: 17 State St, New York, NY 10004
+- Phone: (212) 248-1234
+
+user:
+The washstand in my bathroom is leaking.
+
+assistant channel=analysis:
+The user is reporting a leaking washstand. I can send a technician to their room to fix it. I will need to ask for their room number.
+
+assistant channel=final:
+I'm sorry to hear that. What is your room number? I can send someone to take a look at it for you.
+
+user:
+I'm in room 812.
+
+assistant channel=commentary to=tool.send_technician:
+{"room_number": "812", "issue_description": "The washstand in the bathroom is leaking."}
+
+tool.send_technician channel=commentary to=assistant:
+{"status": "success", "message": "A technician has been dispatched to room 812."}
+
+assistant channel=analysis:
+The tool call was successful. I should now inform the user that a technician is on the way.
+
+assistant channel=final:
+Thank you. A technician is on their way to your room to fix the leak.
+
+user:
+Great, thank you for your help.
+
+assistant channel=analysis:
+The user is satisfied. I will offer further assistance.
+
+assistant channel=final:
+You're welcome. Is there anything else I can assist you with?

@@ -1,0 +1,73 @@
+"""
+Guest requests latex-free protection due to allergy, with discreet delivery.
+
+ROLES: user (guest with latex allergy), assistant (wellness amenities concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_wellness_amenities","description":"Retrieve available personal wellness and health products.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["protection","personal_care","health_wellness","all_wellness"]}},"required":[]},"strict":true},
+  {"name":"verify_discreet_delivery_options","description":"Check available discreet delivery options for personal wellness items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time_preference":{"type":"string","enum":["immediate","evening","specific_time"]}},"required":["room_number"]},"strict":true},
+  {"name":"arrange_wellness_delivery","description":"Arrange discreet delivery of personal wellness amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}},"required":["sku","quantity"],"additionalProperties":false}},"delivery_method":{"type":"string","enum":["room_service_tray","housekeeping_supplies","front_desk_envelope"]},
+  "delivery_timing":{"type":"string","enum":["immediate","evening_turndown","next_housekeeping","specific_time"]}},"required":["room_number","items","delivery_method","delivery_timing"]},"strict":true}
+]
+```
+"""
+
+system:
+Skyline Executive Hotel (hotel_id: seh_toronto)
+Address: 200 Front St W, Toronto, ON, Canada
+Timezone: America/Toronto
+
+Personal Wellness Inventory:
+- WELLNESS_PROTECTION_PREMIUM: Premium latex-free protection (3-pack)
+- WELLNESS_LUBRICANT_WATER: Water-based lubricant (50ml)
+
+Delivery Protocols:
+- Discreet envelope pickup or covered tray delivery
+
+user:
+Hi—do you have latex-free protection? I’m allergic to latex.
+
+assistant channel=analysis:
+Show latex-free option.
+
+assistant channel=commentary to=tool.get_wellness_amenities:
+{"category":"protection"}
+
+tool.get_wellness_amenities channel=commentary to=assistant:
+{"available_products":[{"sku":"WELLNESS_PROTECTION_PREMIUM","name":"Premium Latex-Free Protection","pack_size":3,"material":"non_latex"}]}
+
+assistant channel=final:
+Yes—Premium Latex‑Free Protection (3‑pack) is available. What’s your room number and preferred delivery style?
+
+user:
+Room 1803. Envelope pickup would be great.
+
+assistant channel=analysis:
+Verify discreet options, then arrange envelope pickup.
+
+assistant channel=commentary to=tool.verify_discreet_delivery_options:
+{"room_number":"1803","time_preference":"immediate"}
+
+tool.verify_discreet_delivery_options channel=commentary to=assistant:
+{"room_number":"1803","available_methods":["front_desk_envelope","room_service_tray"],"recommended_timing":"immediate"}
+
+assistant channel=commentary to=tool.arrange_wellness_delivery:
+{"room_number":"1803","items":[{"sku":"WELLNESS_PROTECTION_PREMIUM","quantity":1}],"delivery_method":"front_desk_envelope","delivery_timing":"immediate"}
+
+tool.arrange_wellness_delivery channel=commentary to=assistant:
+{"delivery_id":"SEH-1803-WP-01","pickup":"front_desk_envelope","ready_in_minutes":10}
+
+assistant channel=final:
+All set—SEH-1803-WP-01 will be ready at the front desk in about 10 minutes in a sealed envelope. Anything else I can arrange?
+
+user:
+That’s perfect, thanks! Also—what’s the view like from the CN Tower?
+
+assistant channel=analysis:
+Tourist info beyond scope -> [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Checking external sightseeing details.
+

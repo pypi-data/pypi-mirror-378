@@ -1,0 +1,73 @@
+"""
+Executive floor guest prefers to pick up cotton buds at the front desk.
+Arrange pickup and confirm policy.
+
+ROLES: user (executive floor guest), assistant (amenities specialist)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "stage_front_desk_pickup",
+    "description": "Stage a pack of cotton buds for front desk pickup.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pack_type": { "type": "string", "enum": ["standard","organic_bamboo","hypoallergenic"] },
+        "ready_in": { "type": "string" }
+      },
+      "required": ["pack_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Meridian Financial Center Hotel (hotel_id: mfch_hk_02)
+Address: 8 Connaught Rd, Central, Hong Kong
+Timezone: Asia/Hong_Kong
+Executive Floor: priority pickup service at front desk
+
+Amenity Policy:
+- Cotton Buds: standard, organic bamboo, hypoallergenic
+- Pickup: staged at front desk within 10–15 minutes
+- Fees: complimentary
+- Restock: available 24/7 via operator
+- Notes: label allergy-friendly packs clearly
+
+user:
+Could you prepare an organic bamboo pack for pickup at the front desk? I’m on the executive floor.
+
+assistant channel=analysis:
+Stage front desk pickup for organic bamboo within 10–15 minutes.
+
+assistant channel=commentary to=tool.stage_front_desk_pickup:
+{"pack_type":"organic_bamboo","ready_in":"15 minutes"}
+
+tool.stage_front_desk_pickup channel=commentary to=assistant:
+{"staged":true,"counter":"front desk","eta":"10–15 minutes","label":"allergy-friendly"}
+
+assistant channel=final:
+Certainly—an organic bamboo pack will be ready at the front desk in about 10–15 minutes. It’ll be labeled as allergy-friendly. Complimentary.
+
+user:
+Thanks! If I arrive late at night, can I still get a restock?
+
+assistant channel=analysis:
+Answer using 24/7 operator restock.
+
+assistant channel=final:
+Yes—restocks are available 24/7 through the operator; we’ll stage another pack whenever you need.
+
+user:
+Perfect. Also, is the Peak Tram running later this evening?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the Peak Tram operating schedule for this evening. Investigating potential answers.
+

@@ -1,0 +1,64 @@
+"""
+Guest requests a romantic turn-down scent with floral emphasis and asks about delivery window.
+
+ROLES: user (couple guest), assistant (aroma concierge coordinating turn-down)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"floral_options","description":"List floral oils.","parameters":{"type":"object","additionalProperties":false,"properties":{"scope":{"type":"string","enum":["floral"]}},"required":["scope"]},"strict":true},
+  {"name":"schedule","description":"Schedule delivery time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"time":{"type":"string"}},"required":["room","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Rose Gallery Hotel (hotel_id: rgh_par_21)
+Address: 18 Rue des Fleurs, 75004 Paris, France
+Hours: 09:00–22:00 aromatherapy; turn-down coordination 18:00–21:30
+Floral portfolio:
+- Rose, Geranium, Ylang-ylang, Jasmine
+Service timing:
+- Standard delivery 20–30 minutes
+- Turn-down window 18:00–21:30
+Safety: Avoid direct skin contact; allergy check available
+
+user:
+We’re in 705. Could you set a romantic floral scent for turn-down around 7 PM? What’s your delivery window?
+
+assistant channel=analysis:
+Answer delivery/turn-down windows from system; list floral oils via tool; schedule 19:00 for 705.
+
+assistant channel=commentary to=tool.floral_options:
+{"scope":"floral"}
+
+tool.floral_options channel=commentary to=assistant:
+{"oils":["Rose","Geranium","Ylang-ylang","Jasmine"]}
+
+assistant channel=commentary to=tool.schedule:
+{"room":"705","time":"19:00"}
+
+tool.schedule channel=commentary to=assistant:
+{"ticket":"RGH-705-FLR-771","eta_minutes":25}
+
+assistant channel=final:
+Our standard delivery is 20–30 minutes, and the turn-down window runs 18:00–21:30. Floral options include Rose, Geranium, Ylang-ylang, and Jasmine. I’ve scheduled your 19:00 turn-down scent for room 705 (ticket RGH-705-FLR-771).
+
+user:
+Lovely—merci! The lobby art is charming.
+
+assistant channel=analysis:
+Chitchat reply only.
+
+assistant channel=final:
+It complements the evening ambiance nicely.
+
+user:
+Could you also arrange roses on the bed?
+
+assistant channel=analysis:
+Room decoration service is beyond aromatherapy tools here.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for rose decorations.
+

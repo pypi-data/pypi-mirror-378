@@ -1,0 +1,70 @@
+"""
+Guest requests a mix of long‑form news magazines and asks about digital access.
+
+ROLES: user (guest in 2411 seeking deep reads), assistant (concierge assembling news titles and clarifying digital access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_magazine_inventory","description":"List titles in news/current affairs.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string"}},"required":["category"]},"strict":true},
+  {"name":"deliver_magazines","description":"Deliver selected titles to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"magazine_titles":{"type":"array","items":{"type":"string"}},"delivery_time":{"type":"string"}},"required":["room_number","magazine_titles"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Parliament View — Riverside
+Room: 2411 (Corner King)
+News & Long‑Form:
+- Titles: The New Yorker, The Atlantic, Harper’s Magazine, Time, Newsweek
+- Digital: The New Yorker and The Atlantic via in‑room tablet
+- Delivery: 07:00–22:00
+- Back issues: 48‑hour notice
+- Care: sleeves; return at checkout
+
+Guest Info:
+- Wi‑Fi SSID Riverview-Guest / Pass Bench&Quill2025
+- Lounge desks: 07:00–21:00
+- Quiet hours 22:00–07:00
+- Language: English
+- Model: PressStand PS‑8
+
+user:
+Could you send The New Yorker and Harper’s Magazine to 2411 now? Also, do you have digital access to The Atlantic?
+
+assistant channel=analysis:
+Verify news titles and arrange delivery; confirm digital access from system.
+
+assistant channel=commentary to=tool.get_magazine_inventory:
+{"category":"news"}
+
+tool.get_magazine_inventory channel=commentary to=assistant:
+{"available_titles":["The New Yorker","The Atlantic","Harper’s Magazine","Time","Newsweek"],"issues":["January 2025"],"copies":25}
+
+assistant channel=commentary to=tool.deliver_magazines:
+{"room_number":"2411","magazine_titles":["The New Yorker","Harper’s Magazine"],"delivery_time":"as soon as possible"}
+
+tool.deliver_magazines channel=commentary to=assistant:
+{"delivery_id":"PV-2411-N01","runner":"Samir","eta_minutes":18}
+
+assistant channel=final:
+Yes—The New Yorker and Harper’s Magazine are on the way to 2411 (PV‑2411‑N01, about 18 minutes). The Atlantic is available digitally on your in‑room tablet.
+
+user:
+Thanks—this room has a calm feel.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+The river light makes it especially relaxing in the afternoons.
+
+user:
+Any parliamentary debates open to the public today?
+
+assistant channel=analysis:
+Out of scope.
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Checking public session information.
+

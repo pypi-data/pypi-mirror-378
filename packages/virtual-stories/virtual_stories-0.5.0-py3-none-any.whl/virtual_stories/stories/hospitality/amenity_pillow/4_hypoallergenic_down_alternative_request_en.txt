@@ -1,0 +1,73 @@
+"""
+Guest requests hypoallergenic down-alternative pillows due to allergies.
+Provide allergy-safe options, size selection, and quick delivery.
+
+ROLES: user (guest with feather allergy), assistant (sleep concierge with allergy expertise)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_pillow_stock","description":"Check down-alternative pillow inventory by size and firmness.","parameters":{"type":"object","properties":{"size":{"type":"string","enum":["standard","queen","king"]},"firmness":{"type":"string","enum":["soft","medium","firm"]}},"required":["size"]},"strict":true},
+  {"name":"deliver_allergy_safe","description":"Deliver hypoallergenic pillows with protectors.","parameters":{"type":"object","properties":{"room":{"type":"string"},"models":{"type":"array","items":{"type":"string"}},"protectors":{"type":"boolean"},"timing":{"type":"string","enum":["immediate","during_turndown"]}},"required":["room","models"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riviera Grand Barcelona (hotel_id: rgb_bcn_05)
+Address: Pg. de Gràcia, 64, 08007 Barcelona, Spain
+Timezone: Europe/Madrid
+
+Allergy-Safe Bedding:
+- Down-alternative microfibre pillows: soft/medium/firm in all sizes
+- Dust-mite barrier encasements; zipper-sealed seams
+- Fragrance-free detergent; ozone sanitation cycle
+- EU Ecolabel textiles; recycled water laundry system
+- Inventory refreshed daily; labeled bins by firmness
+
+Guest Services:
+- Express delivery under 12 minutes for floors 10–16
+- Turndown swap-and-bag with allergen-safe bags
+- Pillow heights labeled: low 9cm, mid 12cm, high 15cm
+- Extra: cooling percale or soft sateen cases
+- Multilingual team; English/Spanish/Catalan
+
+user:
+Hello, room 1210. I’m allergic to feathers—can I get two firm down‑alternative pillows in king size?
+
+assistant channel=analysis:
+Check firm king down‑alternative stock; then deliver two with protectors.
+
+assistant channel=commentary to=tool.check_pillow_stock:
+{"size":"king","firmness":"firm"}
+
+tool.check_pillow_stock channel=commentary to=assistant:
+{"available":true,"models":["microfibre_firm_king"],"stock":34,"heights_cm":15,"encasements_available":true}
+
+assistant channel=commentary to=tool.deliver_allergy_safe:
+{"room":"1210","models":["microfibre_firm_king","microfibre_firm_king"],"protectors":true,"timing":"immediate"}
+
+tool.deliver_allergy_safe channel=commentary to=assistant:
+{"sent":true,"eta":"9 minutes","runner":"Lucía","items":["2x microfibre_firm_king","2x dust_mite_encasements"],"turndown":false}
+
+assistant channel=final:
+Absolutely—two firm king down‑alternative pillows are on the way with dust‑mite encasements. Lucía will arrive in about 9 minutes.
+
+user:
+Do you have height labels?
+
+assistant channel=analysis:
+Answer from system Guest Services.
+
+assistant channel=final:
+Yes—our firm king down‑alternative pillows are the high profile at about 15 cm.
+
+user:
+Any Gaudí sites you recommend visiting tomorrow?
+
+assistant channel=analysis:
+Out of scope; apply ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

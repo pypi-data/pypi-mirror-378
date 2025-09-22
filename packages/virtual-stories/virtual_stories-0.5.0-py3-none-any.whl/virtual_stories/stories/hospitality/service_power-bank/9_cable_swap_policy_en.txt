@@ -1,0 +1,50 @@
+"""
+Guest asks about swapping cables; we process a swap via tool, include small talk, and flag an out‑of‑scope brand guarantee.
+
+ROLES: user (guest needing a different cable), assistant (front desk handling cable swaps)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"swap_cable","description":"Swap the included cable type for a loan.","parameters":{"type":"object","additionalProperties":false,"properties":{"loan_id":{"type":"string"},"from":{"type":"string"},"to":{"type":"string"}},"required":["loan_id","from","to"]}}
+]
+```
+"""
+
+system:
+Hotel: Stonebridge Hotel
+Details:
+- Each unit includes USB‑C and USB‑A cables
+- 1 unit per room; 24‑hour courtesy; $20 hold may apply after 24h
+- Swaps: handled at Front Desk
+
+user:
+My loan is pb_1902—can I swap the USB‑A cable for another USB‑C?
+
+assistant channel=analysis:
+Process a cable swap for loan pb_1902 via tool and confirm.
+
+assistant channel=commentary to=tool.swap_cable:
+{"loan_id":"pb_1902","from":"USB-A","to":"USB-C"}
+
+tool.swap_cable channel=commentary to=assistant:
+{"loan_id":"pb_1902","status":"swapped","new_set":["USB-C","USB-C"]}
+
+assistant channel=final:
+Done—loan pb_1902 now has two USB‑C cables. Swaps are handled at the Front Desk; one unit per room with a 24‑hour courtesy period.
+
+user:
+Thanks—the Front Desk is quick.
+
+assistant channel=final:
+Appreciate that.
+
+user:
+Can you guarantee a specific cable brand?
+
+assistant channel=analysis:
+Brand guarantees aren’t described; use special flag.
+
+assistant channel=final:
+[ATTENTION] Specific brand guarantees aren’t specified here. Verifying information.
+

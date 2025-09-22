@@ -1,0 +1,77 @@
+"""
+Guest requests toothbrushes with travel caps; confirm feature and deliver. Include small talk and an [ATTENTION] query.
+
+ROLES: user (guest requesting travel-cap toothbrushes), assistant (amenities desk handling delivery with accessory preference)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_toothbrush_feature","description":"Check if travel caps available for requested bristle","parameters":{"type":"object","properties":{"bristle":{"type":"string","enum":["soft","medium"]},"qty":{"type":"integer","minimum":1}},"required":["bristle","qty"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_toothbrush_with_caps","description":"Deliver toothbrushes with travel caps","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"bristle":{"type":"string"},"qty":{"type":"integer"}},"required":["room_number","bristle","qty"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Arches at Old Mill (hotel_id: aom_bruges_05)
+Address: 14 Kraanlei, 8000 Brugge, Belgium
+Timezone: Europe/Brussels
+
+Facts:
+- Toothbrushes: soft and medium; most batches include travel caps
+- Typical delivery ETA: 10–14 minutes
+- Canal-side rooms; complimentary still water in carafes
+
+YAML Building:
+---
+floors: 4
+elevator: true
+historic: true
+---
+
+JSON Runner:
+{"primary":"Ava","backup":"Jonas"}
+
+CSV Nearby (spot,walk_min):
+Market_Square,8
+Rozenhoedkaai,3
+
+user:
+Could you send two soft toothbrushes with travel caps to 203?
+
+assistant channel=analysis:
+Check travel-cap availability for soft; deliver two to 203.
+
+assistant channel=commentary to=tool.check_toothbrush_feature:
+{"bristle":"soft","qty":2}
+
+tool.check_toothbrush_feature channel=commentary to=assistant:
+{"available":true,"caps":true,"brand":"CanalCare"}
+
+assistant channel=commentary to=tool.deliver_toothbrush_with_caps:
+{"room_number":"203","bristle":"soft","qty":2}
+
+tool.deliver_toothbrush_with_caps channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":12,"runner":"Ava"}
+
+assistant channel=final:
+On the way—two CanalCare soft toothbrushes with travel caps to room 203. ETA about 12 minutes (runner: Ava).
+
+user:
+The canals are so peaceful at night.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+Evening walks by Rozenhoedkaai are lovely and quiet.
+
+user:
+Could you recommend the best chocolate shop and reserve a tasting?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

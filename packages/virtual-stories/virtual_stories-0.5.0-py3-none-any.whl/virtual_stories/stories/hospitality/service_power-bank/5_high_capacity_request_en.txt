@@ -1,0 +1,50 @@
+"""
+Guest requests a high‑capacity unit; we check availability via tool, include small talk, and flag an out‑of‑scope long‑term rental request.
+
+ROLES: user (guest needing higher capacity), assistant (front desk checking stock)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"request_high_capacity","description":"Check if a high‑capacity power bank is available.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"required":[]}
+]
+```
+"""
+
+system:
+Hotel: Techline Downtown
+Lending info:
+- Standard units with USB‑C/USB‑A cables
+- One per room; 24‑hour courtesy; $20 hold after 24h
+- Front Desk pickup/return
+
+user:
+Do you have a high‑capacity model?
+
+assistant channel=analysis:
+Use the tool to confirm whether high‑capacity units are available and answer accordingly.
+
+assistant channel=commentary to=tool.request_high_capacity:
+{}
+
+tool.request_high_capacity channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=final:
+A high‑capacity unit is available. It includes USB‑C and USB‑A cables, with one unit per room for a 24‑hour courtesy period; after 24 hours a $20 hold may apply. Pick up and return at the Front Desk.
+
+user:
+That’s perfect.
+
+assistant channel=final:
+We’ll set one aside at the desk.
+
+user:
+Could I rent it for two weeks continuously?
+
+assistant channel=analysis:
+Long‑term rentals aren’t described; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Multi‑week rentals aren’t covered here. Reviewing available resources.
+

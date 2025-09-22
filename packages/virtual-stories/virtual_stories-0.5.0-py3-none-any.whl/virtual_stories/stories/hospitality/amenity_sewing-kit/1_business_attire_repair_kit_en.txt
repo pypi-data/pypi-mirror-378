@@ -1,0 +1,113 @@
+"""
+Guest needs emergency sewing kit for business attire repair before important meeting.
+
+ROLES: user (business executive with torn clothing), assistant (housekeeping manager with repair amenity access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: The Grandview Business Hotel Seattle (hotel_id: gbh_sea_01)
+Address: 1010 First Avenue, Seattle, WA 98104
+Timezone: America/Los_Angeles
+
+Sewing & Repair Services:
+- Basic sewing kit: needle, thread (black, white, navy), safety pins, small scissors
+- Executive kit: premium threads, fabric markers, button repair, hem tape
+- Emergency assistance: housekeeping staff trained in basic repairs (7AM-11PM)
+- Professional valet: full garment repair service (next-day turnaround)
+
+Floor Services:
+- Floors 1-12: Standard business amenities with basic kits
+- Floors 13-20: Executive level with premium repair kits
+- Floor 21-25: Penthouse with on-demand valet services
+
+Repair Capabilities:
+- Button replacement, hem adjustments, minor tear repairs
+- Emergency temporary fixes for meetings/presentations
+- Fabric matching for common business attire colors
+
+user:
+Help! I'm in room 1847 and I just noticed my suit jacket has a small tear near the pocket. I have a crucial board meeting in 2 hours. Do you have any sewing supplies I could use?
+
+assistant channel=analysis:
+Urgent business attire repair needed. Check executive kit availability for floor 18, then arrange emergency service.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type": "executive", "floor_level": "18"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available": true, "kit_contents": ["premium_thread_navy", "fabric_marker", "fine_needle", "safety_pins", "hem_tape"], "location": "executive_housekeeping_station_18"}
+
+assistant channel=analysis:
+Executive kit available with navy thread perfect for suit repair. Arrange urgent delivery with assistance offer.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number": "1847", "service_type": "kit_delivery", "urgency": "emergency", "garment_type": "business_suit_jacket"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged": true, "delivery_time": "8_minutes", "staff_assigned": "senior_housekeeping_supervisor", "assistance_offered": true, "backup_option": "on_site_repair_if_needed"}
+
+assistant channel=final:
+Absolutely! I'm rushing our executive sewing kit to room 1847—it'll be there in 8 minutes with navy thread perfect for your suit. Our senior supervisor can assist with the repair if needed.
+
+user:
+That's perfect timing. I really appreciate the quick response. The service here is exceptional.
+
+assistant channel=analysis:
+Guest expressing appreciation. Friendly acknowledgment appropriate.
+
+assistant channel=final:
+Thank you so much! We're always here to help with those unexpected business travel moments. Best of luck with your board meeting!
+
+user:
+Actually, while we're talking, do you know any good coffee shops nearby for after my meeting?
+
+assistant channel=analysis:
+Local coffee shop recommendations are outside sewing kit service scope. Use special flag.
+
+assistant channel=final:
+[ATTENTION] Let me research coffee options in the area for you. Collecting information on this topic.
+
+user:
+No problem at all. The sewing kit will be perfect—thank you again!
+
+assistant channel=analysis:
+Final gratitude from guest. Simple positive closure needed.
+
+assistant channel=final:
+You're so welcome! The kit should be at your door any moment. Have a successful meeting!

@@ -1,0 +1,60 @@
+"""
+Guest asks about parking during check‑in; confirm room and provide parking details from system; include small talk and an ATTENTION follow‑up.
+
+ROLES: user (driver guest), assistant (front desk issuing keys and parking notes)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_in_guest","description":"Check in and return room + key","parameters":{"type":"object","properties":{"reservation_code":{"type":"string"},"last_name":{"type":"string"}},"required":["reservation_code","last_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Riverbend Hotel — Front Desk
+Check‑in 15:00; Check‑out 11:00
+ID match required; credit card preauth
+
+Parking:
+- Self‑parking P3: $20/night (clearance 2.0 m)
+- Valet: $32/night; EV chargers at valet bay
+
+Dining:
+- Breakfast 06:30–10:00 at Mill & Grain
+
+Amenities:
+- Wi‑Fi Riverbend_Guest; gym 24/7
+
+user:
+Code RB-70021 under Carter. Where should I park and how much is it?
+
+assistant channel=analysis:
+Assign room; return parking details from system.
+
+assistant channel=commentary to=tool.check_in_guest:
+{"reservation_code":"RB-70021","last_name":"Carter"}
+
+tool.check_in_guest channel=commentary to=assistant:
+{"room":"918","key_id":"K-441800"}
+
+assistant channel=final:
+Welcome—room 918 is ready with key K-441800. Self‑parking on P3 is $20/night (2.0 m clearance), or valet is $32/night with EV charging at the valet bay.
+
+user:
+Great—love the mill theme.
+
+assistant channel=final:
+Mill & Grain opens at 06:30 for breakfast.
+
+user:
+What time is check‑out?
+
+assistant channel=final:
+Check‑out is by 11:00.
+
+user:
+Can I get free valet tonight?
+
+assistant channel=final:
+[ATTENTION] Valet fee waivers aren’t available here. Checking available options.

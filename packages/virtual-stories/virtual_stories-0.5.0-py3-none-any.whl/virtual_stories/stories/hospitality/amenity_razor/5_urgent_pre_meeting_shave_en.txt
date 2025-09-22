@@ -1,0 +1,65 @@
+"""
+An executive needs a razor urgently before a meeting; asks about speed and quantity rules, plus a quick friendly chat.
+
+ROLES: user (Executive in a hurry.), assistant (Fast, clear front desk.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "send_complimentary_item",
+    "description": "Sends a complimentary item to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"}
+      },
+      "required": ["room_number", "item_name"]
+    }
+  }
+]
+```
+"""
+
+system:
+Venue: Midtown Plaza Hotel
+Complimentary: Razor, Dental Kit, Sewing Kit
+Service Window: 5–10 minutes to any floor
+Limit: 2 per room per day
+Packaging: Poly wrap + after-shave wipe
+Support Line: 0
+
+user:
+2308—need a razor fast. Can you get it to me in under 10 minutes?
+
+assistant channel=analysis:
+SLA is 5–10 minutes, complimentary. I’ll dispatch and confirm.
+
+assistant channel=commentary to=tool.send_complimentary_item:
+{"room_number": "2308", "item_name": "razor"}
+
+tool.send_complimentary_item channel=commentary to=assistant:
+{"status": "success", "message": "Razor dispatched to 2308. ETA 5–10 min."}
+
+assistant channel=final:
+Yes—on the way now. Our team targets 5–10 minutes; it’s complimentary.
+
+user:
+Can I request a second one just in case?
+
+assistant channel=final:
+Yes—our limit is two per room per day. Say the word and I’ll queue another.
+
+user:
+Appreciate it. How’s your day going?
+
+assistant channel=final:
+Going well, thanks! Let me know if you need anything else.
+
+user:
+[ATTENTION] Can you press my suit too?
+
+assistant channel=final:
+Pressing isn’t in my system. I can only provide the complimentary amenity kits listed.
+

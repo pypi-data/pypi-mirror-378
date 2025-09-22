@@ -1,0 +1,61 @@
+"""
+Guest cannot get HDMI to display from a laptop; requests troubleshooting steps.
+
+ROLES: user (guest presenter), assistant (AV support offering guided steps)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "troubleshoot_connection",
+    "description": "Provide step-by-step HDMI troubleshooting steps for a projector.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {"type": "string", "enum": ["HDMI1","HDMI2"]},
+        "resolution": {"type": "string", "enum": ["1080p","720p"]}
+      },
+      "required": ["input","resolution"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Stonebridge Convention Suites (SCS-CHI-10)
+Address: 700 W Monroe St, Chicago, IL 60661
+Projector inputs: HDMI1 (default), HDMI2; native 1080p; supports 720p
+Included: 2m HDMI; adapters by request; tech desk 07:00–22:00
+Policy: Guest operates laptop; AV can assist switching inputs and focus
+Fees: USD 40/hour projector; no charge for basic troubleshooting
+
+user:
+My laptop isn’t showing—HDMI cable is in. What should I try?
+
+assistant channel=analysis:
+Provide steps via tool, using HDMI1 and 1080p; reply only with tool output guidance.
+
+assistant channel=commentary to=tool.troubleshoot_connection:
+{"input":"HDMI1","resolution":"1080p"}
+
+tool.troubleshoot_connection channel=commentary to=assistant:
+{"steps":["Set projector input to HDMI1","Reseat HDMI at both ends","On laptop: duplicate display (Win+P/Mirroring)","Set resolution to 1920x1080","Power-cycle projector if no signal","Try alternate HDMI port/cable if needed"]}
+
+assistant channel=final:
+Try these: set input to HDMI1, reseat HDMI at both ends, duplicate the laptop display, set 1920×1080, then power-cycle the projector if needed; if no image, try the other HDMI port or cable.
+
+user:
+Thanks—your techs are friendly.
+
+assistant channel=final:
+Happy to help—call x550 for hands-on support.
+
+user:
+Can you remote into my laptop to fix it?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

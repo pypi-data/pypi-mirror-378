@@ -1,0 +1,97 @@
+"""
+Guest with glossy tile asks for two non-slip mats; check dedicated SKU and deliver. Include chit-chat, an in-context quiet hours question, and an [ATTENTION] request.
+
+ROLES: user (guest concerned about slick tiles), assistant (concierge coordinating delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"stock_non_slip","description":"Check stock for non-slip SKU.","parameters":{"type":"object","additionalProperties":false,"properties":{"sku":{"type":"string"}},"required":["sku"]},"strict":true},
+  {"name":"deliver_non_slip","description":"Deliver non-slip mats to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"sku":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","sku","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Coral Key House (hotel_id: ckh_fl_61)
+Address: 19 Ocean Reef Way, Key Largo, FL 33037
+Timezone: America/New_York
+Check-in/Out: 16:00 / 11:00
+Amenity Runs: 07:00–22:00
+
+Amenities & Safety:
+- bath_mat, bath_mat_non_slip
+- Safety tip: place on dry floor; wipe excess water
+- Typical ETA: 10–15 minutes
+
+Leisure:
+1) Mangrove boardwalk loop
+2) Lagoon cove with hammocks
+3) Paddle launch (daylight hours)
+4) Café Reef 06:30–12:30
+5) Quiet hours 22:00–07:00
+
+Accessibility:
+- Ground-floor rooms with step-free access
+- Portable bath seats by request
+
+Sustainability:
+- Coastal habitat protection measures
+- Refillable amenities; towel reuse program
+
+Design:
+- Coral-toned textiles and rattan furnishings
+
+Transportation:
+- On-site parking; rideshare pickup at front circle
+
+user:
+Hi—room 214. The tiles are glossy; could we get two non-slip bath mats?
+
+assistant channel=analysis:
+Check non-slip stock, then deliver two.
+
+assistant channel=commentary to=tool.stock_non_slip:
+{"sku":"bath_mat_non_slip"}
+
+tool.stock_non_slip channel=commentary to=assistant:
+{"sku":"bath_mat_non_slip","on_hand":8}
+
+assistant channel=commentary to=tool.deliver_non_slip:
+{"room":"214","sku":"bath_mat_non_slip","qty":2}
+
+tool.deliver_non_slip channel=commentary to=assistant:
+{"ticket":"CKH-214-6654","eta_minutes":12}
+
+assistant channel=final:
+Two non-slip mats are on the way to 214 under ticket CKH-214-6654, ETA about 12 minutes.
+
+user:
+The hammocks by the cove look relaxing.
+
+assistant channel=analysis:
+Chit-chat referencing leisure.
+
+assistant channel=final:
+The lagoon cove with hammocks is a peaceful corner of the property.
+
+user:
+What are the quiet hours again?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Quiet hours run 22:00–07:00.
+
+user:
+Could you arrange a sunrise paddle guide for tomorrow?
+
+assistant channel=analysis:
+Out of scope; use flag.
+
+assistant channel=final:
+[ATTENTION] Exploring different approaches.
+
+user:
+Thanks!

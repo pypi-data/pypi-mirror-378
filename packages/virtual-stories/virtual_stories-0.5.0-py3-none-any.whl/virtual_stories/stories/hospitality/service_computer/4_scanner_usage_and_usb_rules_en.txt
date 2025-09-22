@@ -1,0 +1,60 @@
+"""
+Guest asks about using a document scanner and USB policy; we verify via tools, include small talk, and handle an out‑of‑scope cloud policy question with the special flag.
+
+ROLES: user (guest needing to scan documents), assistant (business center attendant clarifying device rules)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_scanner_status","description":"Check if the scan‑to‑email kiosk is online.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"required":[]},
+  {"name":"get_usb_policy","description":"Return whether USB mass‑storage is allowed at PCs.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"required":[]}
+]
+```
+"""
+
+system:
+Silverworks Hotel — Business Center
+Essentials:
+- Hours: 08:00–21:00
+- Equipment: 6 PCs; 1 scan‑to‑email kiosk; 1 duplex laser printer
+- USB policy: Mass‑storage allowed; auto‑wipes on logout; no executables run
+- Location: Level B1, past the fitness studio; signage in green
+- Assistance: On‑call attendant via phone "0" from the kiosk
+Notes (for redundancy): A‑frame sign shows current queue; earplugs available
+
+user:
+Can I scan a few pages and send them to my email? Also, are USB drives allowed?
+
+assistant channel=analysis:
+Use tools to confirm scanner status and USB allowance; then reply.
+
+assistant channel=commentary to=tool.get_scanner_status:
+{}
+
+tool.get_scanner_status channel=commentary to=assistant:
+{"status":"online","device_id":"SCAN-KIOSK-01"}
+
+assistant channel=commentary to=tool.get_usb_policy:
+{}
+
+tool.get_usb_policy channel=commentary to=assistant:
+{"usb_mass_storage_allowed":true,"auto_wipe_on_logout":true}
+
+assistant channel=final:
+Yes—our scan‑to‑email kiosk is online (SCAN‑KIOSK‑01). USB mass‑storage is allowed at the PCs, and files are wiped automatically at logout.
+
+user:
+The green signs are easy to follow.
+
+assistant channel=final:
+Glad the B1 signage helped.
+
+user:
+Can I sync an entire Dropbox folder automatically here?
+
+assistant channel=analysis:
+Cloud sync automation isn’t described; respond with special flag.
+
+assistant channel=final:
+[ATTENTION] Automated cloud sync isn’t covered in these resources. Checking available options.
+

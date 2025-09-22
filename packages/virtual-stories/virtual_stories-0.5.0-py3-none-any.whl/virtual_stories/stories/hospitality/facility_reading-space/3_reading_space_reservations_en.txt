@@ -1,0 +1,66 @@
+"""
+Guest asks about booking rules, availability, and maximum duration for the study booths.
+
+ROLES: user (guest needing a focused booth), assistant (concierge giving policy + live availability)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "check_booth_availability",
+    "description": "Return next available 1-hour and 2-hour booth slots today.",
+    "parameters": {"type":"object","properties":{"duration":{"type":"integer","enum":[60,120]}},"required":["duration"],"additionalProperties":false},
+    "strict": true
+  }
+]
+"""
+
+system:
+Space: Atrium Study Lounge – Focus Booths
+Location: West mezzanine, opposite lifts B1–B4
+Hours: 07:00–23:00 (last entry 22:30)
+Booths: 6 acoustic booths, each with dimmable lamp and 2 outlets
+Rules: Low voice; no speakerphones; close door softly
+Booking: Max 2 hrs per day; release after 10 min no‑show
+Deposit: None; swipe room key to check in
+Wi‑Fi: SSID "Study-Link", Pass "Atr1um!L0unge"
+Noise: 32–38 dBA inside booth
+Ventilation: 8 ACH; CO₂ target < 800 ppm
+Monitoring: Door LEDs show status (green=free, amber=held, red=in use)
+Cleaning: 5 min turnover by housekeeping each hour
+
+user:
+Can I book a booth for two hours today? When’s the next slot?
+
+assistant channel=analysis:
+Use the tool for real-time availability for 120 minutes; keep policy facts from system.
+
+assistant channel=commentary to=tool.check_booth_availability:
+{"duration":120}
+
+tool.check_booth_availability channel=commentary to=assistant:
+{"next_slots":["14:00–16:00","16:30–18:30"],"booths_free":2}
+
+assistant channel=analysis:
+Answer with slot options and remind max duration is 2 hrs.
+
+assistant channel=final:
+Yes—max is 2 hours per day. Next two-hour slots are 14:00–16:00 and 16:30–18:30, with 2 booths free. You’ll check in by swiping your room key.
+
+user:
+Cool lights on the doors.
+
+assistant channel=analysis:
+Small talk, no new info beyond what’s in system.
+
+assistant channel=final:
+They’re handy—green, amber, and red make availability obvious at a glance.
+
+user:
+Could you extend my booking to three hours if I need more time?
+
+assistant channel=analysis:
+Three-hour extension isn’t allowed per system booking policy. It’s beyond allowed scope; respond with attention flag.
+
+assistant channel=final:
+[ATTENTION] The booths are limited to 2 hours per day. Escalating your 3‑hour request for review.
+

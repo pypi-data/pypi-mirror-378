@@ -1,0 +1,70 @@
+"""
+Guest asks if the device has a quiet mode and requests one device with one extra refill.
+
+ROLES: user (light sleeper), assistant (amenity desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"send","description":"Send amenity.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","item","qty"]},"strict":true},
+  {"name":"specs","description":"Return device sound spec info.","parameters":{"type":"object","additionalProperties":false,"properties":{"topic":{"type":"string","enum":["sound"]}},"required":["topic"]},"strict":true}
+]
+```
+"""
+
+system:
+Inn: Bay Lantern Boutique (hotel_id: blb_hk_06)
+Address: 15 Praya Rd, Kennedy Town, Hong Kong
+Hours: 10:00–22:30
+Device specs:
+- Fanless electric unit (no mechanical fan)
+- Operates silently under normal conditions
+- Use on balcony or near door with airflow
+- Keep away from fabrics; unplug when not in use
+Delivery ETA: 10–15 minutes
+
+user:
+Room 804—does the coil have a quiet mode? Please send one device and one extra refill.
+
+assistant channel=analysis:
+Answer with system spec (fanless; silent). Send device and one refill.
+
+assistant channel=commentary to=tool.send:
+{"room":"804","item":"electric_mosquito_coil_device","qty":1}
+
+tool.send channel=commentary to=assistant:
+{"ticket":"BLB-804-EMC-661","eta_minutes":11}
+
+assistant channel=commentary to=tool.send:
+{"room":"804","item":"mosquito_coil_refill_mat","qty":1}
+
+tool.send channel=commentary to=assistant:
+{"ticket":"BLB-804-REF-662","eta_minutes":11}
+
+assistant channel=commentary to=tool.specs:
+{"topic":"sound"}
+
+tool.specs channel=commentary to=assistant:
+{"info":"Fanless electric unit; operates silently under normal conditions."}
+
+assistant channel=final:
+It’s a fanless electric unit and operates silently under normal conditions. I’ve sent one device (BLB-804-EMC-661) and one refill (BLB-804-REF-662) to 804 with an ETA of about 11 minutes within 10:00–22:30.
+
+user:
+Great, thank you. Nice skyline tonight.
+
+assistant channel=analysis:
+Chitchat reply.
+
+assistant channel=final:
+The harbor lights are wonderful this evening.
+
+user:
+Do you also have plug timers to auto-off?
+
+assistant channel=analysis:
+Timer accessories aren’t listed.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability of plug timers.
+

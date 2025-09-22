@@ -1,0 +1,111 @@
+"""
+Guest is considering hotel barber but asks for gel option first; confirm options and deliver gel.
+
+ROLES: user (guest weighing barber vs. in-room shave), assistant (spa-barber liaison)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Coral Bay Resort Maui (hotel_id: cbr_ogg_09)
+Address: 1 Kapalua Bay Dr, Lahaina, HI 96761
+Timezone: Pacific/Honolulu
+
+Grooming at Resort:
+- In-room options: shaving gel (aloe), aftershave balm
+- Barber: limited hours, by appointment only (not bookable via this amenity line)
+- Sensitive skin: fragrance-free variant available
+- Delivery: 15–25 minutes, 08:00–21:00
+- Policy: first sensitivity swap complimentary
+
+Contact & Notes:
+- Spa desk ext 33
+- Evening amenity tray on request 19:00–20:30
+- Packaging: beach-safe pouch
+- Note: barber coordination handled by separate desk
+
+user:
+Hi, is your barber available this evening? If not, could I get an aloe shaving gel to 810?
+
+assistant channel=analysis:
+Barber scheduling not handled here; answer within scope about gel. Check shaving_gel for normal/sensitive and arrange delivery.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type":"shaving_gel","skin_type":"sensitive","brand_preference":"any"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available":true,"recommended_products":["Aloe_Shaving_Gel_100ml"],"sensitive_variant":true}
+
+assistant channel=analysis:
+Deliver gel to 810; inform barber is separate desk without details beyond system.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number":"810","products":["Aloe_Shaving_Gel_100ml"],"delivery_window":"immediate","include_instructions":false}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled":true,"arrival_time":"17_minutes"}
+
+assistant channel=final:
+Our barber is scheduled via a separate desk, but I can send an aloe shaving gel now. It’s on the way to 810 and should arrive in about 17 minutes.
+
+user:
+Is there a fragrance-free version?
+
+assistant channel=analysis:
+System: sensitive variant available.
+
+assistant channel=final:
+Yes—we have a fragrance-free sensitive variant available and that’s what I’ve arranged.
+
+user:
+The sunset is incredible.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Enjoy the view—have a relaxing evening.
+
+user:
+Can you book a snorkeling trip for tomorrow morning?
+
+assistant channel=analysis:
+Beyond amenity scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up snorkeling trip options and share a few choices.

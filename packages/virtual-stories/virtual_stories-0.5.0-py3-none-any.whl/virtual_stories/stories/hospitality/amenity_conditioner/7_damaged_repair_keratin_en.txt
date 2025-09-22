@@ -1,0 +1,55 @@
+"""
+Guest needs keratin repair conditioner for damaged hair.
+
+ROLES: user (damaged hair), assistant (amenities concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_hair_care_products","description":"Retrieve available premium hair care products including conditioners.","parameters":{"type":"object","additionalProperties":false,"properties":{"hair_type":{"type":"string","enum":["dry","oily","normal","curly","colored","damaged","all"]},"product_type":{"type":"string","enum":["conditioner","deep_treatment","leave_in","all_conditioning"]}},"required":[]},"strict":true},
+  {"name":"deliver_hair_care_amenities","description":"Arrange delivery of hair care products to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"size":{"type":"string","enum":["travel_50ml","standard_200ml","luxury_400ml"]}},"required":["sku","size"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["immediate","evening_turndown","morning_service"]}},"required":["room_number","products","delivery_preference"]},"strict":true}
+]
+```
+"""
+
+system:
+Riviera Atrium (hotel_id: riv_nice)
+Address: Prom. des Anglais 77, Nice, France
+Timezone: Europe/Paris
+
+Repair Line:
+- Keratin + Argan complex
+
+SKUs:
+- COND_ARGAN_REPAIR: Argan & Keratin Repair Conditioner
+
+user:
+Any repairing conditioners? My ends are fried.
+
+assistant channel=analysis:
+Offer keratin repair conditioner.
+
+assistant channel=commentary to=tool.get_hair_care_products:
+{"hair_type":"damaged","product_type":"conditioner"}
+
+tool.get_hair_care_products channel=commentary to=assistant:
+{"products":[{"sku":"COND_ARGAN_REPAIR","name":"Argan & Keratin Repair Conditioner"}]}
+
+assistant channel=final:
+We have Argan & Keratin Repair Conditioner. Preferred size and room number?
+
+user:
+Room 512, 400ml. Also—do you validate parking?
+
+assistant channel=analysis:
+Arrange delivery; parking validation beyond scope -> [ATTENTION].
+
+assistant channel=commentary to=tool.deliver_hair_care_amenities:
+{"room_number":"512","products":[{"sku":"COND_ARGAN_REPAIR","size":"luxury_400ml"}],"delivery_preference":"evening_turndown"}
+
+tool.deliver_hair_care_amenities channel=commentary to=assistant:
+{"delivery_id":"RIV-512-RE-08","eta_minutes":25}
+
+assistant channel=final:
+[ATTENTION] Set for evening turndown—RIV-512-RE-08, ~25 minutes. I’ll check parking details separately.
+

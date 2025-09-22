@@ -1,0 +1,67 @@
+"""
+Guest asks reception to check lost-and-found for a scarf and wants pickup guidance.
+
+ROLES: user (guest who misplaced a scarf), assistant (receptionist checking L&F and advising pickup window and ID)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_lost_and_found",
+    "description": "Search reception's lost-and-found log for an item.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_type": {"type": "string"},
+        "color": {"type": "string"},
+        "date_range": {"type": "string", "description": "e.g., 2025-09-01..2025-09-04"}
+      },
+      "required": ["item_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Reception L&F Basics (YAML-style)
+hotel: Hudson Yardline Hotel
+counter: Lobby Front Desk
+hold_window_days: 30
+pickup_hours: 07:00–22:00 (ID required)
+notes:
+  - Items tagged with date and location found
+  - Soft goods bagged; electronics in locked drawer
+  - Claim requires matching description + photo ID
+  - Updates sync hourly to the desk terminal
+  - Unclaimed items beyond window -> central storage
+
+user:
+Could you see if a navy scarf turned in yesterday is there?
+
+assistant channel=analysis:
+Run a search for scarf; share results and pickup rules from system.
+
+assistant channel=commentary to=tool.search_lost_and_found:
+{"item_type":"scarf","color":"navy","date_range":"2025-09-03..2025-09-04"}
+
+tool.search_lost_and_found channel=commentary to=assistant:
+{"matches":[{"id":"LF-2218","item":"scarf","color":"navy","found_at":"Lobby lounge","date":"2025-09-03"}],"count":1}
+
+assistant channel=analysis:
+Confirm the match and advise pickup hours and ID.
+
+assistant channel=final:
+I have 1 match: LF-2218, navy scarf found in the lobby lounge on 2025‑09‑03. You can claim it 07:00–22:00 at reception with photo ID.
+
+user:
+Perfect—thanks.
+
+assistant channel=analysis:
+Brief acknowledgment.
+
+assistant channel=final:
+Happy to help.
+

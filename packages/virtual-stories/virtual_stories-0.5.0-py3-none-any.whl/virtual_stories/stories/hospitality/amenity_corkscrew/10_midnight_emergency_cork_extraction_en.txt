@@ -1,0 +1,73 @@
+"""
+Guest reports a broken cork at midnight and requests emergency assistance.
+Provide after-hours routing and feasible window per system.
+
+ROLES: user (guest with cork issue), assistant (amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "dispatch_after_hours_help",
+    "description": "Dispatch after-hours staff for cork extraction assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": { "type": "string" },
+        "issue": { "type": "string" }
+      },
+      "required": ["room","issue"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Costa Azul Seaview (hotel_id: caz_lisbon_09)
+Address: Avenida 24 de Julho 120, Lisbon, Portugal 1200-870
+Timezone: Europe/Lisbon
+After-Hours: Requests routed via operator; limited staff but emergency wine help available
+
+Wine Service:
+- Tools: waiter’s knife, Ah-So; after-hours kit kept at operator desk
+- Response: 15–25 min typical overnight
+- Fees: complimentary for in-house guests
+- Safety: glass cleanup on request
+- Ice & Water: available 24/7 from operator
+
+user:
+Help! It’s just past midnight and our cork snapped in room 602. Can someone assist?
+
+assistant channel=analysis:
+Dispatch after-hours help with typical response window.
+
+assistant channel=commentary to=tool.dispatch_after_hours_help:
+{"room":"602","issue":"broken cork extraction"}
+
+tool.dispatch_after_hours_help channel=commentary to=assistant:
+{"dispatched":true,"eta":"20 minutes","kit":["Ah-So","waiter’s knife","drip cloth"],"note":"overnight on-call staff"}
+
+assistant channel=final:
+We’ve dispatched our on-call team with an Ah-So and a waiter’s knife—ETA about 20 minutes. Assistance is complimentary, and we can handle glass cleanup if needed.
+
+user:
+Thanks so much. Also, what time does breakfast open in the morning?
+
+assistant channel=analysis:
+Breakfast hours not in system—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll confirm tomorrow’s breakfast opening time. Investigating potential answers.
+
+user:
+Appreciate it. You’re all very calm at this hour!
+
+assistant channel=analysis:
+Casual reply referencing after-hours routing.
+
+assistant channel=final:
+We keep an after-hours kit at the operator desk so we can respond quickly overnight.
+

@@ -1,0 +1,66 @@
+"""
+Guest asks if there’s a lobby shine table and requests a microfiber cloth.
+
+ROLES: user (guest curious about lobby options), assistant (amenities confirming availability)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"amenity_overview","description":"Return whether a lobby shine table is set and stock counts.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"strict":true},
+  {"name":"deliver_shoe_care_item","description":"Deliver a cloth to the guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"cloth_type":{"type":"string"},"quantity":{"type":"integer","minimum":1,"maximum":2}},"required":["room_number","cloth_type","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Riverbend Grand (hotel_id: rbg_cin_05)
+Address: 10 Bankside Way, Cincinnati, OH 45202
+Timezone: America/New_York
+
+Lobby Services:
+- Shine table: 07:00–10:00 & 17:00–19:00
+- Cloth types: microfiber, cotton_flannel
+- Delivery ETA: 9–14 minutes
+- Wi‑Fi: Riverbend-Guest / Bend2024!
+- Quiet hours: 22:00–07:00
+
+user:
+Is the shine table up now? Also, one microfiber to 1112.
+
+assistant channel=analysis:
+Confirm shine table hours and deliver one microfiber to 1112.
+
+assistant channel=commentary to=tool.amenity_overview:
+{}
+
+tool.amenity_overview channel=commentary to=assistant:
+{"shine_table_hours":"07:00-10:00 & 17:00-19:00","on_hand":{"microfiber":25,"cotton_flannel":20},"eta_minutes":12}
+
+assistant channel=commentary to=tool.deliver_shoe_care_item:
+{"room_number":"1112","cloth_type":"microfiber","quantity":1}
+
+tool.deliver_shoe_care_item channel=commentary to=assistant:
+{"delivery_id":"RBG-CL-9022","room_number":"1112","cloth_type":"microfiber","quantity":1,"eta_minutes":12}
+
+assistant channel=final:
+The shine table runs 07:00–10:00 and 17:00–19:00. One microfiber cloth is heading to 1112 (RBG-CL-9022), ETA about 12 minutes.
+
+user:
+Nice setup. Lobby smells like coffee!
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+It does—morning brews make the lobby lively.
+
+user:
+Do you know the Reds score?
+
+assistant channel=analysis:
+Out of scope.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about the score. Checking available options.
+
+

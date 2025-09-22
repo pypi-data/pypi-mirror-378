@@ -1,0 +1,63 @@
+"""
+Guest needs to rent a universal power adapter; verify availability, confirm fee, and arrange delivery to room.
+
+ROLES: user (guest with incompatible plug), assistant (concierge managing rentals and charges)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check item stock and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create billable rental order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true},
+  {"name":"schedule_delivery","description":"Send runner with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Summit Crest Tokyo (SCTY-02), 3-7-1 Shinjuku, Tokyo 160-0022, Japan.
+Urban business hotel; 28 floors; Front Desk 24/7; Concierge 7:00–23:00.
+Universal power adapters: 25 units; rental fee JPY 500 per night; no deposit; billed to room under code RENT-ADPT.
+Delivery within 10–20 minutes by Service Staff; pickup at desk also available.
+Other facts: Guest Laundry 8:00–21:00; Gym 6:00–23:00.
+Only listed services are available.
+
+user:
+Hi, do you have a power adapter I can rent? I'm in room 1722.
+
+assistant channel=analysis:
+Verify adapter availability, hold one, create a billable order for 24 hours, schedule delivery.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"SCTY-02","item":"universal_power_adapter","quantity":1,"room":"1722"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"notes":"JPY 500/night, no deposit","serials":["ADPT-1109"]}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"SCTY-02","room":"1722","item":"universal_power_adapter","duration_hours":24,"charge_code":"RENT-ADPT","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"ORD-ADPT-77221","status":"created","charge_per_night":"JPY 500"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"SCTY-02","room":"1722","order_id":"ORD-ADPT-77221"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":14,"runner":"Mika","order_id":"ORD-ADPT-77221"}
+
+assistant channel=final:
+Yes—one universal adapter is held. I’ve created order ORD-ADPT-77221 at JPY 500 per night and Mika will deliver to 1722 in about 14 minutes.
+
+user:
+Thank you! By the way, when does the gym close?
+
+assistant channel=final:
+The gym is open from 6:00 to 23:00.
+
+user:
+Can you provide your supplier’s internal warranty terms for these adapters?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

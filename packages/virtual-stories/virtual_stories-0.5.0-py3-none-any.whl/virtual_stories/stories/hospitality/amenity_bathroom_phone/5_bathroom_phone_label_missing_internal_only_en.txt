@@ -1,0 +1,57 @@
+"""
+Guest confused by bathroom phone label; clarify that it is internal-only and test the internal line.
+
+ROLES: user (guest asking about dialing), assistant (front desk explaining and testing line)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"run_remote_line_test","description":"Run remote diagnostic for room phone.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"location":{"type":"string","enum":["bathroom","desk"]}},"required":["room_number","location"]},"strict":true}
+]
+```
+"""
+
+system:
+Old Quarter Heritage Inn (hotel_id: oqhi_savannah)
+Address: 29 Liberty St, Savannah, GA 31401
+Timezone: America/New_York
+
+House Notes:
+- Bathroom phone is for internal calls to Front Desk and Security only.
+- Outbound external calls are available from the desk phone.
+- Labels can loosen due to humidity; replacement is scheduled during housekeeping rounds.
+- Remote tests can verify internal line health within seconds.
+- Security response target for wet-area alarms: under 5 minutes.
+
+user:
+Hi—how do I dial outside from the bathroom phone in 233? I don’t see instructions.
+
+assistant channel=analysis:
+Clarify internal-only usage; test the bathroom line to reassure.
+
+assistant channel=commentary to=tool.run_remote_line_test:
+{"room_number":"233","location":"bathroom"}
+
+tool.run_remote_line_test channel=commentary to=assistant:
+{"room_number":"233","location":"bathroom","result":"ok","details":"internal_line_ready"}
+
+assistant channel=final:
+Thanks for checking—our bathroom phones are internal-only for Front Desk and Security. External calls can be made from your desk phone. I also confirmed the bathroom line in 233 is healthy and ready if you need us.
+
+user:
+Got it. By the way, the courtyard smells like jasmine—so nice.
+
+assistant channel=analysis:
+Small talk response.
+
+assistant channel=final:
+Glad the courtyard is pleasant this evening.
+
+user:
+Can you add long-distance calling to my room?
+
+assistant channel=analysis:
+Not in system scope; flag it.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for long‑distance calling permissions.

@@ -1,0 +1,63 @@
+"""
+Guest asks for the official contact email. Provide via tool, include small talk and a background-flag query.
+
+ROLES: user (guest requesting official email), assistant (front desk agent providing contact details from the system/tool)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Skyline Promenade Hotel (hotel_id: skyline_promenade_hotel)
+Official contacts (public):
+  - Email: hello@skylinepromenade.hotel
+  - Phone: +44 20 3984 1120
+  - Fax: +44 20 3984 1121
+  - LINE: @skylineprom
+  - WeChat: skyline_promenade
+  - Website: https://www.skylinepromenade.hotel
+
+user:
+Could you share the official contact email for the hotel?
+
+assistant channel=analysis:
+Fetch email via contact channel tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"skyline_promenade_hotel","channel":"email"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"email":"hello@skylinepromenade.hotel"}
+
+assistant channel=final:
+Our official email is hello@skylinepromenade.hotel.
+
+user:
+Thanks! Quick hello—hope you’re doing well.
+
+assistant channel=final:
+Thanks for saying hi—what else can I help with?
+
+user:
+Do you also have the dedicated media PR embargo inbox for next quarter?
+
+assistant channel=final:
+[ATTENTION] That inbox isn’t available within the provided resources. Checking available options.
+

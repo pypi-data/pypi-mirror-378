@@ -1,0 +1,60 @@
+"""
+Guest checks UI language options and daily call cap, then rents a handset. Include small talk and an [ATTENTION] query.
+
+ROLES: user (guest needing specific UI language), assistant (concierge setting expectations and creating order)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"create_order","description":"Create handset rental order with pickup instructions","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"pickup":{"type":"string","enum":["concierge","front_desk"]},"hours":{"type":"integer"}},"required":["hotel_id","room","pickup","hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seaside Promenade Nice (SPN-08)
+Address: 12 Prom. des Anglais, 06000 Nice, France
+Rental facts:
+- Rate: €16/day incl. €6 credit; charge code RENT-PHONE; local calls only
+- Cap: 100 minutes/day; top‑up at Concierge
+- UI languages: EN/FR/IT available on device
+- Hours: Concierge 08:00–21:00; Front Desk 24/7 (after‑hours pickup)
+- Deposit: €45 with ID; refunded on return
+Extras:
+- Inventory: 7 units; SPN-PHN-01…07
+- Accessories: USB‑C charger included
+- Pickup: Concierge window near street entrance; after hours Front Desk
+- Data: disabled; hotspot off
+- Reset: all devices wiped on return
+
+user:
+Does the handset support Italian? I’m in 607.
+
+assistant channel=analysis:
+Confirm UI language list includes IT, then create a 24-hour order for Concierge pickup.
+
+assistant channel=final:
+Yes—Italian is available on the device UI alongside English and French.
+
+assistant channel=commentary to=tool.create_order:
+{"hotel_id":"SPN-08","room":"607","pickup":"concierge","hours":24}
+
+tool.create_order channel=commentary to=assistant:
+{"order_id":"PHN-607-19","serial":"SPN-PHN-03"}
+
+assistant channel=final:
+Your handset is set—order PHN-607-19 (SPN-PHN-03). Pick it up at the Concierge window by the street entrance; the rate is €16/day with €6 credit.
+
+user:
+Merci—by the way, lovely sea breeze.
+
+assistant channel=final:
+Glad to hear it—Concierge is open until 21:00.
+
+user:
+Can I enable mobile data on it?
+
+assistant channel=final:
+[ATTENTION] Data access isn’t enabled. Verifying information.
+

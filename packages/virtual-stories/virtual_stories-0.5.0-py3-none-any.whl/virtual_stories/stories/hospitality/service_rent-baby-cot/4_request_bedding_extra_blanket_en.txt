@@ -1,0 +1,56 @@
+"""
+Guest asks whether cot bedding is included and requests an extra baby blanket; arrange cot and clarify what’s included.
+
+ROLES: user (parent confirming inclusions), assistant (front desk clarifying inclusions and scheduling setup; blanket only if listed)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Hold cot for room","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"schedule_housekeeping_setup","description":"Schedule cot setup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_note":{"type":"string"}},"required":["hotel_id","room","order_note"]},"strict":true}
+]
+```
+"""
+
+system:
+Meridian Arc Sydney (MASY-09)
+Address: 488 George St, Sydney NSW 2000, Australia
+Policy: Baby cots complimentary; bedding included; extra blankets not listed; setup by housekeeping only; guest present; keep away from windows/cords
+Inventory: 15 cots; setup ETA 15–25 minutes; Housekeeping 07:00–22:00; Front Desk 24/7
+Facilities: Pool 06:00–21:00; Breakfast 06:30–10:30
+Only services listed are available.
+
+user:
+Is bedding included with the cot? Could we also get an extra baby blanket? Room 2106.
+
+assistant channel=analysis:
+Confirm bedding is included, extra blankets are not listed in services, then hold a cot and schedule setup.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"MASY-09","item":"baby_cot","quantity":1,"room":"2106"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"MASY-09","room":"2106","order_note":"Set up 1 baby cot; guest present; place away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":17,"ticket":"HK-2106-9021"}
+
+assistant channel=final:
+Yes—bedding is included with our cots. Extra blankets aren’t listed. I’ve scheduled setup (ticket HK-2106-9021) in about 17 minutes.
+
+user:
+Is the pool open right now?
+
+assistant channel=final:
+The pool operates 06:00 to 21:00.
+
+user:
+Could you provide your textile sourcing certificates for baby bedding?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

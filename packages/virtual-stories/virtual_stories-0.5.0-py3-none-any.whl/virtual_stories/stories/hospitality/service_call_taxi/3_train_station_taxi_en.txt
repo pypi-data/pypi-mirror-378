@@ -1,0 +1,71 @@
+"""
+Guest requests a taxi to the central train station; include small talk, one system-answered Q, and one [ATTENTION] question answered via tool.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {"name":"get_taxi_eta","description":"Live ETA for taxi pickup","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"vehicle_type":{"type":"string","enum":["sedan","van","luxury","eco"]}},"required":["pickup_point","vehicle_type"]}},
+  {"name":"request_taxi","description":"Dispatch a taxi","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"destination":{"type":"string"},"passengers":{"type":"integer"},"vehicle_type":{"type":"string","enum":["sedan","van","luxury","eco"]}},"required":["pickup_point","destination","passengers","vehicle_type"]}}
+]
+"""
+
+system:
+Hotel: Riverstone Boutique (hotel_id: riverstone_ams)
+Address: Prinsengracht 241, 1015 KE Amsterdam | Timezone: Europe/Amsterdam
+Check-in 2:00 PM | Check-out 11:00 AM | Front desk: +31 20 555 0909
+Taxi support: we arrange street taxis and child-seat vans upon request.
+Taxi desk hours: 06:00–23:00. After 23:00, bell team can only hail street taxis from canal-side.
+Pickup: "Canal Entrance" (eco/sedan), "Courtyard Gate" (van/luxury).
+Payments: most taxis accept cards; hotel cannot bill third-party taxi fares to rooms.
+Child seats: 2 available for hotel vans; require van booking.
+Notes: bridges nearby can cause brief delays during openings.
+
+user:
+Hi there—could you get me a taxi to Centraal Station?
+
+assistant channel=analysis:
+Acknowledge and confirm pickup options; offer live ETA.
+
+assistant channel=final:
+Certainly—we can dispatch a sedan from the Canal Entrance or a van from the Courtyard Gate. Would you like me to check a live ETA?
+
+user:
+When do you stop arranging taxis at night?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Our taxi desk operates until 23:00; after that we can only hail street taxis from the canal-side.
+
+user:
+[ATTENTION] If I take an eco car from the Canal Entrance, what's the live ETA now?
+
+assistant channel=analysis:
+Call get_taxi_eta for Canal Entrance and eco.
+
+assistant channel=commentary to=get_taxi_eta:
+{"pickup_point":"Canal Entrance","vehicle_type":"eco"}
+
+tool.get_taxi_eta:
+{"eta_minutes": 6, "provider":"CityGreen Cabs","vehicle":"Toyota Prius, plate N-432-KF"}
+
+assistant channel=final:
+Current ETA is 6 minutes for an eco car at the Canal Entrance (Toyota Prius, plate N-432-KF) via CityGreen Cabs.
+
+user:
+Great—please book it for 1 passenger to Amsterdam Centraal.
+
+assistant channel=analysis:
+Dispatch sedan eco via request_taxi.
+
+assistant channel=commentary to=request_taxi:
+{"pickup_point":"Canal Entrance","destination":"Amsterdam Centraal Station","passengers":1,"vehicle_type":"eco"}
+
+tool.request_taxi:
+{"status":"confirmed","dispatch_id":"RS-2107","eta_minutes":6}
+
+assistant channel=final:
+Confirmed—Dispatch RS-2107, eco car to Amsterdam Centraal, ETA 6 minutes at Canal Entrance. Safe travels!
+

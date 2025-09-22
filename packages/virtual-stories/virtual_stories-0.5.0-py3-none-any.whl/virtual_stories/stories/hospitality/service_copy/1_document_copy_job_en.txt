@@ -1,0 +1,51 @@
+"""
+Guest requests document copies; create a copy job via tool and provide location and fee notes. Include small talk and a background handoff for notarization.
+
+ROLES: user (guest needing copies), assistant (front office copy/print service handling the request)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "create_copy_job",
+    "description": "Create a document copy request and return price.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"},"color":{"type":"boolean"},"paper_size":{"type":"string","enum":["A4","Letter"]}},"required":["pages","color","paper_size"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Bayfront Plaza Hotel — Copy/Print Point (Lobby)
+Paper sizes: A4, Letter
+Per‑page fees: B/W USD 0.15; Color USD 0.50
+Pickup window: 10–15 minutes for small jobs
+
+user:
+Could you copy 12 pages in black and white, A4?
+
+assistant channel=analysis:
+Create a copy job for 12 pages, black and white, A4; return pricing from tool, plus pickup timing from system.
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":12,"color":false,"paper_size":"A4"}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-4412","price":"USD 1.80"}
+
+assistant channel=final:
+Your copy job CPY-4412 is set at USD 1.80 for 12 A4 black‑and‑white pages. Please collect at the Lobby Copy/Print Point in about 10–15 minutes.
+
+user:
+Thanks—hope your afternoon’s treating you well.
+
+assistant channel=final:
+Much appreciated—your documents will be ready shortly.
+
+user:
+Can you notarize the documents too?
+
+assistant channel=final:
+[ATTENTION] Notarization isn’t available through these resources. Checking available options.
+

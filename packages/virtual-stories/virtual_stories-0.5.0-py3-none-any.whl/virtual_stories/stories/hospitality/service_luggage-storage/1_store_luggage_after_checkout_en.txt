@@ -1,0 +1,60 @@
+"""
+Guest asks to store luggage after checkout with tag issuance.
+
+ROLES: user (guest needing temporary luggage storage), assistant (bell desk issuing claim tags and timing windows)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "store_luggage",
+    "description": "Create a luggage storage ticket with item count and expected pickup.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_name": {"type": "string"},
+        "items": {"type": "integer", "minimum": 1},
+        "expected_pickup_time": {"type": "string"}
+      },
+      "required": ["guest_name", "items"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: City Gate Hotel
+Luggage Storage:
+- Hours: 06:00–23:00 same day
+- Claim: Printed tag numbers; show ID to retrieve
+- Fee: Complimentary same day; overnight not available
+
+user:
+I’ve checked out—can you store two suitcases until 6 pm? Name is Taylor.
+
+assistant channel=analysis:
+Create storage with items=2 and pickup 18:00.
+
+assistant channel=commentary to=tool.store_luggage:
+{"guest_name":"Taylor","items":2,"expected_pickup_time":"18:00"}
+
+tool.store_luggage channel=commentary to=assistant:
+{"ticket_id":"lug_6032","tag_numbers":["A217","A218"],"fee":"complimentary"}
+
+assistant channel=final:
+We’ve stored 2 items under Taylor (ticket lug_6032) with claim tags A217 and A218, complimentary for same‑day pickup by 18:00. Please bring ID to retrieve.
+
+user:
+Great—your lobby chairs are comfy.
+
+assistant channel=final:
+Same‑day storage runs 06:00–23:00; please bring your claim tags for pickup.
+
+user:
+Could you hold them overnight if my plans slip?
+
+assistant channel=final:
+[ATTENTION] Overnight storage isn’t listed in our bell services. Checking available options.

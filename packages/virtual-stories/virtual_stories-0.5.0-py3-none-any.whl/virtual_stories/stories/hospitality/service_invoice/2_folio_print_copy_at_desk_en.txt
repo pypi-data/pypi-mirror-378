@@ -1,0 +1,68 @@
+"""
+Guest requests a printed folio at the desk; confirm room and print specification, include pickup note and a beyond-scope follow-up.
+
+ROLES: user (guest needing a printed invoice), assistant (front desk agent issuing folio prints)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "print_folio_copy",
+    "description": "Print a folio invoice copy for guest pickup.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": {"type": "string"},
+        "copies": {"type": "integer", "minimum": 1},
+        "paper_size": {"type": "string", "enum": ["A4", "Letter"]}
+      },
+      "required": ["room", "copies", "paper_size"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Aurora City Center Hotel
+Address: 200 Grant Ave, San Francisco, CA 94108, USA
+Folio/Invoice Policy:
+- Availability: Current-night interim or final after checkout
+- Delivery: Email (PDF) or Printed at Front Desk
+- Data included: Room charges, taxes, incidentals by date, payment method summary
+- Privacy: Issued to verified guest email or in-person pickup with room verification
+- Print Station: Front Desk Back Office — Printer PRN-FD-02
+- Hours: Front Desk 24/7; Printing available at all hours
+- Paper Sizes: A4 or Letter; default A4
+- Retention: Reprints available up to 30 days from checkout
+- PDF watermark: "Guest Copy" on emailed versions only
+- Time Zone: Pacific Time (PT)
+
+user:
+Can you print my folio for room 1711?
+
+assistant channel=analysis:
+Print 1 copy on A4 for room 1711 and reference pickup at Front Desk.
+
+assistant channel=commentary to=tool.print_folio_copy:
+{"room":"1711","copies":1,"paper_size":"A4"}
+
+tool.print_folio_copy channel=commentary to=assistant:
+{"print_job_id":"INV-1711-PRNFD02-002","status":"queued","pickup":"Front Desk"}
+
+assistant channel=final:
+Your folio is queued for printing (job INV-1711-PRNFD02-002). Please pick it up at the Front Desk; one A4 copy will be ready shortly.
+
+user:
+The lobby flowers look great today.
+
+assistant channel=final:
+Glad you noticed—your print will be at the Front Desk.
+
+user:
+Can you add my company VAT number to the folio before printing?
+
+assistant channel=final:
+[ATTENTION] This request exceeds the available details here. Reviewing available resources.

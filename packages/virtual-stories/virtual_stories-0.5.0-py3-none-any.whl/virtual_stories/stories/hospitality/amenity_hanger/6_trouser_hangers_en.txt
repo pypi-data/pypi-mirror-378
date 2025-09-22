@@ -1,0 +1,60 @@
+"""
+Guest needs trouser hangers; asks hours and a brand detail.
+
+ROLES: user (guest in room 503 requesting trouser hangers), assistant (concierge coordinating availability and delivery, quoting hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check amenity stock counts","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Schedule amenity delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Observatory Walk — Atlas Tower
+Room: 503 (Classic King)
+Closet: 5 wooden hangers default
+Policy: Trouser hangers (clamp) on request; limit 6/night
+Window: Normal 06:45–22:45; Urgent 22:45–00:15
+Contact: Desk 0; Service 7730; HK 7731
+SLA floors 1–8: 8–14 minutes
+Supply: Atlas L6 pantry; use Service Lift S1
+
+user:
+Could I get 3 trouser hangers to 503?
+
+assistant channel=analysis:
+Check availability for 3 trouser hangers; then arrange normal delivery to room 503.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"trouser hanger","quantity":3}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"trouser hanger","available":true,"in_stock":36}
+
+assistant channel=analysis:
+Proceed with normal delivery and add a brief note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"503","amenity_name":"trouser hanger","quantity":3,"priority":"normal","note":"Deliver via S1; knock-announce"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HNG-503-5527","eta_minutes":10}
+
+assistant channel=final:
+Confirmed—3 trouser hangers are on the way to room 503 with an ETA of about 10 minutes.
+
+user:
+Thanks! What hours are you operating tonight?
+
+assistant channel=final:
+We run 06:45–22:45 for normal service and 22:45–00:15 for urgent requests.
+
+user:
+Are these a particular clamp brand?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

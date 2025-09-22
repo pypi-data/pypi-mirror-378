@@ -1,0 +1,54 @@
+"""
+On-property AED standby request for an event; clarify supervision and terms; include small talk and an [ATTENTION] request.
+
+ROLES: user (event host needing AED standby), assistant (duty manager arranging AED per policy with Security supervision)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_aed","description":"Reserve an on-property AED unit for supervised event use.","parameters":{"type":"object","additionalProperties":false,"properties":{"event_space":{"type":"string"},"start_time":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":8}},"required":["event_space","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Westgate Convention Center
+AED Policy Snapshot:
+- Inventory: 3 portable AED units with adult/child pads.
+- Scope: On-property event standby only; Security places and retrieves the unit; pre-use briefing required.
+- Rate: $30/hour; max 8 hours per event; deployment from Security Office (L1, behind Reception).
+- Contact: Security Desk (Ground Level) handles deployment and return.
+- Notes: Units remain on property at all times.
+Venue Map:
+- Event Spaces: Cedar Ballroom, Maple Salon, Juniper Hall.
+
+user:
+Need AED standby in Juniper Hall from 10:00 for 3 hours.
+
+assistant channel=analysis:
+Use the tool with event space and timing; then confirm supervision and rate per system.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"Juniper Hall","start_time":"10:00","duration_hours":3}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_2001","hourly_rate":30,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+Reserved—AED standby in Juniper Hall from 10:00 for 3 hours (aed_2001). Security will place and brief your team; the standby rate is $30/hour and the unit remains on property.
+
+user:
+Thanks—the lobby felt organized today.
+
+assistant channel=final:
+Deployment and return are coordinated from the Security Desk on the Ground Level.
+
+user:
+Can we extend to 9 hours if needed?
+
+assistant channel=analysis:
+Policy maximum is 8 hours; answer from system.
+
+assistant channel=final:
+The maximum standby duration is 8 hours per event.
+

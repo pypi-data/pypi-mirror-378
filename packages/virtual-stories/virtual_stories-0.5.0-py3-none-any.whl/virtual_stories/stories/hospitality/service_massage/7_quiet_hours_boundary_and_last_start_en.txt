@@ -1,0 +1,50 @@
+"""
+Massage booking near quiet hours boundary; confirm last start policy; small talk and [ATTENTION] request.
+
+ROLES: user (late-evening guest), assistant (spa desk ensuring compliance with last-start policy and quiet hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"book_in_room_massage","description":"Book in-room massage.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"duration_minutes":{"type":"integer","enum":[60,90]},"start_time":{"type":"string"}},"required":["room_number","duration_minutes","start_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Sunvale Tower
+Service Window: 10:00–22:00; last start 20:30 (60‑min)
+Rates: $121 (60‑min), $171 (90‑min)
+Arrival: Therapist ~10 minutes early; Quiet hours 22:00–07:00
+Address: 55 Sol Street; Wi‑Fi: Sunvale-Guest
+
+user:
+Book 60 minutes at 20:20 in room 1411.
+
+assistant channel=analysis:
+This is within last-start; proceed to book.
+
+assistant channel=commentary to=tool.book_in_room_massage:
+{"room_number":"1411","duration_minutes":60,"start_time":"20:20"}
+
+tool.book_in_room_massage channel=commentary to=assistant:
+{"booking_id":"spa_sv_411","rate":121,"currency":"USD","arrival_note":"Therapist arrives ~10 minutes early"}
+
+assistant channel=final:
+Confirmed: 60‑minute in‑room massage at 20:20 in room 1411 (spa_sv_411) at $121 USD. The therapist will arrive about 10 minutes early; quiet hours start at 22:00.
+
+user:
+Thanks.
+
+assistant channel=final:
+You’re welcome.
+
+user:
+Is cupping therapy available?
+
+assistant channel=analysis:
+Not in system; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available options regarding cupping therapy.
+

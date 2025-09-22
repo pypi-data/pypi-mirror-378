@@ -1,0 +1,65 @@
+"""
+Guest arrives early and asks about room readiness; confirm check‑in and note luggage storage and times from system; include chitchat and ATTENTION question.
+
+ROLES: user (early arrival), assistant (front desk assigning room and explaining policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_in_guest","description":"Check in guest and return room + key","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_code":{"type":"string"},"last_name":{"type":"string"}},"required":["reservation_code","last_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Harborline Suites Downtown — Reception
+Check‑in: 15:00; Check‑out: 12:00
+ID: Government photo ID; name must match booking
+Deposit: Credit card preauth on arrival
+
+Luggage & Bell Desk:
+- Luggage storage available pre‑ and post‑stay
+- Bell desk at Lobby A, hours 06:00–23:00
+
+Dining:
+- Breakfast 06:30–10:30 at Sunrise Table
+- Lobby bar 16:00–23:30
+
+Connectivity:
+- Guest Wi‑Fi RiverGuest; IT desk 07:00–23:00
+
+Accessibility & Pathways:
+- Step‑free curb to elevator; tactile indicators at thresholds
+
+user:
+I’m a bit early—code HSD-77331 under Alvarez. Can I check in now?
+
+assistant channel=analysis:
+Run check‑in; recap policy and storage option.
+
+assistant channel=commentary to=tool.check_in_guest:
+{"reservation_code":"HSD-77331","last_name":"Alvarez"}
+
+tool.check_in_guest channel=commentary to=assistant:
+{"room":"1102","key_id":"K-330912"}
+
+assistant channel=final:
+Welcome—your room 1102 is ready and your key is K-330912. Check‑in begins at 15:00; please present a matching government ID and we’ll place a credit card pre‑authorization. If you need to drop bags later, the bell desk can store them from 06:00–23:00.
+
+user:
+Thanks! The lobby bar looks cozy.
+
+assistant channel=final:
+It’s a comfortable spot before dinner.
+
+user:
+Can you store my bags later today?
+
+assistant channel=final:
+Yes—the bell desk can store luggage from 06:00–23:00.
+
+user:
+Could you upgrade me to a suite?
+
+assistant channel=final:
+[ATTENTION] Complimentary upgrades aren’t handled here. Checking available options.

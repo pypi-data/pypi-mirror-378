@@ -1,0 +1,121 @@
+"""
+Guest asks for a firmer brush, then considers a child soft toothbrush; confirm availability, handle delivery, include small talk, and one [ATTENTION] query.
+
+ROLES: user (guest comparing toothbrush bristles for adult/child), assistant (guest services amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_toothbrush_stock",
+    "description": "Check toothbrush availability by bristle and size.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "bristle": {"type": "string", "enum": ["soft", "medium"]},
+        "size": {"type": "string", "enum": ["adult", "child"]}
+      },
+      "required": ["bristle", "size"],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_toothbrush",
+    "description": "Deliver a toothbrush to the specified room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "bristle": {"type": "string"},
+        "size": {"type": "string"}
+      },
+      "required": ["room_number", "bristle", "size"],
+      "additionalProperties": false
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Sierra Pines Lodge (hotel_id: spl_tahoe_04)
+Address: 131 Alpine Ridge Rd, South Lake Tahoe, CA 96150, USA
+Timezone: America/Los_Angeles
+
+Core Amenity Info:
+- Toothbrush: adult soft/medium; child soft
+- Typical delivery: 8–15 minutes
+- Winter note: Lobby fireplace lounge open 7AM–11PM
+
+Sustainability YAML:
+---
+water_program:
+  refill_stations: 4
+  bathroom_aerators: true
+  linen_reuse: opt_in
+energy:
+  heating: "high-efficiency boilers"
+  renewable_offset_pct: 60
+  night_setback: true
+---
+
+Housekeeping JSON:
+{
+  "turn_down": true,
+  "amenity_restock_window": "14:00-16:00",
+  "toothbrush_bin_count": 64
+}
+
+CSV Nearby Chairlifts (name,walk_min):
+Lakeview,9
+Summit Ridge,14
+
+Policy Notes:
+- Children amenities available on request at no fee
+- Quiet hours 10PM–7AM
+- Parking: Complimentary for lodge guests
+
+user:
+Do you have a firm adult toothbrush? If not, I can take a child’s soft one for my niece in 408.
+
+assistant channel=analysis:
+Check adult medium (closest to firm) then child soft; deliver whichever available.
+
+assistant channel=commentary to=tool.check_toothbrush_stock:
+{"bristle":"medium","size":"adult"}
+
+tool.check_toothbrush_stock channel=commentary to=assistant:
+{"available":true,"brand":"PinePeak","note":"medium bristle"}
+
+assistant channel=analysis:
+Adult medium is available; proceed to deliver to room 408.
+
+assistant channel=commentary to=tool.deliver_toothbrush:
+{"room_number":"408","bristle":"medium","size":"adult"}
+
+tool.deliver_toothbrush channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":10,"runner":"Luis"}
+
+assistant channel=final:
+We carry a medium-bristle adult toothbrush (closest to firm). I’ve arranged delivery to room 408—ETA about 10 minutes (runner: Luis). If you still want a child soft, I can send one as well.
+
+user:
+The fireplace lounge smells like cedar—so cozy.
+
+assistant channel=analysis:
+Small talk acknowledgment based on system details.
+
+assistant channel=final:
+It’s popular on winter evenings—open 7AM to 11PM.
+
+user:
+Can you load my ski pass for Summit Ridge chairlift tomorrow?
+
+assistant channel=analysis:
+No tool for pass loading; beyond scope. Use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

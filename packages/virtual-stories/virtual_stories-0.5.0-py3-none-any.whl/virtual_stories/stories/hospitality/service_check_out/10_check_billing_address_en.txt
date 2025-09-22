@@ -1,0 +1,51 @@
+"""
+Guest checks out and asks to verify billing address; include small talk, restate express checkout from system, and an out-of-scope adding a new corporate profile.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"calculate_folio","description":"Return current folio summary for a reservation before checkout.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Arcade Square Hotel — Front Office
+Address: 480 Market St, San Francisco, CA 94105, USA
+Standard checkout: 11:00
+Express checkout: Key drop at Reception
+Late checkout: By availability; fees may apply
+Wi‑Fi: SSID "ArcadeSquare-Guest"; WPA2
+Parking: Off‑site partner garage (200 m)
+Gym: 06:00–22:00
+Payment: USD; major cards accepted
+Accessibility: Step‑free Reception entrance
+
+user:
+Please check out AS-54109; is express checkout available?
+
+assistant channel=analysis:
+Return folio; confirm express checkout.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"AS-54109"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 510","taxes":"USD 45.90","incidentals":"USD 22","total":"USD 577.90"}
+
+assistant channel=final:
+Your total is USD 577.90 (room USD 510, taxes USD 45.90, incidentals USD 22). Express checkout is available via key drop at Reception.
+
+user:
+Thanks—hope your morning’s calm.
+
+assistant channel=final:
+Thank you—happy to assist.
+
+user:
+Can you add a new corporate billing profile for me now?
+
+assistant channel=final:
+[ATTENTION] Adding new profiles isn’t included in these resources. Reviewing.

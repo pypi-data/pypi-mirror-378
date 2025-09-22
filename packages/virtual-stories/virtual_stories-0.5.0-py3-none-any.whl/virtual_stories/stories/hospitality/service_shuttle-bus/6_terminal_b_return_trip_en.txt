@@ -1,0 +1,44 @@
+"""
+Guest confirms a return trip from Terminal B to hotel; provide pickup point and timing.
+
+ROLES: user (guest arriving at Terminal B), assistant (front desk specifying pickup and timing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_return_pickup_info","description":"Return pickup spot and interval","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Airport Link Suites Frankfurt (ALFF-19)
+Return Shuttle Info:
+- From Terminal 1 to hotel driveway, every hour 05:00–23:00
+- Pickup point: Terminal 1 Bus Bay C3
+- Capacity: 12 seats
+- Typical wait window: up to 15 minutes
+ - Travel time back to hotel: ~10 minutes
+ - Time Zone: Central European Time (CET/CEST)
+ - Booking: Not required for return; first‑come within the hour
+
+user:
+I’ll land at Terminal 1—where do I catch the shuttle back?
+
+assistant channel=analysis:
+Provide pickup location and interval.
+
+assistant channel=commentary to=tool.get_return_pickup_info:
+{"hotel_id":"ALFF-19"}
+
+tool.get_return_pickup_info channel=commentary to=assistant:
+{"pickup_point":"Terminal 1 Bus Bay C3","interval":"hourly 05:00–23:00"}
+
+assistant channel=final:
+Please wait at Terminal 1 Bus Bay C3; the shuttle arrives hourly from 05:00 to 23:00.
+
+user:
+Do you share driver names ahead of time?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

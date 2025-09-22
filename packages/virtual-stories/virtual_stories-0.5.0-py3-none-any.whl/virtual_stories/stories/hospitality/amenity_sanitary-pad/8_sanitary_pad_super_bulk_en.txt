@@ -1,0 +1,71 @@
+"""
+Guest requests multiple super pads with wings; confirm availability and deliver; include small talk and acknowledgment.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check sanitary pads by absorbency and wings.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_pad"]},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"}},"required":["item_code","absorbency","with_wings"]},"strict":true},
+  {"name":"deliver_personal_care","description":"Deliver personal care items discreetly in a paper bag.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"},"quantity":{"type":"integer","minimum":1},"bag_type":{"type":"string","enum":["discreet_paper"]}},"required":["room_number","item_code","absorbency","with_wings","quantity","bag_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Capitol View (hotel_id: cv_dca_10)
+Address: 999 N Capitol St NE, Washington, DC 20002
+Personal care: 07:00–23:00; ETA 8–12 minutes
+Wi‑Fi: 500/300 Mbps; public spaces boosted
+Scent: white tea in lobby
+Check-in/out: 16:00 / 11:00
+Lounge: 17:00–22:00; terrace city view
+Gym: 24h; Peloton bikes
+
+Pad inventory:
+- super/with_wings(35), regular/with_wings(28)
+- light/no_wings(14)
+- Packaging: discreet_paper
+
+user:
+I need three packs of super pads with wings to 1822.
+
+assistant channel=analysis:
+Check super/with_wings; deliver 3 to 1822.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"item_code":"sanitary_pad","absorbency":"super","with_wings":true}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_pad","absorbency":"super","with_wings":true,"on_hand_packs":35}
+
+assistant channel=analysis:
+Proceed with bulk delivery.
+
+assistant channel=commentary to=tool.deliver_personal_care:
+{"room_number":"1822","item_code":"sanitary_pad","absorbency":"super","with_wings":true,"quantity":3,"bag_type":"discreet_paper"}
+
+tool.deliver_personal_care channel=commentary to=assistant:
+{"ticket_id":"PC-1822-6671","eta_minutes":10}
+
+assistant channel=final:
+All set—three packs of super pads with wings will arrive at 1822 in a discreet paper bag. Ticket PC-1822-6671, roughly 10 minutes.
+
+user:
+The white tea scent is calming.
+
+assistant channel=analysis:
+Acknowledgment referencing scent detail.
+
+assistant channel=final:
+We keep a white tea diffuser in the lobby—happy it feels calming.
+
+user:
+Do you supply mini hot water kettles?
+
+assistant channel=analysis:
+Not specified; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check if kettles are available. Reviewing amenities.
+

@@ -1,0 +1,62 @@
+"""
+Guest requests board only; confirm availability and policy; include small talk and out-of-scope ask.
+
+ROLES: user (guest who has an iron but needs a board), assistant (service agent arranging delivery and clarifying limits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check board availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver requested amenity.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Pacific Overlook (hotel_id: po_sf)
+Address: 600 Beach St, San Francisco, CA
+Loaners:
+- Irons and boards provided on request; 1 set or individual items as needed
+- Hours: 07:00–23:00; ETA 12–18 minutes floors 5–12
+Safety: Ironing mat included with board deliveries
+Lobby: Fireplace lounge 17:00–22:00
+
+user:
+I only need an ironing board for room 706—already have the iron.
+
+assistant channel=analysis:
+Check board availability and dispatch.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing_board","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing_board","available":true,"in_stock":3}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"706","amenity_name":"ironing_board","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"PO-706-BRD","eta_minutes":14}
+
+assistant channel=final:
+Confirmed—one ironing board is on its way to 706, ETA about 14 minutes.
+
+user:
+Is there any charge for this?
+
+assistant channel=final:
+No charge—loaners are complimentary within policy.
+
+user:
+The fireplace lounge sounds cozy.
+
+assistant channel=final:
+It’s open 17:00 to 22:00—great for unwinding.
+
+user:
+Can you extend my checkout to 4 PM?
+
+assistant channel=final:
+[ATTENTION] Reviewing this since it’s beyond our current resources.
+

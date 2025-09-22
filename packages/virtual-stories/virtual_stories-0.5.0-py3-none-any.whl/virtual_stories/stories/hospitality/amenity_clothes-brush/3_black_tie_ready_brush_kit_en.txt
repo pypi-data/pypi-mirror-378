@@ -1,0 +1,79 @@
+"""
+Guest needs a lint-free finish for tuxedo; compare anti-static vs boar-bristle and deliver.
+
+ROLES: user (guest in room 1903 heading to gala), assistant (amenities desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_garment_care_items","description":"List garment-care brushes and kits",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"category":{"type":"string","enum":["clothes_brush"]}},
+     "required":["category"]},"strict":true},
+  {"name":"deliver_garment_care_item","description":"Deliver items to room",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"priority":{"type":"string","enum":["normal","express"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Mariner’s Promenade (hotel_id: tmp_san_diego)
+Address: 88 Pacific Quay, San Diego, CA 92101
+Timezone: America/Los_Angeles
+
+Black-Tie Readiness Notes:
+- For tuxedo wool, use boar bristle for dust removal, finish with anti-static pass
+- Avoid pressing hard around lapels to keep roll
+
+Inventory Snapshot:
+- boar_bristle_walnut
+- nylon_anti_static_full
+- gala_kit_pro: includes anti-static brush + lint roller + sleeve guard
+
+Loan & Delivery:
+- 1 kit or 1 brush per room; ETA to 19th floor: 8–14 minutes
+
+Design Detail:
+- Rooftop boardwalk with nautical lanterns overlooks the marina
+
+user:
+Hi! I’m in 1903 and need a lint-free finish on a black tux. What’s best?
+
+assistant channel=analysis:
+List items, recommend boar for initial pass and anti-static for final; offer gala kit.
+
+assistant channel=commentary to=tool.list_garment_care_items:
+{"category":"clothes_brush"}
+
+tool.list_garment_care_items channel=commentary to=assistant:
+{"items":["boar_bristle_walnut","nylon_anti_static_full","gala_kit_pro"],"eta":"8-14"}
+
+assistant channel=final:
+For a black tux, start with a boar‑bristle brush for dust, then finish with an anti‑static pass. Our gala_kit_pro includes both plus a lint roller—shall I send that to 1903?
+
+user:
+Yes please—and that rooftop boardwalk looks lovely.
+
+assistant channel=final:
+It’s a favorite at sunset—the nautical lanterns glow over the marina.
+
+assistant channel=commentary to=tool.deliver_garment_care_item:
+{"room_number":"1903","items":["gala_kit_pro"],"priority":"express"}
+
+tool.deliver_garment_care_item channel=commentary to=assistant:
+{"request_id":"TMP-1903-744","eta_minutes":9}
+
+assistant channel=final:
+Great—order TMP-1903-744 is on the way with an ETA of about 9 minutes.
+
+user:
+Do you rent cufflinks too?
+
+assistant channel=analysis:
+Not in context; flag.
+
+assistant channel=final:
+[ATTENTION] Noted—checking availability.
+

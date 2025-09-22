@@ -1,0 +1,65 @@
+"""
+Guest wants to rent swim aids and asks where to get towels.
+
+ROLES: user (beginner swimmer), assistant (deck attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_swim_aid","description":"Rent a swim aid (kickboard, pull buoy, noodle) to a guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"aid":{"type":"string","enum":["kickboard","pull_buoy","noodle"]},"room":{"type":"string"}},"required":["hotel_id","aid","room"]},"strict":true},
+  {"name":"get_towel_kiosk_map","description":"Return towel kiosk locations and hours on the pool deck.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbor Quay (hotel_id: harbor_quay_belfast)
+Address: 20 Queens Quay, Belfast BT3 9DT, UK
+Timezone: Europe/London
+Pool Deck Summary:
+  - Indoor/outdoor convertible pool; movable roof; depth 1.0–1.4 m
+  - Lane markings in indoor section; outdoor section has current channel
+  - Loaner Aids: kickboards, pull buoys, noodles (free, tracked to room)
+  - Towels via kiosks: North Gate K1 and East Canopy K2
+  - Lockers with code pads; set code on first use; reset after 6 hours
+  - Lifeguard patrols every 15 minutes; CCTV coverage on deck per signage
+
+user:
+Can I rent a kickboard to room 514? Also, where do I grab towels?
+
+assistant channel=analysis:
+Queue a kickboard rental to room 514; fetch towel kiosk map.
+
+assistant channel=commentary to=tool.rent_swim_aid:
+{"hotel_id":"harbor_quay_belfast","aid":"kickboard","room":"514"}
+
+tool.rent_swim_aid channel=commentary to=assistant:
+{"status":"checked_out","return_by":"20:00"}
+
+assistant channel=commentary to=tool.get_towel_kiosk_map:
+{"hotel_id":"harbor_quay_belfast"}
+
+tool.get_towel_kiosk_map channel=commentary to=assistant:
+{"kiosks":[{"id":"K1","name":"North Gate","hours":"08:00-20:00"},{"id":"K2","name":"East Canopy","hours":"09:00-19:00"}]}
+
+assistant channel=final:
+Kickboard checked out to room 514; please return by 20:00. Towels: K1 North Gate (08:00–20:00) and K2 East Canopy (09:00–19:00).
+
+user:
+Do you have mirrored swim goggles for rent?
+
+assistant channel=analysis:
+Goggles aren’t listed in system as rentable—flag attention.
+
+assistant channel=final:
+[ATTENTION] I don’t see goggles in our rental list. I’ll confirm inventory.
+
+user:
+Thanks—this place feels very organized.
+
+assistant channel=analysis:
+Reply with brief chitchat.
+
+assistant channel=final:
+We try to keep the deck flow smooth for everyone.
+

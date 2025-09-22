@@ -1,0 +1,50 @@
+"""
+Express checkout with note about paper receipt availability during desk hours; include casual small talk and [ATTENTION] for a beyond-scope request.
+
+ROLES: user (guest asking about receipt options), assistant (front desk clarifying e-receipt and optional paper copy at desk hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"initiate_express_checkout","description":"Start express checkout and email a digital receipt.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"email":{"type":"string"}},"required":["reservation_id","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Copper Finch
+Quick Facts:
+- Express key drop at Reception’s side slot labeled “Express Checkout”.
+- E‑receipts sent after folio closure; paper receipts available during front desk staffed hours.
+- Address: 9 Cable Street; Wi‑Fi: Finch-Guest; Quiet hours 22:00–07:00.
+
+user:
+Can you process express checkout CF-99042 and email to zoe@sample.com?
+
+assistant channel=analysis:
+Initiate and recap e-receipt and optional paper receipt note.
+
+assistant channel=commentary to=tool.initiate_express_checkout:
+{"reservation_id":"CF-99042","email":"zoe@sample.com"}
+
+tool.initiate_express_checkout channel=commentary to=assistant:
+{"status":"initiated","receipt":"queued"}
+
+assistant channel=final:
+Express checkout initiated. Drop your key at the slot marked “Express Checkout.” A digital receipt will be emailed after folio closure; a paper copy is available during desk hours on request.
+
+user:
+Thanks for the smooth stay.
+
+assistant channel=final:
+Happy to help—have a great rest of your day.
+
+user:
+Please attach scanned copies of my signed folio pages to the email.
+
+assistant channel=analysis:
+No scan/attachment tools; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood about attaching scans. Checking available options.
+

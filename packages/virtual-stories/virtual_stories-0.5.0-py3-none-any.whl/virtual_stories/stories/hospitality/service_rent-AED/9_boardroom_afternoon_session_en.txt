@@ -1,0 +1,51 @@
+"""
+Boardroom afternoon session AED standby; confirm supervision, rate, and on-property limitation; small talk and [ATTENTION] question.
+
+ROLES: user (boardroom host), assistant (duty manager coordinating AED per policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_aed","description":"Reserve AED for supervised on-property standby.","parameters":{"type":"object","additionalProperties":false,"properties":{"event_space":{"type":"string"},"start_time":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":8}},"required":["event_space","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Citygate Plaza
+AED Summary:
+- Units: 2; Security-placed; briefing required; on-property only; max 8 hours.
+- Rate: $23/hour.
+- Security Office: Lobby level, beside service elevator bank.
+Spaces: Boardroom North, City Hall, Plaza Salon.
+
+user:
+Please set AED standby in Boardroom North from 14:00 for 3 hours.
+
+assistant channel=analysis:
+Reserve via tool; reiterate rate, supervision, and on-property limitation.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"Boardroom North","start_time":"14:00","duration_hours":3}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_cg_332","hourly_rate":23,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+AED standby reserved in Boardroom North 14:00 for 3 hours (aed_cg_332). Security will place and brief; rate is $23/hour. Units remain on property at all times.
+
+user:
+Thanks—the service elevators were efficient.
+
+assistant channel=final:
+The Security Office is beside the service elevator bank on the lobby level.
+
+user:
+Could you provide a signed medical liability waiver for us?
+
+assistant channel=analysis:
+No waiver documents provided; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available options regarding liability documents.
+

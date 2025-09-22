@@ -1,0 +1,63 @@
+"""
+Late-night guest requests laundry bag; assistant confirms service hours and arranges delivery; includes small talk and out-of-scope query.
+
+ROLES: user (guest in room 2407 requesting a laundry bag at night), assistant (night runner coordinating within limited hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_availability","description":"Check amenity stock","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Skyline Convention Hotel — West Tower
+Rooms: 2301–2418; Room 2407 in scope
+Night service: Runner available 22:00–02:00 (limited amenities)
+Laundry: Bag delivery 24/7; pickups from 07:00 next day
+Turnaround: Standard next-day by 19:00
+Contacts: Night Desk 9000; Housekeeping 7000 (day)
+Security: Cameras on West elevators; key access after 23:00
+Notes: Conference floors 10–12; West Tower service corridor W2
+
+user:
+Sorry for the late ping—could I get a laundry bag to 2407?
+
+assistant channel=analysis:
+Night runner can deliver; check stock and dispatch with normal priority. Clarify pickup starts 07:00.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"laundry bag","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"laundry bag","available":true,"in_stock":33}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2407","amenity_name":"laundry bag","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"LB-2407-0072","eta_minutes":10}
+
+assistant channel=final:
+No problem—one laundry bag is en route to 2407, ETA about 10 minutes. Laundry pickups resume at 07:00.
+
+user:
+Thanks! Late night for you too?
+
+assistant channel=final:
+It’s a quiet night—happy to help.
+
+user:
+Can you do a pickup right now?
+
+assistant channel=final:
+Pickups start at 07:00; overnight delivery only.
+
+user:
+Know any 24-hour diners nearby?
+
+assistant channel=final:
+[ATTENTION] Off-property dining guidance isn’t included in the current system context.
+

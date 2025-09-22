@@ -1,0 +1,83 @@
+"""
+Guest requests vanity mirror setup for an in-room makeup class; asks about brightness presets.
+Provide options, install, and preset info.
+
+ROLES: user (guest hosting class), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_mirror_options", "description": "Check professional makeup mirrors with presets.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "mirror_type": { "type": "string", "enum": ["vanity"] }, "lighting_needed": { "type": "boolean" } }, "required": ["mirror_type"] }, "strict": true },
+  { "name": "install_mirror_setup", "description": "Install vanity with preset buttons.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mirror_type": { "type": "string", "enum": ["vanity"] }, "lighting_type": { "type": "string", "enum": ["adjustable_led"] }, "placement_location": { "type": "string", "enum": ["bedroom"] }, "power_source": { "type": "string", "enum": ["plug_in"] } }, "required": ["room_number", "mirror_type", "placement_location"] }, "strict": true },
+  { "name": "adjust_mirror_lighting", "description": "Set preset brightness and temp.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "brightness_level": { "type": "integer", "minimum": 1, "maximum": 10 }, "color_temp": { "type": "string", "enum": ["warm_2700k", "neutral_4000k", "daylight_5000k"] } }, "required": ["room_number", "brightness_level", "color_temp"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Midtown Arts Hotel (hotel_id: mah_atl_01)
+Address: 120 Peachtree St NE, Atlanta, GA 30303
+Timezone: America/New_York
+
+Class Support:
+- Professional mirrors with preset buttons
+- Install 30–45 minutes; cable management
+- Presets typically 3/6/9 brightness
+- Warm/neutral/daylight modes
+- Removal at checkout
+
+user:
+Suite 1910—need a pro vanity mirror with presets for a makeup class at 6.
+
+assistant channel=analysis:
+Check pro vanity with presets; install in bedroom; set neutral mid preset.
+
+assistant channel=commentary to=tool.check_mirror_options:
+{"mirror_type":"vanity","lighting_needed":true}
+
+tool.check_mirror_options channel=commentary to=assistant:
+{"available_types":["professional_makeup_vanity"],"lighting_options":["adjustable_led"],"inventory_status":"available"}
+
+assistant channel=commentary to=tool.install_mirror_setup:
+{"room_number":"1910","mirror_type":"vanity","lighting_type":"adjustable_led","placement_location":"bedroom","power_source":"plug_in"}
+
+tool.install_mirror_setup channel=commentary to=assistant:
+{"service_id":"MIR_ATL1910","installation_time":"within 40 minutes","placement":"bedroom table","notes":"preset buttons 3/6/9"}
+
+assistant channel=commentary to=tool.adjust_mirror_lighting:
+{"room_number":"1910","brightness_level":6,"color_temp":"neutral_4000k"}
+
+tool.adjust_mirror_lighting channel=commentary to=assistant:
+{"adjustment_completed":true,"brightness":6,"color_temp":"neutral_4000k"}
+
+assistant channel=final:
+We’ll set a professional vanity mirror in Suite 1910 within ~40 minutes, preset to brightness 6 in neutral mode for your 6 PM class.
+
+user:
+Is removal automatic at checkout?
+
+assistant channel=analysis:
+From system: removal at checkout.
+
+assistant channel=final:
+Yes—we remove and collect it at checkout automatically.
+
+user:
+The arts district has great energy.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Perfect vibe for creative sessions—enjoy your class.
+
+user:
+Could you arrange a projector too?
+
+assistant channel=analysis:
+Outside mirror scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with events about a projector.
+"""
+

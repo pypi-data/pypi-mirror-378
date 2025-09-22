@@ -1,0 +1,59 @@
+"""
+Guest requests an ironing board and fresh cover; includes small talk and SLA question.
+
+ROLES: user (guest in room 2101 requesting board with fresh cover), assistant (services coordinating availability/delivery and quoting SLA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check stock for amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Schedule delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverside Arcade — South Tower
+Room: 2101 (King Riverview)
+Policy: 1 ironing board per room; replacement covers available on request
+Window: 07:00–23:00 normal; 23:00–00:45 urgent
+SLA floors 20–22: 12–18 minutes
+Staging: ST-21 closet; S3 after 22:00
+Contacts: 0; 7930; 7931
+
+user:
+Could I get an ironing board with a fresh cover to 2101?
+
+assistant channel=analysis:
+Check availability for 1 ironing board; then deliver normally with fresh cover note.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board","available":true,"in_stock":12}
+
+assistant channel=analysis:
+Proceed with normal delivery including fresh cover note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2101","amenity_name":"ironing board","quantity":1,"priority":"normal","note":"Provide fresh cover"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-2101-1180","eta_minutes":16}
+
+assistant channel=final:
+Confirmed—an ironing board with a fresh cover is scheduled for room 2101 with an ETA of about 16 minutes.
+
+user:
+Thanks! What’s the usual timing for these floors?
+
+assistant channel=final:
+For floors 20–22, normal deliveries are about 12–18 minutes.
+
+user:
+Is the cover brand-labelled?
+
+assistant channel=final:
+[ATTENTION] Examining various angles.
+

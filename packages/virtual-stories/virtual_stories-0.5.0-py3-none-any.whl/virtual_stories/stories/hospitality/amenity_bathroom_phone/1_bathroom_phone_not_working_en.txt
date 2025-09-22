@@ -1,0 +1,119 @@
+"""
+Guest reports the bathroom phone is not working; run a remote line test and open a maintenance ticket if needed; include small talk and the special flag.
+
+ROLES: user (guest reporting non-functional bathroom phone), assistant (front-desk/engineering liaison running remote tests and tickets)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "run_remote_line_test",
+    "description": "Run a remote diagnostic on the room phone line at a specified location (bathroom or desk).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "location": { "type": "string", "enum": ["bathroom", "desk"] }
+      },
+      "required": ["room_number", "location"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_engineering_ticket",
+    "description": "Open an engineering ticket for a room device issue.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "note": { "type": "string" }
+      },
+      "required": ["room_number", "category", "priority"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_engineering_visit",
+    "description": "Schedule an engineering visit window for the room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "window_minutes": { "type": "integer", "minimum": 10 }
+      },
+      "required": ["room_number", "window_minutes"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Skyline Central Tower (hotel_id: sct_dt_21)
+Address: 500 Highline Ave, Chicago, IL 60601
+Engineering coverage: 06:00–23:00 on-site; on-call overnight
+
+In-room telephony:
+- Each room has two sets: desk and bathroom location
+- Bathroom phone: wall-mounted, single-line, internal calls only (front desk/engineering)
+
+Standard response:
+- Run remote line test first; if failed, open engineering ticket with high priority and schedule a 20–30 min visit window.
+
+user:
+Hi—the bathroom phone in 3409 has no dial tone.
+
+assistant channel=analysis:
+Run a remote line test for room 3409, location bathroom. Based on result, proceed.
+
+assistant channel=commentary to=tool.run_remote_line_test:
+{"room_number":"3409","location":"bathroom"}
+
+tool.run_remote_line_test channel=commentary to=assistant:
+{"room_number":"3409","location":"bathroom","result":"fail","details":"no_voltage_detected"}
+
+assistant channel=analysis:
+Remote test failed; open an engineering ticket with high priority, then schedule a 20-minute window.
+
+assistant channel=commentary to=tool.create_engineering_ticket:
+{"room_number":"3409","category":"bathroom_phone","priority":"high","note":"No dial tone; remote test no_voltage_detected"}
+
+tool.create_engineering_ticket channel=commentary to=assistant:
+{"ticket_id":"ENG-3409-9022","status":"open"}
+
+assistant channel=commentary to=tool.schedule_engineering_visit:
+{"room_number":"3409","window_minutes":20}
+
+tool.schedule_engineering_visit channel=commentary to=assistant:
+{"ticket_id":"ENG-3409-9022","visit_window_minutes":20,"eta_minutes":18}
+
+assistant channel=final:
+Thanks for flagging this. I’ve opened ticket ENG-3409-9022 and scheduled a 20‑minute engineering window; the estimated arrival is about 18 minutes.
+
+user:
+The city view from up here is stunning at night.
+
+assistant channel=analysis:
+Small talk acknowledgment using property identity only; no tools needed.
+
+assistant channel=final:
+It’s one of Skyline Central’s best features—those downtown views really shine after dark.
+
+user:
+Can you pull the call history for that bathroom phone?
+
+assistant channel=analysis:
+Call history retrieval is not available via the defined tools or system. Use the special flag.
+
+assistant channel=final:
+[ATTENTION] Understood. Checking available options.
+
+user:
+Okay, I’ll wait for engineering.
+

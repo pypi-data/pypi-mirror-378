@@ -1,0 +1,57 @@
+"""
+Guest requests urgent delivery before a meeting; confirm hours/SLA, include small talk and out-of-scope ask.
+
+ROLES: user (guest with time-sensitive request), assistant (service agent prioritizing urgent delivery within policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check amenity availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Dispatch amenity.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Capitol View Center (hotel_id: cvc_dc)
+Address: 1100 New Jersey Ave SE, Washington, DC
+Policy:
+- Irons/boards available on request; 1 set per room
+- Hours: 06:30–23:00; urgent requests supported during this window
+- SLA: 8–15 minutes for floors 10–18
+Safety: Use ironing mat provided
+Note: Rooftop deck opens 17:00
+
+user:
+I have a meeting in 20 minutes. Can you get an iron to 1216 ASAP?
+
+assistant channel=analysis:
+Check availability and dispatch with urgent priority.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"iron","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"iron","available":true,"in_stock":9}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1216","amenity_name":"iron","quantity":1,"priority":"urgent"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"CVC-1216-URG","eta_minutes":9}
+
+assistant channel=final:
+On it—one iron is en route to 1216 with urgent priority, ETA about 9 minutes.
+
+user:
+Is the rooftop open later?
+
+assistant channel=final:
+It opens at 17:00.
+
+user:
+Any good late-night diners nearby?
+
+assistant channel=final:
+[ATTENTION] Checking options outside our current resources.
+

@@ -1,0 +1,76 @@
+"""
+Guest reports quality issues with their room service order and asks about complaint procedures and quality assurance.
+
+ROLES: user (guest reporting room service quality issues), assistant (in-room dining operator handling complaints and quality concerns)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"get_room_service_menu","description":"Retrieve room service menu","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true},
+  {"name":"place_room_service_order","description":"Place an in-room dining order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"qty":{"type":"integer"}}}},"delivery_notes":{"type":"string"}},"required":["hotel_id","room","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Royal Crescent Edinburgh (RCED-16), 12 Royal Circus, Edinburgh EH3.
+Room Service 24/7. Delivery estimate 30–45 minutes.
+Menu highlights (SKUs): RS-BRG (Angus Burger), RS-CAES (Chicken Caesar Salad), RS-TEA (Assorted Teas), RS-SUP (Tomato Soup), RS-SND (Club Sandwich), RS-PST (Pasta), RS-DRT (Dessert Platter), RS-CAF (Coffee Selection).
+Quality assurance: All orders prepared to exact specifications; temperature checks before delivery; presentation standards maintained; ingredient freshness guaranteed; chef quality control on all items.
+Complaint procedures: Immediate replacement for quality issues; full refund for unsatisfactory orders; manager consultation available; quality feedback recorded; continuous improvement process.
+Special services: Tray pickup by request after dining; quality guarantee on all items; customer satisfaction priority; immediate resolution for complaints.
+
+user:
+Hi, I received my order RS-704-331 about 30 minutes ago, but the food was cold and the presentation wasn't what I expected. I'm quite disappointed.
+
+assistant channel=analysis:
+Address the quality complaint and provide resolution options from system prompt.
+
+assistant channel=final:
+I sincerely apologize for the quality issues with your order RS-704-331. This is not the standard we maintain. We offer immediate replacement for quality issues and full refunds for unsatisfactory orders. Would you like me to arrange a fresh replacement order or process a full refund? I can also have our manager contact you directly.
+
+user:
+I'd prefer a replacement order, please. The same items: Angus Burger and Chicken Caesar Salad.
+
+assistant channel=analysis:
+Place a replacement order with quality assurance notes.
+
+assistant channel=commentary to=tool.place_room_service_order:
+{"hotel_id":"RCED-16","room":"704","items":[{"sku":"RS-BRG","qty":1},{"sku":"RS-CAES","qty":1}],"delivery_notes":"REPLACEMENT ORDER for RS-704-331 - quality issue resolution; ensure proper temperature and presentation; priority preparation"}
+
+tool.place_room_service_order channel=commentary to=assistant:
+{"order_id":"RS-704-445","eta_minutes":25,"status":"accepted","priority":"quality_replacement"}
+
+assistant channel=analysis:
+Confirm the replacement order with priority handling.
+
+assistant channel=final:
+Your replacement order RS-704-445 is confirmed: 1 Angus Burger and 1 Chicken Caesar Salad to room 704. This is being prepared with priority attention to temperature and presentation. Estimated delivery is about 25 minutes. I've also noted this for our quality improvement process.
+
+user:
+Thank you for handling this so professionally. The immediate replacement is much appreciated.
+
+assistant channel=analysis:
+Acknowledge their appreciation for the professional handling without adding new information.
+
+assistant channel=final:
+Your satisfaction is our priority, and we take quality very seriously. Thank you for giving us the opportunity to make this right.
+
+user:
+Do you have any quality control measures to prevent this from happening again?
+
+assistant channel=analysis:
+Provide information about quality assurance measures from system prompt.
+
+assistant channel=final:
+Yes, we have comprehensive quality control: all orders are prepared to exact specifications, temperature checks before delivery, presentation standards maintained, ingredient freshness guaranteed, and chef quality control on all items. We also record all quality feedback for continuous improvement.
+
+user:
+Do you offer any compensation or loyalty benefits for quality issues?
+
+assistant channel=analysis:
+Compensation and loyalty benefits aren't specifically mentioned in system prompt, so use attention flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for your question. Reviewing available resources.

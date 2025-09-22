@@ -1,0 +1,68 @@
+"""
+Family pool guest requests microfiber hair ties; includes policy confirmation and beyond-context check.
+
+ROLES: user (guest in 642), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check if a specific amenity is in stock and quantities available.","parameters":{"type":"object","properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Create a delivery request for an amenity to a guest room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Resort: Sunreef Villas
+Pools: family & lap
+Amenity: microfiber hair ties (chlorine-friendly)
+Service: 08:00–22:00
+SLA: 15–22 min
+Limit: 8 per room/day
+Phones: Concierge 0; Housekeeping 7720
+
+user:
+Hi—642 here. Could I get 5 microfiber hair ties?
+
+assistant channel=analysis:
+Check stock; if available, deliver 5 to 642.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"microfiber hair ties","quantity":5}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"available":true,"in_stock":64}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"642","amenity_name":"microfiber hair ties","quantity":5,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"SR-642-MF-510","eta_minutes":18}
+
+assistant channel=final:
+Confirmed—5 microfiber hair ties are on their way to 642. ETA ~18 minutes.
+
+user:
+Is there a daily limit?
+
+assistant channel=analysis:
+System: 8 per room/day.
+
+assistant channel=final:
+Yes—limit is 8 per room per day.
+
+user:
+Pool looks great.
+
+assistant channel=final:
+Enjoy the swim.
+
+user:
+Do you run kids swim lessons tomorrow?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I’ll check the swim lesson schedule.
+

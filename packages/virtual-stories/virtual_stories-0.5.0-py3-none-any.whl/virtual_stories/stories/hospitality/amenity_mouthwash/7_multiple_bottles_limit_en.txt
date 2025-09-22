@@ -1,0 +1,63 @@
+"""
+Guest requests several bottles; assistant clarifies nightly limit and delivers within policy; includes chit-chat and out-of-scope query.
+
+ROLES: user (guest in room 611 asking for 5 bottles), assistant (front desk clarifying limit and fulfilling 3)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_availability","description":"Check stock","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Harbor Square — Lighthouse Wing
+Room 611: Corner Queen
+Mouthwash: Brand "ClearMint"; 30 ml
+Policy: Up to 3 extra bottles per night
+Delivery: 07:00–23:00
+Contacts: Housekeeping 771; Operator 0
+Note: Lighthouse elevator L1 serves 6th floor; ice machine near 609
+Safety: Not for children under 6
+
+user:
+Could I get five mouthwash bottles to 611?
+
+assistant channel=analysis:
+Policy allows 3 per night; confirm stock and deliver 3; inform guest of limit.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"mouthwash","quantity":3}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"mouthwash","available":true,"in_stock":52}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"611","amenity_name":"mouthwash","quantity":3,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MW-611-6602","eta_minutes":8}
+
+assistant channel=final:
+I can send up to three per night per policy—three bottles are on the way to 611 with an ETA of about 8 minutes.
+
+user:
+Thanks! Delivery until what time?
+
+assistant channel=final:
+Deliveries run 07:00–23:00.
+
+user:
+How are you today?
+
+assistant channel=final:
+Doing well—thanks!
+
+user:
+Can you point me to a nearby dentist?
+
+assistant channel=final:
+[ATTENTION] Offsite dentist recommendations aren’t in the provided system context.
+

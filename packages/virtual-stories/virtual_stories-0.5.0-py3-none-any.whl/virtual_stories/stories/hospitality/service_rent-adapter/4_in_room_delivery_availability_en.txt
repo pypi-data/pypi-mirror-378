@@ -1,0 +1,65 @@
+"""
+Guest requests in-room delivery with a specific ETA window; confirm delivery SLA and post charges.
+
+ROLES: user (guest on a call, needs drop-off), assistant (guest services arranging timed room drop)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check adapter stock","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create room-drop rental order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true},
+  {"name":"schedule_delivery","description":"Schedule delivery to room","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Desert Star Phoenix (DSPX-04)
+101 E Monroe St, Phoenix, AZ 85004, USA
+Profile: Urban high-rise; business/leisure mix; timezone MST
+Electrical: 120V • 60Hz • house supplies universal adapters for international guests
+Inventory: 20 adapters; rate USD 3/night; no deposit; folio code RENT-ADPT
+Delivery: Typical ETA 10–15 minutes; desk pickup available 24/7
+Facilities: Rooftop pool 08:00–21:00; Fitness 05:00–23:00; Cafe 06:00–14:00
+Only services listed are available.
+
+user:
+Could you drop an adapter to 2307 in about 15 minutes?
+
+assistant channel=analysis:
+Confirm availability, create 24-hour room-drop order, and schedule delivery.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"DSPX-04","item":"universal_power_adapter","quantity":1,"room":"2307"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"DSPX-04","room":"2307","item":"universal_power_adapter","duration_hours":24,"charge_code":"RENT-ADPT","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"ORD-DSPX-9022","status":"created","rate":"USD 3/night"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"DSPX-04","room":"2307","order_id":"ORD-DSPX-9022"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":13,"runner":"Luis"}
+
+assistant channel=final:
+All set—order ORD-DSPX-9022 is created at USD 3 per night, and Luis will deliver to 2307 in about 13 minutes.
+
+user:
+Quick one—what time does the fitness center open?
+
+assistant channel=final:
+It operates 05:00 to 23:00.
+
+user:
+Can you share internal vendor SLA for replacement stock?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

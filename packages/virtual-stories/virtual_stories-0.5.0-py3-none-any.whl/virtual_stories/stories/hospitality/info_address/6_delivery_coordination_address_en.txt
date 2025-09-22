@@ -1,0 +1,115 @@
+"""
+Guest needs detailed address information for coordinating multiple deliveries for extended business stay with specific building access requirements.
+
+ROLES: user (business executive coordinating deliveries), assistant (professional concierge providing detailed delivery logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "lookup_hotel_address",
+    "description": "Get the official mailing and visiting address with geo details.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "include_coords": {"type":"boolean"}
+      },
+      "required": ["hotel_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_delivery_protocols",
+    "description": "Get information about delivery acceptance and routing procedures.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "delivery_type": {"type":"string", "enum": ["packages", "documents", "food", "flowers", "all"]},
+        "security_level": {"type":"string", "enum": ["standard", "high_security", "executive"]}
+      },
+      "required": ["delivery_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Executive Towers Corporate Suites (hotel_id: executive_towers_corporate)
+High-security extended-stay hotel for executives and diplomats
+Address lines:
+  - Street: 3500 Executive Drive, Central Business District
+  - Tower: North Tower, Executive Level Access
+  - Unit: Use guest room number as unit identifier
+  - City/Region: Metropolitan City, MC 10001
+  - Country: United States
+  - Special instructions: "ATTN: Guest Services - Delivery Coordination"
+Delivery protocols:
+  - All deliveries processed through secure receiving dock (Building rear, Level B1)
+  - Security screening required for all packages over 1 lb or containing electronics
+  - Executive-level guests receive priority handling with same-day delivery to room
+  - Refrigerated storage available for perishable items up to 48 hours
+  - Document courier services with chain-of-custody tracking
+  - Fresh flower delivery coordination with room preparation service
+  - Food delivery accepted from pre-approved vendors only (health department compliance)
+  - International shipping coordination with customs clearance assistance
+Access and security:
+  - Delivery personnel must check in at main security desk
+  - Guest authorization required for all deliveries over $500 value
+  - Signature confirmation available with photo documentation
+  - Time-sensitive delivery alerts sent to guest mobile devices
+  - Secure storage lockers for unattended package pickup
+  - Executive floor access requires escort for delivery personnel
+  - After-hours delivery acceptance (fee applies for overnight/weekend processing)
+Business services integration:
+  - Meeting room delivery coordination for presentation materials
+  - Catering setup assistance for in-room business dining
+  - Technical equipment delivery with IT support coordination
+  - Corporate account billing available for approved vendors
+Coordinates: 40.7589, -73.9851
+
+user:
+I'm staying here for three weeks on business and need to coordinate several important deliveries. Could you give me the complete address with any special delivery instructions?
+
+assistant channel=analysis:
+Executive guest needs comprehensive address information for business deliveries during extended stay. Should provide detailed address and delivery coordination information.
+
+assistant channel=commentary to=tool.lookup_hotel_address:
+{"hotel_id":"executive_towers_corporate","include_coords":true}
+
+tool.lookup_hotel_address channel=commentary to=assistant:
+{"street":"3500 Executive Drive, Central Business District","tower":"North Tower, Executive Level Access","unit":"Use room number as unit","city_region":"Metropolitan City, MC 10001","country":"United States","special_instructions":"ATTN: Guest Services - Delivery Coordination","coordinates":"40.7589,-73.9851"}
+
+assistant channel=final:
+Certainly! For your business deliveries, use: Executive Towers Corporate Suites, 3500 Executive Drive, Central Business District, North Tower, Executive Level Access, Unit [Your Room Number], Metropolitan City, MC 10001, United States. Please include "ATTN: Guest Services - Delivery Coordination" on all packages.
+
+user:
+Perfect. I'm expecting documents, some tech equipment, and daily catered lunches. What should I know about your delivery procedures?
+
+assistant channel=commentary to=tool.get_delivery_protocols:
+{"delivery_type":"all","security_level":"executive"}
+
+tool.get_delivery_protocols channel=commentary to=assistant:
+{"packages":"secure receiving dock B1, security screening required","documents":"courier service with chain-of-custody tracking","food":"pre-approved vendors only, refrigerated storage 48 hours","security":"guest authorization required for $500+ items","executive":"priority handling, same-day room delivery"}
+
+assistant channel=final:
+Excellent! All deliveries go through our secure dock at Level B1 with security screening. Documents get chain-of-custody tracking, tech equipment requires authorization for items over $500, and catered food must be from pre-approved vendors. As an executive-level guest, you get priority same-day room delivery.
+
+user:
+That's very thorough! This seems like a well-run operation here.
+
+assistant channel=final:
+Thank you! We pride ourselves on seamless business support. Would you like me to coordinate with any specific vendors or set up authorization for your expected deliveries?
+
+user:
+Actually yes, that would be helpful. By the way, do you know what time the New York Stock Exchange opens? I need to coordinate some calls.
+
+assistant channel=analysis:
+Guest is asking about NYSE opening hours, which is external market information not related to hotel services. This requires the [ATTENTION] flag.
+
+assistant channel=final:
+[ATTENTION] Let me check the current market hours information for you.

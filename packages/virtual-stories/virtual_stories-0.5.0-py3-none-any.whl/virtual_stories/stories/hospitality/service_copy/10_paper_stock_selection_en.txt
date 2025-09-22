@@ -1,0 +1,48 @@
+"""
+Guest asks about paper stock; create job and state standard stock from system; include small talk and ATTENTION for specialty cardstock.
+
+ROLES: user (guest concerned about paper quality), assistant (copy desk clarifying available stock and creating job)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"create_copy_job","description":"Create a copy job.","parameters":{"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"},"color":{"type":"boolean"},"paper_size":{"type":"string","enum":["A4","Letter"]}},"required":["pages","color","paper_size"]},"strict":true}
+]
+```
+"""
+
+system:
+Cedar Lane Boutique — Front Desk Copy Station
+Hours: 07:00–21:00
+Standard stock: 80 gsm office paper; A4 and Letter
+Rates: B/W USD 0.15; Color USD 0.50
+Turnaround: 10–15 minutes for small jobs
+Billing: Room charge or card; receipt on request
+
+user:
+I need 18 color pages on Letter. Do you have heavier paper?
+
+assistant channel=analysis:
+Create the color job, state standard stock (80 gsm) and availability; avoid promising specialty cardstock.
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":18,"color":true,"paper_size":"Letter"}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-5977","price":"USD 9.00"}
+
+assistant channel=final:
+Your job CPY-5977 is queued for 18 Letter color pages at USD 9.00. Standard stock is 80 gsm office paper; pickup is about 10–15 minutes at the Front Desk Copy Station.
+
+user:
+Thanks—lobby plants look great.
+
+assistant channel=final:
+Appreciate it; we’ll notify the desk when ready.
+
+user:
+Could you use thick glossy cardstock instead?
+
+assistant channel=final:
+[ATTENTION] Specialty cardstock isn’t available in these resources. Reviewing available resources.
+

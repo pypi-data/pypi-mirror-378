@@ -1,0 +1,72 @@
+"""
+Guest inquires about seating types, noise, and tea selection; includes tool for capacity, small talk, and an [ATTENTION] request.
+
+ROLES: user (reader seeking a quiet corner), assistant (Oasis Library Lounge attendant providing precise details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_current_capacity","description":"Report current estimated occupancy for Oasis Library Lounge","parameters":{"type":"object","properties":{},"additionalProperties":false,"required":[]},"strict":true}
+]
+```
+"""
+
+system:
+Name: Oasis Library Lounge
+Level: Mezzanine M2 (adjacent to book wall)
+Hours: 08:00–21:00
+Seating: 12 carrels; 16 armchairs; 1 fireplace sofa (3‑seat)
+Noise policy: ≤ 48 dB; phone calls in hallway only
+Tea: Single‑origin Assam; genmaicha; chamomile
+Coffee: Pour‑over bar 10:00–16:00
+Wi‑Fi: 120 Mbps; hidden SSID on request for focus devices
+Power: Desk lamps with outlets in carrels; 6 spare adapters at desk
+Printer: Epson EcoTank ET‑5850 (A4/A3)
+Access: Included for all guests; capacity control applies
+Lighting: 4000 K neutral, dimmable in carrels
+
+user:
+Is there a private desk and how quiet is it?
+
+assistant channel=analysis:
+Answer from system: carrels exist and noise limit is ≤ 48 dB.
+
+assistant channel=final:
+Yes—12 study carrels are available, and the room is kept at or below 48 dB with calls taken in the hallway.
+
+user:
+How busy is it right now?
+
+assistant channel=analysis:
+Use the capacity tool and report only its output.
+
+assistant channel=commentary to=tool.get_current_capacity:
+{}
+
+tool.get_current_capacity channel=commentary to=assistant:
+{"occupancy":"Moderate","approx_percent":54}
+
+assistant channel=analysis:
+Provide a concise status with the tool data.
+
+assistant channel=final:
+Occupancy is Moderate, about 54%.
+
+user:
+Smells cozy near the fireplace.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+That corner tends to be the calmest.
+
+user:
+Can you extend hours to midnight for me?
+
+assistant channel=analysis:
+No extension tool/policy exists. Use the flag.
+
+assistant channel=final:
+[ATTENTION] Hour extension noted. Assessing the available options.
+

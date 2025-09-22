@@ -1,0 +1,66 @@
+"""
+Guest requests a combination pack suggestion and a soothing tea along with pantyliners.
+Provide available types and arrange discreet delivery.
+
+ROLES: user (guest seeking a balanced pack), assistant (wellness coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check availability of personal care and hygiene supplies.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_category":{"type":"string","enum":["feminine_hygiene","personal_care","wellness_supplies","comfort_items"]},"specific_item":{"type":"string","enum":["pantyliners","sanitary_pads","tampons","intimate_wipes","pain_relief"]}},"required":["product_category"]},"strict":true},
+  {"name":"arrange_discreet_delivery","description":"Arrange private delivery of personal care items to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items_requested":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["housekeeping_discrete","wellness_staff","room_service_bag"]},"timing_preference":{"type":"string"}},"required":["room_number","items_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Alder Grove Urban Retreat (hotel_id: ag_sea_37)
+Address: 901 5th Ave, Seattle, WA 98164
+Timezone: America/Los_Angeles
+
+Shelf Mix:
+- Pantyliners: ultra‑thin and regular (Natracare, Always)
+- Comfort teas: chamomile, ginger
+- Delivery: wellness_staff or room_service_bag
+- Typical ETA: 9–14 minutes
+- Privacy flag on all deliveries
+
+user:
+Hi—room 2020. I can’t decide—ultra‑thin or regular pantyliners. Any chance you can send a small mix and some tea?
+
+assistant channel=analysis:
+Check pantyliners and arrange mixed pack with chamomile.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"product_category":"feminine_hygiene","specific_item":"pantyliners"}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"brands":["Natracare","Always"],"types":["ultra_thin","regular"],"stock_sufficient":true}
+
+assistant channel=commentary to=tool.arrange_discreet_delivery:
+{"room_number":"2020","items_requested":["mix_ultra_thin_regular_pantyliners","chamomile_tea"],"delivery_method":"wellness_staff","timing_preference":"within_15_minutes"}
+
+tool.arrange_discreet_delivery channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":10,"package_contents":["pantyliners_mix_12ct","chamomile_tea_2_sachets"],"discreet_packaging":true}
+
+assistant channel=final:
+Done—a discreet 12‑count mix of ultra‑thin and regular pantyliners with two chamomile tea sachets will arrive at room 2020 in about 10 minutes.
+
+user:
+Perfect—so thoughtful.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+Happy to keep things comfortable.
+
+user:
+Could you also schedule a massage for this evening?
+
+assistant channel=analysis:
+Massage scheduling not defined in system/tools; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

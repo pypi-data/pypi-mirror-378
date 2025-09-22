@@ -1,0 +1,86 @@
+"""
+Guest requests herbal toothpaste for sensitive gums; confirm availability, fluoride, and delivery ETA. Include chitchat and an ATTENTION item.
+
+ROLES: user (guest), assistant (personal care amenity desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_toothpaste_options","description":"Verify herbal toothpaste availability and fluoride content.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"variant":{"type":"string","enum":["herbal","mint","kids_strawberry"]}},
+     "required":["variant"]},"strict":true},
+  {"name":"deliver_toothpaste","description":"Deliver selected toothpaste to a room (travel size).",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"variant":{"type":"string"}},
+     "required":["room_number","variant"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Stonebridge Urban Hotel (hotel_id: SUH_atl_02)
+Address: 120 Peachtree Center Ave, Atlanta, GA 30303
+Timezone: America/New_York
+
+Toothpaste Bar:
+- Variants: herbal (low-foam), mint (standard), kids_strawberry (SLS-free)
+- Size: 30 mL travel | Fluoride: herbal yes, kids no, mint yes
+- Delivery hours: 06:00–23:30 | Fee: complimentary
+- Bundle: brush+paste on request
+- Runner IDs: sb-amenity-1..5
+
+Lobby Notes:
+Indoor garden wall | Cold brew tap | Quiet work pods
+
+user:
+Hi, do you have an herbal toothpaste for sensitive gums? Room 1908.
+
+assistant channel=analysis:
+Check herbal availability, then deliver to 1908.
+
+assistant channel=commentary to=tool.check_toothpaste_options:
+{"variant":"herbal"}
+
+tool.check_toothpaste_options channel=commentary to=assistant:
+{"available":true,"fluoride":true,"size_ml":30}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_toothpaste:
+{"room_number":"1908","variant":"herbal"}
+
+tool.deliver_toothpaste channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":10,"runner":"sb-amenity-3","ticket":"TP-1908-H"}
+
+assistant channel=final:
+Herbal toothpaste (30 mL, fluoride) is on the way to 1908—about 10 minutes (runner sb-amenity-3, ticket TP-1908-H).
+
+user:
+Is there any fee for these?
+
+assistant channel=analysis:
+Answer from Toothpaste Bar: complimentary.
+
+assistant channel=final:
+They’re complimentary—no fee.
+
+user:
+That indoor garden wall is lovely.
+
+assistant channel=analysis:
+Chitchat based on Lobby Notes.
+
+assistant channel=final:
+It’s a guest favorite, right next to the cold brew tap and quiet work pods.
+
+user:
+Do you carry prescription-strength options?
+
+assistant channel=analysis:
+Beyond system’s listed variants—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check on prescription-strength availability for you.
+

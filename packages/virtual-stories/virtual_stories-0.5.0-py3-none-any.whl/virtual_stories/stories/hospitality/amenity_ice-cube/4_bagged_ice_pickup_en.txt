@@ -1,0 +1,65 @@
+"""
+Guest prefers bagged ice and asks whether pickup is possible; includes chitchat and a beyond-context brand question.
+
+ROLES: user (guest in room 1811 requesting bagged ice), assistant (services coordinating bagged ice delivery and clarifying policy hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Deliver amenity to room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Quayside Forum — Harbor Tower
+Room: 1811 (Executive Twin)
+Ice options: Bagged ice available from freezer; scooped available on request
+Hours: Normal 07:00–23:00; Urgent 23:00–00:45
+SLA floors 17–20: 12–18 minutes normal
+Dispatch: HB-18 galley; S3 service elevator preferred after 22:00
+Phones: 0 Front; 7830 Services; 7831 HK
+
+user:
+Could I get one bag of ice to 1811?
+
+assistant channel=analysis:
+Place normal delivery for one bag of ice to room 1811 with dispatch note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1811","amenity_name":"ice (bag)","quantity":1,"priority":"normal","note":"From HB-18 galley via S3"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-1811-6614","eta_minutes":16}
+
+assistant channel=final:
+Confirmed—one bag of ice is scheduled for room 1811 with an ETA of about 16 minutes.
+
+user:
+Appreciate it. Could I pick it up instead?
+
+assistant channel=final:
+Delivery is standard; if you prefer pickup, the HB-18 galley can hand off during the normal window 07:00–23:00.
+
+user:
+Who makes the ice bags you use?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

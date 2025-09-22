@@ -1,0 +1,115 @@
+"""
+Guest requests a quieter room; include small talk, one system-answered question, and one [ATTENTION] beyond-context handled via tools.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "check_room_inventory",
+    "description": "Check current availability by room type and floor zone.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "requested_type": {"type": "string", "enum": ["standard","deluxe","suite"]},
+        "zone": {"type": "string", "enum": ["high_floor","courtyard","corner","near_elevator"]}
+      },
+      "required": ["requested_type","zone"]
+    }
+  },
+  {
+    "name": "move_reservation",
+    "description": "Execute a same-day room move.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "from_room": {"type": "string"},
+        "to_room": {"type": "string"}
+      },
+      "required": ["from_room","to_room"]
+    }
+  },
+  {
+    "name": "quote_change_fee",
+    "description": "Return any applicable move fees.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "requested_type": {"type": "string", "enum": ["standard","deluxe","suite"]},
+        "stay_nights": {"type": "integer"}
+      },
+      "required": ["requested_type","stay_nights"]
+    }
+  }
+]
+"""
+
+system:
+Property: Midtown Arc Hotel (hotel_id: midtown_arc_nyc)
+Address: 500 Lexington Ave, New York, NY 10017 | Timezone: America/New_York
+Check-in 3 PM | Check-out 12 PM | Desk ext: 0
+Room move policy:
+- Same category moves: no fee, subject to readiness.
+- Upgrades: deluxe +$25/night; suite +$90/night.
+- Cutoffs: housekeeping finalizes assignments by 20:00.
+Quiet zones: high_floor and courtyard are quietest; near_elevator is noisiest.
+Key handling: return old keys after move; mobile keys refresh in ~2 minutes.
+Elevator note: bank A serves floors 3–18, bank B 19–30.
+
+user:
+Hi, my room is a bit noisy. Can I move to a quieter one?
+
+assistant channel=analysis:
+Acknowledge; explain quiet zones from system; offer to check availability.
+
+assistant channel=final:
+I’m sorry about the noise. Our quietest options are high-floor or courtyard rooms. Would you like me to check what’s available now?
+
+user:
+Do you charge a fee for the same category?
+
+assistant channel=analysis:
+Answer from system: no fee for same category moves.
+
+assistant channel=final:
+No fee for a same-category move; it’s subject to room readiness.
+
+user:
+[ATTENTION] Is there a high-floor deluxe available right now?
+
+assistant channel=analysis:
+Use check_room_inventory for deluxe/high_floor.
+
+assistant channel=commentary to=check_room_inventory:
+{"requested_type":"deluxe","zone":"high_floor"}
+
+tool.check_room_inventory:
+{"available": true, "candidate_room": "2416", "ready": true}
+
+assistant channel=final:
+Yes—high-floor deluxe 2416 is available and ready.
+
+user:
+Please move me from 912 to 2416.
+
+assistant channel=analysis:
+Execute move via move_reservation.
+
+assistant channel=commentary to=move_reservation:
+{"from_room":"912","to_room":"2416"}
+
+tool.move_reservation:
+{"status":"moved","new_keys":"issued","note":"Mobile key refresh in 2 minutes"}
+
+assistant channel=final:
+All set—your reservation is moved to 2416. New keys issued; mobile key will refresh in about 2 minutes.
+
+user:
+Thanks for the quick help!
+
+assistant channel=analysis:
+Close with friendly chitchat.
+
+assistant channel=final:
+You’re very welcome—have a restful stay.
+

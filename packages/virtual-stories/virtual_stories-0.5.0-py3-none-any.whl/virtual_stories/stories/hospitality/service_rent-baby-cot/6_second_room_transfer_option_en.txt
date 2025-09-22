@@ -1,0 +1,55 @@
+"""
+Guest asks to move a cot from one room to another due to a room change; clarify that housekeeping will re-set it.
+
+ROLES: user (parent changing rooms), assistant (concierge coordinating re-setup)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"schedule_housekeeping_setup","description":"Schedule cot teardown and re-setup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_note":{"type":"string"}},"required":["hotel_id","room","order_note"]},"strict":true}
+]
+```
+"""
+
+system:
+Highland Gate Edinburgh (HGED-13)
+Address: 10 Princes St, Edinburgh EH2 2AN, UK
+Cot policy: Housekeeping handles setup/teardown; guest must be present; safety placement required; complimentary; bedding included
+Housekeeping window: 20–30 minutes for moves; hours 07:00–22:00
+Front Desk: 24/7; Lounge 12:00–00:30
+Only services listed are available.
+
+user:
+We’re moving from 1011 to 1404—can you move the baby cot?
+
+assistant channel=analysis:
+Arrange a teardown in 1011 and re-setup in 1404 per policy.
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"HGED-13","room":"1011","order_note":"Teardown baby cot; guest present; prep for re-setup in 1404."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":18,"ticket":"HK-1011-7760"}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"HGED-13","room":"1404","order_note":"Set up baby cot; guest present; away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":26,"ticket":"HK-1404-7761"}
+
+assistant channel=final:
+We’ll handle it—teardown ticket HK-1011-7760 (~18 min) and re-setup ticket HK-1404-7761 (~26 min). Please have someone present for safety placement.
+
+user:
+Is the lounge still open?
+
+assistant channel=final:
+The lounge runs 12:00 to 00:30.
+
+user:
+Can you provide internal damage reports for crib equipment?
+
+assistant channel=final:
+[ATTENTION] Accessing available resources.
+

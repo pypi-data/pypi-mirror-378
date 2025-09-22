@@ -1,0 +1,83 @@
+"""
+Guest asks for child-friendly snacks in the evening.
+Provide options and delivery.
+
+ROLES: user (parent with child), assistant (room service staff mindful of kid-friendly options)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_available_menu_items","description":"List kid-friendly snacks.","parameters":{"type":"object","additionalProperties":false,"properties":{"menu_type":{"type":"string","enum":["light_bites"]},"dietary_restrictions":{"type":"array","items":{"type":"string","enum":["none","gluten_free","vegetarian"]}}},"required":["menu_type"]},"strict":true},
+  {"name":"place_food_order","description":"Place snack order for delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"estimated_delivery":{"type":"string"},"total_cost":{"type":"number"}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seaside Boardwalk Hotel (hotel_id: sbh_19)
+Address: 85 Shoreline Ave, Santa Cruz, CA 95060
+Timezone: America/Los_Angeles
+
+Kid-Friendly Snacks:
+- Apple slices with peanut butter (nut-free alt: sunflower butter) $8
+- Mini turkey roll-ups (gluten-free) $11
+- Cheese cubes and crackers $10
+- Delivery 20–30 minutes
+
+user:
+Do you have kid-friendly snacks? Room 318.
+
+assistant channel=analysis:
+List kid-friendly snacks and confirm order.
+
+assistant channel=commentary to=tool.get_available_menu_items:
+{"menu_type":"light_bites","dietary_restrictions":["none"]}
+
+tool.get_available_menu_items channel=commentary to=assistant:
+{"menu_items":[{"name":"apple_slices_pb","price":8},{"name":"mini_turkey_rollups","price":11},{"name":"cheese_cubes_crackers","price":10}]}
+
+assistant channel=final:
+Yes—options include apple slices with peanut butter ($8), mini turkey roll‑ups ($11), and cheese cubes with crackers ($10). What should I send to room 318?
+
+user:
+Apple slices please.
+
+assistant channel=analysis:
+Place order to 318.
+
+assistant channel=commentary to=tool.place_food_order:
+{"room_number":"318","items":["apple_slices_pb"],"estimated_delivery":"~25 minutes","total_cost":8}
+
+tool.place_food_order channel=commentary to=assistant:
+{"order_confirmed":true,"order_id":"SBH-318-SN10","eta":"25 minutes","items":["apple_slices_pb"],"total":8}
+
+assistant channel=final:
+Order SBH-318-SN10 is placed—apple slices are on the way and should arrive in about 25 minutes.
+
+user:
+Is there a nut-free option?
+
+assistant channel=analysis:
+Answer from system: sunflower butter alt available.
+
+assistant channel=final:
+Yes—we can swap peanut butter for sunflower butter.
+
+user:
+Boardwalk lights are fun tonight.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+They make the evening stroll feel like a carnival.
+
+user:
+Could you get us aquarium tickets tomorrow?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

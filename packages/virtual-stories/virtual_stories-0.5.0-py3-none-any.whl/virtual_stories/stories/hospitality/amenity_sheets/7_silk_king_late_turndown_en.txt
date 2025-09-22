@@ -1,0 +1,138 @@
+"""
+Guest requests silk king sheets and asks to align with turn-down; verify inventory and coordinate.
+
+ROLES: user (guest seeking premium silk), assistant (evening service coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_linen_inventory",
+    "description": "Check availability of sheet collections and sizes.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] }
+      },
+      "required": ["collection", "size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "order_linen_delivery",
+    "description": "Deliver specified sheet collection to room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] },
+        "quantity_sets": { "type": "integer", "minimum": 1, "maximum": 4 }
+      },
+      "required": ["room_number", "collection", "size", "quantity_sets"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_bed_service",
+    "description": "Schedule housekeeping to remake bed with specified sheets.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "preferred_time": { "type": "string", "description": "HH:MM in 24h local time" }
+      },
+      "required": ["room_number", "collection"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Skyline Marina Hotel Seattle (hotel_id: smh_sea_07)
+Address: 1000 Alaskan Way, Seattle, WA 98104
+Timezone: America/Los_Angeles
+
+Linen Menu:
+- silk_1000tc: king, queen; limited stock
+- luxury_600tc: hotel favorite
+- bamboo_eco: hypoallergenic option
+- standard_300tc: classic percale
+
+Evening Service:
+- Same-day changes: 08:00–22:00
+- Turn-down: 19:00–21:30
+- Delivery ETA: 20–40 minutes
+- Spare set policy: silk spare limited to 1
+- Contact: Housekeeping ext 14
+
+Care:
+- Silk anchors on fitted sheets
+- Avoid heavy creams before bed on silk
+- Pillowcase refresh at turn-down
+- Inventory updates each hour
+- Notes recorded in room profile
+
+user:
+Hi, could I switch my king bed to silk_1000tc and align the remake with turn-down around 19:45? Room 2519.
+
+assistant channel=analysis:
+Check silk_1000tc king; order 1 set; schedule 19:45 within turn-down window.
+
+assistant channel=commentary to=tool.check_linen_inventory:
+{"collection":"silk_1000tc","size":"king"}
+
+tool.check_linen_inventory channel=commentary to=assistant:
+{"collection":"silk_1000tc","size":"king","available_sets":4,"estimated_delivery_minutes":32}
+
+assistant channel=analysis:
+Place order and schedule 19:45.
+
+assistant channel=commentary to=tool.order_linen_delivery:
+{"room_number":"2519","collection":"silk_1000tc","size":"king","quantity_sets":1}
+
+tool.order_linen_delivery channel=commentary to=assistant:
+{"room_number":"2519","collection":"silk_1000tc","size":"king","quantity_sets":1,"delivery_eta_minutes":32,"delivery_id":"LINEN-SK-7741"}
+
+assistant channel=commentary to=tool.schedule_bed_service:
+{"room_number":"2519","collection":"silk_1000tc","preferred_time":"19:45"}
+
+tool.schedule_bed_service channel=commentary to=assistant:
+{"scheduled":true,"room_number":"2519","collection":"silk_1000tc","window":"19:35–20:00"}
+
+assistant channel=final:
+Confirmed—your silk_1000tc king set is queued (ETA ~32 minutes). We’ll remake at 19:45 (window 19:35–20:00) and coordinate it with turn-down.
+
+user:
+What’s the turn-down window again?
+
+assistant channel=analysis:
+Answer from system: 19:00–21:30.
+
+assistant channel=final:
+Turn-down runs from 19:00 to 21:30.
+
+user:
+Thanks—the marina lights are pretty.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+They are—enjoy the view tonight.
+
+user:
+Any seafood dinner recommendations?
+
+assistant channel=analysis:
+Beyond linen scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up nearby seafood options and share a few picks.

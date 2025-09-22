@@ -1,0 +1,76 @@
+"""
+Guest preparing for photography requests both LED ring and daylight options to compare.
+Deliver two mirrors and let guest choose.
+
+ROLES: user (guest doing photo makeup), assistant (beauty amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "stage_dual_mirrors",
+    "description": "Stage two mirrors (LED ring + daylight) for side-by-side comparison.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": { "type": "string" },
+        "models": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["room","models"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Bayfront Studios (hotel_id: bfs_sydney_10)
+Address: 88 Hickson Rd, Sydney NSW 2000, Australia
+Timezone: Australia/Sydney
+Studios: Designed for creatives; flexible lighting
+
+Beauty Support:
+- LED Ring: 5x
+- Daylight Panel: 3x
+- Delivery: 15–25 minutes
+- Fees: complimentary
+- Returns: collected on call
+
+user:
+Could I try both the LED ring mirror and the daylight panel in room 1002 to compare for photos?
+
+assistant channel=analysis:
+Stage both mirrors for side-by-side.
+
+assistant channel=commentary to=tool.stage_dual_mirrors:
+{"room":"1002","models":["LED Ring 5x","Daylight Panel 3x"]}
+
+tool.stage_dual_mirrors channel=commentary to=assistant:
+{"staged":true,"eta":"20 minutes","items":["LED Ring 5x","Daylight Panel 3x"],"fee":"complimentary"}
+
+assistant channel=final:
+Absolutely—we’ll deliver an LED Ring 5x and a Daylight Panel 3x to room 1002 in about 20 minutes so you can compare them side by side. Complimentary.
+
+user:
+Thanks! If I keep only one, will you collect the other later?
+
+assistant channel=analysis:
+Answer using returns policy.
+
+assistant channel=final:
+Yes—just call and we’ll collect whichever mirror you don’t keep in the room.
+
+user:
+Great. Also, is the Harbour Bridge lit in a special color tonight?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check tonight’s Harbour Bridge lighting schedule. Investigating potential answers.
+

@@ -1,0 +1,80 @@
+"""
+Guest requests lager but asks for glassware and whether ice-cold or chilled is better; verify age and deliver.
+
+ROLES: user (guest ordering lager), assistant (beer service)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_drinking_age","description":"Verify legal drinking age.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"get_beer_selection","description":"Get beer options.","parameters":{"type":"object","additionalProperties":false,"properties":{"beer_type":{"type":"string","enum":["lager","pilsner","all"]},"region_preference":{"type":"string","enum":["local","domestic","imported","no_preference"]},"alcohol_content":{"type":"string","enum":["light","standard","strong","no_preference"]}},"required":["beer_type"]},"strict":true},
+  {"name":"place_beer_order","description":"Place in-room beer order.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"beer_items":{"type":"array","items":{"type":"object","properties":{"beer_sku":{"type":"string"},"quantity":{"type":"integer"},"temperature":{"type":"string","enum":["ice_cold","chilled","cellar_temp"]}},"required":["beer_sku","quantity"],"additionalProperties":false}},"delivery_instructions":{"type":"string"}},"required":["room_number","beer_items"]},"strict":true}
+]
+```
+"""
+
+system:
+Riverside Gallery Hotel (hotel_id: rgh_pittsburgh)
+Address: 320 Art Way, Pittsburgh, PA 15212
+Timezone: America/New_York
+
+Lager Service:
+1) Lagers and pilsners are brightest ice‑cold (32–35°F).
+2) Chilled (38–42°F) softens carbonation slightly for gentler mouthfeel.
+3) Glassware: Pilsner flute for pilsners, classic lager glass for others.
+4) Delivery includes a fresh glass per bottle unless declined.
+5) Service until 01:30 nightly.
+
+user:
+For 804, do you recommend ice‑cold or just chilled for a lager? And can I get the right glass?
+
+assistant channel=analysis:
+Verify age; fetch lager options; recommend ice‑cold; place order with proper glassware.
+
+assistant channel=commentary to=tool.verify_drinking_age:
+{"room_number":"804"}
+
+tool.verify_drinking_age channel=commentary to=assistant:
+{"room_number":"804","guest_age_verified":true,"legal_drinking_age_met":true}
+
+assistant channel=commentary to=tool.get_beer_selection:
+{"beer_type":"lager","region_preference":"no_preference","alcohol_content":"no_preference"}
+
+tool.get_beer_selection channel=commentary to=assistant:
+{"selections":[{"sku":"DOM_STANDARD_LAGER","name":"House Lager","style":"Lager"},{"sku":"CZECH_PILSNER_URQUELL","name":"Pilsner Urquell","style":"Pilsner"}]}
+
+assistant channel=final:
+Ice‑cold highlights a lager’s crisp snap; chilled is a little softer. Would you like a House Lager ice‑cold with a classic lager glass?
+
+user:
+Yes, that sounds perfect.
+
+assistant channel=analysis:
+Place order ice‑cold with lager glass.
+
+assistant channel=commentary to=tool.place_beer_order:
+{"room_number":"804","beer_items":[{"beer_sku":"DOM_STANDARD_LAGER","quantity":1,"temperature":"ice_cold"}],"delivery_instructions":"Include classic lager glass"}
+
+tool.place_beer_order channel=commentary to=assistant:
+{"order_id":"BEER-RGH-6614","estimated_delivery_minutes":12}
+
+assistant channel=final:
+On its way—one ice‑cold House Lager with a lager glass, arriving in about 12 minutes.
+
+user:
+Love the art in the lobby, by the way.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Glad the lobby art made a good impression.
+
+user:
+Could you also send sparkling water?
+
+assistant channel=analysis:
+Outside current scope; flag it.
+
+assistant channel=final:
+[ATTENTION] I’ll check on adding sparkling water to your delivery.

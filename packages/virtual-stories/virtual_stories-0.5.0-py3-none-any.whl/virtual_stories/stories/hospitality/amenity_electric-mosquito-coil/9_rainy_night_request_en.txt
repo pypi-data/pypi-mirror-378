@@ -1,0 +1,63 @@
+"""
+Guest requests device during rainy night and asks about indoor placement near balcony.
+
+ROLES: user (guest avoiding rain), assistant (amenity and safety)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"deliver","description":"Deliver device to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","item","qty"]},"strict":true},
+  {"name":"notes","description":"Indoor near-balcony usage note.","parameters":{"type":"object","additionalProperties":false,"properties":{"topic":{"type":"string","enum":["near_balcony"]}},"required":["topic"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Monsoon Bay Residences (hotel_id: mbr_vn_10)
+Address: 77 Tran Phu, Nha Trang, Vietnam
+Service hours: 09:00–22:00
+Usage policy:
+- Prefer balcony; if raining, place just inside balcony door with window ajar
+- Maintain airflow and 30 cm clearance from curtains
+Inventory: 25 devices, refills 100
+ETA: 12–20 minutes
+
+user:
+It’s raining—please send one device to 1512. Can I use it just inside the balcony door?
+
+assistant channel=analysis:
+Deliver one device; answer using the near-balcony policy. Keep to system facts.
+
+assistant channel=commentary to=tool.deliver:
+{"room":"1512","item":"electric_mosquito_coil_device","qty":1}
+
+tool.deliver channel=commentary to=assistant:
+{"ticket":"MBR-1512-EMC-991","eta_minutes":17}
+
+assistant channel=commentary to=tool.notes:
+{"topic":"near_balcony"}
+
+tool.notes channel=commentary to=assistant:
+{"note":"Use just inside balcony door with window ajar; keep 30 cm clearance from curtains."}
+
+assistant channel=final:
+Yes—on rainy nights you can place it just inside the balcony door with the window ajar, keeping 30 cm clearance from curtains. Your device is en route to 1512 (ticket MBR-1512-EMC-991), ETA about 17 minutes within 09:00–22:00.
+
+user:
+Perfect, thanks. Love the sound of the rain.
+
+assistant channel=analysis:
+Chitchat acknowledgment only.
+
+assistant channel=final:
+It makes for a cozy evening.
+
+user:
+Do you provide rain ponchos?
+
+assistant channel=analysis:
+Poncho availability isn’t included here.
+
+assistant channel=final:
+[ATTENTION] I’ll check if rain ponchos are available.
+

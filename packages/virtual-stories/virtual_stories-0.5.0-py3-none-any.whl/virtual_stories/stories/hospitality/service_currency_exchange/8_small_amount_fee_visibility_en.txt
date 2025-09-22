@@ -1,0 +1,51 @@
+"""
+Guest exchanges a small amount and asks if the fee still applies; include quote and small talk.
+
+ROLES: user (guest exchanging small cash), assistant (cashier explaining fee policy and quoting)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"quote_fx","description":"Quote a currency exchange with applied fee and total payout.","parameters":{"type":"object","additionalProperties":false,"properties":{"from":{"type":"string"},"to":{"type":"string"},"amount":{"type":"number"}},"required":["from","to","amount"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeside Pavilion Hotel — FX Point
+Hours: 11:00–19:00
+Booth: Next to the floral display
+Supported: USD, EUR, GBP
+Fee Policy: Flat fee applies to all transactions
+ID: Passport for ≥ USD 500 equivalent
+Queue: Walk‑up only
+Security: Receipt stamping and dual‑count
+Cash Handling: Cash only
+
+user:
+If I exchange 60 USD to EUR, do I still pay the fee? What would I get?
+
+assistant channel=analysis:
+Confirm fee applies to all; quote 60 USD→EUR via tool.
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"USD","to":"EUR","amount":60}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":0.89,"fee":"EUR 2.00","payout":"EUR 51.40"}
+
+assistant channel=final:
+The flat handling fee applies to every transaction. For 60 USD, the payout is EUR 51.40 after a EUR 2.00 fee (rate 0.89). The booth is open 11:00–19:00 next to the floral display.
+
+user:
+The flowers are beautiful today.
+
+assistant channel=final:
+You’ll find the FX point right beside that floral display.
+
+user:
+Could you exchange traveler’s checks instead of cash?
+
+assistant channel=final:
+[ATTENTION] Traveler’s check handling isn’t documented. Assessing the available data.
+

@@ -1,0 +1,77 @@
+"""
+Guest requests multiple toothbrushes for a small group; confirm quantities and deliver. Include one small-talk turn and an [ATTENTION] query.
+
+ROLES: user (group organizer requesting toothbrushes), assistant (hotel amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_bulk_toothbrush","description":"Check bulk availability","parameters":{"type":"object","properties":{"soft_qty":{"type":"integer"},"medium_qty":{"type":"integer"}},"required":[],"additionalProperties":false},"strict":true},
+  {"name":"deliver_bulk_toothbrush","description":"Deliver bulk toothbrushes","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"soft_qty":{"type":"integer"},"medium_qty":{"type":"integer"}},"required":["room_number"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Copperlight Warehouse Hotel (hotel_id: cwh_melb_15)
+Address: 29 Guildford Ln, Melbourne VIC 3000, Australia
+Timezone: Australia/Melbourne
+
+Key Facts:
+- Toothbrush stock supports small groups on request
+- Typical ETA: 12–20 minutes
+- Water stations on every floor
+
+YAML Building:
+---
+heritage: true
+floors: 6
+sprinklers: true
+---
+
+JSON Stock:
+{"soft_bin": 84, "medium_bin": 46}
+
+CSV Nearby (place,walk_min):
+State_Library,7
+Emporium,5
+
+user:
+Could you send four soft and two medium toothbrushes to 504?
+
+assistant channel=analysis:
+Confirm bulk availability; deliver to 504.
+
+assistant channel=commentary to=tool.check_bulk_toothbrush:
+{"soft_qty":4,"medium_qty":2}
+
+tool.check_bulk_toothbrush channel=commentary to=assistant:
+{"available":true,"max_soft":80,"max_medium":44}
+
+assistant channel=commentary to=tool.deliver_bulk_toothbrush:
+{"room_number":"504","soft_qty":4,"medium_qty":2}
+
+tool.deliver_bulk_toothbrush channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":15,"runner":"Sienna"}
+
+assistant channel=final:
+Confirmed—four soft and two medium toothbrushes are on the way to 504. ETA about 15 minutes (runner: Sienna).
+
+user:
+Love the vintage brickwork in the hallways.
+
+assistant channel=analysis:
+Chitchat acknowledgment about heritage building.
+
+assistant channel=final:
+We preserved the heritage brick—adds real character to the warehouse floors.
+
+user:
+Can you also arrange bottled sparkling water for the group?
+
+assistant channel=analysis:
+Sparkling water arrangement not defined in tools here; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Compiling available data.
+

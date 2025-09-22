@@ -1,0 +1,51 @@
+"""
+Morning ballroom AED standby; confirm Security setup and rate; include small talk and [ATTENTION] query.
+
+ROLES: user (morning event organizer), assistant (security liaison arranging AED standby and clarifying policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_aed","description":"Arrange AED for supervised on-property standby.","parameters":{"type":"object","additionalProperties":false,"properties":{"event_space":{"type":"string"},"start_time":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":8}},"required":["event_space","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverstone Grand
+AED Guidelines:
+- 2 units available; Security places and retrieves; on-property only; pre-use briefing required.
+- Rate: $29/hour; maximum 8 hours.
+- Security Office: Lobby corridor behind Reception.
+Spaces: River Ballroom, Stone Salon, Garden Pavilion.
+
+user:
+Book AED standby in River Ballroom from 09:30 for 3 hours.
+
+assistant channel=analysis:
+Reserve via tool, then recap supervision, rate, and on-property only rule.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"River Ballroom","start_time":"09:30","duration_hours":3}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_rs_901","hourly_rate":29,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+AED standby booked in River Ballroom 09:30 for 3 hours (aed_rs_901). Security will place and brief; the rate is $29/hour. Units remain on property and are managed via the Security Office behind Reception.
+
+user:
+The lobby corridor is easy to spot.
+
+assistant channel=final:
+That’s the corridor behind Reception where Security coordinates deployment and return.
+
+user:
+Can you recommend a specific brand of AED for us to purchase?
+
+assistant channel=analysis:
+Recommendations aren’t provided; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Reviewing available resources regarding product recommendations.
+

@@ -1,0 +1,74 @@
+"""
+Parent wants to book childcare for multiple siblings of different ages with coordinated pickup times.
+
+ROLES: user (parent coordinating care for multiple children), assistant (family services coordinator managing multi-child logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_age_group_availability","description":"Check childcare availability across multiple age groups","parameters":{"type":"object","additionalProperties":false,"properties":{"facility_id":{"type":"string"},"date":{"type":"string","format":"date"},"age_groups":{"type":"array","items":{"type":"object","properties":{"min_age":{"type":"integer"},"max_age":{"type":"integer"},"child_count":{"type":"integer"}}}},"time_slot":{"type":"string"}},"required":["facility_id","date","age_groups","time_slot"]},"strict":true},
+  {"name":"book_sibling_group","description":"Book coordinated childcare for sibling group","parameters":{"type":"object","additionalProperties":false,"properties":{"guest_id":{"type":"string"},"siblings":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"age":{"type":"integer"},"special_notes":{"type":"string"}}}},"date":{"type":"string","format":"date"},"start_time":{"type":"string"},"duration_hours":{"type":"number"},"coordinated_pickup":{"type":"boolean"}},"required":["guest_id","siblings","date","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Facility: Rainbow Kids Multi-Age Center (facility_id: multi_age_rainbow_vegas)
+Property: Desert Oasis Family Resort (hotel_id: desert_oasis_vegas)
+Address: 3950 Las Vegas Blvd S, Las Vegas, NV 89119
+Timezone: America/Los_Angeles
+Age groups: Infants (6-18 months), Toddlers (19-36 months), Preschool (3-5 years), School-age (6-10 years)
+Hours: Daily 06:00-midnight
+Ratios: 1:3 infants, 1:4 toddlers, 1:8 preschool, 1:12 school-age
+Special features: Sibling coordination, mixed-age playtime, family meal service, synchronized schedules
+Multi-child discounts: 15% off for 2 children, 25% off for 3+ children
+Pickup coordination: All siblings released together to authorized guardian with ID verification
+Activities by age: Sensory play (infants), exploration stations (toddlers), creative arts (preschool), STEM challenges (school-age)
+
+user:
+Hi, I have three kids - baby Sofia who's 14 months, Tommy who's 4, and Isabella who's 8. Can I book them all for tomorrow afternoon?
+
+assistant channel=analysis:
+Parent has three children across three different age groups. I need to check availability across multiple age groups first.
+
+assistant channel=commentary to=tool.check_age_group_availability:
+{"facility_id":"multi_age_rainbow_vegas","date":"2025-09-04","age_groups":[{"min_age":6,"max_age":18,"child_count":1},{"min_age":36,"max_age":60,"child_count":1},{"min_age":72,"max_age":120,"child_count":1}],"time_slot":"afternoon"}
+
+tool.check_age_group_availability channel=commentary to=assistant:
+{"availability":[{"age_group":"infants","available":true,"ratio":"1:3","caregiver":"Lisa Chen"},{"age_group":"preschool","available":true,"ratio":"1:8","caregiver":"Mike Rodriguez"},{"age_group":"school_age","available":true,"ratio":"1:12","caregiver":"Amanda Foster"}],"sibling_coordination":"available","family_discount":"25% for 3+ children"}
+
+assistant channel=final:
+Absolutely! We can accommodate all three across our age groups: Sofia (14 months) with Lisa in our infant program, Tommy (4 years) with Mike in preschool, and Isabella (8 years) with Amanda in school-age. You'll get our 25% family discount for 3+ children, and we coordinate sibling pickup together.
+
+user:
+That's wonderful! What time slots work best? We'd like about 4 hours starting around 2 PM. Guest ID DO-445.
+
+assistant channel=analysis:
+Parent wants 4 hours starting at 2 PM for all three children. I should book the sibling group with coordinated pickup.
+
+assistant channel=commentary to=tool.book_sibling_group:
+{"guest_id":"DO-445","siblings":[{"name":"Sofia","age":14,"special_notes":"14 months infant"},{"name":"Tommy","age":4,"special_notes":"preschool age group"},{"name":"Isabella","age":8,"special_notes":"school age group"}],"date":"2025-09-04","start_time":"14:00","duration_hours":4,"coordinated_pickup":true}
+
+tool.book_sibling_group channel=commentary to=assistant:
+{"confirmation":"SG-DO445-090425","total_cost":"$180 after 25% family discount","individual_confirmations":["IF-SOFIA-789","PS-TOMMY-790","SA-ISABELLA-791"],"pickup_time":"18:00","pickup_location":"main desk with ID verification required"}
+
+assistant channel=final:
+All set! Confirmation SG-DO445-090425 books all three from 2-6 PM tomorrow for $180 (after family discount). Sofia, Tommy, and Isabella will be in their age-appropriate groups but coordinated for 6 PM pickup at the main desk. Please bring ID for verification.
+
+user:
+The Vegas lights look incredible from our suite tonight.
+
+assistant channel=analysis:
+Small talk about the Vegas view from their room.
+
+assistant channel=final:
+The city lights are truly spectacular from the upper floors! Perfect for relaxing after a busy day.
+
+user:
+What happens if one child needs to leave early while the others stay?
+
+assistant channel=analysis:
+Parent asking about partial pickup procedures for sibling coordination. This is a logistics question that goes beyond my basic booking tools.
+
+assistant channel=final:
+[ATTENTION] Good question about flexible pickup timing. Checking available options.

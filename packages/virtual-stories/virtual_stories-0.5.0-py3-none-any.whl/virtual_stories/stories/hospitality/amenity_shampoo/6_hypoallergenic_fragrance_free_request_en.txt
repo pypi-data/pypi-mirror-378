@@ -1,0 +1,72 @@
+"""
+Guest requests a fragrance-free hypoallergenic shampoo and asks about bottle sizes; arrange delivery and size info from tools. Include chitchat and [ATTENTION].
+
+ROLES: user (guest with fragrance sensitivity), assistant (spa amenities concierge with inventory visibility)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hair_care_inventory","description":"Check fragrance-free hypoallergenic options and sizes","parameters":{"type":"object","properties":{"product_preference":{"type":"string","enum":["hypoallergenic"]},"fragrance_free":{"type":"boolean"}},"required":["product_preference","fragrance_free"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_hair_care_amenity","description":"Deliver selected product with size","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"product_selection":{"type":"string"},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown"]}},"required":["room_number","product_selection","delivery_timing"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Linden Park House (hotel_id: lph_berlin_09)
+Address: 12 Unter den Linden, 10117 Berlin, Germany
+Timezone: Europe/Berlin
+
+Program:
+- Hypoallergenic, fragrance-free line on request
+- Delivery window: 10–16 minutes
+- Complimentary hair care amenities
+
+YAML Facility:
+---
+quiet_hours: "22:00-07:00"
+sprinklers: true
+---
+
+JSON Sizes:
+{"sizes": ["50ml", "250ml"]}
+
+user:
+Do you have a fragrance-free hypoallergenic shampoo? What sizes are available? I’m in 518.
+
+assistant channel=analysis:
+Check inventory for fragrance-free; report sizes; schedule delivery.
+
+assistant channel=commentary to=tool.check_hair_care_inventory:
+{"product_preference":"hypoallergenic","fragrance_free":true}
+
+tool.check_hair_care_inventory channel=commentary to=assistant:
+{"available_products":["Free_and_Clear"],"sizes":["50ml","250ml"],"recommended":"Free_and_Clear"}
+
+assistant channel=commentary to=tool.deliver_hair_care_amenity:
+{"room_number":"518","product_selection":"Free_and_Clear","delivery_timing":"immediate"}
+
+tool.deliver_hair_care_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"11_minutes","products_included":["Free_and_Clear_Shampoo_250ml"]}
+
+assistant channel=final:
+Yes—our fragrance-free hypoallergenic option is Free & Clear. Available sizes are 50ml and 250ml; I’ve arranged a 250ml bottle to room 518 with an ETA of about 11 minutes.
+
+user:
+The boulevard outside is so lively.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+Unter den Linden is vibrant most evenings—nice for a short walk.
+
+user:
+Could you also book museum tickets for tomorrow morning?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Retrieving information.
+

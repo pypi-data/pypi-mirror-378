@@ -1,0 +1,110 @@
+"""
+Guest with medical prescription inquires about medical marijuana use on property.
+
+ROLES: user (guest with medical marijuana prescription), assistant (concierge clarifying policy and offering alternatives)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_policy",
+    "description": "Retrieve policy details for a given category.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["fire", "fireworks", "pets", "smoking", "drugs"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_wellness_services",
+    "description": "Check available wellness and therapeutic services.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": { "type": "string", "enum": ["spa", "massage", "aromatherapy", "meditation", "acupuncture"] }
+      },
+      "required": ["service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+VENUE: Meridian Wellness Resort — Main Tower (floors 1-15), Spa Pavilion, and Therapeutic Gardens
+LOCATION: Mountain Valley, overlooking Alpine Lake with private forest trails
+STAR RATING: 4.5-star luxury wellness destination with holistic health focus
+CERTIFICATIONS: ISO 14001 Environmental, LEED Gold sustainable building, Wellness Tourism accredited
+GUEST CAPACITY: 240 rooms, 15 luxury villas, 8 healing suites with medical-grade air filtration
+POLICY — Illicit Drugs (possession or use):
+- Prohibited anywhere on property including private accommodations and outdoor spaces.
+- Medical prescriptions require verification and may have usage restrictions.
+- THC-containing substances remain prohibited regardless of medical authorization.
+- CBD products with <0.3% THC may be permitted with proper documentation.
+WELLNESS FACILITIES:
+- Hydrotherapy spa with mineral spring pools heated to 98°F-104°F
+- Meditation pavilion with Tibetan singing bowls (sessions 7:00-10:00, 16:00-19:00)
+- Therapeutic gardens featuring 120+ medicinal herb varieties
+- Salt therapy cave with Pink Himalayan salt walls for respiratory wellness
+- Acupuncture center with licensed practitioners (by appointment)
+- Aromatherapy suite using organic essential oils from on-site botanical garden
+
+user:
+I have a prescription for medical marijuana from my doctor. Can I use it in my room for chronic pain management?
+
+assistant channel=analysis:
+Guest has medical prescription but needs clarification on THC vs CBD policy. Should check policy and offer wellness alternatives.
+
+assistant channel=commentary to=tool.get_policy:
+{"category": "drugs"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"drugs","allowed":false,"summary":"THC-containing substances prohibited regardless of medical authorization","note":"CBD products under 0.3% THC may be permitted with documentation"}
+
+assistant channel=final:
+THC-containing medical marijuana isn't permitted on property, even with prescription. However, CBD products under 0.3% THC are allowed with proper documentation. 
+
+user:
+What documentation would I need for my CBD oil?
+
+assistant channel=analysis:
+User asking about CBD documentation requirements which isn't specified in system context.
+
+assistant channel=final:
+[ATTENTION] I'll look into the specific documentation requirements for CBD products with our wellness team.
+
+user:
+The therapeutic gardens sound amazing for pain relief.
+
+assistant channel=analysis:
+Chitchat about therapeutic gardens - can share system information about medicinal herbs.
+
+assistant channel=final:
+Yes, our gardens feature over 120 medicinal herb varieties. The aromatherapy suite also uses organic essential oils from our botanical garden.
+
+user:
+Do you offer any alternative pain management services?
+
+assistant channel=analysis:
+Should check wellness services that might help with pain management.
+
+assistant channel=commentary to=tool.check_wellness_services:
+{"service_type": "acupuncture"}
+
+tool.check_wellness_services channel=commentary to=assistant:
+{"service":"acupuncture","available":true,"practitioners":"licensed","appointment_required":true,"hours":"by appointment"}
+
+assistant channel=commentary to=tool.check_wellness_services:
+{"service_type": "spa"}
+
+tool.check_wellness_services channel=commentary to=assistant:
+{"service":"spa","available":true,"features":"hydrotherapy mineral springs","temperature_range":"98-104F","additional":"salt therapy cave available"}
+
+assistant channel=final:
+We offer licensed acupuncture by appointment and hydrotherapy spa with mineral spring pools. Our salt therapy cave with Pink Himalayan walls is excellent for wellness.

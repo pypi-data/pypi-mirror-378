@@ -1,0 +1,62 @@
+"""
+Guest asks to relocate lamp for child safety and reduce brightness.
+
+ROLES: user (parent), assistant (housekeeping lighting)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"relocate","description":"Relocate lamp position.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"from":{"type":"string"},"to":{"type":"string","enum":["desk_area","reading_chair","bedside_left","bedside_right","window_corner"]}},"required":["room","to"]},"strict":true},
+  {"name":"dim","description":"Set child-safe dim level.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"brightness":{"type":"number","minimum":10,"maximum":100}},"required":["room","brightness"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Pineview Family Resort (hotel_id: pfr_co_33)
+Address: 88 Meadow Ln, Estes Park, CO 80517
+Family lighting guidance:
+- Keep cords away from play areas
+- Use 30–50% brightness in evenings
+- Position lamps in window corner to reduce reach
+Hours: 08:00–22:30; ETA 12–18 minutes
+
+user:
+Hi, room 230. Please move the lamp to the window corner and dim it—my toddler is curious.
+
+assistant channel=analysis:
+Relocate to window_corner and set brightness to 35% for room 230 per guidance.
+
+assistant channel=commentary to=tool.relocate:
+{"room":"230","from":"reading_chair","to":"window_corner"}
+
+tool.relocate channel=commentary to=assistant:
+{"ticket":"PFR-230-RLC-552","eta_minutes":16}
+
+assistant channel=commentary to=tool.dim:
+{"room":"230","brightness":35}
+
+tool.dim channel=commentary to=assistant:
+{"ticket":"PFR-230-DIM-553","eta_minutes":16}
+
+assistant channel=final:
+We’ll relocate your lamp to the window corner and set it to 35% to keep cords out of reach. Tickets PFR-230-RLC-552 and PFR-230-DIM-553 are confirmed, ETA about 16 minutes within 08:00–22:30.
+
+user:
+Thanks—the pine forest smells great.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+It’s especially fresh after sunset.
+
+user:
+Do you have outlet covers for kids?
+
+assistant channel=analysis:
+Child outlet covers aren’t specified in the system.
+
+assistant channel=final:
+[ATTENTION] I’ll check on outlet cover availability.
+

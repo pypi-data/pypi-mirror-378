@@ -1,0 +1,67 @@
+"""
+Guest inquires about accessibility support and asks for assistance.
+
+ROLES: user (guest with mobility considerations), assistant (spa host arranging assistance and clarifying access details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_assistance","description":"Arrange staff assistance at sauna entry for the requested time.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"time":{"type":"string","format":"date-time"}},"required":["hotel_id","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Copper Canyon Lodge (hotel_id: ccl_phx_05)
+Address: 700 Desert Sky Rd, Phoenix, AZ 85004, USA
+Timezone: America/Phoenix
+Sauna Access: Ramp to wellness level; 85 cm doorway; grab bar at lower bench
+Seating: Lower bench height 44 cm; transfer stool available on request
+Hours: 10:00–22:00; quiet period 14:00–16:00
+Capacity: 2 guests; 20-minute sessions
+Cooldown: Cooling corridor fans; accessible shower with hand sprayer
+Assistance: On-call staff for entry/exit support; request 10 minutes in advance
+Emergency: Push-to-alert button; security radio Channel 3
+
+user:
+Could someone help me at 18:10 to get in and settled?
+
+assistant channel=analysis:
+Schedule assistance 10 minutes before the session time as per policy.
+
+assistant channel=commentary to=tool.schedule_assistance:
+{"hotel_id":"ccl_phx_05","time":"2025-08-29T18:10:00"}
+
+tool.schedule_assistance channel=commentary to=assistant:
+{"scheduled":true,"ref":"ASSIST-1810"}
+
+assistant channel=final:
+We’ll be there at 18:10 to assist (ref ASSIST-1810).
+
+user:
+Is the doorway wide enough for my chair?
+
+assistant channel=analysis:
+Answer from system access measurements.
+
+assistant channel=final:
+Yes—the doorway is 85 cm wide.
+
+user:
+The cooling corridor sounds nice.
+
+assistant channel=analysis:
+Add a small, friendly remark.
+
+assistant channel=final:
+The fans make the transition out of the heat gentler.
+
+user:
+Do you partner with any specific mobility equipment brands?
+
+assistant channel=analysis:
+Partnership brands aren’t listed; use the attention flag.
+
+assistant channel=final:
+[ATTENTION] Understood. Checking available options.
+

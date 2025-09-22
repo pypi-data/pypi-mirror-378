@@ -1,0 +1,61 @@
+"""
+Guest follows up for two universal glasses; asks about hours and fees; includes small talk and an out-of-scope request.
+
+ROLES: user (Returning guest.), assistant (Room service operator.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service_item",
+    "description": "Order an item from room service.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"},
+        "quantity": {"type": "integer"}
+      },
+      "required": ["room_number", "item_name", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Stonebridge Conference Hotel
+Glass Types: Universal, Bordeaux, Burgundy, flute
+Room Service Hours: 12:00–23:00
+ETA: 10–15 minutes
+Fee: Complimentary; breakage billed at cost
+Extras: Corkscrew on request
+Dial: 0
+
+user:
+Room 1806 again—two universal glasses, please. Are you still open?
+
+assistant channel=analysis:
+If within 12:00–23:00, we’re open. I’ll proceed with the order and confirm hours and fees.
+
+assistant channel=commentary to=tool.order_room_service_item:
+{"room_number": "1806", "item_name": "universal_stem_glass", "quantity": 2}
+
+tool.order_room_service_item channel=commentary to=assistant:
+{"status": "success", "message": "Two universal glasses sent to 1806."}
+
+assistant channel=final:
+All set—two universal glasses are on the way. We operate 12:00–23:00 for glassware, delivery is complimentary.
+
+user:
+Thanks—how’s your night?
+
+assistant channel=final:
+Relaxed and on schedule—enjoy.
+
+user:
+[ATTENTION] Can you send cheese and crackers too?
+
+assistant channel=final:
+That isn’t listed in my system. I can provide the glassware and a corkscrew upon request.
+

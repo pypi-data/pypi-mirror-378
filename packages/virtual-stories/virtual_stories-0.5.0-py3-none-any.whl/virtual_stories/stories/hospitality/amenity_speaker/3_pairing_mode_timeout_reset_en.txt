@@ -1,0 +1,77 @@
+"""
+Guest can’t keep speaker in pairing mode; check status, guide reset, then pair.
+
+ROLES: user (guest with iPhone), assistant (tech concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_room_audio_status","description":"Check speaker status and pairing mode.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"pair_bluetooth","description":"Pair device to room speaker.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"device_name":{"type":"string"}},"required":["room_number","device_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Crescent Bay Hotel (hotel_id: cbh_lax_04)
+Address: 1415 Ocean Ave, Santa Monica, CA 90401
+Timezone: America/Los_Angeles
+
+Audio Notes:
+- Speaker: CrescentTone S; name pattern "CBH-ROOM-<room>"
+- Pairing: hold power 3s to enter; auto-timeout after 120s
+- If timeouts persist: toggle power off/on, retry pairing
+- AUX available on request via Services x0
+- Quiet hours: 22:00–07:00
+
+Lobby Ambience:
+- Morning: “Beach Glass”; Evening: “Pacific Nightdrive”
+
+user:
+It keeps dropping out of pairing in 415. Help?
+
+assistant channel=analysis:
+Check status; instruct reset; then pair to provided device name if needed.
+
+assistant channel=commentary to=tool.check_room_audio_status:
+{"room_number":"415"}
+
+tool.check_room_audio_status channel=commentary to=assistant:
+{"room_number":"415","speaker_online":true,"pairing_mode":false,"display_name":"CBH-ROOM-415"}
+
+assistant channel=final:
+Please press and hold power for ~3 seconds until the blue LED blinks. If it times out again, toggle the speaker off and back on, then re‑enter pairing and select “CBH-ROOM-415”.
+
+user:
+Okay, try pairing to “Maya’s iPhone”.
+
+assistant channel=analysis:
+Proceed to pair now.
+
+assistant channel=commentary to=tool.pair_bluetooth:
+{"room_number":"415","device_name":"Maya’s iPhone"}
+
+tool.pair_bluetooth channel=commentary to=assistant:
+{"paired":true,"room_number":"415","device_name":"Maya’s iPhone"}
+
+assistant channel=final:
+You’re paired—“Maya’s iPhone” is connected to CBH-ROOM-415.
+
+user:
+Which playlist runs in the evening?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Our evening playlist is “Pacific Nightdrive.”
+
+user:
+Can you stream a specific podcast to the speaker for me?
+
+assistant channel=analysis:
+Streaming on the guest’s behalf isn’t defined.
+
+assistant channel=final:
+[ATTENTION] I acknowledge the podcast streaming request. Reviewing options.
+

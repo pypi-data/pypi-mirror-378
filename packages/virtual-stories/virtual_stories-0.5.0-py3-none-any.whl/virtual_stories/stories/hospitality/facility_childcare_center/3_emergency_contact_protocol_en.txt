@@ -1,0 +1,92 @@
+"""
+Parent asks about emergency procedures and contact protocols while their child is in childcare.
+
+ROLES: user (concerned parent wanting safety assurance), assistant (childcare safety coordinator explaining emergency protocols)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"register_emergency_contacts","description":"Register multiple emergency contacts for a child","parameters":{"type":"object","additionalProperties":false,"properties":{"guest_id":{"type":"string"},"child_name":{"type":"string"},"primary_contact":{"type":"object","properties":{"name":{"type":"string"},"phone":{"type":"string"},"relation":{"type":"string"}}},"secondary_contacts":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"phone":{"type":"string"},"relation":{"type":"string"}}}}},"required":["guest_id","child_name","primary_contact"]},"strict":true},
+  {"name":"get_emergency_protocols","description":"Get detailed emergency procedures for the facility","parameters":{"type":"object","additionalProperties":false,"properties":{"facility_id":{"type":"string"},"protocol_type":{"type":"string","enum":["medical","evacuation","severe_weather","lockdown","general"]}},"required":["facility_id","protocol_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Facility: Little Treasures Childcare Center (facility_id: childcare_treasures_denver)
+Property: Rocky Mountain Lodge (hotel_id: rocky_mountain_denver)
+Address: 1701 Wynkoop Street, Denver, CO 80202
+Timezone: America/Denver
+Ages: 6 months - 12 years
+Hours: Daily 06:00-22:00
+Medical: On-site pediatric nurse 08:00-18:00, pediatric first aid certified staff 24/7
+Emergency protocols: Fire evacuation, severe weather shelter, medical emergency response
+Location: Ground floor with direct outdoor access, emergency exits marked, AED on-site
+Communication: Instant parent notification system via SMS/phone for emergencies
+Partnerships: Children's Hospital Colorado (3 minutes), Denver Fire Station 1 (2 blocks)
+
+user:
+Hi, what happens if there's an emergency while my daughter is in your childcare center? How quickly would I be notified?
+
+assistant channel=analysis:
+Parent asking about emergency procedures and notification protocols. I should get the general emergency procedures first.
+
+assistant channel=commentary to=tool.get_emergency_protocols:
+{"facility_id":"childcare_treasures_denver","protocol_type":"general"}
+
+tool.get_emergency_protocols channel=commentary to=assistant:
+{"protocols":["immediate parent notification via SMS and phone","on-site pediatric nurse available 08:00-18:00","all staff pediatric first aid certified","direct line to Children's Hospital Colorado","evacuation to Rocky Mountain Lodge main lobby if needed","incident documentation and follow-up"],"response_time":"immediate notification, medical response within 2 minutes"}
+
+assistant channel=final:
+We have comprehensive emergency protocols with immediate parent notification via SMS and phone. Our on-site pediatric nurse is here 08:00-18:00, all staff are pediatric first aid certified, and we're 3 minutes from Children's Hospital Colorado. You'd be notified instantly of any incident, with medical response within 2 minutes.
+
+user:
+That's reassuring. Can I add my husband and my mother as emergency contacts? I'm guest ID RM-334, daughter Emma is 4 years old.
+
+assistant channel=analysis:
+Parent wants to register multiple emergency contacts. I need to collect the contact information and register them.
+
+assistant channel=commentary to=tool.register_emergency_contacts:
+{"guest_id":"RM-334","child_name":"Emma","primary_contact":{"name":"Guest (mother)","phone":"from guest registration","relation":"mother"},"secondary_contacts":[{"name":"to be provided","phone":"to be provided","relation":"father"},{"name":"to be provided","phone":"to be provided","relation":"grandmother"}]}
+
+tool.register_emergency_contacts channel=commentary to=assistant:
+{"status":"partial_registration","message":"Please provide contact details for secondary contacts","contact_form_id":"EC-RM334-EMMA"}
+
+assistant channel=final:
+Of course! I've started form EC-RM334-EMMA for Emma. Please provide your husband's and mother's names and phone numbers, and I'll register them as secondary emergency contacts immediately.
+
+user:
+My husband is David Johnson, 303-555-0198. My mom is Linda Chen, 303-555-0167.
+
+assistant channel=commentary to=tool.register_emergency_contacts:
+{"guest_id":"RM-334","child_name":"Emma","primary_contact":{"name":"Guest (mother)","phone":"from guest registration","relation":"mother"},"secondary_contacts":[{"name":"David Johnson","phone":"303-555-0198","relation":"father"},{"name":"Linda Chen","phone":"303-555-0167","relation":"grandmother"}]}
+
+tool.register_emergency_contacts channel=commentary to=assistant:
+{"status":"registered","contact_count":3,"notification_priority":["mother","father","grandmother"],"confirmation_id":"EC-2025-0903-RM334"}
+
+assistant channel=final:
+Perfect! All three emergency contacts are registered with confirmation EC-2025-0903-RM334. We'll notify you first, then David, then Linda in that priority order for any emergency situation.
+
+user:
+The mountain air here is so crisp and refreshing.
+
+assistant channel=analysis:
+Small talk about the Denver mountain environment.
+
+assistant channel=final:
+It really is! The high altitude makes everything feel so clean and fresh here in Colorado.
+
+user:
+What about severe weather like tornadoes? Do you have a basement shelter?
+
+assistant channel=analysis:
+Specific question about severe weather protocols, which requires getting those specific protocols.
+
+assistant channel=commentary to=tool.get_emergency_protocols:
+{"facility_id":"childcare_treasures_denver","protocol_type":"severe_weather"}
+
+tool.get_emergency_protocols channel=commentary to=assistant:
+{"protocols":["immediate move to interior ground floor safe room","no basement available but reinforced interior space designated","continuous weather monitoring via NOAA alerts","parent notification within 60 seconds of weather warning","children remain in safe space until all-clear given","emergency supplies for 4+ hours"],"safe_room_location":"interior hallway near main desk, away from windows"}
+
+assistant channel=final:
+We have a designated severe weather safe room in our interior hallway away from windows. While there's no basement, it's a reinforced space with emergency supplies. You'd be notified within 60 seconds of any weather warning, and children stay safe until the all-clear.

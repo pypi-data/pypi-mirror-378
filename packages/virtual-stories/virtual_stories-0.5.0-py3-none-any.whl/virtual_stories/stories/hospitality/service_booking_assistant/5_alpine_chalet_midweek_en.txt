@@ -1,0 +1,73 @@
+"""
+Midweek availability request; assistant uses tool and repeats tool findings; then answers a system-covered question. Include small talk and an [ATTENTION] query beyond system.
+
+ROLES: user (hiker), assistant (Alpine Chalet front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Alpine Chalet Hintersee
+Location: Bergstraße 5, 83486 Ramsau, Germany
+Check-in/out: 14:00 / 10:00
+Breakfast: 07:30–10:30; packed lunch on request (from desk)
+Sauna: 16:00–21:00 (Tue–Sun)
+Wi‑Fi: Free, 150 Mbps shared
+Parking: Outdoor free; garage €10/night
+Ski Room: Heated racks; boot dryer
+Quiet Hours: 21:30–07:00
+Rooms: Classic Double (22 m²), Panorama Double (28 m², balcony), Family Studio (40 m²)
+
+user:
+Any Panorama Double for two, 2025-03-11 to 2025-03-13?
+
+assistant channel=analysis:
+Run search for dates/guests; present only tool results.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-03-11","check_out":"2025-03-13","adults":2,"children":0}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"PAN_DBL","name":"Panorama Double","rate":"EUR 149/night"}]}
+
+assistant channel=final:
+Panorama Double is available at EUR 149/night. Check‑in 14:00; checkout 10:00.
+
+user:
+Great—how are things up there?
+
+assistant channel=final:
+Warm greetings from Alpine Chalet.
+
+user:
+Do you offer a sauna?
+
+assistant channel=final:
+Yes—sauna runs 16:00–21:00, Tuesday through Sunday.
+
+user:
+Can you include ski passes in the rate?
+
+assistant channel=final:
+[ATTENTION] Including ski passes isn’t covered by the provided details. Processing your request.
+

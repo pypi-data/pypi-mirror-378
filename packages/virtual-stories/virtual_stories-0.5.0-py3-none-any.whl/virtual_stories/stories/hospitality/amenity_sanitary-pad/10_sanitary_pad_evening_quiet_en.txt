@@ -1,0 +1,80 @@
+"""
+Guest requests pads in the evening and asks about quiet hours; confirm availability and deliver; include small talk and acknowledgment.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check sanitary pads by absorbency and wings.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_pad"]},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"}},"required":["item_code","absorbency","with_wings"]},"strict":true},
+  {"name":"deliver_personal_care","description":"Deliver personal care items discreetly in a paper bag.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"},"quantity":{"type":"integer","minimum":1},"bag_type":{"type":"string","enum":["discreet_paper"]}},"required":["room_number","item_code","absorbency","with_wings","quantity","bag_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cedar Court (hotel_id: cc_pdx_12)
+Address: 1000 SW Broadway, Portland, OR 97205
+Personal care: 07:00–23:00; ETA 8–14 minutes
+Quiet floors: 16–20 after 21:30
+Wi‑Fi: 400/400 Mbps; meeting traffic prioritized until 18:00
+Scent: cedar hint in lobby
+Check-in/out: 15:00 / 12:00
+Cafe: 06:30–14:00; pastries by local bakery
+
+Pads stock:
+- regular/with_wings(26), super/with_wings(22)
+- light/no_wings(13)
+- Delivery: discreet_paper bag
+
+user:
+Could I get two packs of regular with wings to 1705?
+
+assistant channel=analysis:
+Check regular/with_wings; deliver 2 to 1705.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"item_code":"sanitary_pad","absorbency":"regular","with_wings":true}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_pad","absorbency":"regular","with_wings":true,"on_hand_packs":26}
+
+assistant channel=analysis:
+Proceed with delivery to 1705.
+
+assistant channel=commentary to=tool.deliver_personal_care:
+{"room_number":"1705","item_code":"sanitary_pad","absorbency":"regular","with_wings":true,"quantity":2,"bag_type":"discreet_paper"}
+
+tool.deliver_personal_care channel=commentary to=assistant:
+{"ticket_id":"PC-1705-9911","eta_minutes":10}
+
+assistant channel=final:
+Certainly—two packs of regular pads with wings will arrive at 1705 in a discreet paper bag. Ticket PC-1705-9911, about 10 minutes.
+
+user:
+Is 17th floor a quiet floor at night?
+
+assistant channel=analysis:
+Answer from system quiet floors.
+
+assistant channel=final:
+Yes—floors 16–20 observe quiet hours after 21:30.
+
+user:
+The cedar hint in the lobby is cozy.
+
+assistant channel=analysis:
+Reference scent detail.
+
+assistant channel=final:
+We use a light cedar hint—glad it feels cozy.
+
+user:
+Do you have spare heating blankets?
+
+assistant channel=analysis:
+Not specified; flag it.
+
+assistant channel=final:
+[ATTENTION] I’ll check on heating blankets. Reviewing inventory records.
+

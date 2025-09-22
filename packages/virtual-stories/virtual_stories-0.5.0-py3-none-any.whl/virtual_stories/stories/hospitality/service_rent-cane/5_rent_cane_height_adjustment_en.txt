@@ -1,0 +1,54 @@
+"""
+Guest needs cane with specific height adjustment; confirm adjustable models available, discuss customization options, and arrange delivery.
+
+ROLES: user (guest requiring specific cane height for comfort), assistant (front desk providing customized accessibility solutions)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check accessibility item availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create rental with fee or comp","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Old Town Heritage Prague (OTHP-05), Karlova 7, 110 00 Prague 1, Czechia.
+Boutique heritage hotel; 7 floors; Front Desk 24/7.
+Walking canes: 6 units; complimentary for up to 48 hours; return at Front Desk; no deposit.
+Cane specifications: Adjustable height models (CANE-01, CANE-03, CANE-07); range 32-38 inches; rubber tips included; ergonomic handles available.
+Other facts: Elevator to all floors; Breakfast 7:00–10:30; Maintenance team available for adjustments; Customization services.
+
+user:
+I need a walking cane, but I'm quite tall and need one that can be adjusted to about 36 inches. Do you have adjustable models?
+
+assistant channel=analysis:
+The guest needs a cane with specific height adjustment. I should check for adjustable models and confirm the height range available.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"OTHP-05","item":"walking_cane_adjustable","quantity":1,"room":"305"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["CANE-03"],"notes":"Adjustable 32-38 inches; ergonomic handle","specifications":"Height range: 32-38 inches, Rubber tip, Ergonomic grip"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"OTHP-05","room":"305","item":"walking_cane_adjustable","duration_hours":48,"charge_code":"COMP-ACCESS","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CAN-305-2221","status":"created","charge":"comp","height_setting":"36 inches","customization":"completed"}
+
+assistant channel=final:
+Perfect! CANE-03 is adjustable from 32-38 inches, so 36 inches is ideal. I've set it to your height and created order CAN-305-2221, complimentary for 48 hours. The cane has an ergonomic handle and rubber tip for comfort. We'll deliver it to room 305.
+
+user:
+Excellent! The hotel's attention to detail is impressive.
+
+assistant channel=final:
+Thank you—we believe accessibility should be seamless and comfortable for all our guests.
+
+user:
+Do you have any specialized mobility equipment for guests with arthritis?
+
+assistant channel=final:
+[ATTENTION] Reviewing available specialized equipment options.

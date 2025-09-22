@@ -1,0 +1,54 @@
+"""
+Guest wants mountain postcards and asks about bundle; include inventory tool, small talk, and out-of-scope.
+
+ROLES: user (hiker guest), assistant (front desk)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "get_gift_shop_inventory",
+    "description": "Checks the inventory of the hotel gift shop.",
+    "parameters": {"type": "object","properties": {"item_name": {"type": "string"}},"required": ["item_name"]}
+  }
+]
+```
+"""
+
+system:
+Alpine Crest Lodge — Trailhead Gift Nook
+Open: 07:00–19:00 daily; location: trailhead foyer
+Postcard sets: sunrise ridge, glacial lake, summit panorama
+Bundle offer: any 6 for $11; single cards $2.25
+Stamping: international stamps $1.40; domestic $0.75
+Materials: water-resistant matte; rounded corners
+Eco: portion of proceeds funds trail maintenance
+Inventory checks via get_gift_shop_inventory
+
+user:
+Do you carry the summit panorama postcards?
+
+assistant channel=analysis:
+Check inventory for summit_panorama_postcard; confirm pricing and hours from system.
+
+assistant channel=commentary to=tool.get_gift_shop_inventory:
+{"item_name": "summit_panorama_postcard"}
+
+tool.get_gift_shop_inventory channel=commentary to=assistant:
+{"item_name": "summit_panorama_postcard", "quantity": 33, "price": 2.25}
+
+assistant channel=final:
+Yes—33 in stock at $2.25 each, or any 6 for $11. The Trailhead Gift Nook is open 07:00–19:00.
+
+user:
+Love that you fund trail maintenance.
+
+assistant channel=final:
+Thank you—it’s a cause we care about.
+
+user:
+What’s tomorrow’s avalanche risk rating for the north face?
+
+assistant channel=final:
+[ATTENTION] Trail hazard forecasts aren’t included in these resources.
+

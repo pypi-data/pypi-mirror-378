@@ -1,0 +1,69 @@
+"""
+A writer requests a room with a reading desk on a quiet floor; they ask about lamp types, chair ergonomics, and upgrade costs.
+
+ROLES: user (Writer seeking a focused workspace.), assistant (Solution-oriented front desk manager.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "find_available_room",
+    "description": "Finds an available room with specific features.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "feature": {"type": "string"},
+        "start_date": {"type": "string", "format": "date"},
+        "end_date": {"type": "string", "format": "date"}
+      },
+      "required": ["feature", "start_date", "end_date"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: The Scholar's Terrace
+Positioning: Boutique hotel for academics, authors, and researchers
+Workspace Program:
+- Dedicated reading desks in Scholar, Executive Scholar, and Atelier Suites
+- Desk lamps: warm 2700K dimmable; task lamp on request
+- Chairs: adjustable ergonomic task chairs
+Upgrade Policy: Complimentary to next category if feature is required for work
+Quiet-Floor Policy: Floors 15–18 designated quiet after 9pm
+Check-in Help: Dial Front Desk at 0
+
+user:
+Hi—checking in today. I need a quiet room with a reading desk.
+
+assistant channel=analysis:
+We can find a room with "reading_desk" and quiet floors are 15–18. I’ll search availability and then mention upgrade policy and desk setup.
+
+assistant channel=commentary to=tool.find_available_room:
+{"feature": "reading_desk", "start_date": "2025-09-03", "end_date": "2025-09-07"}
+
+tool.find_available_room channel=commentary to=assistant:
+{"rooms": [{"room_number": "1603", "room_type": "Executive Scholar", "features": ["reading_desk", "quiet_floor"], "floor": 16}]}
+
+assistant channel=final:
+We have Executive Scholar 1603 on our quiet floor 16 with a dedicated reading desk. Lamps are warm 2700K and dimmable; the chair is ergonomic and adjustable. We can offer a complimentary upgrade if needed for work.
+
+user:
+Is there a cost for that upgrade?
+
+assistant channel=final:
+No—when the desk is required for work, we upgrade to the next category at no charge.
+
+user:
+Great—how’s your day going?
+
+assistant channel=final:
+All good here—welcome and let us know if you need a task lamp.
+
+user:
+[ATTENTION] Can you also book a co-working space downtown?
+
+assistant channel=final:
+I don’t have booking access for external co-working spaces in my system. I can secure your room with a desk and quiet-floor placement here.
+

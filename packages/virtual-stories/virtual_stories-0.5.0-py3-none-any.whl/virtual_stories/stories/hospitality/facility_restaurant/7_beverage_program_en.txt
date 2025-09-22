@@ -1,0 +1,66 @@
+"""
+Guest asks about corkage and zero-proof pairings; curious about bar details.
+
+ROLES: user (diner focused on beverages), assistant (concierge explaining beverage program and policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_cocktails","description":"Return signature cocktails and zero-proof options at Garden Hearth.","parameters":{"type":"object","properties":{},"required":[],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Venue: Garden Hearth (restaurant_id: rest_garden_hearth)
+Beverage program: 280‑label wine list; zero‑proof pairings available by course
+Corkage: $35 per 750 ml; max 2 bottles per table
+Bar hours: 16:00–22:00
+Happy hour: 16:00–18:00 at bar seats only
+Refills: Iced tea complimentary refills
+Water: Still/sparkling filtered, no charge
+Age policy: Bar counter 21+; dining room all ages
+Payment: Major cards, Apple Pay, room charge
+
+user:
+Do you allow corkage? What’s the fee?
+
+assistant channel=analysis:
+Answer strictly from system corkage line.
+
+assistant channel=final:
+Yes—corkage is $35 per 750 ml, with a maximum of two bottles per table.
+
+user:
+Do you have zero‑proof pairings?
+
+assistant channel=analysis:
+Confirm from system; then offer a brief sample via tool.
+
+assistant channel=commentary to=tool.list_cocktails:
+{}
+
+tool.list_cocktails channel=commentary to=assistant:
+{"signature":["Bay Herb Gimlet","Citrus Coast Old Fashioned"],"zero_proof":["Garden Tonic","Stonefruit Spritz"]}
+
+assistant channel=final:
+We do—zero‑proof pairings are available. Examples: Garden Tonic and Stonefruit Spritz.
+
+user:
+Love a good spritz!
+
+assistant channel=analysis:
+Short friendly reply.
+
+assistant channel=final:
+Refreshing and bright—great with seasonal dishes.
+
+user:
+Can you host a tequila tasting for our group next week?
+
+assistant channel=analysis:
+Not in system/tools—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Understood about a tasting request. Assessing options.
+

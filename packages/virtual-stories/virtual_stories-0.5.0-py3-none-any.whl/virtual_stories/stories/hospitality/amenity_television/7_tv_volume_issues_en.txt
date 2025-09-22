@@ -1,0 +1,122 @@
+"""
+Guest reports volume control issues with the TV and asks about audio troubleshooting and sound problems.
+
+ROLES: user (guest experiencing TV volume problems), assistant (in-room technology concierge troubleshooting audio issues)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "diagnose_tv_issue",
+    "description": "Run a remote diagnostic on the in-room TV to check power, input, and signal state.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "dispatch_tv_technician",
+    "description": "Dispatch an in-room technician for TV support.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "required": ["room_number", "reason"]
+    },
+    "strict": true
+  },
+  {
+    "name": "enable_guest_streaming_mode",
+    "description": "Enable privacy sandbox for guest streaming logins (auto-clears at checkout).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Skyline Vista Hotel (hotel_id: sv_nyc_34)
+Location: 455 West 34th Street, New York, NY 10001
+Timezone: America/New_York
+
+In-Room TV Details:
+- Display: 55" Samsung QLED (2024 series) with HDMI 1/2, TV tuner, and casting
+- Sound: Integrated soundbar mode enabled by default
+- Channels: Premium sports, international news, and film classics package
+- Privacy: Guest Streaming Mode wipes credentials at checkout
+
+Spaces & Ambience:
+- 34th-floor skyline lounge with floor-to-ceiling windows
+- Lobby espresso cart serving single-origin roasts from 6–11AM
+
+Audio troubleshooting: Volume normalization settings; audio delay compensation; soundbar mode toggle; Bluetooth audio interference check; input-specific volume levels; mute function reset; audio preset adjustments; bass and treble reset; night mode toggle; external device audio routing
+
+user:
+Hi! I'm having trouble with the volume on the TV in room 2217. It's either too loud or too quiet, and the volume buttons don't seem to work consistently.
+
+assistant channel=analysis:
+Run diagnostic to check TV status and provide audio troubleshooting steps.
+
+assistant channel=commentary to=tool.diagnose_tv_issue:
+{"room_number":"2217"}
+
+tool.diagnose_tv_issue channel=commentary to=assistant:
+{"powered_on":true,"active_input":"TV","signal":"good","recommendation":"audio_settings_check","panel_controls_available":true}
+
+assistant channel=analysis:
+Provide audio troubleshooting steps based on diagnostic results.
+
+assistant channel=final:
+I can see your TV is working properly. For volume issues, try these steps: 1) Check if volume normalization is enabled (Menu > Sound > Volume Normalization), 2) Try toggling soundbar mode off and on, 3) Reset audio presets to default, 4) Check if night mode is affecting volume levels. You can also use the panel controls on the TV if the remote volume buttons aren't working.
+
+user:
+I tried those steps but it's still not working properly. Can you send a technician?
+
+assistant channel=analysis:
+Dispatch technician to troubleshoot audio issues.
+
+assistant channel=commentary to=tool.dispatch_tv_technician:
+{"room_number":"2217","reason":"volume_control_issues_and_audio_troubleshooting_needed"}
+
+tool.dispatch_tv_technician channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":15,"assigned":"tech_mike"}
+
+assistant channel=analysis:
+Confirm technician dispatch for audio troubleshooting.
+
+assistant channel=final:
+Absolutely! Mike is on his way to room 2217 to troubleshoot the volume issues. He'll be there in about 15 minutes and can check the audio settings, soundbar connections, and volume controls.
+
+user:
+The integrated soundbar mode sounds like it should provide great audio quality.
+
+assistant channel=analysis:
+Acknowledge their interest in the soundbar feature without adding new information.
+
+assistant channel=final:
+Yes, the integrated soundbar mode is designed to provide excellent audio quality with enhanced clarity and depth!
+
+user:
+Do you have any wireless speakers available for better audio?
+
+assistant channel=analysis:
+Wireless speakers aren't mentioned in system prompt, so use attention flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for your question. Reviewing available resources.

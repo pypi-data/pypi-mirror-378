@@ -1,0 +1,82 @@
+"""
+Guest asks LINE operating hours and wants a direct handle confirmation; include chit‑chat and an out‑of‑scope data request.
+
+ROLES: user (guest), assistant (front desk via social)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Aurora Quay Suites (hotel_id: aurora_quay)
+Coordinates: 1.2796°N, 103.8571°E
+Contact matrix:
+  LINE: @auroraquay
+  Email: hello@auroraquaysuites.sg
+  Phone: +65 6900 2210
+  Website: https://www.auroraquaysuites.sg
+Service window:
+  LINE responses 07:00–22:00 SGT; after-hours: queued
+  Avg first reply: 12–25 minutes
+Other details:
+  Check-in floors: 5–6F | Pool: 18F (saltwater) | Quiet hours: 22:00–07:00
+
+user:
+What are your LINE hours today?
+
+assistant channel=analysis:
+Answer from system Service window.
+
+assistant channel=final:
+We respond on LINE between 07:00–22:00 SGT; after-hours messages queue for the morning.
+
+user:
+Just to confirm—what’s the exact LINE handle?
+
+assistant channel=analysis:
+Fetch handle via contact tool to echo precisely.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"aurora_quay","channel":"line"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"line":"@auroraquay"}
+
+assistant channel=final:
+You can find us at @auroraquay.
+
+user:
+By the way, love the pool view.
+
+assistant channel=analysis:
+Small talk; reference pool info.
+
+assistant channel=final:
+It’s a favorite—our saltwater pool is up on 18F.
+
+user:
+Can you provide your historical monthly LINE SLA trend?
+
+assistant channel=analysis:
+Out of scope—no SLA history.
+
+assistant channel=final:
+[ATTENTION] Monthly SLA trends aren’t available within the provided resources.
+

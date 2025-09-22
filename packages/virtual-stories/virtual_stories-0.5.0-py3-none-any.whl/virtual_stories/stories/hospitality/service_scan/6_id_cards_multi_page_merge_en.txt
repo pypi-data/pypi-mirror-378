@@ -1,0 +1,41 @@
+"""
+Guest scans multiple ID cards front/back into one PDF; include in-context merge guidance and [ATTENTION] tool scans.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"scan_document","description":"Scan","parameters":{"type":"object","properties":{"pages":{"type":"integer"},"dpi":{"type":"integer"},"color":{"type":"string","enum":["b&w","color"]},"duplex":{"type":"boolean"},"ocr":{"type":"boolean"}},"required":["pages","dpi","color","duplex","ocr"]}}
+]
+"""
+
+system:
+Business Center – Old Town Court (hotel_id: otc_prg)
+ADF supports card carriers; for front/back cards, load as 2 pages per card.
+PDF merge: supported by scanning all sides in one job.
+Recommended: color 300 dpi for IDs.
+
+user:
+I have three ID cards—can you scan both sides into one PDF?
+
+assistant channel=analysis:
+Explain process from system; yes, scan 6 pages in one job.
+
+assistant channel=final:
+Yes—load them so each side scans as a page, and we’ll run one job to merge all six pages into a single PDF.
+
+user:
+[ATTENTION] Please scan now in color 300 dpi with OCR.
+
+assistant channel=analysis:
+Run tool with pages=6, dpi=300, color, duplex off, OCR on.
+
+assistant channel=commentary to=scan_document:
+{"pages":6,"dpi":300,"color":"color","duplex":false,"ocr":true}
+
+tool.scan_document:
+{"status":"scanned","filename":"id_cards_3x_front_back_color.pdf"}
+
+assistant channel=final:
+Completed—saved as id_cards_3x_front_back_color.pdf with OCR at 300 dpi.
+

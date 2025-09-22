@@ -1,0 +1,52 @@
+"""
+Guest asks if the phone number is suitable for emergencies; provide the main number and confirm it routes urgency; include an out-of-scope incident log request.
+
+ROLES: user (guest), assistant (operator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Granite Court (hotel_id: granite_court)
+Main phone: +1 303 555 7722 | Email frontdesk@granitecourt.com
+Policy: Emergencies may be reported via the main line; lines staffed 24/7
+Extras: Fireplace lounge; Ski valet; Trail maps at concierge.
+
+user:
+Is your main number the right one for emergencies?
+
+assistant channel=analysis:
+Provide number and confirm policy from system.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"granite_court","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+1 303 555 7722"}
+
+assistant channel=final:
+Yes—please call +1 303 555 7722 for emergencies; the line is staffed 24/7.
+
+user:
+The fireplace lounge is so cozy.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+We’re glad—many guests warm up there after the slopes.
+
+user:
+Can you share last night’s incident log?
+
+assistant channel=analysis:
+Out of scope—no incident logs available.
+
+assistant channel=final:
+[ATTENTION] Incident log details aren’t available within the provided resources.
+

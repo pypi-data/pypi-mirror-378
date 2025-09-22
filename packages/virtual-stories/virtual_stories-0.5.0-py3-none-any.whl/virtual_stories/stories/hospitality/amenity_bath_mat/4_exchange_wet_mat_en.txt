@@ -1,0 +1,98 @@
+"""
+Guest requests to exchange a wet bath mat; verify exchange policy and submit swap ticket. Include small talk, an in-context hours question, and an [ATTENTION] case.
+
+ROLES: user (guest with a wet mat), assistant (front desk coordinating swap)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"linen_swap","description":"Create a swap request for wet/soiled linens.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["room","item","quantity"]},"strict":true},
+  {"name":"stock_check","description":"Check stock counts for a linen item.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Blue Dune Resort (hotel_id: bdr_az_03)
+Address: 880 Desert Shore Dr, Scottsdale, AZ 85251
+Timezone: America/Phoenix
+Check-in/Out: 16:00 / 11:00
+Housekeeping Service Window: 07:00–22:00
+
+Policies:
+- Wet or soiled bath mats can be swapped on request.
+- We do not provide chemicals; only clean replacements.
+- Typical swap ETA: 10–18 minutes.
+
+Amenities:
+1) Rooftop plunge pool (08:00–21:00)
+2) Cactus Garden Courtyard with misting stations
+3) Café Ocotillo (06:30–14:00)
+4) Hydration stations on each floor
+5) Quiet hours: 22:00–07:00
+
+Design:
+- Sandstone tiles, desert palette, shaded breezeways
+
+Dining:
+- Café Ocotillo 06:30–14:00
+- Terrace snacks 16:00–20:00
+
+Accessibility:
+- Step-free access to all public areas
+- Shower stools available on request
+
+Sustainability:
+- Low-flow fixtures; xeriscape landscaping
+- Refillable water stations in each wing
+
+user:
+Hi, our bath mat got soaked. Could you swap it out in room 512?
+
+assistant channel=analysis:
+Check stock for bath_mat, then create a linen swap for 1 unit.
+
+assistant channel=commentary to=tool.stock_check:
+{"item":"bath_mat"}
+
+tool.stock_check channel=commentary to=assistant:
+{"item":"bath_mat","on_hand":15}
+
+assistant channel=commentary to=tool.linen_swap:
+{"room":"512","item":"bath_mat","quantity":1}
+
+tool.linen_swap channel=commentary to=assistant:
+{"swap_id":"SW-BDR-512-1188","eta_minutes":12}
+
+assistant channel=final:
+I’ve set up a swap for one bath mat in room 512. Swap ID SW-BDR-512-1188 with an estimated 12 minutes to arrival.
+
+user:
+The courtyard with the misting stations feels great.
+
+assistant channel=analysis:
+Small talk referencing amenities.
+
+assistant channel=final:
+The Cactus Garden Courtyard and misting stations do keep it cool in the afternoon.
+
+user:
+Up to what time can housekeeping swap items tonight?
+
+assistant channel=analysis:
+Answer from Housekeeping Service Window.
+
+assistant channel=final:
+Housekeeping swaps run until 22:00.
+
+user:
+Could you find a same-day laundry service nearby and send them our clothes?
+
+assistant channel=analysis:
+Beyond system/tools; use special flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+
+user:
+Thanks, that timing is perfect.

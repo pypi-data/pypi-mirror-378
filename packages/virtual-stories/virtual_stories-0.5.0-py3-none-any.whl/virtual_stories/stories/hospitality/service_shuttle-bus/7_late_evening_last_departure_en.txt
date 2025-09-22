@@ -1,0 +1,50 @@
+"""
+Guest asks for the last shuttle of the night; confirm timing and reserve.
+
+ROLES: user (guest with late departure), assistant (front desk managing shuttle schedule)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_last_departure","description":"Return last shuttle time","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"reserve_last_departure","description":"Reserve last shuttle","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Terminal View Hotel (TVH-08)
+Service hours: 05:00–23:00 hourly
+Pickup: Front driveway
+Drop‑off: Terminal A
+Capacity: 12 seats per departure
+Travel time: ~12 minutes
+Booking: Recommended for the last departure
+Time Zone: Eastern Time (ET)
+
+user:
+Can you book me on the last shuttle tonight? Room 1516.
+
+assistant channel=analysis:
+Get last time (23:00) and reserve for 1516.
+
+assistant channel=commentary to=tool.get_last_departure:
+{"hotel_id":"TVH-08"}
+
+tool.get_last_departure channel=commentary to=assistant:
+{"last":"23:00"}
+
+assistant channel=commentary to=tool.reserve_last_departure:
+{"hotel_id":"TVH-08","room":"1516"}
+
+tool.reserve_last_departure channel=commentary to=assistant:
+{"reservation_id":"TVH-1516-2300","status":"confirmed"}
+
+assistant channel=final:
+You’re confirmed for the 23:00 shuttle (TVH-1516-2300). Pickup is at the front driveway.
+
+user:
+Is there Wi‑Fi on the shuttle?
+
+assistant channel=final:
+[ATTENTION] Checking available options.

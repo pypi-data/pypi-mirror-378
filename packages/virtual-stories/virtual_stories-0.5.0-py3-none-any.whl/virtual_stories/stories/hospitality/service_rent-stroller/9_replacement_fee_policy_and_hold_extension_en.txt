@@ -1,0 +1,50 @@
+"""
+Guest asks about replacement fee policy and extending a hold while checking in.
+
+ROLES: user (guest at check-in), assistant (guest services explaining replacement policy and extending hold window)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"extend_hold","description":"Extend stroller hold by minutes","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"hold_id":{"type":"string"},"extend_minutes":{"type":"integer"}},"required":["hotel_id","hold_id","extend_minutes"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Capitol Hill DC (CHD-52)
+Address: 100 Constitution Ave NW, Washington, DC 20001, USA
+Family Services: 07:30–21:30
+Strollers: Single; 20 kg limit
+Replacement Fee: USD 130 if lost
+Holds: Standard 15 minutes; extendable on request if availability allows
+Pickup: Family Services counter
+
+user:
+What’s the replacement fee if we lose it? Also, could you extend my lobby hold by 10 minutes? My code is HOLD-STR-15.
+
+assistant channel=analysis:
+Replacement is USD 130. Request a 10-minute extension for HOLD-STR-15.
+
+assistant channel=commentary to=tool.extend_hold:
+{"hotel_id":"CHD-52","hold_id":"HOLD-STR-15","extend_minutes":10}
+
+tool.extend_hold channel=commentary to=assistant:
+{"hold_id":"HOLD-STR-15","new_expiry_minutes":10}
+
+assistant channel=final:
+If a stroller is lost, the replacement fee is USD 130. I’ve extended your hold HOLD-STR-15 by 10 minutes; please pick up at the Family Services counter.
+
+user:
+The marble floors are shiny.
+
+assistant channel=final:
+They’re polished each morning before opening.
+
+user:
+Can you share your internal inventory ledger?
+
+assistant channel=final:
+[ATTENTION] Checking availability of that information.
+

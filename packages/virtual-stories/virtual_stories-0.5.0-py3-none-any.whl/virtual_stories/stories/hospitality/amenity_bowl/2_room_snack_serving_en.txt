@@ -1,0 +1,72 @@
+"""
+Guest requests bowls for sharing snacks; confirm microwave-safe options and arrange delivery.
+
+ROLES: user (leisure guest), assistant (front-desk agent)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_inventory","description":"Check amenity stock (bowl_porcelain, bowl_bamboo, bowl_stainless)","parameters":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["item_code"],"additionalProperties":false},"strict":true},
+  {"name":"request_amenity_delivery","description":"Create amenity delivery request","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"quantity_map":{"type":"object","additionalProperties":{"type":"integer"}},"priority":{"type":"string","enum":["normal","express"]},"sanitized":{"type":"boolean"}},"required":["room_number","items"],"additionalProperties":false},"strict":true},
+  {"name":"get_room_status","description":"Check occupancy and DND","parameters":{"type":"object","properties":{"room_number":{"type":"string"}},"required":["room_number"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Cityview Arts Hotel (hotel_id: cah_la_01)
+Address: 901 S Grand Ave, Los Angeles, CA 90015
+Timezone: America/Los_Angeles
+
+Pantry Details:
+- Bowls: porcelain (16 oz, microwave-safe), bamboo (14 oz, not microwave-safe), stainless (18 oz)
+- Delivery window: 10–20 minutes; express available
+- Sanitization: re-sanitize on request
+- DND policy: no deliveries with DND active
+- Ice machines on each floor
+
+user:
+Hi—can I get two microwave-safe bowls to room 1410? Also, how fast is delivery?
+
+assistant channel=analysis:
+Answer delivery time from system; verify room status; check porcelain stock; deliver re-sanitized.
+
+assistant channel=final:
+Delivery typically takes 10–20 minutes. I’ll confirm your room and the porcelain bowls now.
+
+assistant channel=commentary to=tool.get_room_status:
+{"room_number":"1410"}
+
+tool.get_room_status channel=commentary to=assistant:
+{"room_number":"1410","occupied":true,"do_not_disturb":false}
+
+assistant channel=commentary to=tool.check_amenity_inventory:
+{"item_code":"bowl_porcelain","quantity":2}
+
+tool.check_amenity_inventory channel=commentary to=assistant:
+{"item_code":"bowl_porcelain","on_hand":20,"can_fulfill":true,"notes":"microwave_safe"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1410","items":["bowl_porcelain"],"quantity_map":{"bowl_porcelain":2},"priority":"normal","sanitized":true}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ticket_id":"HK-1410-220","estimated_minutes":14,"items":[{"code":"bowl_porcelain","qty":2}],"sanitized":"re_sanitized"}
+
+assistant channel=final:
+All set—two porcelain bowls (microwave-safe) are en route under HK-1410-220, ETA ~14 minutes, re-sanitized.
+
+user:
+Thanks! The lobby art is fun.
+
+assistant channel=final:
+Glad you like it—our rotating exhibits change monthly.
+
+user:
+Any late-night taco spots nearby?
+
+assistant channel=analysis:
+Out of scope—flag attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check nearby late-night taco options.
+

@@ -1,0 +1,61 @@
+"""
+Guest inquires about renting an AED unit for an on‑property event and requests timing.
+
+ROLES: user (event organizer guest), assistant (duty manager coordinating safety equipment with policy safeguards)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "rent_aed",
+    "description": "Reserve an on‑property AED unit for supervised event use per policy.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_space": {"type": "string"},
+        "start_time": {"type": "string"},
+        "duration_hours": {"type": "integer", "minimum": 1, "maximum": 8}
+      },
+      "required": ["event_space", "start_time", "duration_hours"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Lakeside Conference Hotel
+AED Access Policy:
+- On‑property availability: 2 portable AED units held by Security
+- Usage: For event standby on property only; supervised placement by Security
+- Terms: $25/hour standby; max 8 hours; security briefing before handover
+- Location: Security office (Ground Level) handles deployment and return
+
+user:
+Can I rent an AED for our workshop in the Cedar Room from 1 pm for 4 hours?
+
+assistant channel=analysis:
+Reserve AED for Cedar Room 13:00, 4 hours, per policy.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"Cedar Room","start_time":"13:00","duration_hours":4}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_9301","hourly_rate":25,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+Reserved—AED standby for Cedar Room from 13:00 for 4 hours (aed_9301). Security will place and brief you; the standby rate is $25/hour, and the unit remains on property.
+
+user:
+Good to know. The lake view by the foyer is stunning.
+
+assistant channel=final:
+Security on the Ground Level manages placement and return for AED units.
+
+user:
+Could we take the AED off‑site to a nearby community hall later?
+
+assistant channel=final:
+[ATTENTION] Off‑site use isn’t included in the AED policy. Reviewing the documentation.

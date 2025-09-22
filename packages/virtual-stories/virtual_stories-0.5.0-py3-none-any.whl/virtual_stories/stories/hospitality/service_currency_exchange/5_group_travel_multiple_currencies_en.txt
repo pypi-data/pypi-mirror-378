@@ -1,0 +1,62 @@
+"""
+Group traveler needs multiple exchanges and asks about supported currencies; provide two quotes in sequence.
+
+ROLES: user (tour lead exchanging for group), assistant (cashier handling multi‑currency requests)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "quote_fx",
+    "description": "Quote a currency exchange with applied fee and total payout.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"from":{"type":"string"},"to":{"type":"string"},"amount":{"type":"number"}},"required":["from","to","amount"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborfront Convention Hotel — FX Desk
+Hours: 08:00–20:00 conference days; 10:00–18:00 otherwise
+Desk Position: Convention foyer, near Hall B
+Supported: USD, EUR, GBP, JPY
+Limits: Daily cap USD 3,000 equivalent
+Verification: Dual‑count, printed receipt with stamp
+ID: Passport for ≥ USD 500 equivalent
+Equipment: Banknote validator installed
+Note: Cash only
+
+user:
+Do you support EUR and JPY? Please convert 300 USD to EUR and 20,000 JPY to USD.
+
+assistant channel=analysis:
+Confirm supported list; then run two quotes with the tool and deliver both.
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"USD","to":"EUR","amount":300}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":0.89,"fee":"EUR 2.00","payout":"EUR 265.00"}
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"JPY","to":"USD","amount":20000}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":0.0068,"fee":"USD 2.00","payout":"USD 134.00"}
+
+assistant channel=final:
+We support USD, EUR, GBP, and JPY at the convention foyer near Hall B. Your quotes: 300 USD→EUR pays out EUR 265.00 after a EUR 2.00 fee (rate 0.89), and 20,000 JPY→USD pays out USD 134.00 after a USD 2.00 fee (rate 0.0068).
+
+user:
+Looks busy around Hall B.
+
+assistant channel=final:
+Those are our conference‑day hours at the FX desk.
+
+user:
+Can you waive the fee if I exchange for ten people at once?
+
+assistant channel=final:
+[ATTENTION] Fee waivers aren’t listed in our policy. Reviewing available resources.
+

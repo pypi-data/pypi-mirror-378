@@ -1,0 +1,56 @@
+"""
+Guest confuses safe with power locker; clarify usage, reset, and include small talk and out-of-scope query.
+
+ROLES: user (guest unsure about safe function), assistant (front desk clarifying and assisting reset)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_safe_status","description":"Check safe state.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"reset_safe_pin","description":"Issue temp PIN.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Summit Square (hotel_id: ss_dal)
+Address: 1914 Commerce St, Dallas, TX
+Safe:
+- Model: CityVault C320; PIN 4–6 digits
+- Not a charging locker; no power passthrough
+Support: Front desk 24/7
+Lobby Note: Piano plays live 18:00–20:00 Thu–Sat
+
+user:
+Does the safe in 722 charge devices inside? Mine shows a code prompt.
+
+assistant channel=analysis:
+Clarify that it’s not a charging locker; offer temp PIN if needed.
+
+assistant channel=commentary to=tool.verify_safe_status:
+{"room_number":"722"}
+
+tool.verify_safe_status channel=commentary to=assistant:
+{"status":"locked","error_code":null}
+
+assistant channel=commentary to=tool.reset_safe_pin:
+{"room_number":"722"}
+
+tool.reset_safe_pin channel=commentary to=assistant:
+{"temporary_pin":"6391","instructions":"enter temp PIN; set new 4–6 digit PIN"}
+
+assistant channel=final:
+It’s a standard safe (no charging). Use temporary PIN 6391 to open, then set a new 4–6 digit code.
+
+user:
+Heard there’s live piano in the lobby.
+
+assistant channel=final:
+Yes—18:00 to 20:00 on Thu–Sat.
+
+user:
+Can you ship a package for me tomorrow?
+
+assistant channel=final:
+[ATTENTION] Checking this since it’s outside our current resources.
+

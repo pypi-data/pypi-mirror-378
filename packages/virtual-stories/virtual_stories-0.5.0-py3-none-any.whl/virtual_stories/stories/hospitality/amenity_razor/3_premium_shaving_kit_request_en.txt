@@ -1,0 +1,68 @@
+"""
+A guest requests a premium twin-blade razor before a video call and asks about delivery time, limits, and recycling.
+
+ROLES: user (Guest rushing for a call.), assistant (Front desk agent keeping it crisp.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "send_complimentary_item",
+    "description": "Sends a complimentary item to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"}
+      },
+      "required": ["room_number", "item_name"]
+    }
+  }
+]
+```
+"""
+
+system:
+Property: The Cityline Executive Hotel
+Front Desk Motto: "On time, every time."
+Amenity Policy:
+- Complimentary: razor, dental kit, sewing kit
+- Quantity cap: 2 units/room/day
+Fulfillment SLA: 8–12 minutes to guest rooms
+Packaging: Travel pouch + mini after-shave wipe
+Sustainability: Return unused items at checkout box near elevators
+Support: Dial 0
+
+user:
+Room 2304—can I get a twin-blade razor ASAP? I’ve got a video call soon.
+
+assistant channel=analysis:
+Twin-blade razors are complimentary; SLA 8–12 minutes. I’ll dispatch one now.
+
+assistant channel=commentary to=tool.send_complimentary_item:
+{"room_number": "2304", "item_name": "twin_blade_razor"}
+
+tool.send_complimentary_item channel=commentary to=assistant:
+{"status": "success", "message": "Twin-blade razor sent to 2304. ETA 8–12 min."}
+
+assistant channel=final:
+Done. A twin-blade razor is on its way—expect it in 8–12 minutes.
+
+user:
+How many can I get today if I need more?
+
+assistant channel=final:
+Up to two per room per day at no cost.
+
+user:
+Neat. Also—how’s your evening going?
+
+assistant channel=final:
+Smooth so far, thanks for asking. Hope your call goes well.
+
+user:
+[ATTENTION] Can you recommend a nearby barber and book me in?
+
+assistant channel=final:
+I don’t have barber listings or booking access in my system. I can provide razors and other complimentary kits only.
+

@@ -1,0 +1,74 @@
+"""
+Guest in a spa suite requests a skincare station with magnifying mirror and soft light.
+Deliver mirror and place on desk for routine.
+
+ROLES: user (spa suite guest), assistant (beauty amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "prepare_skincare_station",
+    "description": "Prepare a mirror and soft light setup on the desk.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": { "type": "string" },
+        "mirror": { "type": "string", "enum": ["magnifying_3x","magnifying_5x"] },
+        "light": { "type": "string", "enum": ["daylight","soft_led"] }
+      },
+      "required": ["room","mirror","light"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Onsen Garden Suites (hotel_id: ogs_hakone_02)
+Address: 588 Yumoto, Hakone, Kanagawa 250-0311, Japan
+Timezone: Asia/Tokyo
+Spa Suites: private soaking tubs; quiet hours 22:00–07:00
+
+Beauty Amenities:
+- Magnifying Mirrors: 3x, 5x
+- Lighting: soft LED or daylight
+- Placement: desk recommended; near window optional
+- Delivery: 20–30 minutes
+- Fees: complimentary
+
+user:
+Could you set a 5x magnifying mirror with soft LED on the desk in room 606?
+
+assistant channel=analysis:
+Prepare skincare station 5x + soft LED on desk.
+
+assistant channel=commentary to=tool.prepare_skincare_station:
+{"room":"606","mirror":"magnifying_5x","light":"soft_led"}
+
+tool.prepare_skincare_station channel=commentary to=assistant:
+{"prepared":true,"eta":"25 minutes","items":["5x mirror","soft LED lamp"],"note":"quiet hours observed"}
+
+assistant channel=final:
+Absolutely—we’ll place a 5x mirror with a soft LED lamp on your desk in about 25 minutes. We’ll observe quiet hours during delivery. Complimentary.
+
+user:
+Thank you! Do you recommend near-window placement at night?
+
+assistant channel=analysis:
+Stick to given placement guidance.
+
+assistant channel=final:
+For nighttime routines, the desk with soft LED provides consistent lighting. Near-window placement is best during daylight.
+
+user:
+Great. Also, are the hydrangeas blooming in the garden now?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the current bloom status in the garden. Investigating potential answers.
+

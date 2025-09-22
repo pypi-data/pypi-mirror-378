@@ -1,0 +1,74 @@
+"""
+Conference week availability; assistant queries tool and returns tool output only; then answers a system policy. Include small talk and an [ATTENTION] request.
+
+ROLES: user (conference attendee), assistant (Capital Square reservations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+| Capital Square Hotel |
+| Address | 220 Constitution Ave NW, Washington, DC 20001 |
+| Check‑in | 15:00 |
+| Check‑out | 12:00 |
+| Breakfast | 06:30–10:00 |
+| Lounge | 17:00–20:00 hors d'oeuvres |
+| Wi‑Fi | 250 Mbps included |
+| Parking | Self $35/night; Valet $55/night |
+| EV | 8 chargers (Level 2) |
+| Quiet Hours | 22:00–07:00 |
+Rooms: Capitol King (27 m²), Capitol Twin (27 m²), Corner King (32 m²)
+
+user:
+One adult, 2025-10-20 to 2025-10-23—what’s available?
+
+assistant channel=analysis:
+Run search; return tool options and rates.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-10-20","check_out":"2025-10-23","adults":1,"children":0}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"CAP_K","name":"Capitol King","rate":"USD 279/night"},{"code":"COR_K","name":"Corner King","rate":"USD 319/night"}]}
+
+assistant channel=final:
+Capitol King at USD 279/night or Corner King at USD 319/night are open. Checkout is 12:00; quiet hours 22:00–07:00.
+
+user:
+Thanks—hope the lobby’s calm today.
+
+assistant channel=final:
+Glad to help at Capital Square.
+
+user:
+Is self‑parking available and how much is it?
+
+assistant channel=final:
+Self‑parking is $35/night; valet is $55/night.
+
+user:
+Can you add a federal rate without ID?
+
+assistant channel=final:
+[ATTENTION] Applying special federal rates without ID isn’t covered by the provided details. Processing your request.
+

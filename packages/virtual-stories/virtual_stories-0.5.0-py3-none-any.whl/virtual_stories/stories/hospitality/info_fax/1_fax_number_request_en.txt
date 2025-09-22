@@ -1,0 +1,63 @@
+"""
+Guest asks for the fax number; provide via tool. Include friendly small talk and one flag-triggered out-of-scope question.
+
+ROLES: user (guest requesting fax number), assistant (front desk with official contact registry)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Grand Meridian Portside (hotel_id: grand_meridian_portside)
+Public contacts:
+  EMAIL=contact@grandmeridian.port
+  PHONE=+1 617 555 2040
+  FAX=+1 617 555 2041
+  LINE=@grandmeridian
+  WECHAT=grand_meridian_ps
+  WEBSITE=https://www.grandmeridian.port
+
+user:
+Could you provide the fax number for Grand Meridian Portside?
+
+assistant channel=analysis:
+Get fax via contact channel tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"grand_meridian_portside","channel":"fax"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"fax":"+1 617 555 2041"}
+
+assistant channel=final:
+Our fax number is +1 617 555 2041.
+
+user:
+Thanks! How’s everything going today?
+
+assistant channel=final:
+Thanks for asking—what else can I help with?
+
+user:
+Do you have real-time confirmation that the fax line is currently free?
+
+assistant channel=final:
+[ATTENTION] Live line status isn’t available from the provided resources. Verifying information.
+

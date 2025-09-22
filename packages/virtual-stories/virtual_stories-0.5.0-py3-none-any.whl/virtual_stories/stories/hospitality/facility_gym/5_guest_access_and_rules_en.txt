@@ -1,0 +1,71 @@
+"""
+Guest verifies access method and quiet rules; include chitchat and an ATTENTION request.
+
+ROLES: user (late-night exerciser), assistant (front desk clarifying access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_gym_access","description":"Return how guests access the gym and any occupancy limits.","parameters":{"type":"object","properties":{}},"strict":true},
+  {"name":"get_rules","description":"Return quiet hours and audio policy.","parameters":{"type":"object","properties":{}},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Palm Vista Resort
+Fitness: Vista Gym (lower ground, beside pool entrance)
+Open: 24 hours; keycard tap at glass door
+Occupancy: up to 16 guests
+
+Equipment:
+- Bikes (2), ellipticals (2), treadmills (4)
+- Dumbbells 5–50 lb, kettlebells 8–20 kg
+- Multi-cable station, bench
+
+Etiquette & Noise:
+• Quiet zone; headphones only
+• Re-rack weights; avoid dropping
+
+Amenities:
+- Chilled water and towels inside
+- Wipes dispenser at each rack
+
+user:
+How do I get in after midnight, and are speakers allowed?
+
+assistant channel=analysis:
+Confirm access and noise policy using tools.
+
+assistant channel=commentary to=tool.get_gym_access:
+{}
+
+tool.get_gym_access channel=commentary to=assistant:
+{"access":"24 hours via keycard tap at glass door","occupancy":16}
+
+assistant channel=commentary to=tool.get_rules:
+{}
+
+tool.get_rules channel=commentary to=assistant:
+{"audio":"Headphones only; no external speakers","quiet":"Quiet zone at all hours"}
+
+assistant channel=final:
+You can enter any time by tapping your room keycard at the glass door. The space is a quiet zone—use headphones only; external speakers aren’t allowed.
+
+user:
+Nice—love the pool lighting at night.
+
+assistant channel=final:
+It does set a relaxing mood for late workouts.
+
+user:
+What’s the occupancy limit inside?
+
+assistant channel=final:
+Up to 16 guests at a time.
+
+user:
+Can you let my friend from outside use the gym tonight?
+
+assistant channel=final:
+[ATTENTION] Outside-guest access isn’t available here. Verifying options.

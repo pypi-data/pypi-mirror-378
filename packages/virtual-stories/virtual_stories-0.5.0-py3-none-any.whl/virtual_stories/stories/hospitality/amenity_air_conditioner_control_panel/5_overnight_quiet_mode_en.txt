@@ -1,0 +1,65 @@
+"""
+Guest wants a quieter overnight setting—lower fan and mid-range temperature.
+
+ROLES: user (light sleeper), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_panel_status", "description": "Get panel lock status.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "set_room_temperature", "description": "Set temperature and fan.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"temperature_f":{"type":"number"},"fan":{"type":"string","enum":["auto","low","medium","high"]}},"required":["room_number","temperature_f","fan"]}, "strict": true }
+]
+```
+"""
+
+system:
+Crescent Bay Resort (hotel_id: cbr_san_jose)
+Address: 99 Innovation Dr, San Jose, CA 95134
+Timezone: America/Los_Angeles
+
+HVAC Guidance:
+- Quiet overnight: 70–72°F, fan low
+- Guest range: 66–74°F
+Engineering: 07:00–22:00
+Amenities: Garden path 07:00–20:00
+Sustainability: Set‑back when unoccupied
+
+user:
+I’m a light sleeper. Please set room 614 to 71°F and fan low for the night.
+
+assistant channel=analysis:
+Check panel status; apply settings.
+
+assistant channel=commentary to=tool.get_panel_status:
+{"room_number":"614"}
+
+tool.get_panel_status channel=commentary to=assistant:
+{"room_number":"614","locked":false}
+
+assistant channel=commentary to=tool.set_room_temperature:
+{"room_number":"614","temperature_f":71,"fan":"low"}
+
+tool.set_room_temperature channel=commentary to=assistant:
+{"applied":true,"temperature_f":71,"fan":"low"}
+
+assistant channel=final:
+614 is set to 71°F with the fan on low for a quieter night.
+
+user:
+The garden path looked peaceful earlier.
+
+assistant channel=analysis:
+Small talk only.
+
+assistant channel=final:
+It’s open 07:00–20:00—nice for a short stroll.
+
+user:
+Can you set this to repeat nightly automatically?
+
+assistant channel=analysis:
+Scheduling not in system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check whether nightly automation is available.
+

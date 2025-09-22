@@ -1,0 +1,67 @@
+"""
+Guest asks if the kitchen can prepare a simple staff-style meal after midnight.
+
+ROLES: user (guest wanting a plain meal), assistant (night concierge constrained to listed menu)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_midnight_rules","description":"Return midnight service constraints.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}},
+  {"name":"get_midnight_items","description":"Return items that can be prepared after midnight.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Ironworks Detroit (hotel_id: irw_det)
+Address: 400 Renaissance Dr, Detroit, MI 48243
+Timezone: America/Detroit
+
+Midnight Constraints:
+- Cookline limited to fryer, panini press, soup well
+- No custom off-menu preparations
+- Available items list is authoritative
+
+Available Items After Midnight:
+- Panini (turkey, veggie)
+- Tomato basil soup
+- Fries
+- Side salad
+- Fruit cup
+
+user:
+Could the kitchen do plain grilled chicken and rice?
+
+assistant channel=analysis:
+Off-menu custom items are not available per constraints. Provide authoritative list via tool and decline custom.
+
+assistant channel=commentary to=tool.get_midnight_rules:
+{"hotel_id":"irw_det"}
+
+tool.get_midnight_rules channel=commentary to=assistant:
+{"custom_off_menu":false}
+
+assistant channel=commentary to=tool.get_midnight_items:
+{"hotel_id":"irw_det"}
+
+tool.get_midnight_items channel=commentary to=assistant:
+{"items":["Panini (turkey)","Panini (veggie)","Tomato basil soup","Fries","Side salad","Fruit cup"]}
+
+assistant channel=final:
+After midnight we’re limited to a short list and can’t do custom off‑menu dishes. Available now: Panini (turkey or veggie), tomato basil soup, fries, side salad, and fruit cup.
+
+user:
+Okay, tomato soup then.
+
+assistant channel=final:
+Got it—tomato basil soup is available.
+
+user:
+Can I get it delivered off property?
+
+assistant channel=analysis:
+Off‑property delivery not defined. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Assessing the possibilities.
+

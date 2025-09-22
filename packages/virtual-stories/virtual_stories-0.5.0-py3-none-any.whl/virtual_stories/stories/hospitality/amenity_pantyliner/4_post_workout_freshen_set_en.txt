@@ -1,0 +1,81 @@
+"""
+Guest asks for pantyliners and intimate wipes after a workout.
+Provide available options and coordinate discreet delivery.
+
+ROLES: user (guest freshening up post-workout), assistant (wellness desk associate)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check availability of personal care and hygiene supplies.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_category":{"type":"string","enum":["feminine_hygiene","personal_care","wellness_supplies","comfort_items"]},"specific_item":{"type":"string","enum":["pantyliners","sanitary_pads","tampons","intimate_wipes","pain_relief"]}},"required":["product_category"]},"strict":true},
+  {"name":"arrange_discreet_delivery","description":"Arrange private delivery of personal care items to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items_requested":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["housekeeping_discrete","wellness_staff","room_service_bag"]},"timing_preference":{"type":"string"}},"required":["room_number","items_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Ironwood Athletic & Spa (hotel_id: ias_det_33)
+Address: 400 Renaissance Center, Detroit, MI 48243
+Timezone: America/Detroit
+
+Wellness Cart:
+- Pantyliners: regular and overnight
+- Intimate wipes: pH‑balanced, alcohol‑free
+- Comfort: heating patch, herbal tea
+- Delivery: 8–12 minutes discreet
+- Spa tie‑in: eucalyptus steam available
+
+user:
+Room 1910—could I get pantyliners and some intimate wipes?
+
+assistant channel=analysis:
+Check inventory for pantyliners and intimate_wipes; then deliver via housekeeping_discrete.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"product_category":"feminine_hygiene","specific_item":"pantyliners"}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"types":["regular","overnight"],"brands":["Always"],"stock_sufficient":true}
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"product_category":"personal_care","specific_item":"intimate_wipes"}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"brands":["pH_balance_care"],"stock_sufficient":true}
+
+assistant channel=final:
+We have Always pantyliners in regular or overnight and pH‑balanced intimate wipes. Which pantyliner type do you prefer for room 1910?
+
+user:
+Regular, thanks.
+
+assistant channel=analysis:
+Arrange discreet housekeeping delivery.
+
+assistant channel=commentary to=tool.arrange_discreet_delivery:
+{"room_number":"1910","items_requested":["always_pantyliners_regular","ph_intimate_wipes"],"delivery_method":"housekeeping_discrete","timing_preference":"within_15_minutes"}
+
+tool.arrange_discreet_delivery channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":10,"package_contents":["always_regular_20ct","ph_wipes_10pk"],"discreet_packaging":true}
+
+assistant channel=final:
+Confirmed—Always regular pantyliners (20‑count) and pH‑balanced wipes (10‑pack) will arrive discreetly to room 1910 in about 10 minutes.
+
+user:
+Gym was great—nice equipment selection.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+Glad it set you up well post‑workout.
+
+user:
+Can you add a late checkout to my reservation right now?
+
+assistant channel=analysis:
+Reservation changes not defined; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Processing your request.
+

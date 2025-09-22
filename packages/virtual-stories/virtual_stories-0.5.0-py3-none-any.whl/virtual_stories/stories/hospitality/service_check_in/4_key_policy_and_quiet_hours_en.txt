@@ -1,0 +1,64 @@
+"""
+Guest completes check‑in and asks about key and quiet hours; include small talk and an ATTENTION ask beyond scope.
+
+ROLES: user (arriving traveler), assistant (front desk confirming details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_in_guest","description":"Assign room and key","parameters":{"type":"object","properties":{"reservation_code":{"type":"string"},"last_name":{"type":"string"}},"required":["reservation_code","last_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Mariner Point Hotel — Front Desk
+Check‑in: 15:00; Check‑out: 11:00
+ID & Deposit:
+- ID matching reservation
+- Credit card preauth required
+
+Keys & Access:
+- Mobile key supported on request
+- Physical keycard per guest (up to 2)
+
+Quiet & Conduct:
+- Quiet hours 22:00–07:00
+- No parties in rooms
+
+Facilities:
+- Fitness 24/7; pool 07:00–21:00
+- Breakfast 06:30–10:00 at Harbor Cafe
+
+user:
+Hi—code MP-99201 under Rossi. Can I get two keycards and what are quiet hours?
+
+assistant channel=analysis:
+Assign room; confirm key policy and quiet hours from system.
+
+assistant channel=commentary to=tool.check_in_guest:
+{"reservation_code":"MP-99201","last_name":"Rossi"}
+
+tool.check_in_guest channel=commentary to=assistant:
+{"room":"807","key_id":"K-774002"}
+
+assistant channel=final:
+Welcome to Mariner Point. You’re in room 807 (key K-774002). We can provide up to two physical keycards per room, and quiet hours are 22:00–07:00.
+
+user:
+Nice lobby scent—feels relaxing.
+
+assistant channel=final:
+Enjoy settling in and the harbor cafe in the morning.
+
+user:
+What time is breakfast?
+
+assistant channel=final:
+Breakfast runs 06:30–10:00 at Harbor Cafe.
+
+user:
+Can you comp breakfast tomorrow?
+
+assistant channel=final:
+[ATTENTION] Complimentary breakfast isn’t configured here. Reviewing available resources.

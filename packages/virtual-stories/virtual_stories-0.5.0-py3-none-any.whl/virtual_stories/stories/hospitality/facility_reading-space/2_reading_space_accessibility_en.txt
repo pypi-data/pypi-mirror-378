@@ -1,0 +1,68 @@
+"""
+Guest verifies accessibility, seating, and quiet hours for the reading space.
+
+ROLES: user (guest with accessibility needs), assistant (concierge providing confirmed facts)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "get_accessibility_features",
+    "description": "List ramps, desk heights, aisle width, and nearby accessible restroom.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+"""
+
+system:
+Space: The Stacks (quiet reading suite)
+Location: Level 2, east wing, behind glass acoustic doors
+Hours: 06:30–22:30 daily
+Capacity: 18 seats (10 desks, 8 lounge chairs)
+Rules: No calls; keyboard taps allowed; food-free zone
+Amenities: Task lamps, filtered water, USB-C power, lap blankets on request
+Noise: 35–40 dBA target
+Wi‑Fi: SSID "Atrium-Guest", Passphrase "Leaf&Ink-2025"
+Power: 16 outlets; 8 USB-C ports; surge-protected
+Lighting: 420–480 lux at desk surface; indirect LEDs
+Cleaning: Light tidy 14:00; deep clean Wednesday 03:00–04:00
+Accessibility: Ramp grade 1:12; clearance 110 cm; desk height 74 cm
+Signage Code: RS-E2-STACKS; Wayfinding color: Sage
+Nearby: Accessible restroom 15 m north of entrance
+
+user:
+Is the reading space accessible and how many seats are there?
+
+assistant channel=analysis:
+Use the tool for fine-grained accessibility measurements; confirm capacity from system.
+
+assistant channel=commentary to=tool.get_accessibility_features:
+{}
+
+tool.get_accessibility_features channel=commentary to=assistant:
+{"ramp_grade":"1:12","aisle_clearance_cm":110,"desk_height_cm":74,"accessible_restroom_distance_m":15}
+
+assistant channel=analysis:
+Answer with capacity and the accessibility specifics from tool and system.
+
+assistant channel=final:
+Yes. The Stacks has 18 seats (10 desks, 8 lounge chairs). Accessibility includes a 1:12 ramp, 110 cm aisle clearance, 74 cm desk height, and an accessible restroom 15 m north of the entrance.
+
+user:
+Nice—love the lap blankets.
+
+assistant channel=analysis:
+Keep it light; no new facts.
+
+assistant channel=final:
+They’re perfect when the AC feels a touch brisk.
+
+user:
+Could you reserve a private sign-language interpreter for me in the room?
+
+assistant channel=analysis:
+Interpreter arrangement isn’t defined. Flag as attention without adding facts.
+
+assistant channel=final:
+[ATTENTION] Noted your interpreter request for the reading suite. Reviewing available options.
+

@@ -1,0 +1,86 @@
+"""
+Guest needs hanging folder refills and tab inserts for long-term filing.
+Provide inventory check and quick room delivery.
+
+ROLES: user (extended-stay analyst), assistant (business center attendant managing storage supplies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supply_inventory","description":"Check hanging folders and tab inserts.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_category":{"type":"string","enum":["hanging_folders","tab_inserts"]},"quantity_needed":{"type":"number"}},"required":["supply_category"]},"strict":true},
+  {"name":"deliver_office_supplies","description":"Deliver supplies to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center"]}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Midtown Ledger Hotel (hotel_id: mlh_03)
+Address: 77 Lexington Ave, New York, NY 10010
+Timezone: America/New_York
+
+Filing Support:
+- Hanging folders (letter & legal) with plastic tabs and white inserts
+- Tab insert reams pre-cut with micro-perf
+- Delivery SLA: 10–15 minutes
+- After-hours desk bell: ext. 7701
+- Complimentary for stays > 5 nights
+
+Inventory Lines:
+Hanging (letter): 140
+Hanging (legal): 90
+Tab inserts: 300 sheets
+
+user:
+Could I get 20 hanging folders (letter) and tab inserts to room 1908?
+
+assistant channel=analysis:
+Check inventory for hanging folders and tab inserts, then deliver to room 1908.
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"hanging_folders","quantity_needed":20}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true,"notes":"letter & legal in stock"}
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"tab_inserts","quantity_needed":1}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true,"pack_size":"100 inserts per sheet pack"}
+
+assistant channel=commentary to=tool.deliver_office_supplies:
+{"room_number":"1908","items":["hanging_letter_20","tab_inserts_1pack"],"delivery_location":"guest_room"}
+
+tool.deliver_office_supplies channel=commentary to=assistant:
+{"delivered":true,"eta":"12 minutes","runner":"night_shift","ticket":"MLH-1908-044"}
+
+assistant channel=final:
+Done—ticket MLH-1908-044. Twenty letter-size hanging folders and one pack of tab inserts will arrive in about 12 minutes.
+
+user:
+Is this complimentary for long stays?
+
+assistant channel=analysis:
+Yes for stays > 5 nights.
+
+assistant channel=final:
+Yes—filing supplies are complimentary for extended stays over five nights.
+
+user:
+Also, love the jazz in the lobby.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+Our trio plays weeknights—glad the vibe suits your evenings.
+
+user:
+Can you arrange document notarization today?
+
+assistant channel=analysis:
+Not covered; use attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

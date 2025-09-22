@@ -1,0 +1,89 @@
+"""
+Remote worker guest inquires about WiFi quality, power outlets, and suitable working spaces in the cafe.
+
+ROLES: user (remote worker needing reliable workspace), assistant (cafe staff knowledgeable about workspace amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_wifi_status","description":"Check current WiFi network status and speed information.","parameters":{"type":"object","additionalProperties":false,"properties":{"network_name":{"type":"string"}},"required":["network_name"]},"strict":true},
+  {"name":"check_workspace_availability","description":"Check availability of workspace amenities like power outlets and seating.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string"},"time_duration":{"type":"string"}},"required":["amenity_type","time_duration"]},"strict":true}
+]
+```
+"""
+
+system:
+Outlet: Rivet Café (facility_id: cafe_rivet_nyc)
+Property: Hudson Yardline Hotel (hotel_id: hudson_yardline_nyc)
+Address: 500 W 33rd St, New York, NY 10001
+Timezone: America/New_York
+Hours: Weekdays 06:30–14:30; Weekends 07:00–15:00
+Menu highlights: Flat white; Cappuccino; Almond croissant; Ham & gruyère croissant
+WiFi: Free high-speed internet; network "HudsonYardline_Guest"; password available at counter
+Workspace amenities: Power outlets at every table; USB charging ports; comfortable seating
+Working environment: Quiet background music; natural lighting; business-friendly atmosphere
+Laptop-friendly: Large tables; ergonomic chairs; minimal noise during business hours
+Extended stay: No time limits; refill discounts for long-term guests; lunch options available
+
+user:
+Good morning! I'm working remotely today and wondering about your WiFi and workspace setup. Is it suitable for video calls?
+
+assistant channel=analysis:
+Guest needs information about WiFi and workspace amenities for remote work. I should check the current WiFi status and workspace availability.
+
+assistant channel=final:
+Absolutely! We're very remote-work friendly. Let me check our current WiFi status and workspace availability for you.
+
+assistant channel=commentary to=tool.check_wifi_status:
+{"network_name":"HudsonYardline_Guest"}
+
+tool.check_wifi_status channel=commentary to=assistant:
+{"status":"Active","speed":"High-speed","reliability":"Excellent","video_call_suitable":true}
+
+assistant channel=commentary to=tool.check_workspace_availability:
+{"amenity_type":"Power outlets and seating","time_duration":"Full day"}
+
+tool.check_workspace_availability channel=commentary to=assistant:
+{"power_outlets":"Available at every table","usb_ports":"Yes","comfortable_seating":"Available","quiet_environment":"Yes"}
+
+assistant channel=analysis:
+WiFi is excellent for video calls and workspace amenities are fully available. I should provide comprehensive information about the working environment.
+
+assistant channel=final:
+Perfect! Our WiFi is high-speed and excellent for video calls. We have power outlets and USB charging ports at every table, plus comfortable seating with natural lighting. The atmosphere is business-friendly with quiet background music.
+
+user:
+That sounds ideal! Do you have any time limits for staying, and what's the WiFi password?
+
+assistant channel=analysis:
+Guest wants to know about time limits and WiFi password. I can provide this information from the system prompt.
+
+assistant channel=final:
+No time limits at all - you're welcome to stay as long as you need! The WiFi network is "HudsonYardline_Guest" and the password is available at the counter. We also offer refill discounts for long-term guests.
+
+user:
+Excellent! I'll need to be here for about 4 hours. Can I get a large cappuccino to start? Guest ID HY-727.
+
+assistant channel=analysis:
+Guest is placing an order for a long work session. I should confirm the order and mention the refill discount for extended stays.
+
+assistant channel=final:
+Perfect! A large cappuccino for your 4-hour work session. We'll call HY-727 when it's ready. Since you'll be here for a while, you'll qualify for our refill discount - just let us know when you need another coffee!
+
+user:
+The workspace setup is really comfortable. Much better than working from my hotel room.
+
+assistant channel=analysis:
+This is small talk about the workspace comfort. I should acknowledge positively and maybe mention other amenities.
+
+assistant channel=final:
+Thank you! We designed it specifically for remote workers like yourself. The natural lighting and comfortable seating make a big difference for productivity. Plus, you have easy access to lunch options when you're ready for a break.
+
+user:
+Do you have any private areas or phone booths for sensitive calls?
+
+assistant channel=analysis:
+Guest is asking about private areas for sensitive calls. This information isn't in my system prompt, so I need to use the [ATTENTION] flag.
+
+assistant channel=final:
+[ATTENTION] That's a great question about private spaces. Let me check what private areas we have available for sensitive calls.

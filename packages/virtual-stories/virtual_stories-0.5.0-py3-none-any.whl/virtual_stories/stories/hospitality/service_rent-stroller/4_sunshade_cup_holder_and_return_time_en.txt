@@ -1,0 +1,59 @@
+"""
+Guest asks for sunshade and cup holder; confirms return time window.
+
+ROLES: user (guest planning park visit), assistant (guest services confirming accessories and timing window, then arranging loan)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check","description":"Check stroller availability","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"item":{"type":"string"}},"required":["hotel_id","item"],"additionalProperties":false},"strict":true},
+  {"name":"order","description":"Create stroller order","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"duration_hours":{"type":"integer"},"accessories":{"type":"array","items":{"type":"string"}}},"required":["hotel_id","room","duration_hours"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: City Park London (CPL-12)
+Address: 221 Bayswater Rd, London W2 4RJ, UK
+Family Services: 07:30–21:30
+Strollers: Single, 20 kg max; compact fold
+Accessories: Sunshade, rain cover, cup holder
+Cleaning: UV cabinet nightly; disinfectant wipe after use
+Fees: Complimentary; £95 replacement
+Delivery: 10–20 minutes to rooms
+Contact: Ext. 616
+
+user:
+Could I borrow a stroller with a sunshade and cup holder for 6 hours to room 327? What time should I return it by?
+
+assistant channel=analysis:
+Check availability; create 6-hour order with sunshade and cup holder; advise that it’s due six hours from handover.
+
+assistant channel=commentary to=tool.check:
+{"hotel_id":"CPL-12","item":"stroller_single"}
+
+tool.check channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.order:
+{"hotel_id":"CPL-12","room":"327","duration_hours":6,"accessories":["sunshade","cup_holder"]}
+
+tool.order channel=commentary to=assistant:
+{"order_id":"STR-327-06","status":"created"}
+
+assistant channel=final:
+Order STR-327-06 is set for a single stroller with a sunshade and cup holder, delivered to 327. It’s due back six hours from handover; we can collect it from your door.
+
+user:
+The park across the street looks nice.
+
+assistant channel=final:
+It’s perfect for a relaxed stroll.
+
+user:
+Can you provide the full conformity declaration from the manufacturer?
+
+assistant channel=final:
+[ATTENTION] Verifying information sources.
+

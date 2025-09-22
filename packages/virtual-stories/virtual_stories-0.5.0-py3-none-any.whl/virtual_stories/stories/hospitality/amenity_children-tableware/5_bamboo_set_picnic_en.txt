@@ -1,0 +1,77 @@
+"""
+Family plans a picnic and requests a lightweight bamboo set; asks about pickup location; arrange lobby pickup.
+
+ROLES: user (family guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"bamboo_sets","description":"List bamboo tableware options.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"stage_lobby_pickup","description":"Stage a set for lobby pickup.","parameters":{"type":"object","additionalProperties":false,"properties":{"set":"string","pickup":"string"},"required":["set","pickup"]}}
+]
+```
+"""
+
+system:
+Oak & Meadow Suites (hotel_id: oms_sfo_16)
+Address: 300 Grove St, San Francisco, CA 94102
+Timezone: America/Los_Angeles
+
+Bamboo Options:
+- Bamboo bowl + spoon
+- Divided plate + cup
+
+Pickup Points:
+- Lobby concierge
+- Side entrance podium
+
+Timing:
+- Ready in 8–12 minutes
+
+Policy:
+- Loan only; no deposit
+
+Contact:
+- Concierge ext. 0; Side podium ext. 5
+
+user:
+Could we pick up a lightweight bamboo set for a picnic? Where should we grab it?
+
+assistant channel=analysis:
+List bamboo options; stage at lobby concierge for pickup.
+
+assistant channel=commentary to=tool.bamboo_sets:
+{}
+
+tool.bamboo_sets channel=commentary to=assistant:
+{"options":["bamboo_bowl_spoon","bamboo_divided_plate_cup"]}
+
+assistant channel=final:
+We have bamboo bowl + spoon or a divided plate + cup. I’ll stage your set at the lobby concierge—ready in about 8–12 minutes.
+
+assistant channel=commentary to=tool.stage_lobby_pickup:
+{"set":"bamboo_divided_plate_cup","pickup":"lobby_concierge"}
+
+tool.stage_lobby_pickup channel=commentary to=assistant:
+{"ref":"OMS-LOBBY-221","ready_in_minutes":9}
+
+assistant channel=final:
+Set—ref OMS-LOBBY-221. Pick up at the lobby concierge in about 9 minutes.
+
+user:
+The courtyard garden smells amazing.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Our lavender beds are in bloom—enjoy your picnic.
+
+user:
+Do you provide picnic blankets?
+
+assistant channel=analysis:
+Not included; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on picnic blankets beyond tableware lending.

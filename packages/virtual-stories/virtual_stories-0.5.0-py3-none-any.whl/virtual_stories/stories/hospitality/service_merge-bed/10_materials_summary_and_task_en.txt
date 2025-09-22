@@ -1,0 +1,60 @@
+"""
+Guest summarizes materials and asks for a merge; schedule and confirm. Include small talk and [ATTENTION].
+
+ROLES: user (guest confirming what’s used), assistant (housekeeping confirming materials and creating task)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"create_task","description":"Create merge task with materials recap","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"time":{"type":"string"},"materials":{"type":"array","items":{"type":"string"}}},"required":["room","time","materials"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Meridian Park Los Angeles (MPLA-41)
+Address: 700 S Flower St, Los Angeles, CA 90017
+Materials and policy:
+- Bridge + foam topper + king fitted sheet + king duvet set
+- Window 10:00–18:00; ~25 minutes; FIFO
+- Fee included; HK-MERGE tracking
+- No straps; gap inspection
+- Reversal on departure upon request
+Ops:
+- Staging L8 service room
+- Tools sanitized between rooms
+- No mattress rotation
+- Contact via Front Desk
+- Arrival ±10 minutes
+
+user:
+So you use a bridge and topper, then king linens, right? Can you come at 15:30 to 2004?
+
+assistant channel=analysis:
+Confirm materials list exactly; create task at 15:30 with materials recap.
+
+assistant channel=final:
+Correct—we place a bridge and foam topper, then make the bed with king linens.
+
+assistant channel=commentary to=tool.create_task:
+{"room":"2004","time":"15:30","materials":["bridge","foam topper","king fitted sheet","king duvet set"]}
+
+tool.create_task channel=commentary to=assistant:
+{"task_id":"merge_2004_1530","eta_minutes":25}
+
+assistant channel=final:
+Scheduled—merge_2004_1530 at 15:30; the setup takes about 25 minutes.
+
+user:
+Thanks.
+
+assistant channel=final:
+We’ll see you then.
+
+user:
+Can you also add a heated mattress pad?
+
+assistant channel=final:
+[ATTENTION] Evaluating potential solutions.
+

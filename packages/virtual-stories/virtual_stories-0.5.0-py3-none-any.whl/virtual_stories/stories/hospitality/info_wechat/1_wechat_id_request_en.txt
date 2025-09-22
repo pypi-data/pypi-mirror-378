@@ -1,0 +1,61 @@
+"""
+Guest asks for official WeChat ID; respond via tool. Include small talk and one background handoff.
+
+ROLES: user (guest requesting WeChat ID), assistant (concierge providing social contact IDs)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Azure Lantern Hotel (hotel_id: azure_lantern_htl)
+Contact roster:
+  WeChat: azure_lantern
+  LINE: @azurelantern
+  Email: hello@azurelantern.hotel
+  Phone: +852 3100 7800
+
+user:
+What is your WeChat ID?
+
+assistant channel=analysis:
+Call contact channel tool for wechat.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"azure_lantern_htl","channel":"wechat"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"wechat":"azure_lantern"}
+
+assistant channel=final:
+Our WeChat ID is azure_lantern.
+
+user:
+Thanks—hope everything’s going smoothly there.
+
+assistant channel=final:
+Thank you—how else may I assist?
+
+user:
+Do you have the current follower growth trend for this week?
+
+assistant channel=final:
+[ATTENTION] That trend isn’t available from the provided resources. Working on your request.
+

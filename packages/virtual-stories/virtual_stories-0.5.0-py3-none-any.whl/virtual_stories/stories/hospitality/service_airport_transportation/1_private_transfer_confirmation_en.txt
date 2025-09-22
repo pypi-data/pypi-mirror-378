@@ -1,0 +1,64 @@
+"""
+Guest asks to arrange a private airport transfer; confirm booking details via tool. Include small talk and a background handoff for a flight-tracking request.
+
+ROLES: user (guest needing airport transport), assistant (concierge arranging private transfer with clear pickup details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "book_airport_transfer",
+    "description": "Book a private sedan or van transfer to or from the airport.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": {"type":"string","enum":["to_airport","from_airport"]},
+        "pickup_time": {"type":"string","description":"Local time in 24h HH:MM"},
+        "party_size": {"type":"integer"},
+        "vehicle_type": {"type":"string","enum":["sedan","van"]}
+      },
+      "required": ["direction","pickup_time","party_size","vehicle_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Seabreeze Marina Resort — Concierge Desk
+Airport options summary:
+  - Private sedan: up to 3 guests; typical travel 45–60 min
+  - Private van: up to 6 guests; typical travel 45–60 min
+  - Meeting point (from hotel): Porte-cochère, Main Lobby
+  - Meeting point (from airport): Terminal 1, Exit B, Name board
+Transfer window: 05:00–23:30 dispatch
+Note: Car seats on request; limited inventory
+
+user:
+Can I get a private sedan to the airport at 06:15 for two people?
+
+assistant channel=analysis:
+Book a sedan “to_airport” at 06:15 for party of two; then confirm meeting point and dispatch window from system.
+
+assistant channel=commentary to=tool.book_airport_transfer:
+{"direction":"to_airport","pickup_time":"06:15","party_size":2,"vehicle_type":"sedan"}
+
+tool.book_airport_transfer channel=commentary to=assistant:
+{"booking_id":"TX-61752","pickup_time":"06:15","vehicle":"sedan","party_size":2,"estimated_fare":"USD 78"}
+
+assistant channel=final:
+Your private sedan is confirmed for 06:15 (Booking ID TX-61752) for two guests. Meet at the Main Lobby porte-cochère; the estimated fare is USD 78. Our dispatch window runs 05:00–23:30.
+
+user:
+Thanks—and is your shift an early one today?
+
+assistant channel=final:
+Glad to set you up for a smooth trip.
+
+user:
+Can you track my inbound flight’s gate changes as well?
+
+assistant channel=final:
+[ATTENTION] Flight tracking isn’t available through the provided resources. Reviewing available resources.

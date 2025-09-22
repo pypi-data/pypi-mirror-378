@@ -1,0 +1,79 @@
+"""
+Guest reports a small pet accident on carpet; confirm method and enzyme pre-treat; schedule service and set expectations.
+
+ROLES: user (pet owner), assistant (housekeeping dispatcher)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"assess_pet_spot","description":"Assess size and time since accident.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","size_cm":{"type":"integer","minimum":1},"minutes":{"type":"integer","minimum":0}},"required":["room","size_cm","minutes"]}},
+  {"name":"book_enzyme_treatment","description":"Book enzymatic pre-treat and rinse.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","slot":"string"},"required":["room"]}}
+]
+```
+"""
+
+system:
+Willow & Brick Pet-Friendly Hotel (hotel_id: wbf_atl_10)
+Address: 77 Peachtree Pl NE, Atlanta, GA 30309
+Timezone: America/New_York
+
+Approved Methods:
+- Enzymatic pre-treat for organic soils
+- Neutral rinse and blot; brief fan-dry
+
+Hours & Noise:
+- 07:00–22:00; fan-dry under 52 dB
+
+Response Times:
+- Expedite: 10–18 min; Standard: 30–60 min
+
+Pet Policy:
+- Please inform desk; odor neutralizer available on request
+
+Contact:
+- Housekeeping ext. 21; Pet-friendly line ext. 19
+
+user:
+Hi—our dog had a small accident near the door in room 815, about 15 cm across, 20 minutes ago. Can you help?
+
+assistant channel=analysis:
+Assess and schedule enzyme treatment.
+
+assistant channel=commentary to=tool.assess_pet_spot:
+{"room":"815","size_cm":15,"minutes":20}
+
+tool.assess_pet_spot channel=commentary to=assistant:
+{"recommended":"enzymatic_pre_treat","follow":"neutral_rinse_fan_dry","urgency":"expedite"}
+
+assistant channel=final:
+We’ll use an enzymatic pre-treat, then a neutral rinse and brief fan-dry. I can place you in the expedite queue—arrival in about 10–18 minutes. Shall I book it?
+
+user:
+Yes, please book it and add the odor neutralizer.
+
+assistant channel=commentary to=tool.book_enzyme_treatment:
+{"room":"815","slot":"expedite"}
+
+tool.book_enzyme_treatment channel=commentary to=assistant:
+{"ticket":"PET-815-441","eta_minutes":11,"add_on":"odor_neutralizer"}
+
+assistant channel=final:
+Confirmed—ticket PET-815-441. Team arrives in about 11 minutes with odor neutralizer included.
+
+user:
+Thanks! Also, your brick accents are charming.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+We love the mix of warm brick and soft willows—thank you.
+
+user:
+Can you watch our dog while we’re at dinner?
+
+assistant channel=analysis:
+Pet sitting isn’t listed here; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for pet sitting beyond housekeeping services.

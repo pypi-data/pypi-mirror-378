@@ -1,0 +1,60 @@
+"""
+Guest reserves a meeting projector with HDMI and room delivery.
+
+ROLES: user (guest hosting a meeting), assistant (events team arranging AV equipment and confirming fees and delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "reserve_projector",
+    "description": "Reserve an LCD projector with accessories and schedule room delivery.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "start_time": {"type": "string"},
+        "duration_hours": {"type": "integer", "minimum": 1, "maximum": 8}
+      },
+      "required": ["room_number", "start_time", "duration_hours"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Forum Center Hotel
+Projector Rental:
+- Package: LCD projector + HDMI cable + table stand
+- Rate: $40/hour; 1–8 hours
+- Delivery/Setup: Guest room delivery by Events technician
+
+user:
+Can I reserve a projector for room 1120 from 2 pm for 3 hours?
+
+assistant channel=analysis:
+Reserve for 14:00, 3 hours, and confirm rate and delivery.
+
+assistant channel=commentary to=tool.reserve_projector:
+{"room_number":"1120","start_time":"14:00","duration_hours":3}
+
+tool.reserve_projector channel=commentary to=assistant:
+{"reservation_id":"proj_4470","rate_per_hour":40,"currency":"USD","includes":["LCD projector","HDMI","stand"]}
+
+assistant channel=final:
+Projector reserved (proj_4470) for room 1120 from 14:00 for 3 hours. Rate is $40/hour and includes the LCD unit, HDMI cable, and table stand; an Events technician will deliver and set it up in your room.
+
+user:
+Awesome—your meeting floor signage is clear.
+
+assistant channel=final:
+An Events technician will deliver and set up the projector in your room.
+
+user:
+Can you provide a wireless presenter remote too?
+
+assistant channel=final:
+[ATTENTION] Wireless remotes aren’t listed in the projector package. Reviewing available resources.

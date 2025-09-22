@@ -1,0 +1,79 @@
+"""
+Guest requests an extension cable with the electric mosquito coil for balcony outlet placement.
+
+ROLES: user (balcony user), assistant (front desk amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"deliver","description":"Deliver item to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","item","qty"]},"strict":true},
+  {"name":"safety","description":"Provide coil placement safety notes.","parameters":{"type":"object","additionalProperties":false,"properties":{"context":{"type":"string","enum":["extension_cable"]}},"required":["context"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Palm Dunes Retreat (hotel_id: pdr_ae_22)
+Address: 3 Seabreeze Crescent, Ras Al Khaimah, UAE
+Amenity hours: 09:00–23:00
+Outlets: Balcony corner outlets are weather-protected
+Inventory:
+- Coil devices: 21 units
+- Refill mats: 90 pcs
+- Outdoor-rated extension cables: 12
+Guidelines:
+- Keep cable away from walkway; avoid tripping hazards
+- Do not daisy-chain extensions
+- Unplug after use
+
+user:
+Room 416 here—could I get one coil device, two refills, and an outdoor extension cable?
+
+assistant channel=analysis:
+Deliver three items as requested with one ticket per item. Provide cable-specific safety guidance from tool.
+
+assistant channel=commentary to=tool.deliver:
+{"room":"416","item":"electric_mosquito_coil_device","qty":1}
+
+tool.deliver channel=commentary to=assistant:
+{"ticket":"PDR-416-EMC-118","eta_minutes":20}
+
+assistant channel=commentary to=tool.deliver:
+{"room":"416","item":"mosquito_coil_refill_mat","qty":2}
+
+tool.deliver channel=commentary to=assistant:
+{"ticket":"PDR-416-REF-119","eta_minutes":20}
+
+assistant channel=commentary to=tool.deliver:
+{"room":"416","item":"outdoor_extension_cable","qty":1}
+
+tool.deliver channel=commentary to=assistant:
+{"ticket":"PDR-416-EXT-120","eta_minutes":20}
+
+assistant channel=commentary to=tool.safety:
+{"context":"extension_cable"}
+
+tool.safety channel=commentary to=assistant:
+{"notes":["Route cable along balcony edge to avoid footpath","Do not connect multiple cables","Unplug after use"]}
+
+assistant channel=final:
+Confirmed for room 416: device (PDR-416-EMC-118), two refills (PDR-416-REF-119), and outdoor extension cable (PDR-416-EXT-120). ETA ~20 minutes within 09:00–23:00. Cable notes: route along the edge, don’t daisy-chain, and unplug after use.
+
+user:
+Thanks—nice sunset tonight.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+It’s a great view from that side.
+
+user:
+Is the extension cable 10 meters long?
+
+assistant channel=analysis:
+Length detail isn’t in system or tools.
+
+assistant channel=final:
+[ATTENTION] Noted. I’ll verify the cable length.
+

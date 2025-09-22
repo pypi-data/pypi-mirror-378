@@ -1,0 +1,71 @@
+"""
+Guest requests late checkout; assistant uses the tool to approve/deny and quote the fee; then answers a system-based policy question. Include small talk and an [ATTENTION] request beyond system scope.
+
+ROLES: user (guest), assistant (Art Deco House front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_late_checkout",
+    "description": "Request a late checkout within policy and return approval and fee.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "requested_time": {"type": "string", "description": "24h time, e.g., 14:00"}
+      },
+      "required": ["room_number", "requested_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Art Deco House — Miami Beach
+Address: 1100 Collins Ave, Miami Beach, FL 33139, USA
+Standard Checkout: 11:00
+Late Checkout Window: up to 14:00 (subject to occupancy)
+Fees: $40 until 13:00; $65 until 14:00
+Billing: Fee posts to folio upon approval
+Wi‑Fi: 300 Mbps included throughout
+Pool: 08:00–20:00; towels at front desk
+Quiet Hours: 22:00–07:00
+Parking: Valet only $48/night; 2 EV chargers
+
+user:
+Room 612—can I check out at 13:30?
+
+assistant channel=analysis:
+13:30 is within window (<=14:00); fee should be $65 if approved.
+
+assistant channel=commentary to=tool.request_late_checkout:
+{"room_number":"612","requested_time":"13:30"}
+
+tool.request_late_checkout channel=commentary to=assistant:
+{"approved":true,"fee":65,"currency":"USD","note":"Hold until 14:00 latest"}
+
+assistant channel=final:
+Approved—late checkout for room 612 is set to 13:30 with a $65 USD fee (hold until 14:00 latest). The fee will be posted to your folio.
+
+user:
+Appreciate it. All good at the pool?
+
+assistant channel=final:
+Thanks for staying at Art Deco House.
+
+user:
+What’s standard checkout time again?
+
+assistant channel=final:
+Standard checkout is 11:00.
+
+user:
+Can you waive the fee if I’m a local?
+
+assistant channel=final:
+[ATTENTION] Waiving fees isn’t covered by the provided details. Processing your request.
+

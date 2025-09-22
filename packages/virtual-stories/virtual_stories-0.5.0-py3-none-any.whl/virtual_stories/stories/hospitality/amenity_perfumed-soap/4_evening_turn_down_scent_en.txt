@@ -1,0 +1,62 @@
+"""
+Coordinate an evening turn-down with a mild perfumed soap and note on ingredients.
+
+ROLES: user (guest requesting evening refresh), assistant (housekeeping coordinator with spa inventory access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"evening_inventory","description":"Check mild scents and ingredient notes.","parameters":{"type":"object","additionalProperties":false,"properties":{"mild":{"type":"boolean"}},"required":[]},"strict":true},
+  {"name":"schedule_drop","description":"Schedule an evening drop.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"scent":{"type":"string"}},"required":["room","scent"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Garden Courtyard Hotel (hotel_id: gch_sfo_11)
+Address: 50 Post St, San Francisco, CA 94104
+Timezone: America/Los_Angeles
+Housekeeping: 24h; Spa amenity handoff 09:00–21:00; evening turn-down 18:00–21:00
+Mild Scents: green_tea, citrus
+Note: essential-oil based; paraben-free
+Ext: x2233
+
+user:
+Could you place a mild green tea soap during evening turn-down to 1412?
+
+assistant channel=analysis:
+Confirm mild scent and schedule evening drop.
+
+assistant channel=commentary to=tool.evening_inventory:
+{"mild":true}
+
+tool.evening_inventory channel=commentary to=assistant:
+{"ok":true,"mild_scents":["green_tea","citrus"],"note":"essential-oil based"}
+
+assistant channel=commentary to=tool.schedule_drop:
+{"room":"1412","scent":"green_tea"}
+
+tool.schedule_drop channel=commentary to=assistant:
+{"scheduled":true,"window":"18:00–19:00"}
+
+assistant channel=final:
+Scheduled—green tea soap will be placed during evening turn-down for 1412 between 18:00–19:00. Note: essential-oil based, paraben-free.
+
+user:
+Is housekeeping 24 hours?
+
+assistant channel=analysis:
+Answer with system info.
+
+assistant channel=final:
+Yes—housekeeping is 24 hours, with spa amenity handoff 09:00–21:00.
+
+user:
+Could you book Alcatraz night tour tickets?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

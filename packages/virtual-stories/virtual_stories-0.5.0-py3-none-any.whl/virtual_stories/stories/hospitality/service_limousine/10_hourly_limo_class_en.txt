@@ -1,0 +1,62 @@
+"""
+Guest considers upgrading to stretch limo for a celebration and asks about minimums.
+
+ROLES: user (celebrating guest), assistant (concierge providing limo class info)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_hourly_minimums","description":"Return hourly minimums by vehicle class.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"strict":true},
+  {"name":"estimate_hourly_total","description":"Estimate total for given class and hours.","parameters":{"type":"object","additionalProperties":false,"properties":{"vehicle_class":{"type":"string","enum":["sedan","suv","van","limo"]},"hours":{"type":"integer","minimum":1}},"required":["vehicle_class","hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Galleria at Parkview (hotel_id: gap_hou_01)
+Address: 5085 Westheimer Rd, Houston, TX 77056
+Timezone: America/Chicago
+
+Hourly Program:
+- Classes: sedan $80/h, suv $100/h, van $115/h, limo $145/h
+- Minimums: 2 hours for sedan/suv/van; 3 hours for limo
+- Inclusions: 20 miles per hour
+- Overage: $2.10/mile
+- Billing: Room charge or card on file
+
+user:
+Is the limo class a 3‑hour minimum? I might book 3 hours.
+
+assistant channel=analysis:
+System says limo minimum is 3 hours. Provide estimate for 3 hours with tool.
+
+assistant channel=commentary to=tool.get_hourly_minimums:
+{}
+
+tool.get_hourly_minimums channel=commentary to=assistant:
+{"sedan":2,"suv":2,"van":2,"limo":3}
+
+assistant channel=commentary to=tool.estimate_hourly_total:
+{"vehicle_class":"limo","hours":3}
+
+tool.estimate_hourly_total channel=commentary to=assistant:
+{"rate_per_hour":145,"hours":3,"est_total":435,"currency":"USD"}
+
+assistant channel=final:
+Yes—the stretch limo has a 3‑hour minimum. For 3 hours, the estimate is $435 USD before mileage overage (20 miles per hour included, then $2.10/mile).
+
+user:
+Sounds perfect. Your lobby piano is lovely tonight.
+
+assistant channel=final:
+Thank you—enjoy the celebration.
+
+user:
+Can you decorate the limo with balloons?
+
+assistant channel=analysis:
+Decoration service not documented. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Thanks for asking. Checking available options.
+

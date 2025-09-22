@@ -1,0 +1,72 @@
+"""
+Nature escape availability; assistant searches via tool and repeats tool results; answers a system question; includes small talk and an [ATTENTION] request.
+
+ROLES: user (nature lover), assistant (Savanna Reserve booking)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Savanna Reserve Tented Camp
+Location: N14 Wildlife Corridor, Windhoek Rural, Namibia
+Check‑in/out: 13:00 / 10:00
+Meals: Full board dining 07:00–10:00, 12:30–14:00, 19:00–21:00
+Game Drives: Depart 06:00 and 16:00 (book at desk)
+Power: Solar + generator backup; plugs Type D/M
+Wi‑Fi: Limited to main mess, 5–10 Mbps
+Quiet Hours: 21:00–06:00
+Tents: Canvas King (35 m²), Family Tent (50 m²)
+
+user:
+Two adults, 2025-08-15 to 2025-08-18—any tents open?
+
+assistant channel=analysis:
+Search for the dates and share tool response only.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-08-15","check_out":"2025-08-18","adults":2,"children":0}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"CV_K","name":"Canvas King","rate":"NAD 4200/night"}]}
+
+assistant channel=final:
+Canvas King is open at NAD 4200/night. Check‑in 13:00; checkout 10:00.
+
+user:
+Sounds incredible. How’s your day?
+
+assistant channel=final:
+Delighted to assist at Savanna Reserve.
+
+user:
+Are game drives scheduled twice a day?
+
+assistant channel=final:
+Yes—departures at 06:00 and 16:00; book at the desk.
+
+user:
+Can you book a private rhino tracking session?
+
+assistant channel=final:
+[ATTENTION] Private rhino tracking isn’t in the provided details. Processing your request.
+

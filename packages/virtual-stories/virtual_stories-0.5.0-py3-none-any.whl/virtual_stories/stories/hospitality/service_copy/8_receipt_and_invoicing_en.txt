@@ -1,0 +1,48 @@
+"""
+Guest needs an itemized receipt; create job and state receipt policy; include small talk and ATTENTION for VAT invoice issuance.
+
+ROLES: user (guest requesting itemized receipt), assistant (copy desk creating job and explaining billing/receipts)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"create_copy_job","description":"Create a copy job and return id and price.","parameters":{"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"},"color":{"type":"boolean"},"paper_size":{"type":"string","enum":["A4","Letter"]}},"required":["pages","color","paper_size"]},"strict":true}
+]
+```
+"""
+
+system:
+Highland Summit Lodge — Copy Kiosk (Lobby)
+Hours: 07:00–21:00
+Rates: B/W USD 0.15; Color USD 0.50 per page
+Receipts: Itemized receipts available on request; charges can be posted to folio or paid by card
+Queue: First‑come, first‑served; SMS notifications available
+Turnaround: 10–15 minutes for small jobs
+
+user:
+I need 16 color copies on Letter, and I’ll need an itemized receipt.
+
+assistant channel=analysis:
+Create a 16‑page color Letter job; confirm itemized receipt is available per system.
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":16,"color":true,"paper_size":"Letter"}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-5714","price":"USD 8.00"}
+
+assistant channel=final:
+Your job CPY-5714 is set for 16 Letter color pages at USD 8.00. Itemized receipts are available on request; pickup is usually 10–15 minutes at the Lobby Copy Kiosk.
+
+user:
+Thanks—smells like fresh coffee in the lobby.
+
+assistant channel=final:
+We’ll let you know when it’s ready.
+
+user:
+Can you issue a VAT invoice to my company?
+
+assistant channel=final:
+[ATTENTION] VAT invoicing isn’t available via these resources. Reviewing available resources.
+

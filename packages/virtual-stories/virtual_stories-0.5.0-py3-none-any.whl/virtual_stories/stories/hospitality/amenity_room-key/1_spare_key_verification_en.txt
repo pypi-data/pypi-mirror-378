@@ -1,0 +1,116 @@
+"""
+Guest reports a lost room key and requests a spare; verify identity and issue a spare key with pickup details; include a casual remark and one background-acknowledgment message.
+
+ROLES: user (guest who misplaced room key), assistant (front desk verifying identity and issuing spare)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "verify_guest_identity",
+    "description": "Verify guest identity for key issuance using last name and ID last four.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "last_name": { "type": "string" },
+        "id_last4": { "type": "string" }
+      },
+      "required": ["room_number", "last_name", "id_last4"]
+    },
+    "strict": true
+  },
+  {
+    "name": "issue_spare_key",
+    "description": "Create a spare key and set a pickup location.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "pickup_location": { "type": "string", "enum": ["front_desk"] }
+      },
+      "required": ["room_number", "pickup_location"]
+    },
+    "strict": true
+  },
+  {
+    "name": "log_lost_key",
+    "description": "Record a lost key event for the room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "required": ["room_number", "note"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Midtown Arc Hotel (hotel_id: ma_chi_11)
+Address: 227 N Fairview Ave, Chicago, IL 60610
+Front desk: 24 hours
+
+Spare key policy:
+- Verification: match last name + government ID last four
+- Pickup: front_desk only (no door delivery)
+- Limits: up to 2 active spares; all spares auto-deactivate at 00:00
+
+Lobby detail:
+- A geometric mural by a local artist spans the mezzanine wall.
+
+user:
+I lost my key for room 1921—last name Park, ID ending 5521. Can you help me get a spare?
+
+assistant channel=analysis:
+Run identity verification, then issue a spare key for front desk pickup, and log the lost key.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"1921","last_name":"Park","id_last4":"5521"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"1921"}
+
+assistant channel=analysis:
+Proceed to issue spare for front desk pickup and log the event.
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"1921","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-1921-7348","pickup_location":"front_desk"}
+
+assistant channel=commentary to=tool.log_lost_key:
+{"room_number":"1921","note":"guest reported lost original key; spare issued SP-1921-7348"}
+
+tool.log_lost_key channel=commentary to=assistant:
+{"logged":true}
+
+assistant channel=final:
+Thanks, Mr./Ms. Park—verification is complete. Your spare key (ID SP-1921-7348) is ready for front desk pickup.
+
+user:
+That mural above the lobby stairs is pretty striking.
+
+assistant channel=analysis:
+Respond with a friendly acknowledgment tied to the lobby mural fact.
+
+assistant channel=final:
+It’s a guest favorite—the geometric piece spans our mezzanine wall.
+
+user:
+Could you have someone bring the spare key up to my door?
+
+assistant channel=analysis:
+Door delivery isn’t supported by tools or system policy; use the special flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check what’s permitted under our policy. Checking available options.
+

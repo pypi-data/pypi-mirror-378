@@ -1,0 +1,80 @@
+"""
+Guest orders a farm-to-room fruit bowl and asks about policies.
+
+ROLES: user (wellness-focused guest, room 1108), assistant (concierge and dining liaison)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service",
+    "description": "Order food and beverages to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "item_name": {"type": "string"},
+        "room_number": {"type": "string"},
+        "quantity": {"type": "integer"},
+        "notes": {"type": "string"}
+      },
+      "required": ["item_name", "room_number", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Name: The Verdant House
+Locale: Riverbend Arts District
+Wellness Program: seasonal produce; pressed juices; herbal infusions
+Hours (In-Room Dining): 06:00–22:00
+Fruit Tiers:
+  • Classic Bowl — $12
+  • Farm-to-Room — $22 (heirloom apple, pear, figs, berries)
+  • Vitamin Boost — $26 (citrus medley, kiwi, pomegranate)
+Notes:
+  • Knife-free slicing available
+  • Compost bin in every room
+  • Tray return encouraged; call ext. 55
+  • Priority delivery for floors 10–12: 10–14 min
+
+user:
+Room 1108 here—one Farm-to-Room bowl, please.
+
+assistant channel=analysis:
+Place Farm-to-Room bowl order to room 1108, quantity 1.
+
+assistant channel=commentary to=tool.order_room_service:
+{"item_name":"Farm-to-Room fruit bowl","room_number":"1108","quantity":1}
+
+tool.order_room_service channel=commentary to=assistant:
+{"ok":true,"eta_min":12}
+
+assistant channel=final:
+Got it—your Farm-to-Room bowl is coming to 1108. ETA about 12 minutes.
+
+user:
+Do you do knife-free slicing?
+
+assistant channel=analysis:
+Yes per system notes.
+
+assistant channel=final:
+Yes—knife-free slicing is available on request.
+
+user:
+The figs sound amazing.
+
+assistant channel=final:
+Enjoy—our seasonal figs are a guest favorite.
+
+user:
+Can you confirm the neighborhood farmers’ market start time tomorrow?
+
+assistant channel=analysis:
+Beyond system scope; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] I’m checking those market hours for you.
+

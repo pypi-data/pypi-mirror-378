@@ -1,0 +1,74 @@
+"""
+Guest requests cotton buds as part of a small spill cleanup kit from the minibar area.
+Provide suitable pack and immediate delivery.
+
+ROLES: user (guest needing small cleanup), assistant (amenities specialist)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "prepare_cleanup_kit",
+    "description": "Prepare a small cleanup kit including cotton buds and cloth.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": { "type": "string" },
+        "contents": { "type": "array", "items": { "type": "string" } },
+        "speed": { "type": "string", "enum": ["immediate","standard"] }
+      },
+      "required": ["room","contents","speed"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Opera Lane House (hotel_id: olh_vienna_05)
+Address: Kärntner Str. 32, 1010 Wien, Austria
+Timezone: Europe/Vienna
+Housekeeping: on-call rapid response for minor spills
+
+Amenity Kit:
+- Contents: cotton buds, microfiber cloth, small waste pouch
+- Delivery: immediate 10–15 minutes
+- Fees: complimentary
+- Disposal: housekeeping can collect pouch later
+- Contact: operator routes requests
+
+user:
+I had a tiny spill near the minibar. Could you send a small cleanup kit with cotton buds to room 515 right away?
+
+assistant channel=analysis:
+Prepare immediate cleanup kit to room 515.
+
+assistant channel=commentary to=tool.prepare_cleanup_kit:
+{"room":"515","contents":["Cotton buds","Microfiber cloth","Small waste pouch"],"speed":"immediate"}
+
+tool.prepare_cleanup_kit channel=commentary to=assistant:
+{"prepared":true,"eta":"12 minutes","fee":"complimentary"}
+
+assistant channel=final:
+On the way—a cleanup kit with cotton buds, a microfiber cloth, and a small waste pouch will arrive in about 12 minutes. Complimentary.
+
+user:
+Thank you. Can housekeeping collect the pouch later tonight?
+
+assistant channel=analysis:
+Use disposal policy.
+
+assistant channel=final:
+Yes—just let us know when you’re done and housekeeping will collect it.
+
+user:
+Great. Also, is there an opera performance across the street tonight?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check tonight’s performance schedule across the street. Investigating potential answers.
+

@@ -1,0 +1,63 @@
+"""
+Offer perfumed or gentle options with clear allergy notes and deliver to the room.
+
+ROLES: user (sensitive skin guest), assistant (amenities specialist providing scent or gentle alternatives)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"amenity_options","description":"List available scents and gentle options.","parameters":{"type":"object","additionalProperties":false,"properties":{"gentle":{"type":"boolean"}},"required":[]},"strict":true},
+  {"name":"send_amenity","description":"Send chosen amenity to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"choice":{"type":"string"}},"required":["room","choice"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cedar Springs Lodge (hotel_id: csl_den_02)
+Address: 1500 Court Pl, Denver, CO 80202
+Timezone: America/Denver
+Spa & Amenities: 08:00–20:00; delivery 12–18 min
+Scents: citrus, green_tea, sandalwood
+Gentle Option: unscented oatmeal bar (hypoallergenic)
+Note: all soaps are paraben-free
+Ext: x4104
+
+user:
+My skin is sensitive—could I get a gentle soap to 1908?
+
+assistant channel=analysis:
+List options including gentle bar; send the gentle choice.
+
+assistant channel=commentary to=tool.amenity_options:
+{"gentle":true}
+
+tool.amenity_options channel=commentary to=assistant:
+{"options":["citrus","green_tea","sandalwood","unscented_oatmeal"],"gentle":"unscented_oatmeal"}
+
+assistant channel=commentary to=tool.send_amenity:
+{"room":"1908","choice":"unscented_oatmeal"}
+
+tool.send_amenity channel=commentary to=assistant:
+{"sent":true,"eta":13}
+
+assistant channel=final:
+Absolutely—the unscented oatmeal (hypoallergenic) bar is on its way to 1908, about 13 minutes.
+
+user:
+It’s so sunny today.
+
+assistant channel=analysis:
+Neutral chitchat.
+
+assistant channel=final:
+Cedar Springs Lodge’s downtown location makes it easy to enjoy the day.
+
+user:
+Can you schedule a guided mountain hike tomorrow?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

@@ -1,0 +1,58 @@
+"""
+Long-stay guest wants to stay on same floor; include in-context elevator bank note and [ATTENTION] inventory tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"check_room_inventory","description":"Availability","parameters":{"type":"object","properties":{"requested_type":{"type":"string","enum":["standard","deluxe"]},"zone":{"type":"string","enum":["high_floor","courtyard","corner","near_elevator"]}},"required":["requested_type","zone"]}},
+  {"name":"move_reservation","description":"Move","parameters":{"type":"object","properties":{"from_room":{"type":"string"},"to_room":{"type":"string"}},"required":["from_room","to_room"]}}
+]
+"""
+
+system:
+Hotel: Harbor Quay (hotel_id: harbor_quay_syd)
+Address: 200 Darling Dr, Sydney NSW | Timezone: Australia/Sydney
+Elevators: bank A floors 5–20, bank B 21–35.
+Policy: lateral moves free; upgrades charged.
+Quietest: courtyard and high_floor.
+
+user:
+I’m on 22 now—can I switch rooms but stay on the same floor?
+
+assistant channel=analysis:
+Confirm possible and mention elevator banks info.
+
+assistant channel=final:
+Yes—that’s possible. Floors 21–35 use bank B; I can check availability on 22 for your category.
+
+user:
+[ATTENTION] Any deluxe courtyard on 22 now?
+
+assistant channel=analysis:
+Run inventory; though our tool doesn’t take specific floor, we infer via zone; respond only with tool/system facts—state courtyard deluxe available candidate.
+
+assistant channel=commentary to=check_room_inventory:
+{"requested_type":"deluxe","zone":"courtyard"}
+
+tool.check_room_inventory:
+{"available": true, "candidate_room":"2211","ready": true}
+
+assistant channel=final:
+We have a courtyard deluxe ready—2211. It’s suitable for a same-floor move.
+
+user:
+Perfect, please move me from 2205 to 2211.
+
+assistant channel=analysis:
+Perform move.
+
+assistant channel=commentary to=move_reservation:
+{"from_room":"2205","to_room":"2211"}
+
+tool.move_reservation:
+{"status":"moved"}
+
+assistant channel=final:
+Done—2211 is now assigned. New keys are available at the desk.
+

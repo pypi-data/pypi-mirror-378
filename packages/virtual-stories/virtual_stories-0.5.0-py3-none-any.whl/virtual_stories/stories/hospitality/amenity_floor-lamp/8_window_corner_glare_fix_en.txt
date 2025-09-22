@@ -1,0 +1,62 @@
+"""
+Guest reports screen glare from window corner lamp and requests adjustment.
+
+ROLES: user (guest working on laptop), assistant (lighting support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"status","description":"Check lamp angle/brightness.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]},"strict":true},
+  {"name":"adjust","description":"Reduce brightness and angle away.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"brightness":{"type":"number","minimum":10,"maximum":100},"position":{"type":"string","enum":["window_corner","desk_area","reading_chair"]}},"required":["room","brightness","position"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Jetstream Airport Hotel (hotel_id: jah_de_41)
+Address: Terminalstrasse 9, Munich, Germany
+Lighting suggestions:
+- To reduce glare, angle lamp away from screen and lower brightness by 10–20%
+- Preferred positions: desk for work, window corner for accent
+Operations: 06:00–23:00; ETA 8–15 minutes
+Two adjustable floor lamps per room
+
+user:
+In 504—the window-corner lamp causes screen glare. Please fix it.
+
+assistant channel=analysis:
+Check status; reduce brightness by 20% and keep position window_corner but angle away.
+
+assistant channel=commentary to=tool.status:
+{"room":"504"}
+
+tool.status channel=commentary to=assistant:
+{"room":"504","current":{"brightness":60,"position":"window_corner"}}
+
+assistant channel=commentary to=tool.adjust:
+{"room":"504","brightness":40,"position":"window_corner"}
+
+tool.adjust channel=commentary to=assistant:
+{"ticket":"JAH-504-GLR-331","eta_minutes":9}
+
+assistant channel=final:
+We’ll angle the lamp away from your screen and lower brightness to 40% to reduce glare. Ticket JAH-504-GLR-331 is confirmed with an ETA of about 9 minutes within 06:00–23:00.
+
+user:
+Thanks—the runway view is cool.
+
+assistant channel=analysis:
+Chitchat reply only.
+
+assistant channel=final:
+It’s a unique backdrop while you work.
+
+user:
+Is there a quiet zone floor I can move to?
+
+assistant channel=analysis:
+Room moves/zone availability not in this dialogue.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability for a quiet zone floor.
+

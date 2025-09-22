@@ -1,0 +1,76 @@
+"""
+Guest asks for a breathable nursing top with specific color preference and comfortable fit.
+Provide inventory check and arrange delivery with maternal support team.
+
+ROLES: user (nursing mother seeking breathable top), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_family_amenities","description":"Check availability of family and maternal support amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["nursing_tops","nursing_pillow","privacy_screen","comfortable_chair","baby_supplies"]},"size_needed":{"type":"string","enum":["XS","S","M","L","XL","XXL"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_maternal_support","description":"Coordinate maternal wellness and nursing support services.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["nursing_clothing","privacy_setup","comfort_furniture","feeding_supplies"]},"size_specifications":{"type":"string"},"delivery_urgency":{"type":"string","enum":["standard","priority","immediate"]}},"required":["room_number","service_type"]},"strict":true},
+  {"name":"coordinate_wellness_services","description":"Connect with wellness team for specialized maternal health support.","parameters":{"type":"object","additionalProperties":false,"properties":{"wellness_service":{"type":"string","enum":["lactation_consultation","postpartum_massage","nutrition_guidance","baby_care_coaching"]},"guest_room":{"type":"string"},"appointment_preference":{"type":"string"}},"required":["wellness_service","guest_room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Baylight Family & Spa (hotel_id: bf_sfo_21)
+Address: 2 Embarcadero Center, San Francisco, CA 94111
+Timezone: America/Los_Angeles
+
+Maternal Amenities Map:
+- Nursing tops: bamboo, organic cotton; sizes XS–XXL; colors: sand, teal, black
+- Comfort items: nursing pillow, privacy screen, supportive rocker chair
+- Wellness slots: lactation consultation Mon/Wed/Fri 09:00–15:00
+- Nursery kits: wipes, diapers (NB–L), travel changing mat
+- Delivery target: 10–15 minutes rooms; spa lounge 6–10
+
+user:
+Hi! I’m in room 1015—do you have a breathable nursing top in teal?
+
+assistant channel=analysis:
+Check nursing_tops availability and colors; then ask for size.
+
+assistant channel=commentary to=tool.check_family_amenities:
+{"amenity_type":"nursing_tops"}
+
+tool.check_family_amenities channel=commentary to=assistant:
+{"available":true,"amenity_type":"nursing_tops","stock_levels":{"XS":2,"S":6,"M":7,"L":5,"XL":3,"XXL":1},"fabric_options":["bamboo","organic_cotton"],"colors":["sand","teal","black"],"styles":["crossover","pull_down","button_front"]}
+
+assistant channel=final:
+Yes—bamboo and organic cotton nursing tops are in stock in teal. What size and style would you prefer for room 1015?
+
+user:
+Medium, bamboo, crossover style please.
+
+assistant channel=analysis:
+Arrange delivery with those specifications.
+
+assistant channel=commentary to=tool.arrange_maternal_support:
+{"room_number":"1015","service_type":"nursing_clothing","size_specifications":"M, teal, bamboo, crossover","delivery_urgency":"standard"}
+
+tool.arrange_maternal_support channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":12,"items_included":["bamboo_crossover_teal_M","spare_nursing_pads_sample"],"delivery_team":"family_services"}
+
+assistant channel=final:
+Great—one bamboo crossover nursing top in teal (size M) is on its way to room 1015 in about 12 minutes, with a sample of nursing pads.
+
+user:
+Thank you! The bay breeze is lovely.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+It makes the rooms feel fresh.
+
+user:
+Could you book a private sunset cruise for us tonight?
+
+assistant channel=analysis:
+Cruise booking beyond system/tools. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

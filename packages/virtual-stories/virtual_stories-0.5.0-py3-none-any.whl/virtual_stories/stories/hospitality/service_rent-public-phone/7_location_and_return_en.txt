@@ -1,0 +1,59 @@
+"""
+Guest verifies exact pickup/return location and return policy; complete rental. Include chitchat and an [ATTENTION] query.
+
+ROLES: user (guest wanting precise logistics), assistant (concierge detailing pickup point and return/refund)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"start_rental","description":"Start handset rental with pickup counter noted","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"duration_hours":{"type":"integer"},"counter":{"type":"string"}},"required":["hotel_id","room","duration_hours","counter"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeside Pavilion Geneva (LPG-05)
+Address: Quai du Mont-Blanc 21, 1201 Genève
+Handset rental:
+- Rate: CHF 19/day with CHF 8 credit; charge code RENT-PHONE
+- Deposit: CHF 50, refunded on return; ID required
+- Pickup/Return: Concierge Counter B (lobby, right wing); after 22:00 at Front Desk
+- Scope: local calls only; SIM nano; no data
+Additional info:
+- Inventory: 6 units (LPG-PHN-31…36)
+- Accessories: USB‑C cable and Swiss plug
+- Languages on device: EN/FR/DE
+- Call limit: 120 minutes/day; top‑up at Concierge
+- Wipe: devices reset on return
+
+user:
+Where exactly do I pick it up? I’m in 834.
+
+assistant channel=analysis:
+Answer with precise counter name and location; then start a 24-hour rental.
+
+assistant channel=final:
+Pickup and return are at Concierge Counter B in the lobby’s right wing; after 22:00 please use the Front Desk.
+
+assistant channel=commentary to=tool.start_rental:
+{"hotel_id":"LPG-05","room":"834","duration_hours":24,"counter":"Concierge Counter B"}
+
+tool.start_rental channel=commentary to=assistant:
+{"order_id":"PHN-834-12","serial":"LPG-PHN-33"}
+
+assistant channel=final:
+Your order PHN-834-12 is ready with unit LPG-PHN-33. The daily rate is CHF 19 with CHF 8 credit; CHF 50 deposit applies.
+
+user:
+The lake view is calming.
+
+assistant channel=final:
+Happy you’re enjoying it—Concierge can assist with top‑ups.
+
+user:
+Can you forward missed calls to my mobile number?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

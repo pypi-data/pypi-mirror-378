@@ -1,0 +1,47 @@
+"""
+Guest has more than the per‑job page limit; advise splitting and submit one batch; include small talk and ATTENTION for expedited priority lane.
+
+ROLES: user (guest with a large fax set), assistant (business center clerk enforcing limits and submitting in batches)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"send_fax","description":"Submit a fax job for transmission.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"recipient_number":{"type":"string"},"pages":{"type":"integer"},"cover_note":{"type":"string"},"destination_type":{"type":"string","enum":["domestic","international"]}},"required":["room_number","recipient_number","pages","destination_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Highland Summit Lodge — Business Services
+Hours: 06:00–22:00
+Per‑job page limit: 20 pages (cover excluded)
+Rates: Domestic USD 2/page; International USD 5/page
+Queue: First‑come, first‑served
+
+user:
+I have 32 domestic pages to fax. Can you send them all at once?
+
+assistant channel=analysis:
+Limit is 20 pages per job; recommend splitting into two. Submit the first 20‑page batch now.
+
+assistant channel=commentary to=tool.send_fax:
+{"room_number":"1410","recipient_number":"+1-415-555-0142","pages":20,"cover_note":"Batch 1 of 2","destination_type":"domestic"}
+
+tool.send_fax channel=commentary to=assistant:
+{"job_id":"fax_2025_09_07_401","status":"queued","billed_pages":20,"rate_per_page":2,"currency":"USD"}
+
+assistant channel=final:
+We’ve queued fax_2025_09_07_401 for the first 20 pages; please submit the remaining 12 as a second batch due to the 20‑page limit. Billing follows USD 2/page domestic.
+
+user:
+Thanks—great view from the lounge.
+
+assistant channel=final:
+We’ll continue as soon as the first batch clears.
+
+user:
+Can you put my job in a priority lane to send faster?
+
+assistant channel=final:
+[ATTENTION] Expedited priority lanes aren’t available here. Reviewing available resources.
+

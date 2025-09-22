@@ -1,0 +1,64 @@
+"""
+Guest requests lower bed height for accessibility; arrange removal of risers.
+
+ROLES: user (guest preferring lower bed), assistant (housekeeping/engineering coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_bed_configuration","description":"Check current bed height and components.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"schedule_engineering_visit","description":"Schedule bed height adjustment.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"window_minutes":{"type":"integer","minimum":10}},"required":["room_number","window_minutes"]},"strict":true}
+]
+```
+"""
+
+system:
+Garden Court Riverside (hotel_id: gcr_sacramento)
+Address: 120 River Park Dr, Sacramento, CA 95833
+Timezone: America/Los_Angeles
+
+Accessibility Options:
+1) Platform risers can be removed to reduce height by 3 inches.
+2) Target bed height for accessibility: 20–23 inches from floor to top of mattress.
+3) Adjustment takes ~15 minutes; two techs recommended.
+4) Housekeeping will re‑skirt the bed after adjustment.
+5) Available daily 08:00–20:00.
+
+user:
+Hi, the bed in 512 feels too high for me. Can you lower it?
+
+assistant channel=analysis:
+Check bed height; schedule visit for riser removal.
+
+assistant channel=commentary to=tool.check_bed_configuration:
+{"room_number":"512"}
+
+tool.check_bed_configuration channel=commentary to=assistant:
+{"room_number":"512","platform_type":"riser","current_height_inches":26}
+
+assistant channel=commentary to=tool.schedule_engineering_visit:
+{"room_number":"512","window_minutes":20}
+
+tool.schedule_engineering_visit channel=commentary to=assistant:
+{"ticket_id":"ENG-GCR-512-1188","visit_window_minutes":20,"eta_minutes":15}
+
+assistant channel=final:
+Absolutely—we’ll remove the risers and drop the bed height by about 3 inches. Engineering is due in ~15 minutes, and housekeeping will tidy the skirt after.
+
+user:
+Thanks! The courtyard fountain sounds lovely tonight.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Glad the fountain adds a calm backdrop.
+
+user:
+Could you also arrange a step stool?
+
+assistant channel=analysis:
+Not defined here; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability for a step stool.

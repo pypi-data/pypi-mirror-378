@@ -1,0 +1,50 @@
+"""
+Late-night move request; include in-context cutoff policy and [ATTENTION] readiness tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"check_room_inventory","description":"Availability","parameters":{"type":"object","properties":{"requested_type":{"type":"string","enum":["standard","deluxe","suite"]},"zone":{"type":"string","enum":["high_floor","courtyard","corner","near_elevator"]}},"required":["requested_type","zone"]}}
+]
+"""
+
+system:
+Hotel: Summit Heights (hotel_id: summit_heights_den)
+Address: 999 17th St, Denver, CO | Timezone: America/Denver
+Move cutoff: housekeeping finalizes by 20:00; after that, only ready rooms can be assigned.
+Fees: none for lateral moves.
+
+user:
+It’s 22:15—can I still change to a high-floor room?
+
+assistant channel=analysis:
+Explain cutoff policy; offer to check if a high-floor is ready.
+
+assistant channel=final:
+After 20:00 we can only assign rooms that are already ready. I can check if a high-floor room is available now.
+
+user:
+[ATTENTION] Is there any high-floor standard currently ready?
+
+assistant channel=analysis:
+Call inventory for standard/high_floor.
+
+assistant channel=commentary to=check_room_inventory:
+{"requested_type":"standard","zone":"high_floor"}
+
+tool.check_room_inventory:
+{"available": true, "candidate_room":"2714","ready": true}
+
+assistant channel=final:
+Yes—2714 (high-floor standard) is ready and can be assigned tonight.
+
+user:
+Great, I’ll come by for keys.
+
+assistant channel=analysis:
+Close politely.
+
+assistant channel=final:
+We’ll have the keys waiting—see you at the desk.
+

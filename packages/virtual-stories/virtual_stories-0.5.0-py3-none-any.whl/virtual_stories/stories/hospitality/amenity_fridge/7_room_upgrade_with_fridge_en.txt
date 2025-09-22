@@ -1,0 +1,84 @@
+"""
+Guest asks for a quiet fridge and wonders about pre-installed rooms; confirm portable delivery for current room and answer noise from system. Include ATTENTION about upgrade.
+
+ROLES: user (guest), assistant (front desk amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"portable_fridge_check","description":"Check portable unit availability for the room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"portable_fridge_deliver","description":"Deliver a portable unit.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"model":{"type":"string"}},
+     "required":["room_number","model"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Summit Peak Hotel (hotel_id: SPH_den_19)
+Address: 600 Alpine Ave, Denver, CO 80206 | TZ: America/Denver
+
+Fridge Policy:
+• Pre-installed only on Club floors 20–24
+• Portable units for all other floors
+• Noise: 32–34 dB models
+• Delivery window: 07:00–23:30
+• Fee: $10/night (club floors included at no charge)
+
+Notes:
+Sky lobby | Mountain view bar | Quiet hours 22:00–06:00
+
+user:
+Hi—can I get a quiet mini-fridge for room 1211?
+
+assistant channel=analysis:
+Check portable unit availability and deliver. Room 1211 is not a Club floor.
+
+assistant channel=commentary to=tool.portable_fridge_check:
+{"room_number":"1211"}
+
+tool.portable_fridge_check channel=commentary to=assistant:
+{"available":true,"model":"SPH-Quiet-50L","noise_db":"32-34","fee_per_night":10}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.portable_fridge_deliver:
+{"room_number":"1211","model":"SPH-Quiet-50L"}
+
+tool.portable_fridge_deliver channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":16,"runner":"omar","ticket":"SPH-1211-F"}
+
+assistant channel=final:
+I’ve arranged an SPH-Quiet-50L for room 1211—ETA ~16 minutes with Omar (ticket SPH-1211-F). Noise is 32–34 dB. The nightly fee is $10.
+
+user:
+Is there a floor where fridges are built-in?
+
+assistant channel=analysis:
+Answer from Fridge Policy: Club floors 20–24.
+
+assistant channel=final:
+Yes—Club floors 20–24 have fridges pre-installed.
+
+user:
+That sky lobby is gorgeous.
+
+assistant channel=analysis:
+Chitchat from Notes.
+
+assistant channel=final:
+Thank you—many guests enjoy the mountain view bar next to it.
+
+user:
+Could you upgrade me to a Club floor tomorrow?
+
+assistant channel=analysis:
+Upgrade handling is outside defined tools—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check Club floor upgrade availability.
+

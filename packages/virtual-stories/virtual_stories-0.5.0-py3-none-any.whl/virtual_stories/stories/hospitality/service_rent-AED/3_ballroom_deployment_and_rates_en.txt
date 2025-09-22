@@ -1,0 +1,52 @@
+"""
+AED standby for a ballroom event; confirm supervision, location of Security Office, and rate; include small talk and [ATTENTION] query.
+
+ROLES: user (planner for a ballroom gala), assistant (duty manager arranging AED standby logistics with Security)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_aed","description":"Reserve AED for on-property supervised standby.","parameters":{"type":"object","additionalProperties":false,"properties":{"event_space":{"type":"string"},"start_time":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":8}},"required":["event_space","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Venue: Royal Gables Hotel
+AED Terms:
+- Availability: 2 portable AEDs; Security supervised placement.
+- On-Property Only: No off-site use; return to Security when finished.
+- Rate: $25/hour; maximum 8 hours; briefing before handover.
+- Security Office: Ground Level, behind Concierge; manages deployment and return.
+Event Spaces: Oak Ballroom, Birch Salon, Willow Terrace.
+
+user:
+Please arrange AED standby in Oak Ballroom from 19:00 for 4 hours.
+
+assistant channel=analysis:
+Call the tool; reply with rate and supervision details from system and tool output.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"Oak Ballroom","start_time":"19:00","duration_hours":4}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_rg_311","hourly_rate":25,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+Booked AED standby in Oak Ballroom from 19:00 for 4 hours (aed_rg_311). Security will place and brief; the rate is $25/hour, and the unit remains on property.
+
+user:
+Your concierge desk was very helpful.
+
+assistant channel=final:
+The Security Office is behind Concierge on the Ground Level for deployment and return.
+
+user:
+Can you provide medical training during the event?
+
+assistant channel=analysis:
+Training services are not provided in system or tool; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood about training. Checking available options.
+

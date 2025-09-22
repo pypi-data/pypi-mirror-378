@@ -1,0 +1,143 @@
+"""
+Guest requests floral arrangements and flower services for special occasions and room enhancement.
+Provide comprehensive floral service assistance with arrangement options and delivery coordination.
+
+ROLES: user (hotel guest requesting flowers for anniversary), assistant (hotel florist coordinator with arrangement services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_floral_inventory",
+    "description": "Check available flowers and arrangements in hotel florist inventory.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "arrangement_type": { "type": "string", "enum": ["bouquet", "centerpiece", "room_decor", "event_staging", "memorial", "celebration"] },
+        "flower_preference": { "type": "string", "enum": ["roses", "lilies", "orchids", "mixed_seasonal", "tropical", "luxury_premium"] },
+        "budget_range": { "type": "string", "enum": ["standard_50_100", "premium_100_200", "luxury_200_plus"] }
+      },
+      "required": ["arrangement_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_floral_arrangement",
+    "description": "Create custom floral arrangement for guest.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "arrangement_style": { "type": "string", "enum": ["romantic_roses", "elegant_mixed", "tropical_paradise", "seasonal_garden", "modern_minimalist", "classic_luxury"] },
+        "delivery_time": { "type": "string", "description": "Preferred delivery time" },
+        "special_message": { "type": "string", "description": "Card message to include" },
+        "occasion": { "type": "string", "enum": ["anniversary", "birthday", "proposal", "apology", "welcome", "celebration"] }
+      },
+      "required": ["room_number", "arrangement_style", "occasion"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_floral_maintenance",
+    "description": "Schedule maintenance for live flower arrangements.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["daily_water_change", "flower_refresh", "arrangement_redesign", "removal"] },
+        "schedule_frequency": { "type": "string", "enum": ["daily", "every_other_day", "weekly", "one_time"] }
+      },
+      "required": ["room_number", "service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Paradise Palms Resort (hotel_id: pp_resort_01)
+Address: 850 Beachfront Boulevard, Maui, HI 96761
+Timezone: Pacific/Honolulu
+
+Floral Services:
+- In-house floral studio with certified florist available 8 AM - 6 PM daily
+- Fresh flower delivery from Maui flower farms twice weekly (Tuesday/Friday)
+- Specialty tropical arrangements: bird of paradise, plumeria, orchids, hibiscus, anthurium
+- Traditional arrangements: roses, lilies, mixed seasonal, elegant bouquets
+- Room enhancement packages: bedside arrangements, bathroom accents, balcony displays
+
+Pricing & Packages:
+- Standard arrangements ($50-$100): simple bouquets, single-variety centerpieces
+- Premium arrangements ($100-$200): mixed tropical designs, luxury roses, orchid displays  
+- Luxury arrangements ($200+): elaborate centerpieces, multi-room displays, wedding-style designs
+- Daily maintenance available for extended stays and special events
+
+Special Services:
+- Anniversary and honeymoon complimentary welcome arrangements
+- Proposal setup with rose petals and mood lighting coordination
+- Memorial and sympathy arrangements with discrete delivery
+- Corporate event staging and meeting room floral accents
+
+user:
+Hi! Tomorrow is our 10th wedding anniversary and I'd love to surprise my wife with beautiful flowers in our room. What options do you have?
+
+assistant channel=analysis:
+Guest wants anniversary flowers for wife - this is a celebration/romantic occasion. I should check available arrangements and suggest appropriate options for 10th anniversary.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type": "celebration", "flower_preference": "roses", "budget_range": "premium_100_200"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available": true, "arrangements": ["romantic_red_roses", "elegant_mixed_tropical", "luxury_orchid_display"], "seasonal_specials": ["maui_sunset_bouquet", "island_paradise_centerpiece"], "pricing": {"romantic_roses": 125, "mixed_tropical": 145, "orchid_display": 185}}
+
+assistant channel=analysis:
+Great selection available including romantic roses and tropical options perfect for Maui anniversary. The romantic roses at $125 or mixed tropical at $145 would be ideal. I need their room number to arrange delivery.
+
+assistant channel=final:
+How wonderful - congratulations on your 10th anniversary! We have several beautiful options: romantic red roses ($125), elegant mixed tropical arrangements with bird of paradise and plumeria ($145), or luxury orchid displays ($185). There's also our special Maui sunset bouquet. What's your room number and which style appeals to you?
+
+user:
+We're in room 3402. The mixed tropical sounds perfect for Hawaii! Can you deliver it tomorrow morning while we're at breakfast?
+
+assistant channel=analysis:
+Guest wants mixed tropical arrangement delivered to room 3402 tomorrow morning during breakfast. Perfect timing for anniversary surprise. I'll create the arrangement with romantic styling.
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number": "3402", "arrangement_style": "tropical_paradise", "delivery_time": "tomorrow morning 8:00-9:30 AM", "special_message": "Happy 10th Anniversary! With love from Paradise Palms Resort", "occasion": "anniversary"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed": true, "arrangement_id": "trop_3402_001", "delivery_scheduled": "8:15 AM", "estimated_duration": "3-4 days fresh", "includes": ["bird_of_paradise", "plumeria", "orchids", "tropical_greenery", "anniversary_card"], "total_cost": 145}
+
+assistant channel=final:
+Perfect choice! I've arranged a stunning tropical paradise arrangement for room 3402 with bird of paradise, plumeria, and orchids. It'll be delivered tomorrow at 8:15 AM while you're at breakfast, complete with an anniversary card. The arrangement will stay fresh for 3-4 days and costs $145.
+
+user:
+That's wonderful! You know, the sunset from our balcony last night was absolutely magical.
+
+assistant channel=analysis:
+Guest sharing positive experience about sunset views. Nice small talk that doesn't require tools - I can respond warmly about Paradise Palms' location and views.
+
+assistant channel=final:
+The sunsets from Paradise Palms are truly spectacular! Your balcony in room 3402 has one of our best sunset views over the Pacific. Perfect setting for your anniversary celebration!
+
+user:
+Actually, could you also help arrange a helicopter tour of the volcanic craters?
+
+assistant channel=analysis:
+Guest asking about helicopter tours which is outside my floral service tools and system knowledge. Need to use the special flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources for tour arrangements.
+
+user:
+Thanks anyway! I'm really excited about the flower surprise tomorrow.
+
+assistant channel=analysis:
+Guest expressing excitement about the flower arrangement. Simple positive acknowledgment.
+
+assistant channel=final:
+You're so welcome! Your wife is going to be absolutely delighted with the tropical arrangement. Happy 10th anniversary from all of us at Paradise Palms Resort!

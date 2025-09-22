@@ -1,0 +1,56 @@
+"""
+Guest reports small cup output; provide guidance and send pods; include small talk and an out-of-scope question.
+
+ROLES: user (guest seeing too little coffee), assistant (support advising on pod/cup size and refills)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"order_coffee_supplies","description":"Send coffee pods to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_type":{"type":"string","enum":["coffee_pods"]},"quantity":{"type":"integer"}},"required":["item_type","quantity"],"additionalProperties":false}}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Aurora Convention Suites (hotel_id: acs_phx)
+Location: 4300 E Washington St, Phoenix, AZ
+Coffee Notes:
+- Vertuo Plus recognizes pod barcode; smaller capsules brew espresso-size
+- Daily: 4 coffee pods; extras on request
+- Varieties: Espresso Intenso (small), Medium Roast (larger cup), Decaf Peru
+Delivery: 07:00–23:00, ETA ~12–18 minutes
+Policy: No fees for extras
+
+user:
+My Vertuo in 604 only makes a tiny shot. How do I get a bigger cup?
+
+assistant channel=analysis:
+Advise from system: use larger-cup varieties; offer to send Medium Roast.
+
+assistant channel=final:
+Use a larger-cup capsule like Medium Roast—the machine reads the barcode to size the brew. Want me to send a couple to 604?
+
+user:
+Yes, send 2 Medium Roast.
+
+assistant channel=commentary to=tool.order_coffee_supplies:
+{"room_number":"604","items":[{"item_type":"coffee_pods","quantity":2}]}
+
+tool.order_coffee_supplies channel=commentary to=assistant:
+{"order_id":"ACS-604-M2","delivery_eta_minutes":15,"items":[{"item_type":"coffee_pods","quantity":2,"varieties":["Medium Roast"]}]}
+
+assistant channel=final:
+On the way—2 Medium Roast pods to 604, ETA about 15 minutes.
+
+user:
+The desert sunrise was beautiful from the window.
+
+assistant channel=final:
+Sunrise over Camelback is a treat from these suites.
+
+user:
+Which trailhead is best for beginners?
+
+assistant channel=final:
+[ATTENTION] Reviewing this outside our available hotel resources.
+

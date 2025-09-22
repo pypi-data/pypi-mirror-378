@@ -1,0 +1,92 @@
+"""
+Guest requests a natural bath sponge; verify availability and deliver.
+
+ROLES: user (guest preparing for a bath), assistant (amenities attendant for bath items)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_bath_amenities",
+    "description": "Check bath amenity availability by type.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_type": { "type": "string", "enum": ["natural_sponge", "mesh_sponge"] }
+      },
+      "required": ["amenity_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_bath_amenity",
+    "description": "Deliver a bath amenity to the room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "amenity_type": { "type": "string" },
+        "quantity": { "type": "integer", "minimum": 1, "maximum": 3 }
+      },
+      "required": ["room_number", "amenity_type", "quantity"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Desert Star Resort (hotel_id: dsr_phx_06)
+Address: 2000 E Camelback Rd, Phoenix, AZ 85016
+Timezone: America/Phoenix
+
+Bath Amenities:
+- Sponge options: natural_sponge (sea sponge), mesh_sponge (loofah mesh)
+- Delivery window: 10–20 minutes typical
+
+Pools & Comfort:
+- Main pool temperature maintained at 82°F year-round
+- Cabanas available by reservation through concierge
+
+user:
+Hi—could I get one natural bath sponge to room 924?
+
+assistant channel=analysis:
+Check natural sponge availability, then deliver one to 924.
+
+assistant channel=commentary to=tool.check_bath_amenities:
+{"amenity_type":"natural_sponge"}
+
+tool.check_bath_amenities channel=commentary to=assistant:
+{"amenity_type":"natural_sponge","on_hand":16,"estimated_delivery_minutes":14}
+
+assistant channel=commentary to=tool.deliver_bath_amenity:
+{"room_number":"924","amenity_type":"natural_sponge","quantity":1}
+
+tool.deliver_bath_amenity channel=commentary to=assistant:
+{"delivery_id":"BATH-DEL-5740","room_number":"924","amenity_type":"natural_sponge","quantity":1,"eta_minutes":14}
+
+assistant channel=final:
+One natural sea sponge is headed to room 924 (BATH-DEL-5740) with an ETA of about 14 minutes.
+
+user:
+Nice—what’s the pool temperature like right now?
+
+assistant channel=analysis:
+Use system pool temperature info.
+
+assistant channel=final:
+Our main pool is maintained at 82°F year-round.
+
+user:
+Any recommendations for desert hikes nearby?
+
+assistant channel=analysis:
+Local hiking guidance is outside tools and system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your hiking question. Exploring different approaches.
+

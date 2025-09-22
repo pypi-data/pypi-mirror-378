@@ -1,0 +1,107 @@
+"""
+Guest reports bathroom phone internal-call button is stuck; attempt remote port reset and schedule service if needed.
+
+ROLES: user (guest with stuck bathroom phone button), assistant (engineering coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "run_remote_line_test",
+    "description": "Run a remote diagnostic on the room phone line at a specified location (bathroom or desk).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "location": { "type": "string", "enum": ["bathroom", "desk"] }
+      },
+      "required": ["room_number", "location"]
+    },
+    "strict": true
+  },
+  {
+    "name": "reset_port",
+    "description": "Remotely power-cycle the analog adapter port to clear stuck key states.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "location": { "type": "string", "enum": ["bathroom", "desk"] },
+        "hold_seconds": { "type": "integer", "minimum": 3, "maximum": 10 }
+      },
+      "required": ["room_number", "location", "hold_seconds"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_engineering_ticket",
+    "description": "Open an engineering ticket for a room device issue.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "note": { "type": "string" }
+      },
+      "required": ["room_number", "category", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Sierra Crest Alpine Resort (hotel_id: scar_tahoe_west)
+Address: 2220 Lakeview Drive, Tahoe City, CA 96145
+Timezone: America/Los_Angeles
+
+Telecom Notes:
+- Bathroom handsets place internal calls to front desk and security only.
+- Stuck key states can flood the line; remote port reset clears the condition in most cases.
+- After two remote resets in 24h, hardware replacement is required.
+- Engineering on-site: 08:00–20:00; on-call overnight for safety devices.
+- Desk phone is independent; guests can still reach us at any time.
+
+user:
+Hi, the bathroom phone in 418 keeps calling the desk by itself—like the button’s jammed.
+
+assistant channel=analysis:
+Confirm with remote test, then perform a short reset on the bathroom port.
+
+assistant channel=commentary to=tool.run_remote_line_test:
+{"room_number":"418","location":"bathroom"}
+
+tool.run_remote_line_test channel=commentary to=assistant:
+{"room_number":"418","location":"bathroom","result":"stuck_key","details":"internal_call_key_closed"}
+
+assistant channel=commentary to=tool.reset_port:
+{"room_number":"418","location":"bathroom","hold_seconds":6}
+
+tool.reset_port channel=commentary to=assistant:
+{"reset_performed":true,"port_status":"restored","recommendation":"monitor_24h"}
+
+assistant channel=final:
+Thanks for reporting it. I ran a remote reset on the bathroom phone port in 418, and it’s now cleared. If it triggers again within 24 hours, I’ll have engineering replace the handset.
+
+user:
+Appreciate it! The lake is so calm this evening.
+
+assistant channel=analysis:
+Small talk acknowledgement.
+
+assistant channel=final:
+Glad it’s a peaceful evening.
+
+user:
+Can you block all outbound calls from my room for privacy?
+
+assistant channel=analysis:
+Call blocking isn’t defined here; use the flag.
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available call restriction options.

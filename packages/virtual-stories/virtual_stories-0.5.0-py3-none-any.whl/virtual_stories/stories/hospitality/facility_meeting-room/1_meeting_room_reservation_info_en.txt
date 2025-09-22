@@ -1,0 +1,61 @@
+"""
+Guest asks about the meeting room capacity, equipment, and booking windows.
+
+ROLES: user (guest planning a small meeting), assistant (events coordinator providing details only)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_meeting_room_details",
+    "description": "Return meeting room name, capacity, layouts, AV equipment, and booking windows.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Meeting room: Orchid Room
+Location: Conference level C, near the business center
+Typical layouts: U‑shape, classroom, boardroom
+AV: 86" display, HDMI/USB‑C, ceiling mics, speaker bar, whiteboard
+Catering: Coffee service available from the business center
+Notes: Natural daylight; blackout blinds; acoustic panels
+
+user:
+I need a meeting room for about 18 people with a screen. What are the details and when can it be booked?
+
+assistant channel=analysis:
+Use the details tool to provide capacity, AV, and booking windows; add location/context from system.
+
+assistant channel=commentary to=tool.get_meeting_room_details:
+{}
+
+tool.get_meeting_room_details channel=commentary to=assistant:
+{"name":"Orchid Room","capacity":18,"layouts":["U-shape","boardroom","classroom"],"av":"86\" display with HDMI/USB-C; ceiling mics; speaker bar","booking_windows":"Half-day or full-day blocks"}
+
+assistant channel=analysis:
+Compose a clear response.
+
+assistant channel=final:
+The Orchid Room seats up to 18 in U‑shape, boardroom, or classroom layouts. It includes an 86" display with HDMI/USB‑C, ceiling microphones, a speaker bar, and a whiteboard. Booking windows are available in half‑day or full‑day blocks. The room is on Conference level C near the business center.
+
+user:
+Sounds perfect.
+
+assistant channel=analysis:
+Short small‑talk reply.
+
+assistant channel=final:
+Great—glad it aligns with your plan.
+
+user:
+Can you tentatively hold it for next Tuesday morning?
+
+assistant channel=analysis:
+Holding inventory isn’t supported by tools here; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Understood about a tentative hold. Working on your request.

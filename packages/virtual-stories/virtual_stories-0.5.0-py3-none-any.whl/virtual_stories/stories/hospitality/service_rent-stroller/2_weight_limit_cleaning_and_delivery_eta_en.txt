@@ -1,0 +1,67 @@
+"""
+Guest asks about weight limit and cleaning; requests delivery ETA.
+
+ROLES: user (guest with toddler), assistant (guest services outlining stroller specs and arranging delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"inventory_check","description":"Check stroller inventory and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"}},"required":["hotel_id","item","quantity"]},"strict":true},
+  {"name":"create_order","description":"Create complimentary stroller loan","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"duration_hours":{"type":"integer"},"accessories":{"type":"array","items":{"type":"string"}}},"required":["hotel_id","room","duration_hours"]},"strict":true},
+  {"name":"dispatch","description":"Dispatch runner with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeside Minneapolis (LSM-19)
+Address: 2000 W Lake St, Minneapolis, MN 55416, USA
+Front Desk: 24/7; Family Services: 07:00–22:00
+Strollers: CityMini single; 20 kg weight limit; suitable up to 105 cm height
+Cleaning: Sanitized with hospital-grade wipes after each use; daily UV cabinet cycle 03:00–04:00
+Accessories: Rain cover, cup holder, sunshade available
+Fees: Complimentary; no deposit; replacement fee USD 120 if lost
+Delivery: 10–15 minutes typical to guest rooms
+Pick-up: Family Services desk near elevators
+Contact: Ext. 414
+
+user:
+Is the weight limit 20 kg? Could you send one to room 534 for 5 hours?
+
+assistant channel=analysis:
+Confirm 20 kg limit; check inventory; create complimentary 5-hour loan; dispatch with ETA.
+
+assistant channel=commentary to=tool.inventory_check:
+{"hotel_id":"LSM-19","item":"stroller_citymini_single","quantity":1}
+
+tool.inventory_check channel=commentary to=assistant:
+{"available":true,"held":1}
+
+assistant channel=commentary to=tool.create_order:
+{"hotel_id":"LSM-19","room":"534","duration_hours":5,"accessories":["sunshade"]}
+
+tool.create_order channel=commentary to=assistant:
+{"order_id":"STR-534-22","status":"created"}
+
+assistant channel=commentary to=tool.dispatch:
+{"hotel_id":"LSM-19","room":"534","order_id":"STR-534-22"}
+
+tool.dispatch channel=commentary to=assistant:
+{"eta_minutes":12,"runner":"Amelia"}
+
+assistant channel=final:
+Yes—20 kg is the limit. I’ve arranged a CityMini single for 5 hours; Amelia will deliver to 534 in about 12 minutes. A sunshade is included and there’s no deposit.
+
+user:
+Thanks—the lakeside trail looks peaceful.
+
+assistant channel=final:
+It’s lovely for an afternoon stroll.
+
+user:
+Can you share the stroller’s full lab test certificate?
+
+assistant channel=final:
+[ATTENTION] Researching available details.
+

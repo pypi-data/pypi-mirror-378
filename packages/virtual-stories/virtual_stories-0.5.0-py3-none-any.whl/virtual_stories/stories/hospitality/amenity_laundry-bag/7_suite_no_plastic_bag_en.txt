@@ -1,0 +1,63 @@
+"""
+Guest prefers no plastic lining and requests two bags; assistant confirms eco options and sends; includes chit-chat and an out-of-scope question.
+
+ROLES: user (guest in suite 1602 requesting two unlined laundry bags), assistant (concierge confirming eco variant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check amenity stock","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: The Promenade Suites — South Veranda Wing
+Suite 1602: Corner sea view; butler-lite service
+Laundry bags: Paper, no plastic lining available on request; pencils provided
+Complimentary: 2 per night; extras available
+Turnaround: Same-day for pickups before 10:00; next-day otherwise
+Pickup windows: 08:00–10:00; 14:30–16:00
+Contacts: Butler 510; Housekeeping 520
+Note: South Veranda elevator SV2 to 16th floor
+
+user:
+Could I have two of the unlined laundry bags to 1602?
+
+assistant channel=analysis:
+Check stock for unlined variant and deliver 2 to 1602.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"unlined paper laundry bag","quantity":2}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"unlined paper laundry bag","available":true,"in_stock":18}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1602","amenity_name":"unlined paper laundry bag","quantity":2,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"UPLB-1602-6113","eta_minutes":13}
+
+assistant channel=final:
+Certainly—two unlined paper laundry bags are on their way to 1602 with an ETA of about 13 minutes.
+
+user:
+Thanks! What time are your pickup windows?
+
+assistant channel=final:
+Pickups run 08:00–10:00 and 14:30–16:00.
+
+user:
+How’s the evening going?
+
+assistant channel=final:
+Quite pleasant so far—thank you!
+
+user:
+Any chance you can print shipping labels for me?
+
+assistant channel=final:
+[ATTENTION] Shipping label services are not covered in the system context.
+

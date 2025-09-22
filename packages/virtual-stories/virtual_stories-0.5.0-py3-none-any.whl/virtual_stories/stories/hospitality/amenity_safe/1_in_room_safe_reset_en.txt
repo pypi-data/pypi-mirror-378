@@ -1,0 +1,109 @@
+"""
+Guest forgot the in-room safe PIN; check status and provide a temporary reset code or dispatch engineering if needed; include one casual remark and a background-acknowledgment message.
+
+ROLES: user (guest unable to open the in-room safe), assistant (front desk coordinating safe status checks and resets)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "verify_safe_status",
+    "description": "Verify current status of the in-room safe.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "reset_safe_pin",
+    "description": "Reset the in-room safe with a temporary PIN for the guest.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "dispatch_engineering",
+    "description": "Dispatch engineering if the safe has an error code.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "issue_code": { "type": "string" },
+        "priority": { "type": "string", "enum": ["normal", "high"] }
+      },
+      "required": ["room_number", "issue_code", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Resort: Sunstone Bay Resort (hotel_id: sb_mia_06)
+Address: 975 Oceanfront Drive, Miami Beach, FL 33139
+Front desk: 24 hours; Engineering: 07:00–22:00
+
+In-room safe details:
+- Model: SunGuard SGX-410
+- PIN length: 4–6 digits
+- Lockout: after 3 failed attempts, lockout 5 minutes
+- Emergency override: engineering only
+
+Poolside note:
+- Cabanas with teal umbrellas line the south pool.
+
+user:
+Hi—I forgot my safe code in room 1024. Can you help me open it?
+
+assistant channel=analysis:
+Check safe status; if normal, issue a temporary reset PIN; otherwise dispatch engineering.
+
+assistant channel=commentary to=tool.verify_safe_status:
+{"room_number":"1024"}
+
+tool.verify_safe_status channel=commentary to=assistant:
+{"status":"locked","error_code":null}
+
+assistant channel=analysis:
+Status is locked without error; proceed to reset and provide a temporary PIN.
+
+assistant channel=commentary to=tool.reset_safe_pin:
+{"room_number":"1024"}
+
+tool.reset_safe_pin channel=commentary to=assistant:
+{"temporary_pin":"4930","instructions":"enter temp PIN, then set new 4-6 digit PIN"}
+
+assistant channel=final:
+I can help—use temporary PIN 4930 to open the SGX-410, then set a new 4–6 digit PIN when prompted.
+
+user:
+The teal umbrellas by the pool look great this afternoon.
+
+assistant channel=analysis:
+Reply with a light comment tied to poolside note.
+
+assistant channel=final:
+They’re a Sunstone Bay signature along the south pool cabanas.
+
+user:
+Can you pull the safe’s audit log for my records?
+
+assistant channel=analysis:
+Audit-log retrieval isn’t provided in tools or system facts; use the special flag.
+
+assistant channel=final:
+[ATTENTION] I’m looking into this. Reviewing the documentation.
+

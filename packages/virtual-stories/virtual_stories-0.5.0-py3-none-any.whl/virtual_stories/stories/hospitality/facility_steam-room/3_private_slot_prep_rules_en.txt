@@ -1,0 +1,94 @@
+"""
+Guest asks for prep rules and a booking before a massage.
+
+ROLES: user (guest wanting a pre-massage steam), assistant (spa concierge enforcing safety rules and scheduling)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_steam_rules","description":"Provide key usage rules and sanitation cadence.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"get_today_slots","description":"List next available 20-minute windows.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"book_slot","description":"Book a named window for one guest.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"slot_id":{"type":"string"}},"required":["hotel_id","slot_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Retreat: Highland Summit Lodge (hotel_id: highland_summit_den)
+Locale: 410 Peak View Rd, Denver, CO 80202
+Timezone: America/Denver
+Facility — Steam Room “Snowmelt”
+- Floor: Spa Mezzanine (SM); enter via cedar-lined corridor
+- Capacity: 2; Window: 20 min; Cleaning lockouts at :00 and :30 (4 min)
+- Temp/Humidity: 45–48°C; high saturation steam
+- Amenities: Mountain herb eucalyptus infusion at :15/:45; ice chips; citrus water
+- Access: Co-ed; swimwear required; towel hooks inside; bench mat non-slip
+- Payment: Room charge and cards; complimentary for massage guests within 60 min prior
+- Safety: Hydrate; no oils or scrubs; remove metal jewelry
+
+user:
+What should I do to prep? Also, can I take the next available slot for one?
+
+assistant channel=analysis:
+Share rules from tool, then present the nearest available slot and book it.
+
+assistant channel=commentary to=tool.list_steam_rules:
+{"hotel_id":"highland_summit_den"}
+
+tool.list_steam_rules channel=commentary to=assistant:
+{"rules":["Shower before entry","Hydrate","No phones","Remove metal jewelry"],"cleaning_lockouts":"00,30"}
+
+assistant channel=commentary to=tool.get_today_slots:
+{"hotel_id":"highland_summit_den"}
+
+tool.get_today_slots channel=commentary to=assistant:
+{"slots":[{"slot_id":"SM-1610-1630"},{"slot_id":"SM-1630-1650"}]}
+
+assistant channel=analysis:
+Offer the first slot and book upon confirmation.
+
+assistant channel=final:
+Prep tips: shower before entry, hydrate, keep phones out, and remove metal jewelry. Next slot is SM-1610-1630; would you like me to book it for one?
+
+user:
+Yes, please book SM-1610-1630.
+
+assistant channel=analysis:
+Proceed to book the requested slot.
+
+assistant channel=commentary to=tool.book_slot:
+{"hotel_id":"highland_summit_den","slot_id":"SM-1610-1630"}
+
+tool.book_slot channel=commentary to=assistant:
+{"status":"booked","slot_id":"SM-1610-1630"}
+
+assistant channel=final:
+All set—your window SM-1610-1630 is booked. Swimwear required; citrus water and towels await.
+
+user:
+The cedar scent in the corridor is lovely.
+
+assistant channel=analysis:
+Short acknowledgment.
+
+assistant channel=final:
+We’re happy it adds to the calm.
+
+user:
+Is entry complimentary since I’m getting a massage after?
+
+assistant channel=analysis:
+Answer from system payment rule.
+
+assistant channel=final:
+Yes—steam access is complimentary within 60 minutes prior to a massage.
+
+user:
+Do you diffuse lavender in the steam too?
+
+assistant channel=analysis:
+Lavender isn’t listed. Use the attention flag.
+
+assistant channel=final:
+[ATTENTION] Good question about lavender diffusion. Checking available options.
+

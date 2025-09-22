@@ -1,0 +1,50 @@
+"""
+Express checkout with note to bundle keys in an envelope; include chitchat and an [ATTENTION] request.
+
+ROLES: user (guest leaving multiple keycards), assistant (front office providing guidance and initiating express checkout)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"initiate_express_checkout","description":"Start express checkout and email a digital receipt.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"email":{"type":"string"}},"required":["reservation_id","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Marina Gatehouse
+Essentials:
+- Express key drop box beside Concierge; place multiple keys in one labeled envelope.
+- Receipts emailed after folio closure.
+- Address: 200 Pier Walk; Wi‑Fi: Gatehouse-Guest; Parking: P1–P2; Quiet hours 22:00–07:00.
+
+user:
+Please do express checkout MG-77130 and email to sam@sample.com.
+
+assistant channel=analysis:
+Use tool, then advise to put multiple keycards in an envelope and drop them.
+
+assistant channel=commentary to=tool.initiate_express_checkout:
+{"reservation_id":"MG-77130","email":"sam@sample.com"}
+
+tool.initiate_express_checkout channel=commentary to=assistant:
+{"status":"initiated","receipt":"queued"}
+
+assistant channel=final:
+Express checkout is underway. Place your keycards in a labeled envelope and drop them in the box beside Concierge. Your receipt will be emailed after folio closure.
+
+user:
+Nice walkway outside today.
+
+assistant channel=final:
+Thank you—have a pleasant departure.
+
+user:
+Can you email the receipt to a second address too?
+
+assistant channel=analysis:
+The tool only took one email; respond with [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Noted about adding a second recipient. Checking available options.
+

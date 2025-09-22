@@ -1,0 +1,78 @@
+"""
+Guest wants elegant folded personal note cards with lined envelopes from the club level.
+Provide premium or luxury card options and arrange club delivery.
+
+ROLES: user (club-level guest sending personal notes), assistant (club lounge host with stationery access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check available stationery supplies in hotel inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_type":{"type":"string","enum":["note_paper","letterhead","envelopes","memo_pads","writing_pads","sticky_notes"]},"quality_level":{"type":"string","enum":["standard","premium","luxury"]}},"required":["item_type"]},"strict":true},
+  {"name":"deliver_stationery_supplies","description":"Arrange delivery of stationery items to guest room or business center.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center","meeting_room","club_lounge"]},"quantity_per_item":{"type":"number"},"special_requests":{"type":"string"}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Vista Grand (hotel_id: svg_nyc_12)
+Address: 500 5th Ave, New York, NY 10110
+Timezone: America/New_York
+Club Floor: 42F–45F | Club desk ext 4500
+
+Stationery Focus:
+- Premium folded personal cards, 120gsm, ivory
+- Luxury cotton cards, 160gsm, hand‑lined envelopes
+- Envelope sizes: C6 only for personal cards
+- Add-ons: gold adhesive dots, wax seal loan set
+- Pen set loan program available at club desk
+
+Delivery Range (club level tables/rooms): 6–9 minutes
+
+user:
+Hello from room 4418. Do you have elegant folded personal cards with lined envelopes?
+
+assistant channel=analysis:
+Offer luxury cotton cards with hand‑lined envelopes; confirm via inventory; deliver.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"note_paper","quality_level":"luxury"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"quality_level":"luxury","options":["cotton_cards_160gsm"],"matching_envelopes":["C6_hand_lined"],"stock_count":12}
+
+assistant channel=final:
+We do—our luxury cotton cards (160gsm) pair with C6 hand‑lined envelopes. Shall I send a set to room 4418?
+
+user:
+Yes, please. A small set is enough.
+
+assistant channel=analysis:
+Arrange delivery of one set.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"4418","items":["cotton_cards_160gsm","C6_hand_lined"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"include gold adhesive dots"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":7,"items_included":["cotton_cards_8","C6_hand_lined_8","gold_dots_8"],"delivery_team":"club_host"}
+
+assistant channel=final:
+On the way—8 cotton cards with 8 hand‑lined C6 envelopes and gold adhesive dots will reach room 4418 in about 7 minutes.
+
+user:
+The skyline is unreal tonight.
+
+assistant channel=analysis:
+Chitchat acknowledgment only.
+
+assistant channel=final:
+It sets the mood for elegant notes.
+
+user:
+Could you also engrave my initials on the wax stamp?
+
+assistant channel=analysis:
+Engraving not in system/tools. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Evaluating potential solutions.
+

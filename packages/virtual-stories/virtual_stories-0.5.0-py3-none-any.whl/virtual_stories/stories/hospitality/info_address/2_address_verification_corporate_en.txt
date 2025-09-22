@@ -1,0 +1,107 @@
+"""
+Corporate guest requests address verification for expense reporting with additional business logistics questions.
+
+ROLES: user (corporate guest needing expense documentation), assistant (front desk professional providing detailed address info)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "lookup_hotel_address",
+    "description": "Get the official mailing and visiting address with geo details.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "include_coords": {"type":"boolean"}
+      },
+      "required": ["hotel_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_business_services",
+    "description": "Get information about business center facilities and services.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": {"type":"string", "enum": ["printing", "meeting_rooms", "secretarial", "all"]},
+        "availability": {"type":"boolean"}
+      },
+      "required": ["service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+The Grand Meridian Tower Hotel (hotel_id: grand_meridian_tower)
+Premium business hotel located in downtown financial district
+Address lines:
+  - Street: 1200 Corporate Plaza, Tower District
+  - Suite: Executive Level, 42nd Floor Main Entrance
+  - City/Region: Metroville, MV 75201
+  - Country: United States
+  - Postal/ZIP: Same as region code
+Business amenities:
+  - 24/7 business center with printing, scanning, binding services
+  - Executive meeting rooms (capacity 2-20 people)
+  - Secretarial services available weekdays 8 AM - 6 PM
+  - High-speed fiber internet throughout property
+  - Video conferencing facilities in premium suites
+Access information:
+  - Underground parking garage (Levels P1-P3)
+  - Valet parking available with business rate discount
+  - Direct skybridge connection to Metro Financial Center
+  - Taxi/rideshare pickup zone on Plaza level
+  - Helicopter landing pad on Tower roof (advance arrangement required)
+Coordinates: 32.7767, -96.7970
+
+user:
+Hi there! I need to get the complete hotel address for my expense report. My company requires very specific address details for reimbursement.
+
+assistant channel=analysis:
+Corporate guest needs detailed address for expense reporting. I should provide comprehensive address information using the lookup tool.
+
+assistant channel=commentary to=tool.lookup_hotel_address:
+{"hotel_id":"grand_meridian_tower","include_coords":true}
+
+tool.lookup_hotel_address channel=commentary to=assistant:
+{"street":"1200 Corporate Plaza, Tower District","suite":"Executive Level, 42nd Floor Main Entrance","city_region":"Metroville, MV 75201","country":"United States","coordinates":"32.7767,-96.7970"}
+
+assistant channel=final:
+Absolutely! For your expense report, our complete address is: The Grand Meridian Tower Hotel, 1200 Corporate Plaza, Tower District, Executive Level, 42nd Floor Main Entrance, Metroville, MV 75201, United States. GPS coordinates: 32.7767, -96.7970.
+
+user:
+Perfect! That's exactly what I need. Quick question - do you happen to have a business center here?
+
+assistant channel=analysis:
+Guest is asking about business center facilities. This is within my scope of knowledge about hotel services.
+
+assistant channel=commentary to=tool.get_business_services:
+{"service_type":"all","availability":true}
+
+tool.get_business_services channel=commentary to=assistant:
+{"printing":"24/7 available","meeting_rooms":"2-20 capacity, reservations recommended","secretarial":"weekdays 8 AM - 6 PM","internet":"high-speed fiber throughout","video_conferencing":"premium suites only"}
+
+assistant channel=final:
+Yes! We have a full-service 24/7 business center with printing, scanning, and binding. We also have executive meeting rooms for 2-20 people, and secretarial services weekdays 8 AM to 6 PM.
+
+user:
+Great! How busy has the hotel been this week?
+
+assistant channel=final:
+It's been quite steady with the financial conference downtown. How long are you staying with us?
+
+user:
+Just two nights. By the way, can you tell me what the weather forecast looks like for tomorrow morning around 7 AM?
+
+assistant channel=analysis:
+The guest is asking about weather forecast, which is beyond the hotel services information I have access to. This requires the [ATTENTION] flag.
+
+assistant channel=final:
+[ATTENTION] Let me look into the weather information for you.

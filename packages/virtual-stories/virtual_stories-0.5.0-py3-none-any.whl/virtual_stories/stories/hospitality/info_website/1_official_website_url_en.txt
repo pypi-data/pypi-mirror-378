@@ -1,0 +1,60 @@
+"""
+Guest asks for the official website; provide via tool including small talk and one special-flag response.
+
+ROLES: user (guest asking for official website URL), assistant (concierge sharing verified link from registry)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Velvet Dune Resort (hotel_id: velvet_dune_resort)
+Verified links:
+  - Website: https://www.velvetdune.com
+  - Email: stay@velvetdune.com
+  - Phone: +61 2 5550 8822
+
+user:
+What’s your official website?
+
+assistant channel=analysis:
+Return website via contact tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"velvet_dune_resort","channel":"website"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"website":"https://www.velvetdune.com"}
+
+assistant channel=final:
+Our official website is https://www.velvetdune.com.
+
+user:
+Thanks, and hi!
+
+assistant channel=final:
+Hello there—what else can I do for you?
+
+user:
+Do you have the site’s current CDN node health report?
+
+assistant channel=final:
+[ATTENTION] That report isn’t available within the provided resources. Retrieving information.
+

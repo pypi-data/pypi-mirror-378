@@ -1,0 +1,76 @@
+"""
+Guest wants 60 cm birch round tea table near the window with normal priority; verify stock and schedule; include chit-chat and an [ATTENTION] query.
+
+ROLES: user (guest), assistant (rooms operations)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_furniture_inventory","description":"Check round tea table stock by size/finish.","parameters":{"type":"object","properties":{"item_code":{"type":"string","enum":["round_tea_table"]},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]}},"required":["item_code","size_cm","finish"],"additionalProperties":false},"strict":true},
+  {"name":"request_in_room_setup","description":"Create setup ticket for placement.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]},"placement":{"type":"string","enum":["near_window","center","sofa_side"]},"surface_protectors":{"type":"boolean"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","item_code","size_cm","finish","placement","surface_protectors","priority"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Palm Dunes Residences (hotel_id: pd_dxb_34)
+Address: Crescent 7, Palm Jumeirah, Dubai
+Service slate: 09:00–22:00; ETA 13–19 minutes
+
+Round tea tables — today
+60/birch(7)
+60/walnut(2)
+80/birch(1)
+80/walnut(2)
+Advisory: near_window best for morning light
+
+Useful bits
+• Check-in 15:00; Check-out 12:00
+• House water: still & sparkling on request
+• Prayer mats available from housekeeping
+• Beach shuttle leaves :00 and :30 each hour
+• In-room dining last call 22:30
+• Staff languages: EN, AR, RU, HI
+
+user:
+Could you arrange a 60 cm birch tea table near the window in 1103?
+
+assistant channel=analysis:
+Check 60/birch availability and place near_window for 1103 with protectors.
+
+assistant channel=commentary to=tool.check_furniture_inventory:
+{"item_code":"round_tea_table","size_cm":60,"finish":"birch"}
+
+tool.check_furniture_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":7,"item_code":"round_tea_table","size_cm":60,"finish":"birch"}
+
+assistant channel=analysis:
+Submit setup ticket normal priority.
+
+assistant channel=commentary to=tool.request_in_room_setup:
+{"room_number":"1103","item_code":"round_tea_table","size_cm":60,"finish":"birch","placement":"near_window","surface_protectors":true,"priority":"normal"}
+
+tool.request_in_room_setup channel=commentary to=assistant:
+{"ticket_id":"FN-1103-9022","eta_minutes":17}
+
+assistant channel=final:
+Confirmed—60 cm birch table near the window is scheduled for 1103. Ticket FN-1103-9022, ETA about 17 minutes.
+
+user:
+Does the beach shuttle run every half hour?
+
+assistant channel=analysis:
+Answer using useful bits.
+
+assistant channel=final:
+Yes—the beach shuttle departs at :00 and :30 each hour.
+
+user:
+Can you upgrade me to a sea-view suite?
+
+assistant channel=analysis:
+Upgrades aren’t defined in system/tools; flag.
+
+assistant channel=final:
+[ATTENTION] I’m checking upgrade availability. Reviewing room inventory with the team.
+

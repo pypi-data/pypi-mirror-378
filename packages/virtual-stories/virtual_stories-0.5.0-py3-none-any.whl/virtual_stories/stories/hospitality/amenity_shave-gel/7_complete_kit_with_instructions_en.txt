@@ -1,0 +1,112 @@
+"""
+Guest requests a complete shaving kit with gel, pre-shave oil, and balm; confirm availability and deliver with instructions.
+
+ROLES: user (guest needing full kit), assistant (spa attendant coordinating delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Riverfront Convention Hotel Frankfurt (hotel_id: rch_fra_07)
+Address: Untermainkai 20, 60329 Frankfurt, Germany
+Timezone: Europe/Berlin
+
+Complete Shave Kits:
+- Contents: gel, pre-shave oil, aftershave balm
+- Skin options: sensitive, normal, dry
+- Formats: travel (100/30/60 ml) and full (150/50/100 ml)
+- Policy: kits billed unless elite status includes amenity credit
+- Brands: standard hotel line or hypoallergenic variant
+
+Service & Timing:
+- Delivery 10–25 minutes, 07:00–22:30
+- Evening service upon request 19:00–21:00
+- Instructions: printed routine card available
+- Contact: Amenities line ext 23
+- Stock rotation weekly
+
+user:
+Hi, could I get a complete shaving kit for sensitive skin in travel size? Room 1721.
+
+assistant channel=analysis:
+Check complete_kit for sensitive; deliver travel size to 1721 with instructions.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type":"complete_kit","skin_type":"sensitive","brand_preference":"hypoallergenic"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available":true,"kit":"Sensitive_Travel_Kit","contents":["Gel_100ml","PreOil_30ml","Balm_60ml"]}
+
+assistant channel=analysis:
+Schedule immediate delivery including instructions.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number":"1721","products":["Sensitive_Gel_100ml","Sensitive_PreOil_30ml","Sensitive_Balm_60ml"],"delivery_window":"immediate","include_instructions":true}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled":true,"arrival_time":"14_minutes","instructions":"printed_routine_card"}
+
+assistant channel=final:
+Yes—we have a sensitive-skin travel kit with gel, pre-shave oil, and balm. It’s scheduled to reach 1721 in about 14 minutes with a printed routine card.
+
+user:
+Is this covered by the elite amenity credit?
+
+assistant channel=analysis:
+System: kits billed unless elite amenity credit applies—answer generically per policy.
+
+assistant channel=final:
+Kits are billed unless your elite amenity credit applies; if it does, it can be used toward this kit.
+
+user:
+Thanks for being quick.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Happy to help—enjoy your stay.
+
+user:
+Can you recommend a nearby running route along the river?
+
+assistant channel=analysis:
+Beyond grooming scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up a riverfront running route and share a quick map.

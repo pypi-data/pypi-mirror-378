@@ -1,0 +1,60 @@
+"""
+Guest asks about library‑quiet policy, power availability, and access; includes a quiet‑hours tool, small talk, and an [ATTENTION] request.
+
+ROLES: user (remote worker seeking silent area), assistant (Skyline Quiet Zone attendant providing strict policy details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_quiet_policy","description":"Return quiet policy details and enforcement times for Skyline Quiet Zone","parameters":{"type":"object","properties":{},"additionalProperties":false,"required":[]},"strict":true}
+]
+```
+"""
+
+system:
+Zone: Skyline Quiet Zone (within Skyline Lounge)
+Level: 27, north wing
+Access: Platinum+ guests and suite guests only
+Hours: 07:00–21:30
+Seating: 8 focus pods; 6 window perches
+Power: 1 socket per pod; 2 shared strips at perches
+Wi‑Fi: 200 Mbps; MAC filtering on request for work laptops
+Noise: Target ≤ 45 dB; visual cue light at 46 dB
+Signage: “Silent Area—Messaging Only” placards at entry
+
+user:
+Is this truly library‑quiet, and when is it enforced?
+
+assistant channel=analysis:
+Use tool for enforcement timing; keep claims minimal.
+
+assistant channel=commentary to=tool.get_quiet_policy:
+{}
+
+tool.get_quiet_policy channel=commentary to=assistant:
+{"target_db":"≤ 45 dB","enforcement":"All day during open hours","cue":"Amber light at ~46 dB"}
+
+assistant channel=analysis:
+Compose a concise answer using tool output.
+
+assistant channel=final:
+Yes—target is at or below 45 dB with an amber cue near 46 dB, enforced throughout open hours.
+
+user:
+Nice that you have perches.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+They give a bit of natural light.
+
+user:
+Could you let my friend who isn’t Platinum in?
+
+assistant channel=analysis:
+Access override isn’t defined. Use the flag.
+
+assistant channel=final:
+[ATTENTION] Access exception noted. Checking available options.
+

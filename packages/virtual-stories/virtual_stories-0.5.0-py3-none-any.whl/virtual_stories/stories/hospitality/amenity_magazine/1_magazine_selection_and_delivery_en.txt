@@ -1,0 +1,141 @@
+"""
+Guest requests magazine delivery and browsing options for leisure reading during stay.
+Provide magazine selection service with diverse publication options and room delivery.
+
+ROLES: user (leisure traveler seeking reading materials), assistant (concierge managing magazine inventory)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_magazine_inventory",
+    "description": "Get current magazine collection and availability.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["business", "lifestyle", "travel", "technology", "fashion", "health", "news", "all"] },
+        "language": { "type": "string", "enum": ["english", "spanish", "french", "german", "all"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_magazines",
+    "description": "Arrange magazine delivery to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "magazine_titles": { "type": "array", "items": { "type": "string" } },
+        "delivery_time": { "type": "string" },
+        "special_instructions": { "type": "string" }
+      },
+      "required": ["room_number", "magazine_titles"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_magazine_subscription",
+    "description": "Check subscription status and renewal dates for magazines.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "magazine_name": { "type": "string" }
+      },
+      "required": ["magazine_name"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Château Frontenac Quebec (hotel_id: cf_qbc_01)
+Address: 1 Rue des Carrières, Québec City, QC G1R 4P5
+Timezone: America/Toronto
+
+Magazine Collection:
+- Business & Finance: Forbes, Harvard Business Review, The Economist, Fortune, Bloomberg Businessweek
+- Lifestyle & Culture: Vogue, Elle, GQ, Vanity Fair, Town & Country, Architectural Digest
+- Travel & Adventure: National Geographic Traveler, Condé Nast Traveler, Travel + Leisure, Outside Magazine
+- Technology & Innovation: Wired, MIT Technology Review, Scientific American, Popular Science
+- Health & Wellness: Health Magazine, Women's Health, Men's Health, Yoga Journal, Prevention
+- News & Current Affairs: Time, Newsweek, The Atlantic, Harper's Magazine, The New Yorker
+- French Publications: L'Actualité, Châtelaine, Maison & Demeure, Coup de Pouce
+
+Service Details:
+- Magazine delivery available 07:00–22:00 daily
+- Current issues available; back issues by request (48-hour notice)
+- Reading lounge on mezzanine level with full collection access
+- Digital subscriptions available via in-room tablet upon request
+- Magazines delivered in protective sleeves to maintain condition
+
+Library Policy:
+- Magazines may be kept in room during stay; return to front desk at checkout
+- Damaged magazines incur replacement fee ($5-15 depending on publication)
+- Personal subscription setup available for extended stays (minimum 2 weeks)
+
+user:
+Good morning! I'm staying in room 815 and was hoping to get some magazines delivered. Do you have any travel magazines and maybe some business publications?
+
+assistant channel=analysis:
+Guest wants travel and business magazines delivered to room 815. Check inventory for both categories, then arrange delivery.
+
+assistant channel=commentary to=tool.get_magazine_inventory:
+{"category": "travel", "language": "english"}
+
+tool.get_magazine_inventory channel=commentary to=assistant:
+{"available_titles": ["National Geographic Traveler", "Condé Nast Traveler", "Travel + Leisure", "Outside Magazine"], "current_issues": ["November 2024", "December 2024", "January 2025"], "total_copies": 24}
+
+assistant channel=commentary to=tool.get_magazine_inventory:
+{"category": "business", "language": "english"}
+
+tool.get_magazine_inventory channel=commentary to=assistant:
+{"available_titles": ["Forbes", "Harvard Business Review", "The Economist", "Fortune", "Bloomberg Businessweek"], "current_issues": ["December 2024", "January 2025"], "total_copies": 18}
+
+assistant channel=analysis:
+Good selection available in both categories. Offer popular titles from each and arrange delivery.
+
+assistant channel=final:
+Good morning! We have excellent travel magazines—National Geographic Traveler, Condé Nast Traveler, Travel + Leisure, and Outside Magazine. For business, we have Forbes, Harvard Business Review, The Economist, Fortune, and Bloomberg Businessweek. Which ones interest you?
+
+user:
+Perfect! Could I get National Geographic Traveler and The Economist delivered to my room? And maybe Harvard Business Review too if you have the latest issue.
+
+assistant channel=commentary to=tool.deliver_magazines:
+{"room_number": "815", "magazine_titles": ["National Geographic Traveler", "The Economist", "Harvard Business Review"], "delivery_time": "within 30 minutes"}
+
+tool.deliver_magazines channel=commentary to=assistant:
+{"delivery_id": "MAG240829001", "room_number": "815", "magazines_prepared": ["National Geographic Traveler January 2025", "The Economist January 2025", "Harvard Business Review January 2025"], "estimated_delivery": "10:45 AM", "delivered_by": "Sarah Mitchell"}
+
+assistant channel=final:
+Excellent choices! Sarah will deliver National Geographic Traveler, The Economist, and Harvard Business Review (all January 2025 issues) to room 815 by 10:45 AM. Your delivery ID is MAG240829001.
+
+user:
+Wonderful! I love reading about different destinations while planning my next trips. This hotel has such a great view of Old Quebec too.
+
+assistant channel=analysis:
+Guest making small talk about travel interests and hotel location. Respond warmly about the historic setting.
+
+assistant channel=final:
+Old Quebec is absolutely magical from here at Château Frontenac! The historic charm really complements those travel magazines perfectly for planning future adventures.
+
+user:
+By the way, do you know if there's a good jazz club in the city tonight?
+
+assistant channel=analysis:
+Request for local entertainment recommendations is outside our magazine service tools and basic hotel information.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking about local entertainment. Reviewing available resources.
+
+user:
+No problem! Thanks for setting up the magazine delivery—I'm looking forward to some good reading this morning.
+
+assistant channel=final:
+You're very welcome! Enjoy your reading, and feel free to request any other magazines during your stay.

@@ -1,0 +1,71 @@
+"""
+Guest makes a late-evening sanitary bag request; confirm availability and deliver; include small talk and acknowledgment.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bathroom_supplies","description":"Check availability for sanitary bags.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_bag"]}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_bathroom_supplies","description":"Deliver bathroom supplies to a room with placement.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1},"placement":{"type":"string","enum":["bathroom_counter","under_sink"]}},"required":["room_number","item_code","quantity","placement"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lumen Midtown (hotel_id: lm_stl_08)
+Address: 3301 Olive St, St. Louis, MO 63103
+Bathroom supplies: 06:30–23:00; ETA 8–12 minutes
+Lobby: evening string quartet Saturdays 19:00–20:00
+Wi‑Fi: 200/200 Mbps; theater block priority 17:00–19:00
+Scent: lavender hint at night
+Check-in/out: 15:00 / 11:00
+Gym: 24h; water refill stations on each floor
+
+Sanitary bag inventory:
+- 170 sleeves available
+- Opaque, biodegradable
+- Placement: counter or under sink
+
+user:
+Could you drop off two sanitary bags to 732 and leave them on the counter?
+
+assistant channel=analysis:
+Check stock; deliver 2 to bathroom_counter.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"item_code":"sanitary_bag"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_bag","on_hand":170}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"732","item_code":"sanitary_bag","quantity":2,"placement":"bathroom_counter"}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"ticket_id":"BS-732-4401","eta_minutes":9}
+
+assistant channel=final:
+Certainly—two sanitary bag sleeves will be on the bathroom counter in 732. Ticket BS-732-4401, about 9 minutes.
+
+user:
+The lavender in the lobby is relaxing.
+
+assistant channel=analysis:
+Reference scent detail.
+
+assistant channel=final:
+We use a light lavender hint at night—happy it feels relaxing.
+
+user:
+Do you carry extra toothbrushes?
+
+assistant channel=analysis:
+Not specified here; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on dental kits. Reviewing amenity inventory.
+

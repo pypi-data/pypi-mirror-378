@@ -1,0 +1,64 @@
+"""
+Guest asks if smoking is allowed on balconies; property is fully smoke-free indoors and on balconies; provide designated area details and include chit‑chat plus an out‑of‑scope ordinance query.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```
+[
+  {"name":"get_policy","description":"Retrieve policy details for a given category.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["smoking"]}},"required":["category"]},"strict":true},
+  {"name":"get_location","description":"Get details for a named on-site area.","parameters":{"type":"object","additionalProperties":false,"properties":{"area":{"type":"string","enum":["courtyard_east_smoking_area"]}},"required":["area"]},"strict":true}
+]
+```
+"""
+
+system:
+PROPERTY: Blue Heron Embankment
+SMOKING POLICY:
+- Smoke-free indoors and on all balconies/terraces.
+- Use the designated outdoor area only: Courtyard East Smoking Area.
+- Cleaning fee for evidence of indoor/balcony smoking: EUR 250.
+AREA INFO:
+- Courtyard East Smoking Area: beside the herb planters; hours 07:00–22:00; wind screens provided.
+EXTRAS:
+- Tea conservatory 1F; Canal boat desk 09:00–18:00; Quiet floors 5F–6F.
+
+user:
+Can I smoke on my balcony?
+
+assistant channel=analysis:
+Answer via policy: no smoking on balconies; provide designated area details via tools.
+
+assistant channel=commentary to=tool.get_policy:
+{"category":"smoking"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"smoking","allowed":false,"summary":"No smoking indoors or on balconies. Use designated outdoor area only."}
+
+assistant channel=commentary to=tool.get_location:
+{"area":"courtyard_east_smoking_area"}
+
+tool.get_location channel=commentary to=assistant:
+{"name":"Courtyard East Smoking Area","hours":"07:00–22:00","landmark":"beside herb planters","features":["wind screens"]}
+
+assistant channel=final:
+Smoking isn’t permitted on balconies. Please use the Courtyard East Smoking Area beside the herb planters, open 07:00–22:00.
+
+user:
+The tea conservatory looked beautiful.
+
+assistant channel=analysis:
+Small talk acknowledging extras.
+
+assistant channel=final:
+It’s a calm space on 1F—perfect for a quiet break.
+
+user:
+Which municipal code enforces your balcony rule?
+
+assistant channel=analysis:
+Out of scope—no ordinance references.
+
+assistant channel=final:
+[ATTENTION] We don’t have the ordinance reference within the provided resources.
+

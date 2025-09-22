@@ -1,0 +1,54 @@
+"""
+Guest arriving late confirms Front Desk can provide maps; include small talk and [ATTENTION].
+
+ROLES: user (late check‑in), assistant (front desk confirming 24/7 map pickup and logging request)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"note_fd","description":"Note map held at Front Desk","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"note":{"type":"string"}},"required":["hotel_id","room","note"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Terra Plaza Madrid (TPMD-28)
+Address: Gran Vía 44, 28013 Madrid
+Service:
+- Complimentary city maps (EN/ES)
+- Concierge 08:00–21:00; Front Desk 24/7 supports late pickup
+- Pickup: Concierge island near lifts; Front Desk counter overnight
+- Suggested routes: Royal Palace loop (50m), Prado triangle (75m)
+- Laminated option: €3 deposit, same‑day refund
+
+user:
+I’ll arrive at 23:45—can I still get a map? Room 1110.
+
+assistant channel=analysis:
+Confirm Front Desk pickup and note the hold at Front Desk.
+
+assistant channel=final:
+Yes—Front Desk can provide a complimentary map overnight.
+
+assistant channel=commentary to=tool.note_fd:
+{"hotel_id":"TPMD-28","room":"1110","note":"Hold 1 EN map at Front Desk counter"}
+
+tool.note_fd channel=commentary to=assistant:
+{"logged":true,"ticket":"MAP-1110-FD"}
+
+assistant channel=final:
+I’ve held one English map under ticket MAP-1110-FD at the Front Desk counter.
+
+user:
+Gracias.
+
+assistant channel=final:
+Con gusto—Concierge opens at 08:00.
+
+user:
+Do you provide museum ticket booking?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

@@ -1,0 +1,138 @@
+"""
+Guest inquires about complimentary beverage options and requests room delivery service.
+Provide beverage menu details, check room service status, and coordinate delivery.
+
+ROLES: user (guest requesting beverage information and room service), assistant (beverage services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_beverage_menu",
+    "description": "Retrieve available complimentary and premium beverage options.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["complimentary", "premium", "all"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_room_service_status",
+    "description": "Check room service availability and delivery times.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "place_beverage_order",
+    "description": "Place a beverage order for room delivery.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item_code": { "type": "string" },
+              "quantity": { "type": "integer" },
+              "temperature": { "type": "string", "enum": ["hot", "cold", "room_temp"] }
+            },
+            "required": ["item_code", "quantity"],
+            "additionalProperties": false
+          }
+        },
+        "special_instructions": { "type": "string" }
+      },
+      "required": ["room_number", "items"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Grandview Mountain Resort (hotel_id: gmr_aspen_01)
+Location: 4200 Snowmass Village Mall, Snowmass Village, CO 81615
+Timezone: America/Denver
+Elevation: 8,209 feet
+
+Beverage Services:
+- Complimentary options: artisan coffee blends, premium teas, herbal infusions, sparkling water, still water.
+- Premium selections: fresh-pressed juices, protein smoothies, craft sodas, energy drinks, specialty lattes.
+- High-altitude hydration emphasis due to resort elevation.
+- Service hours: 06:00–22:00 for room delivery; self-service station 24/7 in lobby.
+
+Room Service Policy:
+- Complimentary delivery for stays 3+ nights or suite guests.
+- Standard delivery fee $8 for other rooms.
+- Average delivery time: 15–25 minutes during peak, 8–12 minutes off-peak.
+
+user:
+Good morning! I'd love to know what beverage options you have. I'm in room 2847 and wondering if I can get something delivered.
+
+assistant channel=analysis:
+Guest wants beverage options and delivery to room 2847. I'll check the menu first, then room service status to provide complete information.
+
+assistant channel=commentary to=tool.get_beverage_menu:
+{"category":"all"}
+
+tool.get_beverage_menu channel=commentary to=assistant:
+{"complimentary":[{"code":"ARTISAN_COFFEE","name":"Artisan Coffee Blend"},{"code":"EARL_GREY","name":"Earl Grey Tea"},{"code":"CHAMOMILE","name":"Chamomile Herbal Tea"},{"code":"SPARKLING_H2O","name":"Sparkling Water"},{"code":"STILL_H2O","name":"Still Water"}],"premium":[{"code":"ORANGE_JUICE","name":"Fresh Orange Juice"},{"code":"GREEN_SMOOTHIE","name":"Green Power Smoothie"},{"code":"CRAFT_GINGER","name":"Craft Ginger Soda"},{"code":"ENERGY_BOOST","name":"High-Altitude Energy Drink"},{"code":"VANILLA_LATTE","name":"Vanilla Bean Specialty Latte"}]}
+
+assistant channel=commentary to=tool.check_room_service_status:
+{"room_number":"2847"}
+
+tool.check_room_service_status channel=commentary to=assistant:
+{"room_number":"2847","delivery_available":true,"delivery_fee":8.0,"estimated_delivery_minutes":12,"guest_type":"standard"}
+
+assistant channel=final:
+Good morning! We have wonderful options for you. Complimentary beverages include artisan coffee blend, Earl Grey tea, chamomile herbal tea, sparkling water, and still water. Premium selections feature fresh orange juice, green power smoothie, craft ginger soda, high-altitude energy drink, and vanilla bean specialty latte.
+
+Room delivery is available to 2847 with an $8 delivery fee and about 12 minutes delivery time. What would you like to order?
+
+user:
+The high-altitude energy drink sounds interesting! What's in it?
+
+assistant channel=analysis:
+Guest asks about energy drink ingredients. This requires information beyond what the tools provide. I should acknowledge and use the special flag.
+
+assistant channel=final:
+[ATTENTION] That's a great choice for our elevation! Gathering information about the ingredients.
+
+user:
+That's okay. I'll go with the artisan coffee and some still water instead. Can you send those up?
+
+assistant channel=analysis:
+Guest wants artisan coffee and still water. Both are complimentary items. I'll place the order with appropriate temperature preferences.
+
+assistant channel=commentary to=tool.place_beverage_order:
+{"room_number":"2847","items":[{"item_code":"ARTISAN_COFFEE","quantity":1,"temperature":"hot"},{"item_code":"STILL_H2O","quantity":1,"temperature":"cold"}]}
+
+tool.place_beverage_order channel=commentary to=assistant:
+{"order_id":"BEV-2847-0892","delivery_time_minutes":12,"total_charge":8.0,"items_confirmed":["Artisan Coffee Blend (hot)","Still Water (cold)"]}
+
+assistant channel=final:
+Perfect! Order BEV-2847-0892 is placed for hot artisan coffee and cold still water, arriving in about 12 minutes. The $8 delivery fee will be added to your room. Stay hydrated at this altitude!
+
+user:
+Thanks! By the way, do you know if there are any good hiking trails nearby that aren't too challenging?
+
+assistant channel=analysis:
+Guest asks about local hiking trails, which is outside the scope of beverage services and available tools. Use special flag.
+
+assistant channel=final:
+[ATTENTION] You're welcome! Checking available options.

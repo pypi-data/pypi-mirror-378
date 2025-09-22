@@ -1,0 +1,56 @@
+"""
+Guest on a week-long stay asks if cot can remain for multiple days; confirm policy and note no extra fee beyond standard.
+
+ROLES: user (long-stay parent), assistant (front desk clarifying duration and arranging setup)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Confirm cot availability for long stay","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"schedule_housekeeping_setup","description":"Schedule initial setup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_note":{"type":"string"}},"required":["hotel_id","room","order_note"]},"strict":true}
+]
+```
+"""
+
+system:
+Garden Court Cape Town (GCCT-31)
+Address: 54 Bree St, Cape Town, 8001, South Africa
+Policy: Cots may remain for the full stay; complimentary; bedding included; safety placement required; guest present at setup
+Inventory: 13 cots; setup ETA 20–30 minutes; Housekeeping 07:00–22:00; Front Desk 24/7
+Facilities: Breakfast 06:30–10:30; Rooftop bar 16:00–00:00
+Only services listed are available.
+
+user:
+We’ll be here a week—can the cot stay the whole time? Room 1019.
+
+assistant channel=analysis:
+Confirm multi-day allowance from system, hold a cot, and schedule initial setup.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"GCCT-31","item":"baby_cot","quantity":1,"room":"1019"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"GCCT-31","room":"1019","order_note":"Set up 1 baby cot; guest present; place away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":24,"ticket":"HK-1019-2207"}
+
+assistant channel=final:
+Yes—cots can remain for your entire stay at no charge. Initial setup ticket HK-1019-2207 is scheduled for about 24 minutes.
+
+user:
+When does the rooftop bar close?
+
+assistant channel=final:
+It operates 16:00 to 00:00.
+
+user:
+Can you provide your internal sanitation testing reports for cots?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

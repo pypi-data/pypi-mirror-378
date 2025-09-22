@@ -1,0 +1,75 @@
+"""
+Guest plans a day out and requests a button-front nursing top for easy access.
+Provide size/color options and arrange prompt delivery.
+
+ROLES: user (parent planning day trip), assistant (family lounge associate)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_family_amenities","description":"Check availability of family and maternal support amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["nursing_tops","nursing_pillow","privacy_screen","comfortable_chair","baby_supplies"]},"size_needed":{"type":"string","enum":["XS","S","M","L","XL","XXL"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_maternal_support","description":"Coordinate maternal wellness and nursing support services.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["nursing_clothing","privacy_setup","comfort_furniture","feeding_supplies"]},"size_specifications":{"type":"string"},"delivery_urgency":{"type":"string","enum":["standard","priority","immediate"]}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Crescent City Family Hub (hotel_id: ccf_no_15)
+Address: 700 Canal St, New Orleans, LA 70130
+Timezone: America/Chicago
+
+Wardrobe Snapshot:
+- Button‑front nursing tops: colors—white, lagoon, coral; sizes S–XL
+- Backup: crossover tees (neutral)
+- Comfort add‑ons: nursing pillow loan, cooling gel pads
+- Delivery goal: 7–11 minutes
+- Coaching: baby care basics Sat 10:00–12:00
+
+user:
+Hi! Room 820. Do you have a button-front nursing top in lagoon?
+
+assistant channel=analysis:
+Check nursing_tops; then ask for size.
+
+assistant channel=commentary to=tool.check_family_amenities:
+{"amenity_type":"nursing_tops"}
+
+tool.check_family_amenities channel=commentary to=assistant:
+{"available":true,"styles":["button_front","crossover"],"colors":["white","lagoon","coral"],"stock_levels":{"S":3,"M":5,"L":4,"XL":3}}
+
+assistant channel=final:
+Yes—we have lagoon in button‑front. What size do you prefer for room 820?
+
+user:
+Small.
+
+assistant channel=analysis:
+Arrange delivery of S lagoon button‑front.
+
+assistant channel=commentary to=tool.arrange_maternal_support:
+{"room_number":"820","service_type":"nursing_clothing","size_specifications":"button_front, lagoon, S","delivery_urgency":"priority"}
+
+tool.arrange_maternal_support channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":8,"items_included":["button_front_lagoon_S","cooling_gel_pads_sample"],"delivery_team":"family_lounge"}
+
+assistant channel=final:
+All set—your lagoon button‑front top (S) and a cooling gel pads sample will arrive at room 820 in about 8 minutes.
+
+user:
+The jazz in the lobby is great.
+
+assistant channel=analysis:
+Chitchat acknowledgement.
+
+assistant channel=final:
+It gives the day a rhythm.
+
+user:
+Can you store my breastmilk in a medical freezer overnight?
+
+assistant channel=analysis:
+Medical freezer storage not defined; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Verifying information.
+

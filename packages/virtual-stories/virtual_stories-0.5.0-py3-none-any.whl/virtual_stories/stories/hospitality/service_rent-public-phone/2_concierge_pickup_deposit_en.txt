@@ -1,0 +1,65 @@
+"""
+Guest requests a prepaid handset for local calls; confirm stock, rates, deposit, and pickup. Include small talk and one [ATTENTION] query.
+
+ROLES: user (guest needing a temporary handset), assistant (concierge handling handset rentals and deposits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_handset_stock","description":"Check prepaid handset availability and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"quantity":{"type":"integer","minimum":1},"room":{"type":"string"}},"required":["hotel_id","quantity","room"]},"strict":true},
+  {"name":"create_phone_rental","description":"Create a prepaid handset rental order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":168},"charge_code":{"type":"string"},"pickup":{"type":"string","enum":["concierge_desk","front_desk"]}},"required":["hotel_id","room","duration_hours","charge_code","pickup"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborline Hotel Boston (HARB-21)
+Address: 455 Atlantic Ave, Boston, MA 02210
+Concierge hours: 07:00–22:00; Front Desk: 24/7
+Prepaid handsets (local calls only):
+- Inventory: 12 units; SIM: nano; hotspot disabled
+- Rate: $18/day includes $8 call credit; extra credit sold at Concierge
+- Deposit: $50 refundable at return; ID required; charge code RENT-PHONE
+- Pickup/Return: Concierge Desk (Lobby, next to elevators) or Front Desk after 22:00
+- Coverage: Greater Boston local area; international calling not enabled
+Extra info:
+- Accessories: USB‑C charger included; spare cable upon request
+- Language support on device: EN/ES/FR; voicemail preconfigured
+- Call cap: 120 minutes/day; overage requires top‑up first
+- Serial tracking example: HLB-PHN-001 … HLB-PHN-012
+- Note: Devices are wiped on return; no personal data retained
+
+user:
+Hi, can I rent a phone for local calls? I’m in 1421.
+
+assistant channel=analysis:
+Check availability, then create a 24-hour rental for Concierge pickup per system policy.
+
+assistant channel=commentary to=tool.check_handset_stock:
+{"hotel_id":"HARB-21","quantity":1,"room":"1421"}
+
+tool.check_handset_stock channel=commentary to=assistant:
+{"available":true,"held":1,"serial":"HLB-PHN-006","notes":"$18/day incl. $8 credit; deposit $50"}
+
+assistant channel=commentary to=tool.create_phone_rental:
+{"hotel_id":"HARB-21","room":"1421","duration_hours":24,"charge_code":"RENT-PHONE","pickup":"concierge_desk"}
+
+tool.create_phone_rental channel=commentary to=assistant:
+{"order_id":"PHN-1421-332","status":"created","daily_rate":18,"currency":"USD"}
+
+assistant channel=final:
+Yes—one prepaid handset is reserved (serial HLB-PHN-006). Order PHN-1421-332 is set for 24 hours at $18/day with $8 credit; $50 deposit applies. Please pick up at the Concierge Desk beside the lobby elevators.
+
+user:
+Thanks! The lobby plants look great today.
+
+assistant channel=final:
+Appreciate the note—Concierge is open until 22:00.
+
+user:
+Can it make international calls to Europe?
+
+assistant channel=final:
+[ATTENTION] International calling isn’t enabled on these devices. Reviewing available resources.
+

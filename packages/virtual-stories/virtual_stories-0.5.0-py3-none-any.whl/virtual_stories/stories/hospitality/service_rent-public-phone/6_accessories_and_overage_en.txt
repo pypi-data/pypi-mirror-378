@@ -1,0 +1,60 @@
+"""
+Guest asks about included accessories and overage handling, then completes a rental. Include small talk and one [ATTENTION] query.
+
+ROLES: user (guest verifying what’s included), assistant (concierge providing details and issuing rental)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"issue_rental","description":"Issue handset rental and note accessory pack","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"hours":{"type":"integer"},"pickup":{"type":"string"}},"required":["hotel_id","room","hours","pickup"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Old Quay Dublin (OQD-14)
+Address: 9 Custom House Quay, Dublin 1, D01
+Policy:
+- Rate: €17/day incl. €7 credit; deposit €40; charge code RENT-PHONE
+- Accessories: USB‑C wall charger + spare cable in pouch
+- Overage: top‑up vouchers at Concierge; calls stop when credit ends
+- Hours: Concierge 07:00–22:00; Front Desk after hours
+- Scope: Local calls only; SIM nano; devices reset on return
+More details:
+- Inventory: 8 units (OQD-PHN-11…18)
+- Pickup: Concierge kiosk by lift lobby; after hours Front Desk
+- Languages: EN/GA on quick‑start card; device UI EN/FR
+- Return: deposit refunded to original method
+- ID: passport or EU ID accepted
+
+user:
+Do you include a charger? Room 517.
+
+assistant channel=analysis:
+Answer from system: charger and spare cable included; then issue an order for 24 hours.
+
+assistant channel=final:
+Yes—the pouch includes a USB‑C wall charger and a spare cable.
+
+assistant channel=commentary to=tool.issue_rental:
+{"hotel_id":"OQD-14","room":"517","hours":24,"pickup":"Concierge kiosk"}
+
+tool.issue_rental channel=commentary to=assistant:
+{"order_id":"PHN-517-04","serial":"OQD-PHN-12"}
+
+assistant channel=final:
+All set—order PHN-517-04 with unit OQD-PHN-12. Pick up at the Concierge kiosk by the lift lobby; €17/day with €7 credit.
+
+user:
+Grand, thanks!
+
+assistant channel=final:
+Concierge is available until 22:00 for top‑ups.
+
+user:
+Can you block anonymous calls to my room?
+
+assistant channel=final:
+[ATTENTION] Assessing the available options.
+

@@ -1,0 +1,69 @@
+"""
+Guest asks about hotel postcards and mailing; include inventory check, small talk, and one out-of-scope query flagged.
+
+ROLES: user (tourist guest), assistant (front desk concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "get_gift_shop_inventory",
+    "description": "Checks the inventory of the hotel gift shop.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "item_name": {"type": "string"}
+      },
+      "required": ["item_name"]
+    }
+  }
+]
+```
+"""
+
+system:
+Seabreeze Promenade Hotel — Lobby Gift Shop
+Address: 14 Oceanfront Way, Boardwalk District
+Gift shop hours: 08:00–21:30 daily; location: left of reception
+Postcards: coastal series (6 designs), heritage series (4 designs)
+Pricing: $2.00 each; bundle (any 6) $10.00; stamps: $0.70 domestic, $1.30 international
+Mail drop: lobby mail slot cleared 10:00 and 17:00
+Payment: cash, major cards, mobile pay
+Sustainability: postcards on FSC-certified paper; soy-based inks
+Packaging: complimentary kraft sleeve; optional rigid mailer $0.50
+Returns: unopened items within 7 days with receipt
+Tool policy: inventory details via get_gift_shop_inventory
+
+user:
+Do you sell postcards of the hotel? I’d like a few.
+
+assistant channel=analysis:
+Confirm availability by checking gift shop inventory for hotel postcards, then mention price and hours from system context.
+
+assistant channel=commentary to=tool.get_gift_shop_inventory:
+{"item_name": "hotel_postcard"}
+
+tool.get_gift_shop_inventory channel=commentary to=assistant:
+{"item_name": "hotel_postcard", "quantity": 84, "price": 2.0}
+
+assistant channel=final:
+Yes—our lobby gift shop carries hotel postcards ($2.00 each). It’s open 08:00–21:30, just to the left of reception. You can also bundle any 6 for $10 if you’d like variety.
+
+user:
+Nice! Can I drop them for mailing here, or do I need to find a post office?
+
+assistant channel=final:
+You can drop them in our lobby mail slot; it’s collected at 10:00 and 17:00 daily. Stamps are available at the counter: $0.70 domestic, $1.30 international.
+
+user:
+By the way, the sea breeze smells amazing here.
+
+assistant channel=final:
+It does—this stretch of the boardwalk is lovely at sunset.
+
+user:
+Could you tell me last month’s total postcard sales volume by design?
+
+assistant channel=final:
+[ATTENTION] That data isn’t included in the provided resources or tools.
+

@@ -1,0 +1,86 @@
+"""
+Guest requests child-friendly cotton buds with safety tips and restock cadence.
+Provide appropriate option and delivery window.
+
+ROLES: user (parent guest), assistant (amenities specialist)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_child_friendly_swabs",
+    "description": "Confirm availability of rounded-tip child-friendly swabs.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{}},
+    "strict": true
+  },
+  {
+    "name": "schedule_room_drop",
+    "description": "Schedule delivery to room with notes.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": { "type": "string" },
+        "item": { "type": "string" },
+        "window": { "type": "string" }
+      },
+      "required": ["room","item"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Garden City Family Hotel (hotel_id: gcfh_singapore_03)
+Address: 15 Beach Rd, Singapore 189677
+Timezone: Asia/Singapore
+Family Services: safety-oriented amenity options
+
+Amenity Details:
+- Child-Friendly Swabs: rounded-tip cosmetic swabs
+- Delivery: 15–25 minutes
+- Restock: available on request; complimentary
+- Safety Tips: printed card provided
+- Contact: front desk for family amenities
+
+user:
+Could you send child-friendly cotton buds with rounded tips to room 1908? We’d like them soon.
+
+assistant channel=analysis:
+Confirm child-friendly swabs and deliver in 15–25 minutes.
+
+assistant channel=commentary to=tool.check_child_friendly_swabs:
+{}
+
+tool.check_child_friendly_swabs channel=commentary to=assistant:
+{"available":true,"label":"rounded-tip"}
+
+assistant channel=commentary to=tool.schedule_room_drop:
+{"room":"1908","item":"Child-friendly rounded-tip swabs","window":"15–25 minutes"}
+
+tool.schedule_room_drop channel=commentary to=assistant:
+{"scheduled":true,"eta":"20 minutes","include":"safety tips card"}
+
+assistant channel=final:
+Absolutely—child-friendly rounded-tip swabs will arrive at room 1908 in about 20 minutes with a safety tips card. Complimentary.
+
+user:
+Thanks! Do you recommend a restock schedule?
+
+assistant channel=analysis:
+Use restock policy.
+
+assistant channel=final:
+We can restock on request anytime; just call and we’ll stage a new pack as needed.
+
+user:
+Great. Also, is there a light show at Marina Bay tonight?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the Marina Bay light show schedule for tonight. Investigating potential answers.
+

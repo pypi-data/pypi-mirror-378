@@ -1,0 +1,48 @@
+"""
+Guest with a long‑haul flight asks for redundancy and confirms ring attempts.
+
+ROLES: user (guest catching a flight), assistant (operator setting the wake‑up and confirming behavior)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_wake_up_call","description":"Set a wake‑up call for a room at a given time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time":{"type":"string"}},"required":["room_number","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Terminal Link Hotel — Wake‑Up Service
+Behavior: Up to 3 rings if not answered
+Time Formats: 24‑hour or am/pm
+Follow‑Up: No knocks
+Desk: Next to Airport Shuttle counter
+Availability: 24/7
+
+user:
+Please set 03:55 for room 517. I really can’t miss it—how persistent is the system?
+
+assistant channel=analysis:
+Set 03:55; then restate the 3‑ring behavior.
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"517","time":"03:55"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_517_0355","time":"03:55"}
+
+assistant channel=final:
+Wake‑up set for 03:55 in room 517 (wakeup_517_0355). The automated system rings up to three times if not answered; no door knocks are included.
+
+user:
+Shuttle desk seems close.
+
+assistant channel=final:
+We’re located next to the Airport Shuttle counter.
+
+user:
+Could you confirm with my airline if the flight is delayed?
+
+assistant channel=final:
+[ATTENTION] Airline confirmation isn’t part of wake‑up services. Looking up the latest information.
+

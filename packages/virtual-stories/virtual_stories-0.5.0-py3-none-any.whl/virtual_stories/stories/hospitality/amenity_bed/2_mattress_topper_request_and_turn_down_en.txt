@@ -1,0 +1,71 @@
+"""
+Guest requests a softer sleep surface via topper and turn-down timing.
+
+ROLES: user (guest seeking softer bed), assistant (bedding services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_bed_configuration","description":"Get current bed setup and available options.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"order_topper","description":"Order mattress topper delivery and installation.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"topper_type":{"type":"string","enum":["plush_down_alt","memory_foam_2in","latex_2in","cooling_gel_2in"]},"priority":{"type":"string","enum":["standard","express"]}},"required":["room_number","topper_type"]},"strict":true},
+  {"name":"schedule_turndown","description":"Schedule turn‑down service time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time":{"type":"string"}},"required":["room_number","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Riverview Executive Suites (hotel_id: res_chicago_river)
+Address: 455 North Canal St, Chicago, IL 60654
+Timezone: America/Chicago
+
+Sleep Enhancements:
+1) Topper choices: Plush Down Alternative, 2" Memory Foam, 2" Natural Latex, 2" Cooling Gel.
+2) Topper install time: 10–15 minutes; express within 20 minutes arrival.
+3) Turn‑down service window: 18:00–22:00, with pillow mist on request.
+4) Hypoallergenic bedding available on all topper combinations.
+5) Standard king mattress firmness factory setting at level 6/10.
+
+user:
+Hi, the bed in 2314 is just a bit firm. Could you add a topper and schedule turn‑down for later?
+
+assistant channel=analysis:
+Check current bed config; place topper order; schedule turn‑down.
+
+assistant channel=commentary to=tool.check_bed_configuration:
+{"room_number":"2314"}
+
+tool.check_bed_configuration channel=commentary to=assistant:
+{"room_number":"2314","bed_type":"king_standard","current_firmness":6,"allergy_profile":"none","pillows":4}
+
+assistant channel=commentary to=tool.order_topper:
+{"room_number":"2314","topper_type":"plush_down_alt","priority":"express"}
+
+tool.order_topper channel=commentary to=assistant:
+{"order_id":"TOP-2314-9920","eta_minutes":18}
+
+assistant channel=commentary to=tool.schedule_turndown:
+{"room_number":"2314","time":"21:00"}
+
+tool.schedule_turndown channel=commentary to=assistant:
+{"scheduled":true,"time":"21:00"}
+
+assistant channel=final:
+All set—your plush down‑alternative topper is en route (ETA ~18 minutes), and turn‑down is scheduled for 21:00 in 2314.
+
+user:
+Lovely, thanks! The riverwalk lights look beautiful tonight.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Glad you’re enjoying the riverwalk lights.
+
+user:
+Could you also book me a 7 AM wake-up call?
+
+assistant channel=analysis:
+Wake‑up calls aren’t in tools/system here; flag it.
+
+assistant channel=final:
+[ATTENTION] I’ll check wake‑up call options for 07:00.

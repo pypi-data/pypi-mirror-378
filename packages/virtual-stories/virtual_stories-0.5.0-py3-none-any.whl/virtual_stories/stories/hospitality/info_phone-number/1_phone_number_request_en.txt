@@ -1,0 +1,61 @@
+"""
+Guest asks for the main phone number; reply via tool. Include small talk and an out-of-scope follow-up with the special flag.
+
+ROLES: user (guest asking for phone number), assistant (front desk providing official telephone contact)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Riverside Atelier Hotel (hotel_id: riverside_atelier)
+Key contacts:
+  - Main phone: +1 415 555 7400
+  - Concierge phone: +1 415 555 7401
+  - Email: hello@riversideatelier.com
+  - Website: https://www.riversideatelier.com
+
+user:
+What’s your main phone number?
+
+assistant channel=analysis:
+Fetch phone via contact tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"riverside_atelier","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+1 415 555 7400"}
+
+assistant channel=final:
+Our main phone number is +1 415 555 7400.
+
+user:
+Thanks! Quick hello from my side.
+
+assistant channel=final:
+Great to hear from you—how else can I help?
+
+user:
+Can you confirm the current call queue wait time on that line?
+
+assistant channel=final:
+[ATTENTION] Current queue metrics aren’t available through the provided resources. Checking available options.
+

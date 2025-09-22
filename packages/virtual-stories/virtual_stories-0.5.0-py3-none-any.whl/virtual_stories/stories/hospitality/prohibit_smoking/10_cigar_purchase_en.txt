@@ -1,0 +1,59 @@
+"""
+Guest asks where to buy cigars; clarify indoor smoking policy and designated area; include chit‑chat and mark purchase info as out‑of‑scope.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```
+[
+  {"name":"get_policy","description":"Retrieve policy details for a given category.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["smoking"]}},"required":["category"]},"strict":true},
+  {"name":"get_location","description":"Get details for a named on-site area.","parameters":{"type":"object","additionalProperties":false,"properties":{"area":{"type":"string","enum":["garden_smoking_pergola"]}},"required":["area"]},"strict":true}
+]
+```
+"""
+
+system:
+PROPERTY: The Willowgate
+POLICY: Indoor areas and balconies are smoke‑free; use Garden Smoking Pergola only; fee GBP 230 for indoor evidence
+AREA: Garden Smoking Pergola behind the tea lawn; hours 07:00–22:00; shelter and receptacles available
+EXTRAS: Tea lawn croquet 15:00; Conservatory 1F.
+
+user:
+Where can I buy cigars nearby?
+
+assistant channel=analysis:
+Purchase info is out of scope; still reiterate on‑site smoking rules and area details if asked.
+
+assistant channel=final:
+[ATTENTION] We don’t have cigar purchase information within the provided resources.
+
+user:
+Am I allowed to smoke once I get one?
+
+assistant channel=analysis:
+Answer via policy and area details.
+
+assistant channel=commentary to=tool.get_policy:
+{"category":"smoking"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"smoking","allowed":false,"summary":"Indoors and balconies are smoke‑free. Use the Garden Smoking Pergola only."}
+
+assistant channel=commentary to=tool.get_location:
+{"area":"garden_smoking_pergola"}
+
+tool.get_location channel=commentary to=assistant:
+{"name":"Garden Smoking Pergola","hours":"07:00–22:00","landmark":"behind the tea lawn","features":["shelter","receptacles"]}
+
+assistant channel=final:
+Indoors and balconies are smoke‑free; you may use the Garden Smoking Pergola behind the tea lawn, 07:00–22:00.
+
+user:
+The conservatory was lovely earlier.
+
+assistant channel=analysis:
+Chit‑chat acknowledgment.
+
+assistant channel=final:
+We’re glad you liked it—just off 1F by the tea lawn.
+

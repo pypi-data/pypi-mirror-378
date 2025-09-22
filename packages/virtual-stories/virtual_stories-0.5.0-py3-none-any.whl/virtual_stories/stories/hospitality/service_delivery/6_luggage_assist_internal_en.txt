@@ -1,0 +1,46 @@
+"""
+Guest asks to move luggage between rooms; schedule delivery and state scope and signature; include small talk and ATTENTION for storage overnight by Service Center.
+
+ROLES: user (guest moving luggage internally), assistant (service center dispatching porter service on property)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_inhouse_delivery","description":"Arrange internal porter delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"from_room":{"type":"string"},"to_room":{"type":"string"},"item":{"type":"string"}},"required":["from_room","to_room","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Aurora City Hotel — Service Center
+Hours: 24/7 dispatch; ETA 10–20 minutes
+Scope: On‑property only; signature on receipt
+Note: Overnight storage is handled by Bell Desk, not Service Center
+
+user:
+Could you move two suitcases from 602 to 1610?
+
+assistant channel=analysis:
+Schedule on‑property luggage delivery and confirm ETA and signature policy; note storage handled by Bell Desk per system.
+
+assistant channel=commentary to=tool.schedule_inhouse_delivery:
+{"from_room":"602","to_room":"1610","item":"two suitcases"}
+
+tool.schedule_inhouse_delivery channel=commentary to=assistant:
+{"delivery_id":"DLV-6530","status":"scheduled","eta_minutes":13}
+
+assistant channel=final:
+We’ve scheduled DLV-6530 to move two suitcases from 602 to 1610 with an ETA around 13 minutes. A signature is taken on receipt.
+
+user:
+Thanks—hallways are spotless.
+
+assistant channel=final:
+Dispatch in progress.
+
+user:
+Can you store the bags with you overnight?
+
+assistant channel=final:
+[ATTENTION] Overnight storage isn’t handled here. Checking available options.
+

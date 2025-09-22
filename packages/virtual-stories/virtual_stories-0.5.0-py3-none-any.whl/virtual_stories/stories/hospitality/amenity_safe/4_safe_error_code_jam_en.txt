@@ -1,0 +1,57 @@
+"""
+Guest reports jam error; verify and dispatch engineering; include chit-chat and an out-of-scope query.
+
+ROLES: user (guest with jammed safe), assistant (front desk coordinating engineering)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_safe_status","description":"Check safe status.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"dispatch_engineering","description":"Send engineering with priority.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"issue_code":{"type":"string"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","issue_code","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Desert Star Villas (hotel_id: dsv_psp)
+Address: 1881 E Palm Canyon Dr, Palm Springs, CA
+Safe Details:
+- Model: SunGuard SGX-410
+- Jam error code: E-21 → engineering required
+- Response windows: high 30m, normal 60–90m (07:00–22:00)
+Policy: No fee for engineering due to device fault
+Guest Note: Pool cabanas are first-come, first-served
+
+user:
+My safe in 240 shows E-21 when I try to open it.
+
+assistant channel=analysis:
+Verify status and dispatch engineering high priority.
+
+assistant channel=commentary to=tool.verify_safe_status:
+{"room_number":"240"}
+
+tool.verify_safe_status channel=commentary to=assistant:
+{"status":"error","error_code":"E-21"}
+
+assistant channel=commentary to=tool.dispatch_engineering:
+{"room_number":"240","issue_code":"E-21","priority":"high"}
+
+tool.dispatch_engineering channel=commentary to=assistant:
+{"ticket":"DSV-240-E21","eta_minutes":28}
+
+assistant channel=final:
+Thanks for the details—E-21 indicates a jam. I’ve dispatched engineering (DSV-240-E21) with an ETA of about 28 minutes.
+
+user:
+Are pool cabanas reserved or walk-up?
+
+assistant channel=final:
+They’re first-come, first-served at this property.
+
+user:
+Could you recommend a mid-century architecture tour?
+
+assistant channel=final:
+[ATTENTION] Looking into this beyond our current resources.
+

@@ -1,0 +1,53 @@
+"""
+Guest requests hypoallergenic solution with case for sensitive eyes.
+
+ROLES: user (sensitive eyes), assistant (guest services coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_amenities","description":"Check availability of personal care and optical amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["contact_lens_case","lens_solution","eye_drops","complete_kit","travel_size"]},"brand_preference":{"type":"string","enum":["any","specific_brand","hypoallergenic"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_amenity_delivery","description":"Arrange delivery or pickup of personal care amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["room_delivery","front_desk_pickup","concierge_hand_delivery"]},"timing":{"type":"string","enum":["immediate","within_hour","specific_time"]}},"required":["room_number","items","delivery_method"]},"strict":true}
+]
+```
+"""
+
+system:
+Alpine Vista Lodge (hotel_id: avl_zurich)
+Address: 12 Utoquai, Zürich, Switzerland
+Timezone: Europe/Zurich
+
+Optical Care Options:
+- Hypoallergenic multi-purpose solution
+- Sterile flat lens cases
+
+user:
+Do you have a hypoallergenic solution and a case?
+
+assistant channel=analysis:
+Query hypoallergenic solution and cases.
+
+assistant channel=commentary to=tool.check_personal_care_amenities:
+{"amenity_type":"lens_solution","brand_preference":"hypoallergenic"}
+
+tool.check_personal_care_amenities channel=commentary to=assistant:
+{"available_items":[{"type":"Hypoallergenic multi-purpose solution 120ml","availability":"in_stock"},{"type":"Sterile contact lens case","availability":"in_stock"}]}
+
+assistant channel=final:
+Yes—hypoallergenic solution (120ml) and sterile cases are available. What’s your room and delivery preference?
+
+user:
+Room 507—please deliver to my room now. Also, is there snow on the mountains today?
+
+assistant channel=analysis:
+Arrange immediate room delivery; snow condition beyond scope -> [ATTENTION].
+
+assistant channel=commentary to=tool.arrange_amenity_delivery:
+{"room_number":"507","items":["Hypoallergenic multi-purpose solution 120ml","Sterile contact lens case"],"delivery_method":"room_delivery","timing":"immediate"}
+
+tool.arrange_amenity_delivery channel=commentary to=assistant:
+{"delivery_id":"AVL-507-HY-02","estimated_delivery":"20 minutes"}
+
+assistant channel=final:
+[ATTENTION] Delivery scheduled in about 20 minutes (AVL-507-HY-02). I’ll check mountain conditions separately.
+

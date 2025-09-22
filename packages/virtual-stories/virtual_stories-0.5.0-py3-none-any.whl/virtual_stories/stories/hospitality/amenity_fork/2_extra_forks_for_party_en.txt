@@ -1,0 +1,67 @@
+"""
+Guest requests multiple forks for an in-room gathering.
+Provide amenity dispatch to the room.
+
+ROLES: user (guest hosting friends), assistant (guest services coordinator handling amenity delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_amenity","description":"Dispatch amenity to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","room_number","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Crescent City Hotel (hotel_id: cch_10)
+Address: 700 Canal St, New Orleans, LA 70130
+Timezone: America/Chicago
+
+Amenity Notes:
+- Cutlery on request: forks, spoons, knives
+- Typical delivery: 8–12 minutes
+- 24/7 room service support
+- Complimentary
+
+user:
+Could I get 6 forks to room 904?
+
+assistant channel=analysis:
+Use request_amenity to send 6 forks to 904.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name":"fork","room_number":"904","quantity":6}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status":"success","eta":"10 minutes","ticket":"CCH-904-FK02"}
+
+assistant channel=final:
+Done—ticket CCH-904-FK02. Six forks are on the way to room 904 with an ETA of about 10 minutes.
+
+user:
+Is there a fee?
+
+assistant channel=analysis:
+Complimentary per system.
+
+assistant channel=final:
+No fee—cutlery requests are complimentary.
+
+user:
+Love the jazz drifting up from the street.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+French Quarter nights come with a soundtrack.
+
+user:
+Can you also reserve a swamp tour?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

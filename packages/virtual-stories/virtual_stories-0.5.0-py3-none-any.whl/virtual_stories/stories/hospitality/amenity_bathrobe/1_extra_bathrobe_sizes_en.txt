@@ -1,0 +1,101 @@
+"""
+Guest requests an extra bathrobe and asks about sizes; confirm availability by size and arrange delivery via tools; include small talk and special flag.
+
+ROLES: user (guest requesting bathrobe with a size preference), assistant (front desk coordinating linen inventory and delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_linen_inventory",
+    "description": "Check on-hand counts for linen items by size.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "description": "e.g., bathrobe" },
+        "size": { "type": "string", "enum": ["S","M","L","XL"] }
+      },
+      "required": ["item_code", "size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_linen_delivery",
+    "description": "Deliver a sized linen item to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "size": { "type": "string", "enum": ["S","M","L","XL"] },
+        "quantity": { "type": "integer", "minimum": 1 },
+        "priority": { "type": "string", "enum": ["normal", "high"] }
+      },
+      "required": ["room_number", "item_code", "size", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Brand: Riverstone Urban Hotel (hotel_id: rs_urban_09)
+Address: 415 Stonebridge Ave, Portland, OR 97205
+Delivery window: 07:30–22:00; typical linen ETA 10–20 minutes
+
+Bathrobe program (waffle weave, white):
+- Sizes: S, M, L, XL
+- Current stock: S(7), M(15), L(12), XL(5)
+- Replacement policy: 1 extra per registered guest upon request
+
+Design trivia:
+- Lobby features basalt accent walls with indoor planters.
+
+user:
+Could I get an extra bathrobe in size M to room 927?
+
+assistant channel=analysis:
+Check size M inventory for bathrobe, then place delivery request for 1 piece to room 927 with normal priority.
+
+assistant channel=commentary to=tool.check_linen_inventory:
+{"item_code":"bathrobe","size":"M"}
+
+tool.check_linen_inventory channel=commentary to=assistant:
+{"item_code":"bathrobe","size":"M","on_hand":15}
+
+assistant channel=analysis:
+Stock for M is sufficient. Place delivery order.
+
+assistant channel=commentary to=tool.request_linen_delivery:
+{"room_number":"927","item_code":"bathrobe","size":"M","quantity":1,"priority":"normal"}
+
+tool.request_linen_delivery channel=commentary to=assistant:
+{"ticket_id":"LN-927-5840","eta_minutes":14}
+
+assistant channel=final:
+Your size M bathrobe is queued for room 927. Ticket LN-927-5840 is confirmed with an estimated 14 minutes to arrival.
+
+user:
+The basalt walls in the lobby look cool.
+
+assistant channel=analysis:
+Provide light acknowledgment with property detail; no tools needed.
+
+assistant channel=final:
+They’re a Riverstone staple—the basalt accents pair with the indoor planters nicely.
+
+user:
+Can you also tell me if the robe is machine washable on hot?
+
+assistant channel=analysis:
+Care instructions beyond what’s specified aren’t in tools or system; use special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking care details. Analyzing the situation.
+
+user:
+No problem—thanks.
+

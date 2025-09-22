@@ -1,0 +1,139 @@
+"""
+Guest requests travel-size toothbrush with specific bristle preference; confirm stock, arrange delivery, include small talk, and one [ATTENTION] case.
+
+ROLES: user (guest requesting travel-size toothbrush and dental kit), assistant (amenities desk handling personal care items)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_toothbrush_stock",
+    "description": "Check available toothbrush types, sizes, and add-ons.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bristle": { "type": "string", "enum": ["soft", "medium"] },
+        "size": { "type": "string", "enum": ["adult", "child", "travel"] },
+        "include_dentalkit": { "type": "boolean" }
+      },
+      "required": ["bristle", "size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_toothbrush",
+    "description": "Deliver toothbrush and dental kit to the guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "bristle": { "type": "string" },
+        "size": { "type": "string" },
+        "include_dentalkit": { "type": "boolean" }
+      },
+      "required": ["room_number", "bristle", "size"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Gilded Quay Boutique (hotel_id: gqb_ldn_22)
+Address: 7 Narrow St, Limehouse, London E14 8DP, United Kingdom
+Timezone: Europe/London
+
+Amenity Scope:
+- Personal care on request: toothbrush, toothpaste, dental kit, mouthwash (alcohol-free)
+- Toothbrush options: adult soft, adult medium, child soft, travel soft
+- Delivery window: 24/7 with typical ETA 10–20 minutes
+- Water quality note: Rooms feature filtered cold-water taps in bathrooms
+
+YAML Facts:
+---
+brand_profile:
+  opening_year: 2018
+  style: "industrial chic on the Thames"
+  room_count: 62
+  elevator: true
+  fire_sprinklers: true
+  nightly_turn_down: true
+  languages: ["English", "French", "Mandarin"]
+---
+
+JSON Dental Amenity Matrix:
+{
+  "toothbrush": {
+    "adult": {"soft": true, "medium": true},
+    "child": {"soft": true, "medium": false},
+    "travel": {"soft": true, "medium": false}
+  },
+  "dentalkit": {"toothpaste": "fluoride_gel_20ml", "floss": "mint_5m"},
+  "mouthwash": {"alcohol_free": true, "volume_ml": 30}
+}
+
+CSV Housekeeping Cycles (weekday,restock,toothbrush_bin_qty):
+Mon,Daily,48
+Tue,Daily,48
+Wed,Daily,48
+Thu,Daily,48
+Fri,Daily,48
+Sat,Daily,36
+Sun,Daily,36
+
+Bullet Highlights:
+- Thames-view lounge with local roastery coffee
+- In-room USB-C charge ports and 230V sockets
+- Allergy-aware products available upon request
+- Complimentary sparkling water in all rooms
+- Quiet hours: 10PM–7AM
+
+Policy Snippets:
+Return-Policy: Unopened personal care items can be exchanged within 24 hours.
+Late-Night-Deliveries: Expect slightly longer ETAs past midnight due to staffing.
+
+user:
+Hi there, could I get a travel-size toothbrush with soft bristles sent to room 317? A small toothpaste would be great too.
+
+assistant channel=analysis:
+Verify stock for travel soft and include dental kit; then deliver to 317.
+
+assistant channel=commentary to=tool.check_toothbrush_stock:
+{"bristle":"soft","size":"travel","include_dentalkit":true}
+
+tool.check_toothbrush_stock channel=commentary to=assistant:
+{"available":true,"brand":"HarborDent Mini","travel_cap":true,"dentalkit_included":{"toothpaste":"fluoride_gel_20ml","floss":"mint_5m"}}
+
+assistant channel=analysis:
+Proceed with delivery including the dental kit.
+
+assistant channel=commentary to=tool.deliver_toothbrush:
+{"room_number":"317","bristle":"soft","size":"travel","include_dentalkit":true}
+
+tool.deliver_toothbrush channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":12,"runner":"Ina"}
+
+assistant channel=final:
+All set—HarborDent Mini travel soft toothbrush with a toothpaste-and-floss dental kit is on the way to room 317. ETA about 12 minutes (runner: Ina).
+
+user:
+The filtered tap water here is a nice touch.
+
+assistant channel=analysis:
+Offer a brief, friendly acknowledgment tied to system facts.
+
+assistant channel=final:
+Glad you noticed—bathroom cold taps are filtered for taste and clarity.
+
+user:
+Could you also recommend a dentist nearby and book an appointment for tomorrow?
+
+assistant channel=analysis:
+External dentist recommendation/booking is beyond current scope and tools. Use ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

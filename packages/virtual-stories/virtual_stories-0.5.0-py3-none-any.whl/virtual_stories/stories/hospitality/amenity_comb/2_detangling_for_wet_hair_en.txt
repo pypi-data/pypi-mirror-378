@@ -1,0 +1,68 @@
+"""
+Guest asks for a detangling comb suitable for wet hair; arrange delivery.
+
+ROLES: user (guest post-shower), assistant (housekeeping amenities)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_grooming_amenities","description":"List grooming items","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["combs","all_grooming"]}},"required":[]},"strict":true},
+  {"name":"check_amenity_availability","description":"Check specific SKU availability","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_sku":{"type":"string"},"floor_number":{"type":"string"}},"required":["amenity_sku","floor_number"]},"strict":true},
+  {"name":"deliver_amenities","description":"Arrange delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}},"required":["sku","quantity"],"additionalProperties":false}},"delivery_time":{"type":"string","enum":["immediate","with_turndown","next_housekeeping"]}},"required":["room_number","items","delivery_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Coral Key Resort (hotel_id: ckr_key_west)
+Address: 15 Ocean Vista Ln, Key West, FL 33040
+Timezone: America/New_York
+
+Amenity Notes:
+- Wide-tooth detangling comb recommended for wet hair
+- Delivery ETA floors 3–7: 10–16 minutes
+
+SKUs: COMB_DETANGLE_WIDE, COMB_FINE_STYLING, BRUSH_PADDLE, TIES_ORGANIC_SET
+
+user:
+Hi—fresh out of the shower in 607. Do you have a detangling comb that’s okay for wet hair?
+
+assistant channel=analysis:
+List items; pick COMB_DETANGLE_WIDE; check availability; deliver immediate.
+
+assistant channel=commentary to=tool.get_grooming_amenities:
+{"category":"combs"}
+
+tool.get_grooming_amenities channel=commentary to=assistant:
+{"available_items":[{"sku":"COMB_DETANGLE_WIDE","name":"Wide-tooth Detangling Comb"},{"sku":"COMB_FINE_STYLING","name":"Fine-tooth Styling Comb"}]}
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_sku":"COMB_DETANGLE_WIDE","floor_number":"6"}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_sku":"COMB_DETANGLE_WIDE","available":true,"floor_stock":9}
+
+assistant channel=commentary to=tool.deliver_amenities:
+{"room_number":"607","items":[{"sku":"COMB_DETANGLE_WIDE","quantity":1}],"delivery_time":"immediate"}
+
+tool.deliver_amenities channel=commentary to=assistant:
+{"delivery_id":"CKR-607-71","eta_minutes":12}
+
+assistant channel=final:
+Yes—a wide‑tooth detangling comb is ideal for wet hair. Delivery CKR-607-71 is on the way with an ETA of about 12 minutes.
+
+user:
+The palm courtyard is lovely at dusk.
+
+assistant channel=final:
+It is—the fronds catch the breeze from the ocean channel.
+
+user:
+Do you have salon blowout services on site?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check what services are available.
+

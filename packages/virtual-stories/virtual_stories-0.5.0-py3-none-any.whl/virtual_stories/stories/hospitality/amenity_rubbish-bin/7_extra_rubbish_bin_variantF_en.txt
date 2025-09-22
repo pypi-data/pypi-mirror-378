@@ -1,0 +1,74 @@
+"""
+Guest requests an extra standard 12 L open bin at the bedside with standard liner; confirm and deliver; include small talk and an [ATTENTION] query.
+
+ROLES: user (guest), assistant (guest services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bin_availability","description":"Check bin availability by type.","parameters":{"type":"object","properties":{"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]}},"required":["bin_type"],"additionalProperties":false},"strict":true},
+  {"name":"request_additional_bin","description":"Request bin delivery with placement and liner.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]},"placement":{"type":"string","enum":["bathroom","bedside","desk"]},"liner_type":{"type":"string","enum":["standard","compostable"]}},"required":["room_number","bin_type","placement","liner_type"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Crescent View Inn (hotel_id: cvi_sfo_26)
+Address: 501 Embarcadero Cir, San Francisco, CA 94107
+Housekeeping ops: 07:30–21:30; ETA 8–14 minutes
+
+Bin inventory today
+compact_6L_lid(6)
+standard_12L_open(10)
+Liners: standard (default), compostable
+
+Operational notes
+• Check-in 16:00; Check-out 12:00
+• Recycling pickup at 08:00 and 14:00
+• Stairwell lights on motion sensors
+• Lobby soundscape: soft piano during daytime
+• EMS test signal Wednesdays 12:00
+• Languages: EN, ES, JA
+
+user:
+Could I get a standard open bin by the bedside in 1612 with a standard liner?
+
+assistant channel=analysis:
+Check standard_12L_open availability; deliver to bedside with standard liner for 1612.
+
+assistant channel=commentary to=tool.check_bin_availability:
+{"bin_type":"standard_12L_open"}
+
+tool.check_bin_availability channel=commentary to=assistant:
+{"available":true,"bin_type":"standard_12L_open","on_hand":10}
+
+assistant channel=analysis:
+Place delivery request.
+
+assistant channel=commentary to=tool.request_additional_bin:
+{"room_number":"1612","bin_type":"standard_12L_open","placement":"bedside","liner_type":"standard"}
+
+tool.request_additional_bin channel=commentary to=assistant:
+{"ticket_id":"HK-1612-6634","eta_minutes":12}
+
+assistant channel=final:
+Added—one standard 12 L open bin with a standard liner will be set bedside in 1612. Ticket HK-1612-6634, ETA about 12 minutes.
+
+user:
+I like the soft piano in the lobby.
+
+assistant channel=analysis:
+Use operational notes.
+
+assistant channel=final:
+We run a soft piano soundscape in the lobby during the day.
+
+user:
+Can you do an extra recycling pickup at 19:00?
+
+assistant channel=analysis:
+Pickups listed at 08:00 and 14:00 only; flag.
+
+assistant channel=final:
+[ATTENTION] I’m checking if a 19:00 recycling pickup can be arranged. Reviewing options.
+

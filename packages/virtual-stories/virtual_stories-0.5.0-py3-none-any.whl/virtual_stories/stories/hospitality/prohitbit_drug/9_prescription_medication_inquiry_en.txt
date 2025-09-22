@@ -1,0 +1,120 @@
+"""
+Guest with multiple prescription medications seeking storage and usage guidance.
+
+ROLES: user (elderly guest with complex medication regimen), assistant (guest services manager providing accommodation support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_policy",
+    "description": "Retrieve policy details for a given category.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["fire", "fireworks", "pets", "smoking", "drugs"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_accessibility_services",
+    "description": "Check available accessibility and medical support services.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service": { "type": "string", "enum": ["medication_storage", "medical_equipment", "accessible_rooms", "emergency_protocols"] }
+      },
+      "required": ["service"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+VENUE: Sunset Gardens Senior Living Resort — Age-friendly luxury destination for mature travelers
+LOCATION: Temperate coastal region with healing gardens and gentle walking paths
+STAR RATING: 4.5-star senior-focused resort with medical concierge and accessibility certifications
+ARCHITECTURE: Single-story wings with grab bars, wider doorways, and non-slip surfaces throughout
+GUEST CAPACITY: 180 accessible suites, 24 medical support rooms with specialized equipment storage
+POLICY — Illicit Drugs (possession or use):
+- Prescription medications fully permitted with proper documentation
+- Refrigerated medication storage available with secure access codes
+- Medical staff available 24/7 to assist with medication management
+- Clear distinction between prescribed medications and controlled substances
+- Pharmacy delivery coordination for prescription refills during extended stays
+MEDICAL SUPPORT FACILITIES:
+- On-site registered nurses with geriatric specialization (24-hour coverage)
+- Secure medication refrigeration units with individual lockboxes in each suite
+- Medical equipment library including mobility aids, CPAP machines, and monitoring devices
+- Telemedicine consultation rooms with high-definition video conferencing for remote doctor visits
+- Therapeutic gardens with labeled medicinal plants and gentle exercise stations
+- Emergency response system with direct connection to nearby Level 1 trauma center (8 minutes)
+
+user:
+I travel with eight different prescription medications, some requiring refrigeration. Can you accommodate secure storage?
+
+assistant channel=analysis:
+Guest needs medication storage assistance - should check policy and available medical support services.
+
+assistant channel=commentary to=tool.get_policy:
+{"category": "drugs"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"drugs","prescriptions":"fully permitted with documentation","refrigeration":"available with secure access codes","medical_support":"24/7 staff assistance available"}
+
+assistant channel=commentary to=tool.check_accessibility_services:
+{"service": "medication_storage"}
+
+tool.check_accessibility_services channel=commentary to=assistant:
+{"service":"medication_storage","available":"secure refrigeration units with individual lockboxes","location":"each suite","access":"personal secure codes"}
+
+assistant channel=final:
+Absolutely! Each suite has secure refrigeration units with individual lockboxes using personal access codes. Our 24/7 medical staff can assist with medication management.
+
+user:
+Do you have nurses available if I need help organizing my daily pills?
+
+assistant channel=analysis:
+Guest asking about nursing support - should check medical staff availability.
+
+assistant channel=commentary to=tool.check_accessibility_services:
+{"service": "emergency_protocols"}
+
+tool.check_accessibility_services channel=commentary to=assistant:
+{"service":"emergency_protocols","available":"registered nurses with geriatric specialization","coverage":"24-hour","emergency_connection":"Level 1 trauma center 8 minutes"}
+
+assistant channel=final:
+Yes, we have registered nurses with geriatric specialization available 24/7 who can help organize medications and provide management support.
+
+user:
+The therapeutic gardens must be lovely for morning walks.
+
+assistant channel=analysis:
+Chitchat about therapeutic gardens - can share system info about labeled medicinal plants and exercise stations.
+
+assistant channel=final:
+They're beautiful! The gardens feature labeled medicinal plants and gentle exercise stations perfect for morning walks.
+
+user:
+Can you arrange prescription refills if my stay extends longer than planned?
+
+assistant channel=analysis:
+Guest asking about pharmacy coordination which is mentioned in system policy.
+
+assistant channel=final:
+Yes, we coordinate pharmacy delivery for prescription refills during extended stays as part of our medical concierge services.
+
+user:
+What's the difference between my prescribed medications and controlled substances in your policy?
+
+assistant channel=analysis:
+Guest asking about specific legal distinctions which would require detailed pharmaceutical law knowledge.
+
+assistant channel=final:
+[ATTENTION] Let me clarify the specific distinctions and documentation requirements between prescription medications and controlled substances.

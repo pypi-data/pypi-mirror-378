@@ -1,0 +1,52 @@
+"""
+Guest requests weddings inquiries email; include confirmation of on-site chapel from system, small talk, and out-of-scope photographer list ask.
+
+ROLES: user (bride/groom), assistant (weddings liaison)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Rivervale Heritage Hotel (hotel_id: rivervale_heritage)
+Contacts:
+  - Weddings Email: weddings@rivervaleheritage.co.uk
+  - Website: https://www.rivervaleheritage.co.uk
+  - Phone: +44 161 555 0221
+Address: 2 Cloth Hall St, Manchester M4 1AB, UK
+Venues: River Gallery (120 pax), Heritage Hall (260 pax), Courtyard Chapel
+Catering: In‑house bakery; vegan menu available
+Access: Piccadilly 8 min walk; loading via Swan St
+Rooms: 204; Suites: 16; Late bar until 01:00 Fri–Sat
+
+user:
+What’s the weddings inquiries email?
+
+assistant channel=analysis:
+Fetch via tool and reply.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"rivervale_heritage","channel":"email"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"email":"weddings@rivervaleheritage.co.uk"}
+
+assistant channel=final:
+weddings@rivervaleheritage.co.uk.
+
+user:
+Beautiful! Do you really have a chapel on site?
+
+assistant channel=final:
+Yes—the Courtyard Chapel is on site.
+
+user:
+Could you send your preferred photographers list?
+
+assistant channel=final:
+[ATTENTION] That list isn’t included in these resources. Checking.
+

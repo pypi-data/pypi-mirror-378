@@ -1,0 +1,62 @@
+"""
+Guest confirms breakfast hours at check‑in; proceed with key issuance and recap dining from system; include chitchat and ATTENTION query.
+
+ROLES: user (guest focused on morning schedule), assistant (front desk sharing concise breakfast details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_in_guest","description":"Assign room and return key","parameters":{"type":"object","properties":{"reservation_code":{"type":"string"},"last_name":{"type":"string"}},"required":["reservation_code","last_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Beacon Terrace — Reception
+Times:
+- Check‑in 15:00; Check‑out 12:00
+- Breakfast 06:30–10:30 at Lantern Room
+
+ID & Payment:
+- ID must match booking name
+- Card pre‑authorization at check‑in
+
+Facilities:
+- Gym 24/7; pool 07:00–21:00
+- Business center 24/7 (L2)
+
+Access:
+- Elevators require key after 22:00
+
+user:
+Hello—BT-55209 under Patel. What time is breakfast?
+
+assistant channel=analysis:
+Assign room; confirm breakfast hours from system.
+
+assistant channel=commentary to=tool.check_in_guest:
+{"reservation_code":"BT-55209","last_name":"Patel"}
+
+tool.check_in_guest channel=commentary to=assistant:
+{"room":"1420","key_id":"K-771023"}
+
+assistant channel=final:
+Welcome to Beacon Terrace—room 1420 with key K-771023. Breakfast runs 06:30–10:30 in the Lantern Room.
+
+user:
+The lobby chairs look comfy.
+
+assistant channel=final:
+They’re a good spot for a quick coffee.
+
+user:
+What time is check‑out?
+
+assistant channel=final:
+Standard check‑out is 12:00.
+
+user:
+Could you extend breakfast to 11:00 for me?
+
+assistant channel=final:
+[ATTENTION] Breakfast hours can’t be changed here. Reviewing available options.

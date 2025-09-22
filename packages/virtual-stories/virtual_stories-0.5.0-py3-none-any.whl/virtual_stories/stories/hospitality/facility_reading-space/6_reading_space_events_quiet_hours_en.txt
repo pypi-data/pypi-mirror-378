@@ -1,0 +1,64 @@
+"""
+Guest checks if any events might affect quiet hours and where to sit for minimal noise.
+
+ROLES: user (noise-sensitive guest), assistant (concierge using event feed and layout tips)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "get_todays_reading_events",
+    "description": "Return today’s reading-space adjacent events with start/end and expected noise.",
+    "parameters": {"type":"object","properties":{},"required":[],"additionalProperties":false},
+    "strict": true
+  }
+]
+"""
+
+system:
+Space: Quiet Gallery Annex (reading spillover)
+Location: East corridor, adjacent to rotating art exhibit
+Hours: 09:00–21:00
+Seating: 14 (gallery benches x4, worktables x10)
+Rules: Quiet hours 13:00–17:00 strictly enforced
+Amenities: Soft pencils, sketch pads, art catalogues, bottle-filler
+Acoustics: NRC 0.85 wall panels; carpeted floor
+Best Seats: Tables 7–10 are farthest from exhibit speakers
+Lighting: 380 lux neutral; track lights dim at 20:45
+Signage: Annex code QGA-E; map grid E-3
+
+user:
+Any events today that will add noise near the annex?
+
+assistant channel=analysis:
+Consult the event tool, then advise seats per system.
+
+assistant channel=commentary to=tool.get_todays_reading_events:
+{}
+
+tool.get_todays_reading_events channel=commentary to=assistant:
+{"events":[{"title":"Artist talk (foyer)","time":"11:30–12:10","noise":"moderate"},{"title":"String trio rehearsal (gallery)","time":"17:15–18:00","noise":"low"}],"notes":"Quiet hours 13:00–17:00 unaffected"}
+
+assistant channel=analysis:
+Summarize events and recommend best tables 7–10.
+
+assistant channel=final:
+Two adjacent events today: an artist talk 11:30–12:10 (moderate) and a string trio rehearsal 17:15–18:00 (low). Quiet hours 13:00–17:00 are unaffected. For the calmest spots, choose tables 7–10 away from exhibit speakers.
+
+user:
+Sounds manageable—thanks.
+
+assistant channel=analysis:
+Short, friendly reply.
+
+assistant channel=final:
+Glad it fits your quiet window.
+
+user:
+Could you have the trio play softly during quiet hours tomorrow?
+
+assistant channel=analysis:
+Changing performer behavior isn’t defined—flag attention.
+
+assistant channel=final:
+[ATTENTION] Your request about adjusting tomorrow’s rehearsal volume is noted. I’m checking options with the team.
+

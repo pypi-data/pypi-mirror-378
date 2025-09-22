@@ -1,0 +1,74 @@
+"""
+Guest content creator requests Hollywood-style mirror with bulbs for filming; asks for brightness tweak.
+Provide options, install, and adjust.
+
+ROLES: user (content creator), assistant (amenity coordinator with mirror kits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_mirror_options", "description": "Check Hollywood-style mirror with bulbs.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "mirror_type": { "type": "string", "enum": ["hollywood_style"] }, "lighting_needed": { "type": "boolean" } }, "required": ["mirror_type"] }, "strict": true },
+  { "name": "install_mirror_setup", "description": "Install Hollywood-style mirror in bedroom.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mirror_type": { "type": "string", "enum": ["hollywood_style"] }, "lighting_type": { "type": "string", "enum": ["hollywood_bulbs"] }, "placement_location": { "type": "string", "enum": ["bedroom", "near_window"] }, "power_source": { "type": "string", "enum": ["plug_in"] } }, "required": ["room_number", "mirror_type", "placement_location"] }, "strict": true },
+  { "name": "adjust_mirror_lighting", "description": "Adjust brightness level.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "brightness_level": { "type": "integer", "minimum": 1, "maximum": 10 }, "color_temp": { "type": "string", "enum": ["neutral_4000k"] } }, "required": ["room_number", "brightness_level", "color_temp"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Studio District Hotel (hotel_id: sdh_la_02)
+Address: 400 Sunset Pl, Los Angeles, CA 90028
+Timezone: America/Los_Angeles
+
+Creator Amenities:
+- Hollywood bulb mirrors; dimmer control
+- Setup in bedroom or near window
+- Install within 45–60 minutes
+- Power plug‑in; cable management included
+- On removal at checkout
+
+user:
+Room 1110—can I get a Hollywood-style mirror for filming, by the window?
+
+assistant channel=analysis:
+Check Hollywood availability; install by window; set neutral 4000K mid brightness.
+
+assistant channel=commentary to=tool.check_mirror_options:
+{"mirror_type":"hollywood_style","lighting_needed":true}
+
+tool.check_mirror_options channel=commentary to=assistant:
+{"available_types":["hollywood_style"],"lighting_options":["hollywood_bulbs"],"inventory_status":"6 units available"}
+
+assistant channel=commentary to=tool.install_mirror_setup:
+{"room_number":"1110","mirror_type":"hollywood_style","lighting_type":"hollywood_bulbs","placement_location":"near_window","power_source":"plug_in"}
+
+tool.install_mirror_setup channel=commentary to=assistant:
+{"service_id":"MIR_LA1110","installation_time":"within 55 minutes","placement":"bedroom near window","notes":"bulb dimmer inline"}
+
+assistant channel=commentary to=tool.adjust_mirror_lighting:
+{"room_number":"1110","brightness_level":5,"color_temp":"neutral_4000k"}
+
+tool.adjust_mirror_lighting channel=commentary to=assistant:
+{"adjustment_completed":true,"brightness":5,"color_temp":"neutral_4000k"}
+
+assistant channel=final:
+We’ll set up a Hollywood‑style bulb mirror by your window within ~55 minutes and dial it to neutral lighting at level 5.
+
+user:
+The studio district vibe is perfect.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s a great spot for creators—plenty of natural light, too.
+
+user:
+Can you arrange a camera rental?
+
+assistant channel=analysis:
+Outside mirror scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with concierge about nearby camera rental options.
+"""
+

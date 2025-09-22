@@ -1,0 +1,57 @@
+"""
+Guest wants lightweight balancing conditioner for oily scalp.
+
+ROLES: user (oily scalp guest), assistant (amenities concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_hair_care_products","description":"Retrieve available premium hair care products including conditioners.","parameters":{"type":"object","additionalProperties":false,"properties":{"hair_type":{"type":"string","enum":["dry","oily","normal","curly","colored","damaged","all"]},"product_type":{"type":"string","enum":["conditioner","deep_treatment","leave_in","all_conditioning"]}},"required":[]},"strict":true},
+  {"name":"deliver_hair_care_amenities","description":"Arrange delivery of hair care products to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"size":{"type":"string","enum":["travel_50ml","standard_200ml","luxury_400ml"]}},"required":["sku","size"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["immediate","evening_turndown","morning_service"]}},"required":["room_number","products","delivery_preference"]},"strict":true}
+]
+```
+"""
+
+system:
+Palm Heights Beach Club (hotel_id: phb_cancun)
+Address: Blvd. Kukulcan Km 14, Cancun, Mexico
+Timezone: America/Cancun
+
+Oil Control Options:
+- Lightweight conditioners that won’t weigh hair down
+- Menthol and tea tree variants available (mint is optional)
+
+SKUs:
+- COND_BALANCE_MINT: Balancing Conditioner (Mint)
+- COND_BALANCE_PURE: Balancing Conditioner (Fragrance‑free)
+
+user:
+Anything light for an oily scalp? Heavy conditioners make my roots greasy.
+
+assistant channel=analysis:
+Offer balancing options and request preference.
+
+assistant channel=commentary to=tool.get_hair_care_products:
+{"hair_type":"oily","product_type":"conditioner"}
+
+tool.get_hair_care_products channel=commentary to=assistant:
+{"products":[{"sku":"COND_BALANCE_MINT","name":"Balancing Conditioner (Mint)"},{"sku":"COND_BALANCE_PURE","name":"Balancing Conditioner (Fragrance-free)"}]}
+
+assistant channel=final:
+We have a lightweight Balancing Conditioner—Mint or Fragrance‑free. Which do you prefer and what size?
+
+user:
+Fragrance‑free in 200ml. I’m in 241. Also, do you rent snorkel gear?
+
+assistant channel=analysis:
+Arrange delivery; snorkel rental is beyond scope -> [ATTENTION].
+
+assistant channel=commentary to=tool.deliver_hair_care_amenities:
+{"room_number":"241","products":[{"sku":"COND_BALANCE_PURE","size":"standard_200ml"}],"delivery_preference":"immediate"}
+
+tool.deliver_hair_care_amenities channel=commentary to=assistant:
+{"delivery_id":"PHB-241-OC-22","eta_minutes":14}
+
+assistant channel=final:
+[ATTENTION] Your Balancing Conditioner (200ml) is scheduled—PHB-241-OC-22 arriving in ~14 minutes. I’ll check snorkel options separately.
+

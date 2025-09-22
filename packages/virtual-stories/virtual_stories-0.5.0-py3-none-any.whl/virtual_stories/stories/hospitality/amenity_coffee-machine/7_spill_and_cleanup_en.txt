@@ -1,0 +1,57 @@
+"""
+Guest reports a spill during brewing; arrange supplies and guidance; include small talk and an out-of-scope query.
+
+ROLES: user (guest with a coffee spill), assistant (support sending towels and cleaning tablets; providing guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"order_coffee_supplies","description":"Send pods or cleaning tablets.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_type":{"type":"string","enum":["cleaning_tablets","coffee_pods","tea_pods"]},"quantity":{"type":"integer"}},"required":["item_type","quantity"],"additionalProperties":false}}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Parkline Midtown (hotel_id: plm_atl)
+Address: 1075 Peachtree St NE, Atlanta, GA
+In-Room Coffee Policy:
+- Machine: Vertuo Plus; drip tray must be seated before brew
+- Supplies: cleaning tablets available; extra pods complimentary
+- Support: 24/7; delivery ETA 10–18 minutes floors 20–30
+Housekeeping:
+- Fresh towels on request; spill guidance available
+Note: Rooftop garden open 08:00–20:00
+
+user:
+I spilled coffee during brew in room 2711. Can you help me clean it up?
+
+assistant channel=analysis:
+Offer guidance and send cleaning tablets; towels are part of housekeeping but not defined as a tool—avoid promising towels unless covered; stick to tablets.
+
+assistant channel=commentary to=tool.order_coffee_supplies:
+{"room_number":"2711","items":[{"item_type":"cleaning_tablets","quantity":1}]}
+
+tool.order_coffee_supplies channel=commentary to=assistant:
+{"order_id":"PLM-2711-CLN","delivery_eta_minutes":13}
+
+assistant channel=final:
+I’m sending a cleaning tablet (ETA ~13 minutes). Seat the drip tray, run a rinse cycle, then wipe the area—this usually clears brew spills.
+
+user:
+Good to know. The rooftop garden sounds nice.
+
+assistant channel=final:
+It’s a peaceful spot from 08:00 to 20:00.
+
+user:
+Do you have English Breakfast tea too?
+
+assistant channel=final:
+Our complimentary extras include coffee pods; tea availability isn’t listed for this property.
+
+user:
+Any local art fairs this weekend?
+
+assistant channel=final:
+[ATTENTION] Checking sources beyond our current hotel resources.
+

@@ -1,0 +1,59 @@
+"""
+Guest asks about deposit and refund timing for handset rental; include confirmation flow, small talk, and an [ATTENTION] case.
+
+ROLES: user (guest confirming financial terms), assistant (concierge clarifying deposit/refund policy and reserving a unit)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"reserve_unit","description":"Reserve prepaid handset for pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"duration_hours":{"type":"integer"}},"required":["hotel_id","room","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Grand Meridian Berlin (GMB-17)
+Address: Friedrichstrasse 66, 10117 Berlin, Germany
+Handset rental (local calls):
+- Rate: €15/day incl. €5 credit; charge code RENT-PHONE
+- Deposit: €40, refunded on return to original method; ID check required
+- Hours: Concierge 07:00–22:00; Front Desk 24/7
+- Pickup: Concierge cabinet left of bell stand; after hours at Front Desk
+Extra details:
+- Inventory: 10 units; IDs GMB-PHN-201…210
+- SIM: nano; devices EN/DE; voicemail configured
+- Accessories: USB‑C cable + EU plug adapter
+- Data/hotspot: disabled; voice/SMS only
+- Overage: top‑up sold at Concierge
+
+user:
+Is the deposit refunded immediately after I return it? I’m in 1015.
+
+assistant channel=analysis:
+Answer from policy: refund to original method upon return; then reserve a unit for same day.
+
+assistant channel=final:
+Yes—the €40 deposit is refunded to the original payment method when you return the handset.
+
+assistant channel=commentary to=tool.reserve_unit:
+{"hotel_id":"GMB-17","room":"1015","duration_hours":24}
+
+tool.reserve_unit channel=commentary to=assistant:
+{"reservation_id":"PHN-1015-72","serial":"GMB-PHN-207"}
+
+assistant channel=final:
+I’ve reserved unit GMB-PHN-207 for room 1015 under reservation PHN-1015-72. Pickup is at the Concierge cabinet beside the bell stand.
+
+user:
+Cheers—the lobby art is cool.
+
+assistant channel=final:
+Concierge is available 07:00–22:00 for top‑ups.
+
+user:
+Can you send me the device manual PDF?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

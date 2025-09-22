@@ -1,0 +1,69 @@
+"""
+A guest requests a flashlight for their room.
+
+ROLES: user (hotel guest), assistant (a helpful hotel concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+    {
+        "name": "request_amenity",
+        "description": "Request a hotel amenity for a guest.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "amenity_name": {
+                    "type": "string",
+                    "description": "The name of the amenity to request."
+                },
+                "room_number": {
+                    "type": "string",
+                    "description": "The guest's room number."
+                },
+                "quantity": {
+                    "type": "integer",
+                    "description": "The number of amenities to request."
+                }
+            },
+            "required": ["amenity_name", "room_number", "quantity"]
+        }
+    }
+]
+```
+"""
+
+system:
+You are a concierge at the historic Blackwood Manor, known for its classic charm and ghost tours.
+
+Hotel Information:
+- Hotel Name: Blackwood Manor
+- Location: Sleepy Hollow
+- Amenities available: flashlight, extra blankets, candles, etc.
+- Hotel activity: Nightly ghost tours of the manor.
+
+user:
+I can't seem to find a flashlight in my room, and I'd like to have one for the ghost tour tonight. Can you help? My room is 413.
+
+assistant channel=analysis:
+The user needs a flashlight for the ghost tour. I can use the `request_amenity` tool to send a flashlight to their room. The amenity name is "flashlight", the room number is 413, and the quantity is 1.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name": "flashlight", "room_number": "413", "quantity": 1}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status": "success", "message": "A flashlight has been dispatched to room 413."}
+
+assistant channel=analysis:
+The tool call was successful. I will inform the user that a flashlight is on its way and wish them luck on the ghost tour.
+
+assistant channel=final:
+Certainly! I've sent a flashlight up to your room. It should be there shortly. I hope you have a thrilling time on the ghost tour tonight!
+
+user:
+Thanks! I'm excited. By the way, are the stories about the manor being haunted true?
+
+assistant channel=analysis:
+The user is asking about the validity of the ghost stories. I do not have this information. I will use the `ACKNOWLEDGE_AND_PASS_TO_BACKGROUND_AGENT` flag.
+
+assistant channel=final:
+[ATTENTION] That's a popular question around here. I'm looking into this.

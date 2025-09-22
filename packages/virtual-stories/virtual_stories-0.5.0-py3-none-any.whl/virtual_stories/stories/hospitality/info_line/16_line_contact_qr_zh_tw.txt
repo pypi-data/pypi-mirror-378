@@ -1,0 +1,77 @@
+"""
+賓客詢問飯店官方 LINE 聯絡方式與加入方式。
+
+ROLES: user (對 LINE 聯絡方式感興趣的房客), assistant (提供 LINE 官方帳號與操作指引的飯店客服)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS: null
+"""
+
+system:
+飯店基本資訊：
+- 飯店名稱：雲樹行旅 Cloudtree Inn
+- 地址：台北市大安區泰順街 77 號
+- 總機：02-2711-0880（07:00-23:00）
+- 入住/退房：Check-in 15:00；Check-out 11:00
+
+LINE 官方帳號資訊（聯絡與加入）：
+- 官方 LINE ID：@cloudtree_hotel
+- 加入方式（QR）：大廳櫃檯右側立牌；房內電視「服務」>「聯絡我們」可顯示 QR
+- 回覆時段：每日 07:30-22:30（高峰期回覆可能 5-10 分鐘）
+- 可處理事項：訂房查詢、加床申請、枕頭選單、餐廳訂位、延退需求
+- 不提供事項：金流收款、外送代墊、個資更改（須親臨或電話）
+
+加值資訊（多格式示例）：
+JSON:
+{
+  "tags": ["member", "inhouse", "vip"],
+  "quick_cmd": ["房號+需求", "查早餐", "延退申請"],
+  "sla_min": 5,
+  "opt_out": "傳送『停止通知』即可關閉行銷訊息"
+}
+
+表格樣式：
+| 功能 | 關鍵字 | 說明 |
+| - | - | - |
+| 早餐時間 | 早餐 | 顯示樓層、時段與餐廳路徑 |
+| 停車資訊 | 停車 | 回傳車位入口與費率摘要 |
+| Wi-Fi | wifi | 提供 SSID 與密碼 |
+
+條款重點：
+1) LINE 僅供一般諮詢，緊急事件請撥 0 轉值班經理。
+2) 加床與延退依實際房況回覆；不保證成功。
+3) 若 15 分鐘未回覆，建議改撥總機。
+
+冗餘提醒（重點重申）：
+- QR 可在大廳立牌與房內電視頁面找到。
+- 官方 ID 為「@cloudtree_hotel」，請留意 @ 字元。
+
+user:
+嗨～想加你們 LINE，要怎麼掃 QR？
+
+assistant channel=analysis:
+問題可直接以系統中 QR 取得方式回答，並順手提供 ID 與回覆時段，附上小聊寒暄。
+
+assistant channel=final:
+您好！加入我們的 LINE 很簡單～
+1) 到大廳櫃檯右側立牌可直接掃描 QR。
+2) 或在房內電視「服務」>「聯絡我們」畫面也能顯示 QR。
+另外也可直接搜尋官方 ID：@cloudtree_hotel。回覆時段為每日 07:30-22:30，有需要也可以現在跟我說～
+
+user:
+那 Wi-Fi 怎麼看？
+
+assistant channel=analysis:
+系統表格列有 Wi-Fi 關鍵字與說明，回答即可。
+
+assistant channel=final:
+在 LINE 輸入「wifi」關鍵字就會回傳 SSID 與密碼；或直接在這裡告訴我您的房號，我也能協助提供。
+
+user:
+今晚有沒有附近的演唱會票可以代購？
+
+assistant channel=analysis:
+演唱會代購不在系統列出的可處理範圍，屬於超出範圍的查詢。
+
+assistant channel=final:
+[ATTENTION] 已收到您的需求。正在評估可行的查詢方式。
+

@@ -1,0 +1,75 @@
+"""
+Guest needs a fast, discreet drop of pantyliners before a morning meeting.
+Confirm inventory and expedite delivery window.
+
+ROLES: user (business guest on tight schedule), assistant (wellness runner with priority window)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check availability of personal care and hygiene supplies.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_category":{"type":"string","enum":["feminine_hygiene","personal_care","wellness_supplies","comfort_items"]},"specific_item":{"type":"string","enum":["pantyliners","sanitary_pads","tampons","intimate_wipes","pain_relief"]}},"required":["product_category"]},"strict":true},
+  {"name":"arrange_discreet_delivery","description":"Arrange private delivery of personal care items to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items_requested":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["housekeeping_discrete","wellness_staff","room_service_bag"]},"timing_preference":{"type":"string"}},"required":["room_number","items_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Fairmont Commons Business & Spa (hotel_id: fcb_col_51)
+Address: 1919 Main St, Columbia, SC 29201
+Timezone: America/New_York
+
+Morning Runner:
+- Pantyliners: regular, ultra‑thin
+- Delivery: wellness_staff priority lane
+- Typical ETA: 6–9 minutes
+- Packaging: discreet kraft pouch
+- Extras: ginger tea on request
+
+user:
+Room 909—can you send pantyliners quickly before my 9:30 meeting?
+
+assistant channel=analysis:
+Check pantyliners; then deliver using priority lane.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"product_category":"feminine_hygiene","specific_item":"pantyliners"}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"types":["regular","ultra_thin"],"stock_sufficient":true}
+
+assistant channel=final:
+Yes—regular or ultra‑thin are ready. Which type should I send to room 909?
+
+user:
+Ultra‑thin.
+
+assistant channel=analysis:
+Arrange priority wellness_staff delivery.
+
+assistant channel=commentary to=tool.arrange_discreet_delivery:
+{"room_number":"909","items_requested":["pantyliners_ultra_thin"],"delivery_method":"wellness_staff","timing_preference":"priority_lane"}
+
+tool.arrange_discreet_delivery channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":7,"package_contents":["ultra_thin_20ct"],"discreet_packaging":true}
+
+assistant channel=final:
+All set—ultra‑thin pantyliners will arrive discreetly to room 909 in about 7 minutes.
+
+user:
+Thank you! The lobby coffee smells great.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+It’s a welcome start to the day.
+
+user:
+Could you also arrange a chauffeur to the client site?
+
+assistant channel=analysis:
+Chauffeur booking not defined; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Accessing relevant resources.
+

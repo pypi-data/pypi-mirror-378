@@ -1,0 +1,52 @@
+"""
+Guest asks for a folio with clear tax breakdown; deliver by print and confirm details are included.
+
+ROLES: user (guest wanting tax clarity), assistant (front desk providing folio)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"print_with_tax_breakdown","description":"Print folio showing tax lines","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seaside Boardwalk Inn
+Folio Scope:
+• Data: room charges, taxes itemized, incidentals by date, payment summary
+• Delivery: Email PDF or Front Desk print
+• Privacy: In-person verification or verified email on file
+• Printer: PRN-SB-07 (Front Office)
+• Hours: 24/7
+• Time Zone: Eastern Time (ET)
+• Reprints: 30 days
+• File Labeling: "Guest Copy"
+• Languages: English-only
+
+user:
+Can you print my invoice with the tax lines visible for room 515?
+
+assistant channel=analysis:
+Print folio with tax breakdown using the printer noted.
+
+assistant channel=commentary to=tool.print_with_tax_breakdown:
+{"room":"515"}
+
+tool.print_with_tax_breakdown channel=commentary to=assistant:
+{"print_job_id":"SB-515-TAX01","status":"queued","pickup":"Front Desk"}
+
+assistant channel=final:
+Done—job SB-515-TAX01 is queued. Pick up at the Front Desk; tax lines are itemized on the print.
+
+user:
+Great. Where is pickup again?
+
+assistant channel=final:
+Front Desk.
+
+user:
+Can you also send me the source CSV behind the folio?
+
+assistant channel=final:
+[ATTENTION] Raw source exports aren’t available here. Reviewing available resources.

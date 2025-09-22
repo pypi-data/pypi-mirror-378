@@ -1,0 +1,51 @@
+"""
+Guest requests more closet hangers and asks a side question.
+
+ROLES: user (guest in room 1207 requesting additional hangers), assistant (concierge coordinating amenity logistics and room guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check if an amenity is in stock","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Request in-room delivery for an amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverlight Conservatory — Garden Tower
+Room 1207 (Deluxe City Twin); Closet has 8 standard hangers by default
+Amenity policy: Up to 12 additional hangers per night upon request
+Delivery windows: 07:00–23:00 normal; urgent 23:00–01:00 (limited staff)
+Extensions: Front Desk 9; Service Center 7700
+SLA: Normal deliveries to floors 10–15: 12–20 minutes
+
+user:
+Could I get 6 more hangers brought to 1207?
+
+assistant channel=analysis:
+Verify availability for 6 hangers; then deliver to room 1207 under normal priority.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"closet hanger","quantity":6}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"closet hanger","available":true,"in_stock":140}
+
+assistant channel=analysis:
+Place delivery for 6 hangers to 1207, normal priority.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1207","amenity_name":"closet hanger","quantity":6,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HNG-1207-5632","eta_minutes":14}
+
+assistant channel=final:
+Confirmed—6 additional hangers are scheduled for room 1207 with an ETA of about 14 minutes.
+
+user:
+By the way, is the indoor garden open late tonight?
+
+assistant channel=final:
+[ATTENTION] Checking available options.

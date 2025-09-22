@@ -1,0 +1,71 @@
+"""
+Guest requests super pads with wings; confirm availability and deliver; include small talk and acknowledgment.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check sanitary pads by absorbency and wings.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_pad"]},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"}},"required":["item_code","absorbency","with_wings"]},"strict":true},
+  {"name":"deliver_personal_care","description":"Deliver personal care items discreetly in a paper bag.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"},"quantity":{"type":"integer","minimum":1},"bag_type":{"type":"string","enum":["discreet_paper"]}},"required":["room_number","item_code","absorbency","with_wings","quantity","bag_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: River Pearl (hotel_id: rp_cin_06)
+Address: 505 Vine St, Cincinnati, OH 45202
+Personal care: 07:00–23:30; ETA 7–13 minutes
+Wi‑Fi: 250/250 Mbps; stable mode for video
+Lobby: live cello Fridays 18:30–19:30
+Scent: bergamot and cedar in evenings
+Check-in/out: 15:00 / 11:00
+Gym: 24h; towels refreshed hourly
+
+Pads inventory:
+- super/with_wings(27), super/no_wings(10)
+- regular/with_wings(22)
+- Deliver in discreet_paper
+
+user:
+Could I have two packs of super with wings to 827?
+
+assistant channel=analysis:
+Check super/with_wings; deliver 2 to 827.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"item_code":"sanitary_pad","absorbency":"super","with_wings":true}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_pad","absorbency":"super","with_wings":true,"on_hand_packs":27}
+
+assistant channel=analysis:
+Proceed with delivery order.
+
+assistant channel=commentary to=tool.deliver_personal_care:
+{"room_number":"827","item_code":"sanitary_pad","absorbency":"super","with_wings":true,"quantity":2,"bag_type":"discreet_paper"}
+
+tool.deliver_personal_care channel=commentary to=assistant:
+{"ticket_id":"PC-827-7704","eta_minutes":8}
+
+assistant channel=final:
+Absolutely—two packs of super pads with wings will arrive at 827 in a discreet paper bag. Ticket PC-827-7704, about 8 minutes.
+
+user:
+The cello in the lobby was beautiful.
+
+assistant channel=analysis:
+Reference lobby event.
+
+assistant channel=final:
+We host live cello on Fridays 18:30–19:30—happy you enjoyed it.
+
+user:
+Do you have heating patches too?
+
+assistant channel=analysis:
+Not specified; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on heating patches. Reviewing inventory.
+

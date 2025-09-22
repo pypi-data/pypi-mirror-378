@@ -1,0 +1,85 @@
+"""
+Parent requests kids strawberry toothpaste; confirm SLS-free and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (parent), assistant (amenities support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"kids_toothpaste_check","description":"Check kids strawberry toothpaste SLS-free status and stock.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"flavor":{"type":"string","enum":["kids_strawberry"]}},
+     "required":["flavor"]},"strict":true},
+  {"name":"toothpaste_deliver","description":"Deliver toothpaste to room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"flavor":{"type":"string"}},
+     "required":["room_number","flavor"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seaside Boardwalk Inn (hotel_id: SBI_ocn_09)
+Address: 14 Oceanfront Way, Santa Cruz, CA 95060 | TZ: America/Los_Angeles
+
+Toothpaste Choices:
+- kids_strawberry: SLS-free, fluoride-free, 25 mL
+- mint: fluoride, 30 mL
+- herbal: fluoride, low-foam, 30 mL
+- Delivery: 07:00–22:00 | Fee: complimentary
+- Bundles: kids brush + cap available
+
+Boardwalk Perks:
+Kite loans | Beach towels | Arcade tokens at desk
+
+user:
+Do you have kids’ strawberry toothpaste for room 512?
+
+assistant channel=analysis:
+Verify kids strawberry in stock and SLS-free; deliver.
+
+assistant channel=commentary to=tool.kids_toothpaste_check:
+{"flavor":"kids_strawberry"}
+
+tool.kids_toothpaste_check channel=commentary to=assistant:
+{"in_stock":true,"sls_free":true,"fluoride":false,"size_ml":25}
+
+assistant channel=analysis:
+Deliver to 512.
+
+assistant channel=commentary to=tool.toothpaste_deliver:
+{"room_number":"512","flavor":"kids_strawberry"}
+
+tool.toothpaste_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":9,"runner":"kai","ticket":"SBI-TP-512-K"}
+
+assistant channel=final:
+Kids’ strawberry toothpaste (SLS-free, fluoride-free, 25 mL) is headed to room 512—about 9 minutes (runner Kai, ticket SBI-TP-512-K). It’s complimentary.
+
+user:
+Can we also get the kids brush cap bundle?
+
+assistant channel=analysis:
+Answer from Bundles: available; no extra tools needed.
+
+assistant channel=final:
+Yes, the kids brush + cap bundle is available; I’ll include it with your delivery.
+
+user:
+The kite loans are adorable.
+
+assistant channel=analysis:
+Chitchat from Boardwalk Perks.
+
+assistant channel=final:
+They’re popular on breezy afternoons—have fun out there!
+
+user:
+Could you set up surf lessons for tomorrow morning?
+
+assistant channel=analysis:
+Out of scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Noted—checking surf lesson availability.
+

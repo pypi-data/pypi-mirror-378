@@ -1,0 +1,80 @@
+"""
+Guest requests sanitary bags midday; confirm availability and deliver; include small talk and acknowledgment; include a system-answered question.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bathroom_supplies","description":"Check availability for sanitary bags.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_bag"]}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_bathroom_supplies","description":"Deliver bathroom supplies to a room with placement.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1},"placement":{"type":"string","enum":["bathroom_counter","under_sink"]}},"required":["room_number","item_code","quantity","placement"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Sunstream Harbor (hotel_id: sh_tpa_04)
+Address: 400 Channelside Dr, Tampa, FL 33602
+Bathroom supply hours: 06:45–23:00; ETA 7–12 minutes
+Pool: 06:00–21:30; cabanas by reservation
+Wi‑Fi: 350/200 Mbps; outdoor coverage on pool deck
+Scent: orange blossom in lobby mornings
+Check-in/out: 15:00 / 11:00
+Parking: valet + self-park; EV (8)
+
+Sanitary bag:
+- Inventory: 195 sleeves
+- Packaging: opaque, compostable
+- Placement: counter or under sink
+
+user:
+Hi—two sanitary bags to 1016, placed on the counter.
+
+assistant channel=analysis:
+Check stock then deliver 2 to bathroom_counter.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"item_code":"sanitary_bag"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_bag","on_hand":195}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"1016","item_code":"sanitary_bag","quantity":2,"placement":"bathroom_counter"}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"ticket_id":"BS-1016-7735","eta_minutes":9}
+
+assistant channel=final:
+On it—two sanitary bag sleeves will be on your bathroom counter in 1016. Ticket BS-1016-7735, about 9 minutes.
+
+user:
+Does the pool close before 10 pm?
+
+assistant channel=analysis:
+Answer from system pool hours.
+
+assistant channel=final:
+Yes—the pool closes at 21:30.
+
+user:
+The orange blossom scent was a nice touch earlier.
+
+assistant channel=analysis:
+Acknowledge scent detail.
+
+assistant channel=final:
+Thank you—we diffuse orange blossom in the lobby mornings.
+
+user:
+Any chance you have SPF 50 sunscreen?
+
+assistant channel=analysis:
+Not specified; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on sunscreen availability. Reviewing shop inventory.
+

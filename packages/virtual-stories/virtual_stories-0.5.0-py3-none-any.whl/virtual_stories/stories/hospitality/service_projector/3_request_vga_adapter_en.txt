@@ -1,0 +1,66 @@
+"""
+Guest needs a VGA adapter for an older laptop along with the projector.
+
+ROLES: user (presenter with legacy VGA output), assistant (concierge coordinating AV accessories)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_adapter",
+    "description": "Request a specific video adapter with the projector delivery.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": {"type": "string"},
+        "adapter_type": {"type": "string", "enum": ["HDMI_to_VGA","USB-C_to_HDMI","MiniDP_to_HDMI"]}
+      },
+      "required": ["room", "adapter_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Meridian Park Tower (MPT-NYC-05)
+Location: 415 Lexington Ave, New York, NY 10017
+A/V Basics:
+- Projector: 4000 lumens, 1080p; inputs: HDMI, mini-HDMI
+- Included: 2m HDMI, table stand; screen by request
+- Adapters on hand: HDMI_to_VGA, USB-C_to_HDMI, MiniDP_to_HDMI
+Fees:
+- Projector USD 42/hour (max 8 hours)
+- Adapters complimentary with projector booking
+Delivery: 06:30–23:00 (AV team); after-hours delivery not available
+Power: 120V, NEMA 5-15 outlet required
+
+user:
+I’m in 2315. Do you have an HDMI to VGA adapter?
+
+assistant channel=analysis:
+Answer from system: yes, HDMI_to_VGA is listed; then offer to attach it via tool for room 2315.
+
+assistant channel=commentary to=tool.request_adapter:
+{"room":"2315","adapter_type":"HDMI_to_VGA"}
+
+tool.request_adapter channel=commentary to=assistant:
+{"request_id":"adp_2315_01","status":"queued","adapter":"HDMI_to_VGA"}
+
+assistant channel=final:
+Yes—HDMI→VGA is available and complimentary with your projector. I’ve queued it for room 2315 (adp_2315_01).
+
+user:
+Nice, thanks! Weather’s lovely today.
+
+assistant channel=final:
+It is—perfect day for a sharp presentation.
+
+user:
+Also, can you loan me a clicker with laser?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

@@ -1,0 +1,50 @@
+"""
+Guest requests three shuttle seats together; confirm capacity and reserve.
+
+ROLES: user (group traveler), assistant (front desk shuttle coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_capacity","description":"Check seats for a given departure","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"time":{"type":"string"}},"required":["hotel_id","time"]},"strict":true},
+  {"name":"reserve_group","description":"Reserve multiple seats","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"time":{"type":"string"},"seats":{"type":"integer","minimum":1}},"required":["hotel_id","room","time","seats"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Terminal View Hotel (TVH-08)
+Shuttle window: 05:00–23:00 hourly
+Pickup: Front driveway
+Drop‑off: Terminal A
+Capacity: 12 seats per run
+Travel time: ~12 minutes to Terminal A
+Booking: Reserve in advance for groups
+Time Zone: Eastern Time (ET)
+
+user:
+We need three seats at 6 PM—room 944.
+
+assistant channel=analysis:
+Check capacity for 18:00 and reserve 3 seats if available.
+
+assistant channel=commentary to=tool.check_capacity:
+{"hotel_id":"TVH-08","time":"18:00"}
+
+tool.check_capacity channel=commentary to=assistant:
+{"capacity":12,"available":true}
+
+assistant channel=commentary to=tool.reserve_group:
+{"hotel_id":"TVH-08","room":"944","time":"18:00","seats":3}
+
+tool.reserve_group channel=commentary to=assistant:
+{"reservation_id":"TVH-944-1800x3","status":"confirmed"}
+
+assistant channel=final:
+Booked—three seats at 18:00 (TVH-944-1800x3). Pickup at the front driveway.
+
+user:
+Do you have child seats on the shuttle?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

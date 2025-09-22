@@ -1,0 +1,57 @@
+"""
+Guest checks accessibility features and requests a quiet corner table suggestion.
+
+ROLES: user (guest prioritizing accessibility and low noise), assistant (concierge describing features and proposing a quiet table)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"locate_quiet_table","description":"Suggest a quiet table number at Garden Hearth.","parameters":{"type":"object","properties":{},"required":[],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Level: 3 (all dining venues)
+Access: Step‑free routes from elevators; thresholds ≤ 1/2"
+Tables: Several adjustable‑height options; clearance ≥ 27" knee space
+Menus: Large‑print and Braille available on request
+Audio: Hearing loop at host stand for check‑in; no amplified music
+Restrooms: ADA‑accessible nearby with grab bars
+Service animals: Welcome
+Quiet zone: Corner tables near planter wall are calmest
+Safety: Visual strobe alarms installed; emergency egress maps posted
+
+user:
+Is your restaurant accessible? I need step‑free access and a quiet corner.
+
+assistant channel=analysis:
+Answer from system with specific items; then offer table suggestion via tool.
+
+assistant channel=commentary to=tool.locate_quiet_table:
+{}
+
+tool.locate_quiet_table channel=commentary to=assistant:
+{"table":"T22","note":"Corner near planter wall; lower ambient noise."}
+
+assistant channel=final:
+Yes—there’s a step‑free route from the elevators, tables with ≥27" knee clearance, large‑print and Braille menus on request, and ADA‑accessible restrooms nearby. A calm option is table T22 in the planter‑wall corner.
+
+user:
+Sounds good, thanks.
+
+assistant channel=analysis:
+Provide a brief, friendly reply.
+
+assistant channel=final:
+You’re very welcome.
+
+user:
+Can you provide a wheelchair escort at 7 pm?
+
+assistant channel=analysis:
+Escort service not defined—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Your escort request is received. Checking available options.
+

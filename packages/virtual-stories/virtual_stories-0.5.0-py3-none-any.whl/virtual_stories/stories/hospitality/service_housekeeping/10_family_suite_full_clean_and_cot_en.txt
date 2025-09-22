@@ -1,0 +1,49 @@
+"""
+Family in a suite requests a full clean and asks about baby cot placement during service.
+
+ROLES: user (family guest), assistant (housekeeping coordinator scheduling full clean and explaining practices)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_housekeeping","description":"Schedule housekeeping service for a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["full_clean","refresh","turn_down"]},"preferred_window":{"type":"string"}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Maple Grove Residences — Housekeeping
+Hours: 08:00–20:00
+Services: full_clean, refresh, turn_down
+Suite Handling: Move portable baby cots carefully; restore placement after cleaning
+Policy: DND respected; 60‑minute windows
+Amenity: Water placed during turndown only
+Location: Tower West service office
+
+user:
+We’re in 1902. Can you do a full clean at 10:00? We have a baby cot—how do you handle it?
+
+assistant channel=analysis:
+Schedule full_clean 10:00–11:00; explain cot handling from system info.
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"1902","service_type":"full_clean","preferred_window":"10:00-11:00"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_1902","status":"scheduled","window":"10:00-11:00"}
+
+assistant channel=final:
+Full clean is set for 1902 from 10:00–11:00 (hk_1902). We move portable baby cots carefully during cleaning and restore placement afterward; housekeeping runs 08:00–20:00.
+
+user:
+The West tower lobby music is soothing.
+
+assistant channel=final:
+We’ll proceed within the 60‑minute window and observe DND.
+
+user:
+Do you launder baby linens separately on request?
+
+assistant channel=final:
+[ATTENTION] Separate linen laundering options aren’t listed. Reviewing available resources.
+

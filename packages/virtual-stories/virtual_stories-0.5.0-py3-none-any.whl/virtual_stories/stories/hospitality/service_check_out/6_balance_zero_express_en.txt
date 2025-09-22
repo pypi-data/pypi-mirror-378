@@ -1,0 +1,51 @@
+"""
+Guest with zero incidentals requests express checkout; include small talk, confirm express option from system, and an out-of-scope baggage storage fee waiver.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"calculate_folio","description":"Return current folio summary for a reservation before checkout.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Stonebridge Hotel — Front Office
+Address: 410 River Rd, Boise, ID 83702, USA
+Standard checkout: 12:00
+Express checkout: Key drop at Front Desk
+Late checkout: On request, fees may apply
+Wi‑Fi: SSID "Stonebridge-Guest"; mesh coverage
+Parking: Self‑parking P1; EV (2× J1772)
+Gym: 24/7; pool 06:00–22:00
+Payment: USD; cards accepted
+Accessibility: Step‑free Lobby and lifts
+
+user:
+Check me out SB-55310—can I just drop the keys?
+
+assistant channel=analysis:
+Return folio, confirm express key drop.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"SB-55310"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 220","taxes":"USD 19.80","incidentals":"USD 0","total":"USD 239.80"}
+
+assistant channel=final:
+Total is USD 239.80 (room USD 220, taxes USD 19.80). Yes—key drop at the Front Desk supports express checkout.
+
+user:
+Great—thanks!
+
+assistant channel=final:
+You’re all set.
+
+user:
+Can you waive luggage storage fees later today?
+
+assistant channel=final:
+[ATTENTION] Fee waivers aren’t included in these resources. Reviewing.

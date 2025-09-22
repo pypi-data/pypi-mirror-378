@@ -1,0 +1,55 @@
+"""
+Guest wants volumizing conditioner for fine hair.
+
+ROLES: user (fine hair), assistant (amenities concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_hair_care_products","description":"Retrieve available premium hair care products including conditioners.","parameters":{"type":"object","additionalProperties":false,"properties":{"hair_type":{"type":"string","enum":["dry","oily","normal","curly","colored","damaged","all"]},"product_type":{"type":"string","enum":["conditioner","deep_treatment","leave_in","all_conditioning"]}},"required":[]},"strict":true},
+  {"name":"deliver_hair_care_amenities","description":"Arrange delivery of hair care products to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"size":{"type":"string","enum":["travel_50ml","standard_200ml","luxury_400ml"]}},"required":["sku","size"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["immediate","evening_turndown","morning_service"]}},"required":["room_number","products","delivery_preference"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeview Conference Hotel (hotel_id: lch_chicago)
+Address: 200 Lakeshore Dr, Chicago, IL
+Timezone: America/Chicago
+
+Volume Line:
+- Lightweight lift without residue
+
+SKUs:
+- COND_ROSEMARY_VOL: Rosemary Mint Volumizing Conditioner
+
+user:
+Anything to add volume without weighing my hair down?
+
+assistant channel=analysis:
+Offer volumizing conditioner.
+
+assistant channel=commentary to=tool.get_hair_care_products:
+{"hair_type":"oily","product_type":"conditioner"}
+
+tool.get_hair_care_products channel=commentary to=assistant:
+{"products":[{"sku":"COND_ROSEMARY_VOL","name":"Rosemary Mint Volumizing Conditioner"}]}
+
+assistant channel=final:
+Yes—Rosemary Mint Volumizing Conditioner. What size and room number?
+
+user:
+Room 1410, 200ml please. Also, is there a jogging map?
+
+assistant channel=analysis:
+Arrange delivery; jogging map beyond scope -> [ATTENTION].
+
+assistant channel=commentary to=tool.deliver_hair_care_amenities:
+{"room_number":"1410","products":[{"sku":"COND_ROSEMARY_VOL","size":"standard_200ml"}],"delivery_preference":"immediate"}
+
+tool.deliver_hair_care_amenities channel=commentary to=assistant:
+{"delivery_id":"LCH-1410-VOL-02","eta_minutes":16}
+
+assistant channel=final:
+[ATTENTION] Scheduled delivery LCH-1410-VOL-02 in ~16 minutes. I’ll check jogging info separately.
+

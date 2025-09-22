@@ -1,0 +1,57 @@
+"""
+International guest unsure about plug type; confirm local standard and arrange an adapter.
+
+ROLES: user (first-time visitor), assistant (concierge explaining plug standard and arranging rental)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Verify stock and hold one adapter","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create adapter rental for room drop","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Baylight London Canary Wharf (BLCW-29)
+Address: 40 Bank St, London E14 5NR, United Kingdom
+Locale: Business district; DLR/Jubilee nearby; Timezone GMT/BST
+Power standard: 230V • 50Hz • Plug Type G
+Adapters: 24 units; £3/night; no deposit; code RENT-ADPT; delivery or desk pickup
+Services: Concierge 07:00–23:00; Front Desk 24/7; Gym 06:00–22:00
+Only services listed are available.
+
+user:
+What plug type do you use there? I’m in room 1109 and need an adapter.
+
+assistant channel=analysis:
+Answer from system (Type G, 230V/50Hz), then arrange a standard 24-hour adapter delivery.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"BLCW-29","item":"universal_power_adapter","quantity":1,"room":"1109"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"BLCW-29","room":"1109","item":"universal_power_adapter","duration_hours":24,"charge_code":"RENT-ADPT","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"ORD-BLCW-9103","status":"created","rate":"£3/night"}
+
+assistant channel=final:
+We use Type G, 230V at 50Hz. I’ve created order ORD-BLCW-9103 at £3 per night and will arrange delivery to 1109.
+
+user:
+Is the gym open now?
+
+assistant channel=final:
+Gym hours are 06:00 to 22:00.
+
+user:
+Could you share your electrical compliance test reports for adapters?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

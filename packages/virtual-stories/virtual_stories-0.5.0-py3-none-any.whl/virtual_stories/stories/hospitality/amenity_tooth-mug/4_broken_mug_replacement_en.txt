@@ -1,0 +1,96 @@
+"""
+Guest reports a broken tooth mug and requests replacement, includes small talk about hotel history and an ATTENTION case for insurance claim.
+
+ROLES: user (guest reporting broken tooth mug), assistant (housekeeping coordinator handling replacement)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_tooth_mug_options",
+    "description": "Check available tooth mug materials and stock.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "material": { "type": "string", "enum": ["ceramic", "glass"] }
+      },
+      "required": ["material"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_tooth_mug",
+    "description": "Deliver a tooth mug to the specified room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "material": { "type": "string" }
+      },
+      "required": ["room_number", "material"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Historic Riverside Inn (hotel_id: hri_sav_02)
+Address: 789 River Street, Savannah, GA 31401
+Timezone: America/New_York
+
+Bathroom Amenity Notes:
+- Tooth mugs: ceramic (antique white with blue floral pattern) and glass (vintage crystal with etched details)
+- All bathroom amenities are period-appropriate for the historic property
+- Fragile items marked with care instructions
+
+Design Details:
+- Original 19th-century porcelain fixtures restored to period accuracy
+- Hand-painted ceramic tiles from local artisans
+- Antique brass hardware throughout guest bathrooms
+- Historic preservation guidelines followed in all renovations
+
+user:
+Hello, I'm calling from room 412. I accidentally dropped the tooth mug in the bathroom and it broke. Could I get a replacement? I'd prefer the same ceramic one if possible.
+
+assistant channel=analysis:
+Guest in room 412 reporting broken ceramic tooth mug and requesting replacement. Check ceramic availability and deliver replacement.
+
+assistant channel=commentary to=tool.check_tooth_mug_options:
+{"material":"ceramic"}
+
+tool.check_tooth_mug_options channel=commentary to=assistant:
+{"available":true,"finish":"antique white with blue floral pattern","stock":15}
+
+assistant channel=analysis:
+Ceramic mugs available in antique white with blue floral pattern. Proceed with delivery to room 412.
+
+assistant channel=commentary to=tool.deliver_tooth_mug:
+{"room_number":"412","material":"ceramic"}
+
+tool.deliver_tooth_mug channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":6,"runner":"housekeeping","replacement":true}
+
+assistant channel=final:
+No problem at all! A replacement ceramic tooth mug in antique white with blue floral pattern is being delivered to room 412. It should arrive within 6 minutes.
+
+user:
+This hotel has such beautiful historic charm. How old is this building?
+
+assistant channel=analysis:
+Guest asking about hotel history. Acknowledge based on system details about historic property with 19th-century fixtures and historic preservation.
+
+assistant channel=final:
+Thank you! The Historic Riverside Inn dates back to the 19th century, and we've carefully restored all the original porcelain fixtures to period accuracy. The hand-painted ceramic tiles are from local artisans, and we follow strict historic preservation guidelines.
+
+user:
+Since the mug broke due to a loose tile in the bathroom, could you help me file an insurance claim for any potential damage to my personal belongings?
+
+assistant channel=analysis:
+Guest requesting help with insurance claim due to loose tile causing mug breakage. This goes beyond available tools and system capabilities for insurance processing.
+
+assistant channel=final:
+[ATTENTION] I understand your concern about the loose tile. Checking available options.

@@ -1,0 +1,60 @@
+"""
+Guest asks how to add the hotel on LINE; include direct handle and QR; add a beyond-scope privacy audit question.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true},
+  {"name":"get_social_qr","description":"Return the QR image URL for a given social channel.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["line","wechat"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Harbor Pine Residences (hotel_id: harbor_pine)
+Address: 17 Kingfisher Quay, Cape Town, 8001, South Africa
+Contacts: LINE @harborpine | Email hello@harborpine.co.za | Phone +27 21 555 6700 | Web https://harborpine.co.za
+LINE notes: Hours 07:00–21:30 SAST, response 10–25 min, not for emergencies, QR https://harborpine.co.za/line-qr
+Extras: Rooftop herb garden tours daily 11:00; Laundry lockers on 3F; Barista latte art 15:00–17:00.
+
+user:
+How do I add you on LINE?
+
+assistant channel=analysis:
+Provide handle and QR using tools.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"harbor_pine","channel":"line"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"line":"@harborpine"}
+
+assistant channel=commentary to=tool.get_social_qr:
+{"hotel_id":"harbor_pine","channel":"line"}
+
+tool.get_social_qr channel=commentary to=assistant:
+{"qr_url":"https://harborpine.co.za/line-qr"}
+
+assistant channel=final:
+Add us by searching @harborpine or scan this QR: https://harborpine.co.za/line-qr
+
+user:
+Neat—latte art classes sound fun.
+
+assistant channel=analysis:
+Small talk about barista sessions.
+
+assistant channel=final:
+They’re a hit—drop by 15:00–17:00 if you can.
+
+user:
+Can you share your third-party privacy audit for LINE?
+
+assistant channel=analysis:
+Out of scope; no audit docs in system.
+
+assistant channel=final:
+[ATTENTION] Privacy audit documents aren’t available within the provided resources.
+

@@ -1,0 +1,74 @@
+"""
+Guest requests magnifying mirror for shaving with warm lighting.
+Provide options and quick install.
+
+ROLES: user (shaving guest), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_mirror_options", "description": "Check magnifying mirror availability and lighting.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "mirror_type": { "type": "string", "enum": ["magnifying"] }, "lighting_needed": { "type": "boolean" } }, "required": ["mirror_type"] }, "strict": true },
+  { "name": "install_mirror_setup", "description": "Install magnifying mirror in bathroom.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mirror_type": { "type": "string", "enum": ["magnifying"] }, "lighting_type": { "type": "string", "enum": ["warm_white", "neutral_4000k"] }, "placement_location": { "type": "string", "enum": ["bathroom"] } }, "required": ["room_number", "mirror_type", "placement_location"] }, "strict": true },
+  { "name": "adjust_mirror_lighting", "description": "Adjust brightness and color temp.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "brightness_level": { "type": "integer", "minimum": 1, "maximum": 10 }, "color_temp": { "type": "string", "enum": ["warm_2700k", "neutral_4000k"] } }, "required": ["room_number", "brightness_level", "color_temp"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Lakeside Conference Lodge (hotel_id: lcl_ams_01)
+Address: Stationsplein 45, 1012 AB Amsterdam, Netherlands
+Timezone: Europe/Amsterdam
+
+Mirror Services:
+- Magnifying mirrors 5x and 10x with warm lighting
+- Install within 30–45 minutes
+- Bathroom placement with swivel arm
+- Lighting adjustable 1–10 and warm/neutral
+- Removal at checkout
+
+user:
+Room 1012—could I get a 10x magnifying mirror with warm lighting in the bathroom?
+
+assistant channel=analysis:
+Check magnifying availability; install in bathroom with warm white; set brightness mid‑range.
+
+assistant channel=commentary to=tool.check_mirror_options:
+{"mirror_type":"magnifying","lighting_needed":true}
+
+tool.check_mirror_options channel=commentary to=assistant:
+{"available_types":["magnifying_5x","magnifying_10x"],"lighting_options":["warm_white","neutral_4000k"],"inventory_status":"10 units available"}
+
+assistant channel=commentary to=tool.install_mirror_setup:
+{"room_number":"1012","mirror_type":"magnifying","lighting_type":"warm_white","placement_location":"bathroom"}
+
+tool.install_mirror_setup channel=commentary to=assistant:
+{"service_id":"MIR_AMS1012","installation_time":"within 35 minutes","placement":"bathroom wall swivel arm","features":["10x magnification","warm LED"]}
+
+assistant channel=commentary to=tool.adjust_mirror_lighting:
+{"room_number":"1012","brightness_level":6,"color_temp":"warm_2700k"}
+
+tool.adjust_mirror_lighting channel=commentary to=assistant:
+{"adjustment_completed":true,"brightness":6,"color_temp":"warm_2700k"}
+
+assistant channel=final:
+We’ll mount a 10× magnifying mirror in your bathroom within ~35 minutes and set it to warm lighting at level 6.
+
+user:
+Is the lodge near the station?
+
+assistant channel=analysis:
+From system: Stationsplein address implies proximity, but system text doesn’t explicitly claim distance; avoid assumptions.
+
+assistant channel=final:
+[ATTENTION] I’ll confirm proximity details to the station.
+
+user:
+Thanks—looking forward to it.
+
+assistant channel=analysis:
+Small talk thanks.
+
+assistant channel=final:
+You’re welcome—see you shortly for the install.
+"""
+

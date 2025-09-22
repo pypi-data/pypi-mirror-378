@@ -1,0 +1,64 @@
+"""
+Guest asks about towel policy and accessories; requests items.
+
+ROLES: user (guest heading down to the sauna), assistant (wellness concierge provisioning accessories)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_accessory","description":"Queue an accessory for pickup at spa desk.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string","enum":["large_towel","small_towel","hydration_cup"]}},"required":["hotel_id","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Palmetto Dunes Retreat (hotel_id: pdr_chs_02)
+Address: 118 Driftwood Ave, Charleston, SC 29401, USA
+Timezone: America/New_York
+Sauna: Dry heat; redwood benches; soft amber lights
+Hours: 08:00–21:00 daily; reset at 13:00–13:20 (no entry)
+Towel Policy: Seat towel required; large towels available on request; small towels self-serve
+Accessories Desk: Hydration cups; hair ties; spare slippers (limited)
+Capacity: 2 guests; 20-minute turns; max 40 minutes/day
+Cooldown: Courtyard breeze lane; lemon-water dispenser
+Safety: Help button under lower bench; staff extension 3300
+
+user:
+Do I need to bring my own towel? Can I pick up a large towel and a cup?
+
+assistant channel=analysis:
+Confirm seat towel requirement from system; queue large towel and hydration cup via tool.
+
+assistant channel=commentary to=tool.request_accessory:
+{"hotel_id":"pdr_chs_02","item":"large_towel"}
+
+tool.request_accessory channel=commentary to=assistant:
+{"status":"queued"}
+
+assistant channel=commentary to=tool.request_accessory:
+{"hotel_id":"pdr_chs_02","item":"hydration_cup"}
+
+tool.request_accessory channel=commentary to=assistant:
+{"status":"queued"}
+
+assistant channel=final:
+A seat towel is required. I’ve queued a large towel and a hydration cup for pickup at the spa desk.
+
+user:
+The amber lighting sounds relaxing.
+
+assistant channel=analysis:
+Offer a simple, friendly note.
+
+assistant channel=final:
+It creates a gentle glow that pairs well with dry heat.
+
+user:
+Is the redwood certified from a sustainable program?
+
+assistant channel=analysis:
+Provenance isn’t listed; respond with the attention flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking about sourcing. Checking available options.
+

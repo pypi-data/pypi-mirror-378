@@ -1,0 +1,58 @@
+"""
+Guest in spa suite asks for both comb and paddle brush; deliver together.
+
+ROLES: user (spa suite guest), assistant (amenities)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_grooming_amenities","description":"List items","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["all_grooming"]}},"required":[]},"strict":true},
+  {"name":"deliver_amenities","description":"Deliver set","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}},"required":["sku","quantity"],"additionalProperties":false}},"delivery_time":{"type":"string","enum":["immediate","with_turndown","next_housekeeping"]}},"required":["room_number","items","delivery_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cascadia Springs (hotel_id: cs_bend)
+Address: 3 Hot Springs Rd, Bend, OR 97701
+Timezone: America/Los_Angeles
+
+SKUs: COMB_WIDE_BAMBOO, BRUSH_PADDLE, TIES_ORGANIC_SET
+ETA spa wing: 7–11 minutes
+
+user:
+Could I have a wide-tooth comb and a paddle brush to S‑12?
+
+assistant channel=analysis:
+Deliver both items immediately.
+
+assistant channel=commentary to=tool.get_grooming_amenities:
+{"category":"all_grooming"}
+
+tool.get_grooming_amenities channel=commentary to=assistant:
+{"available_items":[{"sku":"COMB_WIDE_BAMBOO"},{"sku":"BRUSH_PADDLE"},{"sku":"TIES_ORGANIC_SET"}]}
+
+assistant channel=commentary to=tool.deliver_amenities:
+{"room_number":"S-12","items":[{"sku":"COMB_WIDE_BAMBOO","quantity":1},{"sku":"BRUSH_PADDLE","quantity":1}],"delivery_time":"immediate"}
+
+tool.deliver_amenities channel=commentary to=assistant:
+{"delivery_id":"CS-S12-18","eta_minutes":9}
+
+assistant channel=final:
+Certainly—delivery CS-S12-18 will arrive in about 9 minutes with the comb and paddle brush.
+
+user:
+The hot springs courtyard smells like cedar.
+
+assistant channel=final:
+We line the walkway with cedar decking around the pools.
+
+user:
+Do you offer in-room scalp treatments?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on scalp treatment services.
+

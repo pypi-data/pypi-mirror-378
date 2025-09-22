@@ -1,0 +1,61 @@
+"""
+A small group asks for four universal stems; they ask about delivery fee, ETA, and breakage policy, plus a beyond-scope query.
+
+ROLES: user (Group host.), assistant (Room service operator.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service_item",
+    "description": "Order an item from room service.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"},
+        "quantity": {"type": "integer"}
+      },
+      "required": ["room_number", "item_name", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Resort: Marina Grand
+Glass Types: Universal stem, Bordeaux red, Burgundy red, flute
+Room Service Hours: 10:00–23:00 for glassware
+Delivery ETA: 10–15 minutes
+Charges: Complimentary delivery; breakage billed at cost
+Extras: Corkscrew on request
+Contact: 0
+
+user:
+Hi—suite 2401. Could we have four universal wine stems?
+
+assistant channel=analysis:
+Within hours; universal stems available; complimentary delivery; order 4.
+
+assistant channel=commentary to=tool.order_room_service_item:
+{"room_number": "2401", "item_name": "universal_stem_glass", "quantity": 4}
+
+tool.order_room_service_item channel=commentary to=assistant:
+{"status": "success", "message": "Four universal stems sent to 2401. ETA 10–15 min."}
+
+assistant channel=final:
+Done—four universal stems are on the way, complimentary, arriving in 10–15 minutes.
+
+user:
+What happens if one breaks?
+
+assistant channel=final:
+Breakage is billed at cost.
+
+user:
+[ATTENTION] Can you arrange a private sommelier visit?
+
+assistant channel=final:
+I don’t have external sommelier arrangements in my system. I can provide the glassware and a corkscrew on request.
+

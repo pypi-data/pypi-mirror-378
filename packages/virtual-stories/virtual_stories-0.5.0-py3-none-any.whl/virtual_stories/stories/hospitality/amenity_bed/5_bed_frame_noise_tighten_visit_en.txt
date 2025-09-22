@@ -1,0 +1,64 @@
+"""
+Guest reports creaking bed frame; arrange engineering tighten visit and offer interim fix.
+
+ROLES: user (guest hearing creaks), assistant (engineering liaison)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"create_engineering_ticket","description":"Open an engineering ticket for bed frame noise.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"category":{"type":"string"},"priority":{"type":"string","enum":["low","medium","high","urgent"]},"note":{"type":"string"}},"required":["room_number","category","priority"]},"strict":true},
+  {"name":"schedule_engineering_visit","description":"Schedule an engineering visit window.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"window_minutes":{"type":"integer","minimum":10}},"required":["room_number","window_minutes"]},"strict":true}
+]
+```
+"""
+
+system:
+Blue Horizon Conference Hotel (hotel_id: bhc_houston_galleria)
+Address: 5100 Westheimer Rd, Houston, TX 77056
+Timezone: America/Chicago
+
+Bed Frame SOP:
+1) Tighten headboard and platform bolts; apply felt pads to contact points.
+2) Noise diagnosis typically under 15 minutes.
+3) For late‑night reports, schedule morning visit and offer temporary felt shims.
+4) Engineering hours: 07:00–21:00; on‑call for emergencies.
+5) Replacement bed platforms staged on 8th‑floor storage.
+
+user:
+Hi, every time I turn over, the bed in 1411 creaks loudly.
+
+assistant channel=analysis:
+Open ticket and schedule a visit; share interim option.
+
+assistant channel=commentary to=tool.create_engineering_ticket:
+{"room_number":"1411","category":"bed_frame_noise","priority":"medium","note":"Creaking at movement; likely headboard/platform bolts"}
+
+tool.create_engineering_ticket channel=commentary to=assistant:
+{"ticket_id":"ENG-BHC-1411-2208","status":"open"}
+
+assistant channel=commentary to=tool.schedule_engineering_visit:
+{"room_number":"1411","window_minutes":30}
+
+tool.schedule_engineering_visit channel=commentary to=assistant:
+{"ticket_id":"ENG-BHC-1411-2208","visit_window_minutes":30,"eta_minutes":26}
+
+assistant channel=final:
+Thanks for letting me know. I’ve scheduled engineering—ETA ~26 minutes to tighten the frame and add felt pads. If you prefer morning, I can switch the visit and have a temporary shim placed tonight.
+
+user:
+I’ll take the evening fix. By the way, the lobby smells like fresh citrus.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+Glad the scent feels pleasant this evening.
+
+user:
+Can you also upgrade my room because of this?
+
+assistant channel=analysis:
+Upgrades not defined here; flag it.
+
+assistant channel=final:
+[ATTENTION] I’ll review room upgrade options with the front desk.

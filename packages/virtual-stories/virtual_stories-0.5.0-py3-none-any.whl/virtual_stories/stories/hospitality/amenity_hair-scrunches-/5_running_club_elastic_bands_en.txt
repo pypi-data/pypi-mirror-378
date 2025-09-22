@@ -1,0 +1,68 @@
+"""
+Running club participant asks for elastic hair bands; includes policy and beyond-context.
+
+ROLES: user (guest in 311), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check amenity stock.","parameters":{"type":"object","properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Riverloop Run Hotel
+Club: morning running group
+Amenity: elastic hair bands (sport grade)
+Hours: 06:00–22:00
+SLA: 12–18 min
+Limit: 10/day
+Ext: Concierge 0
+
+user:
+311 here—can I get 6 sport hair bands?
+
+assistant channel=analysis:
+Check stock then deliver 6 to 311.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"sport elastic hair bands","quantity":6}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"available":true,"in_stock":120}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"311","amenity_name":"sport elastic hair bands","quantity":6,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"RL-311-SHB-606","eta_minutes":13}
+
+assistant channel=final:
+All set—6 sport hair bands are on their way to 311. ETA ~13 minutes.
+
+user:
+Is the daily limit 10?
+
+assistant channel=analysis:
+System shows 10/day.
+
+assistant channel=final:
+Yes—the limit is 10 per day.
+
+user:
+The river path looks great.
+
+assistant channel=final:
+Enjoy the run.
+
+user:
+Is tomorrow’s 5K still happening if it rains?
+
+assistant channel=analysis:
+Out of system.
+
+assistant channel=final:
+[ATTENTION] I’ll confirm the 5K weather plan.
+

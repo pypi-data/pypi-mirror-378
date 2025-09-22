@@ -1,0 +1,67 @@
+"""
+Same-day arrival asks for a desk room and checks if the upgrade is free; includes small talk and an out-of-scope inquiry.
+
+ROLES: user (Arriving guest.), assistant (Front desk manager handling quick assignments.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "find_available_room",
+    "description": "Finds an available room with specific features.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "feature": {"type": "string"},
+        "start_date": {"type": "string", "format": "date"},
+        "end_date": {"type": "string", "format": "date"}
+      },
+      "required": ["feature", "start_date", "end_date"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Scriptorium Inn
+Desk Rooms: Scholar, Scholar Plus, Atelier
+Lighting: Warm dimmable; task lamp on request
+Chair: Adjustable ergonomic
+Upgrade: Complimentary when desk is a work need
+Quiet Hours: 9pm–7am
+Dial: 0
+
+user:
+I land in two hours—can you assign me a room with a reading desk?
+
+assistant channel=analysis:
+Run availability for reading_desk tonight through tomorrow. Then confirm features and free upgrade policy.
+
+assistant channel=commentary to=tool.find_available_room:
+{"feature": "reading_desk", "start_date": "2025-09-04", "end_date": "2025-09-05"}
+
+tool.find_available_room channel=commentary to=assistant:
+{"rooms": [{"room_number": "604", "room_type": "Scholar Plus", "features": ["reading_desk"]}]}
+
+assistant channel=final:
+I can place you in Scholar Plus 604 with a proper reading desk, warm dimmable lamp, and adjustable chair. If the desk is for work, the upgrade is complimentary.
+
+user:
+Great—also, is the upgrade actually free?
+
+assistant channel=final:
+Yes—when the desk is required for work, we comp the upgrade.
+
+user:
+How’s your day going?
+
+assistant channel=final:
+Busy but smooth—safe travels.
+
+user:
+[ATTENTION] Can you arrange airport pickup?
+
+assistant channel=final:
+Airport transfers aren’t in my system. I can confirm your desk-equipped room.
+

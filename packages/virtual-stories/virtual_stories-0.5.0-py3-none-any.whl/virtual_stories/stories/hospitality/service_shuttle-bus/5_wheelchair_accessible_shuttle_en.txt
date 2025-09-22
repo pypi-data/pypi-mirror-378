@@ -1,0 +1,51 @@
+"""
+Guest asks about wheelchair accessibility and books a seat; confirm features and reserve.
+
+ROLES: user (guest needing accessibility), assistant (front desk confirming shuttle details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_accessibility_info","description":"Return shuttle accessibility features","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"reserve_accessible_seat","description":"Reserve seat with accessibility note","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"time":{"type":"string"}},"required":["hotel_id","room","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Mountain Lodge Aspen (MLAS-13)
+Shuttle hours: 05:00–23:00 hourly
+Pickup: Front driveway
+Drop‑off: Transit hub
+Capacity: 12 seats per run
+Travel time: ~10–15 minutes to transit hub
+Accessibility: Ramp and priority space available
+Booking: Recommended; note accessibility needs
+Time Zone: Mountain Time (MT)
+
+user:
+Is the 7 PM shuttle wheelchair accessible? Room 510.
+
+assistant channel=analysis:
+Check accessibility and then reserve at 19:00.
+
+assistant channel=commentary to=tool.get_accessibility_info:
+{"hotel_id":"MLAS-13"}
+
+tool.get_accessibility_info channel=commentary to=assistant:
+{"ramp":true,"folding_ramps":true,"priority_space":1}
+
+assistant channel=commentary to=tool.reserve_accessible_seat:
+{"hotel_id":"MLAS-13","room":"510","time":"19:00"}
+
+tool.reserve_accessible_seat channel=commentary to=assistant:
+{"reservation_id":"MLAS-510-1900","status":"confirmed"}
+
+assistant channel=final:
+Yes—ramp access is available. I’ve confirmed your 19:00 seat (MLAS-510-1900); pickup is at the front driveway.
+
+user:
+Can I bring a foldable scooter too?
+
+assistant channel=final:
+[ATTENTION] Checking available options.

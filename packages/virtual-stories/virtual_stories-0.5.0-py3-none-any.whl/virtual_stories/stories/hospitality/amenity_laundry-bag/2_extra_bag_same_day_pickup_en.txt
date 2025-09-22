@@ -1,0 +1,126 @@
+"""
+Guest requests an extra laundry bag and asks about same-day pickup; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 1122 requesting an extra laundry bag), assistant (guest services coordinating amenity dispatch and laundry logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_amenity_availability",
+    "description": "Check if a specific amenity is available and current stock.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1}
+      },
+      "required": ["amenity_name", "quantity"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_amenity_delivery",
+    "description": "Dispatch an amenity to a room with ETA.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_laundry_pickup",
+    "description": "Schedule a laundry pickup time for a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "pickup_window": {"type": "string"},
+        "same_day": {"type": "boolean"}
+      },
+      "required": ["room_number", "pickup_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harborline Hotel — East Pier Tower
+Rooms 1101–1140: Standard Harbor View; Room 1122 in scope
+Laundry amenity: Paper laundry bag + ticket; 2 bags complimentary per night; extras on request
+Turnaround: Same-day service cutoff 10:30; return by 19:00; express 4-hour with surcharge
+Pickup windows: 07:00–10:30 and 14:00–16:00
+Contact: Housekeeping x7712; Front Desk x0
+Fees: Express +35%; stain treatment on request
+Notes: Elevators 1–3 serve 11th floor; runner route E-Blue
+Policy: Bags must be labeled with name and room; unattended pickups allowed if authorized
+Accessibility: Braille laundry tickets available on request
+
+user:
+Hi, can I get an extra laundry bag to 1122?
+
+assistant channel=analysis:
+Confirm stock and arrange a normal delivery of 1 laundry bag to room 1122. Offer pickup window info from system.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"laundry bag","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"laundry bag","available":true,"in_stock":64}
+
+assistant channel=analysis:
+Proceed with normal delivery request and then share same-day pickup cutoff from system context.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1122","amenity_name":"laundry bag","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"LB-1122-3310","eta_minutes":12}
+
+assistant channel=final:
+On it—one laundry bag is heading to room 1122 with an ETA of about 12 minutes. Same-day service cutoff is 10:30 with return by 19:00.
+
+user:
+Perfect, can you also schedule a pickup later this afternoon?
+
+assistant channel=analysis:
+Use the pickup tool to book 14:00–16:00 window per system.
+
+assistant channel=commentary to=tool.schedule_laundry_pickup:
+{"room_number":"1122","pickup_window":"14:00–16:00","same_day":true}
+
+tool.schedule_laundry_pickup channel=commentary to=assistant:
+{"confirmation_id":"PU-1122-1400","window":"14:00–16:00","same_day":true}
+
+assistant channel=final:
+All set—your pickup is confirmed for the 14:00–16:00 window today (same-day service applies).
+
+user:
+By the way, how’s your day going?
+
+assistant channel=final:
+Going smoothly, thanks for asking! Happy to help anytime.
+
+user:
+What’s the express service surcharge percentage again?
+
+assistant channel=final:
+Express service carries a 35% surcharge.
+
+user:
+Do you know a good seafood place nearby?
+
+assistant channel=final:
+[ATTENTION] Dining recommendations are beyond the provided system context.
+

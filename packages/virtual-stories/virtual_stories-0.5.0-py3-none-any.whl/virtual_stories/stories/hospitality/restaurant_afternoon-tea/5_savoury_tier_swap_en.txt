@@ -1,0 +1,49 @@
+"""
+Guest asks to swap a savoury tier item; we request a substitution via tool, include small talk, and flag an out‑of‑scope off‑menu platter request.
+
+ROLES: user (guest with a preference), assistant (lounge concierge handling substitutions if available)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_substitution","description":"Request a specific substitution for the tea set.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"from_item":{"type":"string"},"to_item":{"type":"string"}},"required":["restaurant_id","from_item","to_item"]}}
+]
+```
+"""
+
+system:
+Orchid Lounge — Afternoon Tea
+Food notes:
+- Dietary selections available on request
+- Seating 13:00–17:00; Level 2
+
+user:
+Could I swap the smoked salmon sandwich for a cucumber sandwich?
+
+assistant channel=analysis:
+Attempt the substitution via tool and respond with the tool’s result.
+
+assistant channel=commentary to=tool.request_substitution:
+{"restaurant_id":"rest_orchid_lounge","from_item":"smoked_salmon_sandwich","to_item":"cucumber_sandwich"}
+
+tool.request_substitution channel=commentary to=assistant:
+{"approved":true}
+
+assistant channel=final:
+That swap is approved. Afternoon Tea is served 13:00–17:00 on Level 2.
+
+user:
+Perfect—thank you.
+
+assistant channel=final:
+You’re welcome.
+
+user:
+Can you prepare a custom off‑menu seafood platter instead?
+
+assistant channel=analysis:
+Off‑menu platters aren’t provided; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Off‑menu platters aren’t described here. Reviewing available resources.
+

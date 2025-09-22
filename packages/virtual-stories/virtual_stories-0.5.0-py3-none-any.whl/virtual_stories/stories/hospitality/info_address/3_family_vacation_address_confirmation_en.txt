@@ -1,0 +1,110 @@
+"""
+Family on vacation needs address confirmation for emergency contacts and delivery coordination with multiple children's needs.
+
+ROLES: user (parent organizing family logistics), assistant (helpful concierge providing comprehensive location and family services information)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "lookup_hotel_address",
+    "description": "Get the official mailing and visiting address with geo details.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "include_coords": {"type":"boolean"}
+      },
+      "required": ["hotel_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_family_amenities",
+    "description": "Get information about family-friendly amenities and services.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_category": {"type":"string", "enum": ["childcare", "dining", "recreation", "safety", "all"]},
+        "age_group": {"type":"string", "enum": ["infant", "toddler", "child", "teen", "all"]}
+      },
+      "required": ["amenity_category"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Seaside Family Resort & Spa (hotel_id: seaside_family_resort)
+Beachfront family destination resort with comprehensive children's programs
+Address lines:
+  - Street: 777 Ocean Boulevard, Paradise Cove
+  - Complex: Seahorse Wing (Main Reception)
+  - City/Region: Coral Bay, FL 33139
+  - Country: United States
+Family amenities:
+  - Kids Club (ages 4-12) with certified childcare staff, open 8 AM - 10 PM
+  - Teen Zone (ages 13-17) with gaming, sports, and supervised activities
+  - Baby concierge service with cribs, high chairs, stroller rentals
+  - Family dining options with kids' menus and allergy-friendly choices
+  - Supervised kids' pool area with lifeguards and splash features
+  - Children's spa treatments and mini-beauty salon
+  - Game room with arcade, board games, and movie screening area
+Safety features:
+  - Child safety locks available for all rooms
+  - Pool area with depth markers and safety equipment
+  - 24/7 medical assistance with pediatric nurse on call
+  - Beach patrol service and water safety instruction
+  - Wristband identification system for children
+Beach and recreation:
+  - Private beach with designated family zones
+  - Water sports equipment rental (kayaks, snorkel gear, boogie boards)
+  - Beach volleyball and sandcastle building areas
+  - Nature trails with educational programs
+Coordinates: 25.7617, -80.1918
+
+user:
+Hi! We're here with our three kids - ages 4, 8, and 15. I need to give my mother-in-law the hotel's full address so she knows exactly where we are, and also in case we need anything delivered.
+
+assistant channel=analysis:
+Family guest needs complete address for emergency contact and delivery purposes. They have children of different ages so I should also be helpful about family amenities.
+
+assistant channel=commentary to=tool.lookup_hotel_address:
+{"hotel_id":"seaside_family_resort","include_coords":true}
+
+tool.lookup_hotel_address channel=commentary to=assistant:
+{"street":"777 Ocean Boulevard, Paradise Cove","complex":"Seahorse Wing (Main Reception)","city_region":"Coral Bay, FL 33139","country":"United States","coordinates":"25.7617,-80.1918"}
+
+assistant channel=final:
+Of course! For your family's records, our complete address is: Seaside Family Resort & Spa, 777 Ocean Boulevard, Paradise Cove, Seahorse Wing (Main Reception), Coral Bay, FL 33139, United States. GPS coordinates: 25.7617, -80.1918.
+
+user:
+Thank you! The kids are already asking about activities. What do you have for different age groups?
+
+assistant channel=commentary to=tool.get_family_amenities:
+{"amenity_category":"all","age_group":"all"}
+
+tool.get_family_amenities channel=commentary to=assistant:
+{"kids_club":"ages 4-12, certified staff, 8 AM - 10 PM","teen_zone":"ages 13-17, gaming and sports","childcare":"baby concierge, cribs, strollers","dining":"kids menus, allergy-friendly","pools":"supervised kids area with splash features","spa":"children's treatments available"}
+
+assistant channel=final:
+Perfect ages for our programs! Your 4 and 8-year-old can enjoy our Kids Club with certified staff from 8 AM to 10 PM, and your 15-year-old will love the Teen Zone with gaming and sports. We also have supervised kids' pools with splash features.
+
+user:
+That sounds amazing! The weather looks perfect for the beach today.
+
+assistant channel=final:
+Absolutely! Our private beach has family zones and the water's been beautiful this week. Are you planning to try any water sports?
+
+user:
+Maybe tomorrow! Quick question - do you know if there are any good ice cream shops within walking distance of the hotel?
+
+assistant channel=analysis:
+The guest is asking about nearby ice cream shops, which is local area information beyond what I have in my hotel amenities and services. This requires the [ATTENTION] flag.
+
+assistant channel=final:
+[ATTENTION] I'm gathering information about nearby dining options for you.

@@ -1,0 +1,168 @@
+"""
+A production manager needs a specific desk calendar with timeline features and quick delivery.
+
+ROLES: user (production manager staying for a trade show), assistant (hotel concierge and supplies coordinator)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "check_stationery_inventory",
+    "description": "Check availability of stationery items by SKU.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "sku": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1}
+      },
+      "required": ["sku", "quantity"],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "name": "place_stationery_order",
+    "description": "Place an internal order for stationery to a guest room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sku": {"type": "string"},
+              "qty": {"type": "integer", "minimum": 1}
+            },
+            "required": ["sku", "qty"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["room_number", "items"],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "name": "estimate_delivery_time",
+    "description": "Estimate minutes for in-house delivery of stationery.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "from_department": {"type": "string"},
+        "to_room": {"type": "string"},
+        "priority": {"type": "string", "enum": ["standard", "rush"]}
+      },
+      "required": ["from_department", "to_room"],
+      "additionalProperties": false
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel identity: Harborview Business Suites (Downtown Waterfront Tower).
+Address: 88 Pierfront Blvd, Level 23–31, City Harbor District.
+Front Desk hours: 24/7. Check-in 15:00; Check-out 11:00.
+Concierge desk (Stationery & Print Services): 07:00–22:00, ext 2299.
+Room service delivery windows: standard 30–45 min; rush 15–25 min.
+Wi‑Fi: SSID "Harborview-Guest", Support ext 7711.
+
+Desk calendar offerings (in-house inventory):
+- SKUs and formats:
+  - SKU CAL-MONTH-A3: wall/desk combo, monthly blocks, A3, 160 gsm.
+  - SKU CAL-WEEK-A4: spiral desk, weekly view, A4, 120 gsm.
+  - SKU CAL-GANTT-A4P: project timeline grid, A4 portrait, 140 gsm.
+  - SKU CAL-POCKET-A6: pocket flip, A6, 100 gsm.
+- Refills policy: first refill complimentary within 7 days of issue.
+- Holiday region codes available: US-NE, US-W, EU-CEN, APAC.
+- Color accents: slate, teal, crimson, canary.
+- Sustainability: FSC-certified paper; soy-based inks.
+
+Print/label services:
+key: value
+  template_set: PROJ-TM-2025
+  label_strip_width_mm: 12
+  print_queue: PRN-FL23
+  QR_generation: supported
+  file_accept: PDF, PNG, DOCX
+
+Meeting support quick facts:
+1) Quiet hours on guest floors: 22:00–07:00.
+2) Business Center L23: 06:30–22:30.
+3) Loaner items: clipboards(7), fine liners(12), binder clips(mix).
+4) Same-floor delivery: +5 minutes from estimate.
+5) Time zone: Hotel operates on local time UTC−5.
+
+Inventory snapshot (today 11:10): CAL-GANTT-A4P: 18; CAL-WEEK-A4: 32; CAL-MONTH-A3: 9; CAL-POCKET-A6: 25.
+
+user:
+Hi, I'm in 2307 for the expo and need a desk calendar with a project timeline grid. Do you carry that?
+
+assistant channel=analysis:
+User requests a Gantt-style desk calendar. System lists SKU CAL-GANTT-A4P in inventory. I should confirm availability and optionally check stock via tool.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"sku": "CAL-GANTT-A4P", "quantity": 1}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"sku": "CAL-GANTT-A4P", "available": true, "in_stock": 18}
+
+assistant channel=analysis:
+Available. Offer delivery time options and color accents from system. Then place order to room 2307.
+
+assistant channel=final:
+Yes—our project timeline desk calendar (SKU CAL-GANTT-A4P) is in stock. Accents available: slate, teal, crimson, canary. Would you like standard delivery (30–45 min) or rush (15–25 min) to room 2307?
+
+user:
+Rush, please. Teal accent if possible. Also, what time is check-out here?
+
+assistant channel=analysis:
+Confirm rush, room 2307, teal. Use place order and estimate tools. Also answer check-out 11:00 from system.
+
+assistant channel=commentary to=tool.place_stationery_order:
+{"room_number": "2307", "items": [{"sku": "CAL-GANTT-A4P", "qty": 1}]}
+
+tool.place_stationery_order channel=commentary to=assistant:
+{"status": "submitted", "order_id": "ST-23941", "note": "Color accent teal requested"}
+
+assistant channel=commentary to=tool.estimate_delivery_time:
+{"from_department": "Concierge L23", "to_room": "2307", "priority": "rush"}
+
+tool.estimate_delivery_time channel=commentary to=assistant:
+{"eta_minutes": 20}
+
+assistant channel=final:
+Order ST-23941 placed for 1 × CAL-GANTT-A4P to room 2307 with teal accent. Rush delivery ETA is about 20 minutes. Check-out is at 11:00.
+
+user:
+Thanks! Do you also have US Northeast holidays preprinted on that?
+
+assistant channel=analysis:
+System lists holiday region codes including US-NE. Affirm availability.
+
+assistant channel=final:
+Yes. We can include the US-NE holiday set on the calendar.
+
+user:
+By the way, the waterfront view is gorgeous today. Busy morning?
+
+assistant channel=analysis:
+Offer light, non-factual small talk grounded in service tone.
+
+assistant channel=final:
+Glad you’re enjoying Harborview Business Suites—happy to help keep your morning smooth.
+
+user:
+Could you pre-fill my Q1 milestones from a spreadsheet and align them with that calendar?
+
+assistant channel=analysis:
+This is beyond tools and system (no data import service defined). Use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] This requires capabilities beyond what’s available here. Reviewing available resources.
+

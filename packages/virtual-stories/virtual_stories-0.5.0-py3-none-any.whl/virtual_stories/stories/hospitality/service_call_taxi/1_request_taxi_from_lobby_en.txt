@@ -1,0 +1,58 @@
+"""
+Guest asks the hotel to call a taxi; confirm ETA via tool and share pickup location details from system. Include small talk and a background handoff for a toll adjustment request.
+
+ROLES: user (guest needing a city taxi), assistant (bell desk arranging pickup and confirming details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_taxi",
+    "description": "Call a metered taxi or premium sedan to the hotel’s pickup point.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_type": {"type":"string","enum":["taxi","premium_sedan"]},
+        "pickup_point": {"type":"string"}
+      },
+      "required": ["vehicle_type","pickup_point"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Summit View Hotel — Bell Desk
+Taxi pickup: Main Lobby canopy lane, follow “Rides & Taxis” sign
+Average wait time: 3–8 minutes for taxis; 8–12 minutes for premium sedans
+Payment note: City tolls and surcharges are metered by the driver
+
+user:
+Could you call a regular taxi to the Main Lobby lane?
+
+assistant channel=analysis:
+Use the taxi request tool for a standard taxi at the Main Lobby pickup point; confirm ETA from tool and notes from system.
+
+assistant channel=commentary to=tool.request_taxi:
+{"vehicle_type":"taxi","pickup_point":"Main Lobby canopy lane"}
+
+tool.request_taxi channel=commentary to=assistant:
+{"dispatch_id":"CABS-30211","eta_minutes":5}
+
+assistant channel=final:
+Your taxi is on the way (Dispatch CABS-30211) with an ETA of about 5 minutes. Please wait at the Main Lobby canopy lane under the “Rides & Taxis” sign; city tolls and surcharges are metered by the driver.
+
+user:
+Appreciate it—hope your shift’s going smoothly.
+
+assistant channel=final:
+Thank you—safe travels around town.
+
+user:
+Can you reduce the toll if we take the expressway?
+
+assistant channel=final:
+[ATTENTION] Fare and toll settings aren’t adjustable here. Accessing relevant resources.

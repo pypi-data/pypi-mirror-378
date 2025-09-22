@@ -1,0 +1,64 @@
+"""
+Guest asks for multiple channels and the website; includes a beyond-context query.
+
+ROLES: user (guest consolidating contacts), assistant (concierge returning only verified entries)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get","description":"Fetch channel","parameters":{"type":"object","properties":{"hid":{"type":"string"},"ch":{"type":"string","enum":["website","email","phone","line","wechat","fax"]}},"required":["hid","ch"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+AT-A-GLANCE
+Name: Jade Lantern House
+hid: jade_lantern
+Verified:
+  website: https://www.jadelantern.house
+  email: hello@jadelantern.house
+  phone: +852 5808 1122
+Essentials:
+- Rooftop tea garden; gongfu demos Sat 15:00
+- 41 keys; courtyard suites facing koi pond
+- HEPA filtration in all rooms
+- 24h laundry lounge, contactless
+- Metro exit C2, 2 min walk
+
+user:
+What are your email and website?
+
+assistant channel=analysis:
+Return email then website via tool.
+
+assistant channel=commentary to=tool.get:
+{"hid":"jade_lantern","ch":"email"}
+
+tool.get channel=commentary to=assistant:
+{"email":"hello@jadelantern.house"}
+
+assistant channel=final:
+Email: hello@jadelantern.house
+
+assistant channel=commentary to=tool.get:
+{"hid":"jade_lantern","ch":"website"}
+
+tool.get channel=commentary to=assistant:
+{"website":"https://www.jadelantern.house"}
+
+assistant channel=final:
+Website: https://www.jadelantern.house
+
+user:
+Do you publish uptime percentages?
+
+assistant channel=final:
+[ATTENTION] Uptime reporting isn’t provided in the current context.
+
+user:
+The koi pond was calming.
+
+assistant channel=final:
+We’re glad you enjoyed the courtyard suites by the pond.
+

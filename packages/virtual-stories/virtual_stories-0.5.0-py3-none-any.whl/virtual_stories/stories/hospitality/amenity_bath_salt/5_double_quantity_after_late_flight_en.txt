@@ -1,0 +1,66 @@
+"""
+Guest arrived late and requests a double quantity for two guests; confirm ETA and stock.
+
+ROLES: user (late arrival), assistant (amenities desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "list_bath_salt_scents", "description": "List scent stock.", "parameters": {"type":"object","additionalProperties":false,"properties":{}}, "strict": true },
+  { "name": "request_bath_salt_delivery", "description": "Deliver bath salt.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"scent":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","scent","quantity","priority"]}, "strict": true }
+]
+```
+"""
+
+system:
+Jetway Business Hotel (hotel_id: jbh_atl_09)
+Address: 1800 Concourse Pkwy, Atlanta, GA 30337
+Timezone: America/New_York
+
+Program:
+- Scents: lavender, eucalyptus, unscented (80 g)
+- Delivery: 24/7 for elite tiers; standard 08:00–23:00
+Lounge: Night snack bar 21:00–01:00
+Accessibility: Clear, large print labels
+Sustainability: Paper sachets recyclable
+House Rules: No medical claims
+
+user:
+We just landed. Could I get two eucalyptus packets to 1520?
+
+assistant channel=analysis:
+Check stock; place request with normal priority.
+
+assistant channel=commentary to=tool.list_bath_salt_scents:
+{}
+
+tool.list_bath_salt_scents channel=commentary to=assistant:
+{"scents":[{"name":"lavender","stock":19},{"name":"eucalyptus","stock":15},{"name":"unscented","stock":29}]}
+
+assistant channel=commentary to=tool.request_bath_salt_delivery:
+{"room_number":"1520","scent":"eucalyptus","quantity":2,"priority":"normal"}
+
+tool.request_bath_salt_delivery channel=commentary to=assistant:
+{"ticket_id":"SPA-1520-1183","eta_minutes":16}
+
+assistant channel=final:
+Two eucalyptus bath salts are headed to 1520 (SPA-1520-1183) with an ETA of about 16 minutes.
+
+user:
+The night snack bar sounds tempting.
+
+assistant channel=analysis:
+Small talk from system.
+
+assistant channel=final:
+It runs 21:00 to 01:00—handy after late flights.
+
+user:
+Can you add a complimentary foot soak tray?
+
+assistant channel=analysis:
+Not in system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check whether foot soak trays are available.
+

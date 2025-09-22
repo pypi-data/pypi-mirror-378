@@ -1,0 +1,119 @@
+"""
+Guest needs a mini-fridge for medication storage late at night; confirm policy, availability, delivery ETA, and fee waiver for medical use. Include chitchat and one background acknowledgment.
+
+ROLES: user (guest with temperature-sensitive medication), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_fridge_availability",
+    "description": "Verify availability of portable mini-fridges and medical storage drawers for a room.
+    Returns stock status, recommended model, and whether fee is waived for medical use.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "purpose": { "type": "string", "enum": ["medical", "beverage", "food", "breast_milk"] }
+      },
+      "required": ["room_number", "purpose"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_fridge_delivery",
+    "description": "Schedule delivery of a mini-fridge with target temperature and priority.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "model": { "type": "string" },
+        "target_celsius": { "type": "number" },
+        "priority": { "type": "string", "enum": ["standard", "urgent"] }
+      },
+      "required": ["room_number", "model", "target_celsius", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harborline Boutique Inn (hotel_id: hbi_bos_22)
+Address: 17 Battery Wharf, Boston, MA 02109
+Timezone: America/New_York
+
+Mini-Fridge Details:
+- Capacity: 46 L | Shelf layout: 2 adjustable shelves + door bin
+- Temperature range: 2–10°C; Medical drawer safe zone: 2–8°C
+- Energy: ENERGY STAR certified (annual est. 110 kWh)
+- Noise level: 32 dB at 1m (library-quiet)
+- Delivery window: 24/7 via on-call amenities team
+
+Policies:
+- Medical-use fee: waived with verbal request (no documentation needed)
+- Standard use fee: $8/night deposit held; refundable at pickup
+- Inventory: 14 portable units; cold packs available on request
+
+Amenities Map (summary):
+Front Desk | 24h | Amenity lockers A–D
+3rd Floor | 10:00–22:00 | Self-serve ice
+Lobby | 08:00–20:00 | Local art gallery rotation
+
+Codes:
+MED_FRIDGE_OK, FEE_WAIVED_MED, QUIET_32DB, ENERGY_STAR
+
+user:
+Hi—could I get a mini-fridge tonight for my insulin? I’m in 514 and need it kept around 4°C.
+
+assistant channel=analysis:
+Confirm medical purpose and check availability for room 514. Then schedule urgent delivery with target temperature 4°C.
+
+assistant channel=commentary to=tool.check_fridge_availability:
+{"room_number":"514","purpose":"medical"}
+
+tool.check_fridge_availability channel=commentary to=assistant:
+{"in_stock":true,"recommended_model":"HBI-MED-46L","medical_fee_waived":true,"notes":"Includes medical drawer 2–8C and temp card","units_remaining":11}
+
+assistant channel=analysis:
+Stock confirmed, fee waived for medical use, suitable model identified. Proceed to schedule urgent delivery.
+
+assistant channel=commentary to=tool.schedule_fridge_delivery:
+{"room_number":"514","model":"HBI-MED-46L","target_celsius":4,"priority":"urgent"}
+
+tool.schedule_fridge_delivery channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":8,"runner":"dan","confirmation_id":"FRG-514-9927"}
+
+assistant channel=final:
+All set. A medical mini-fridge (HBI-MED-46L) is scheduled for room 514 with 4°C targeting—ETA about 8 minutes with Dan (ID FRG-514-9927). There’s no fee for medical use.
+
+user:
+Thanks! Also—is there any delivery fee for this?
+
+assistant channel=analysis:
+Answer directly from Policies (medical-use fee waived).
+
+assistant channel=final:
+No delivery or nightly fee applies for medical use—our policy waives it.
+
+user:
+The lobby art looked great earlier—who curates it?
+
+assistant channel=analysis:
+Respond with lobby art gallery rotation detail present in Amenities Map.
+
+assistant channel=final:
+We host a rotating local art gallery in the lobby between 08:00–20:00.
+
+user:
+Could you extend my checkout to 4 PM tomorrow?
+
+assistant channel=analysis:
+This request is beyond the scope of amenity delivery and not defined in system. Use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking—checking extended checkout availability.
+

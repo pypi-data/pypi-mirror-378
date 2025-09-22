@@ -1,0 +1,57 @@
+"""
+Guest reports AC not cooling; asks about response time and triage steps.
+
+ROLES: user (guest in warm room), assistant (front desk creating ticket and advising response time and triage)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"create_ticket","description":"Create maintenance ticket","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"issue":{"type":"string"},"priority":{"type":"string","enum":["low","normal","high","urgent"]}},"required":["hotel_id","room","issue","priority"]},"strict":true},
+  {"name":"eta","description":"Fetch engineer ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"ticket_id":{"type":"string"}},"required":["hotel_id","ticket_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Desert Star Phoenix (DSP-23)
+Address: 400 E Camelback Rd, Phoenix, AZ 85012, USA
+Engineering: On-site 08:00–22:00; on-call overnight
+Response: Typical 15–30 minutes for normal; 10–15 minutes for high
+Triage: Ask guest to set thermostat to 22°C cool and keep door closed
+Escalation: If still warm after visit, portable unit available
+Dispatch: Only via ticket
+
+user:
+My AC in 1121 isn’t cooling. How fast can someone come?
+
+assistant channel=analysis:
+Create a normal priority AC-not-cooling ticket; fetch ETA; mention triage steps.
+
+assistant channel=commentary to=tool.create_ticket:
+{"hotel_id":"DSP-23","room":"1121","issue":"AC not cooling","priority":"normal"}
+
+tool.create_ticket channel=commentary to=assistant:
+{"ticket_id":"DSP-ENG-4401","status":"open"}
+
+assistant channel=commentary to=tool.eta:
+{"hotel_id":"DSP-23","ticket_id":"DSP-ENG-4401"}
+
+tool.eta channel=commentary to=assistant:
+{"eta_minutes":18,"assigned":"Carlos"}
+
+assistant channel=final:
+I’ve opened ticket DSP-ENG-4401; Carlos will arrive in about 18 minutes. Meanwhile, please set the thermostat to 22°C cool and keep the door closed—this helps our triage.
+
+user:
+Thanks—the lobby cactus is cute.
+
+assistant channel=final:
+It’s a local touch we love as well.
+
+user:
+Could you share the full HVAC maintenance manual?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

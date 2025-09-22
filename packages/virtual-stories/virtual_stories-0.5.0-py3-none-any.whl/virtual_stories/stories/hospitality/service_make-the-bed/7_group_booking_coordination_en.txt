@@ -1,0 +1,74 @@
+"""
+Group leader requests bed making for multiple rooms with group coordination. Includes group small talk and handles group services request.
+
+ROLES: user (group leader coordinating multiple rooms), assistant (group services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_make_bed",
+    "description": "Dispatch a make-the-bed task to a room.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"urgency":{"type":"string","enum":["now","next_available"]}},"required":["room_number","urgency"]},
+    "strict": true
+  },
+  {
+    "name": "check_group_services",
+    "description": "Check available group services and coordination options.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["group_dining","group_activities","group_transportation","group_meetings"]}},"required":["service_type"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Parkline Suites
+Make-the-Bed Task:
+- Purpose: tidy linens and pillows only; no full clean
+- Window: 08:00–20:00; typical ETA 10–20 minutes
+- DND pauses response until cleared
+Group services: Group dining, group activities, group transportation, group meetings
+Hotel features: Park view rooms, luxury spa, fine dining restaurant, business center, concierge services
+Room amenities: Premium bedding, marble bathrooms, smart TV, minibar, complimentary WiFi, room service
+Special services: Valet parking, airport shuttle, pet-friendly rooms, wheelchair accessible accommodations
+Dining: The Parkview Restaurant (fine dining), The Garden Café (casual), The Sunset Lounge (cocktails)
+Recreation: Private park access, infinity pool, tennis courts, golf course access, spa services
+Wellness: Full-service spa with 8 treatment rooms, sauna, steam room, yoga classes, personal training
+Group facilities: Group dining areas, group activities, group transportation, group meeting rooms, group coordination
+
+user:
+Hello! I'm coordinating a group of 12 people in rooms 301-306. Can you arrange bed making for all rooms now?
+
+assistant channel=analysis:
+Group leader requesting bed making for multiple rooms. Dispatch service and check group amenities.
+
+assistant channel=commentary to=tool.request_make_bed:
+{"room_number":"301-306","urgency":"now"}
+
+tool.request_make_bed channel=commentary to=assistant:
+{"task_id":"mtb_5515","eta_minutes":25}
+
+assistant channel=commentary to=tool.check_group_services:
+{"service_type":"group_dining"}
+
+tool.check_group_services channel=commentary to=assistant:
+{"available":true,"services":["group_dining","group_activities","group_transportation","group_meetings"],"group_coordination":"available"}
+
+assistant channel=analysis:
+Make-the-bed dispatched for group rooms. Group services available. Provide confirmation and group service information.
+
+assistant channel=final:
+Absolutely! Bed making is dispatched for rooms 301-306 (task mtb_5515) with an ETA of about 25 minutes. We have group dining and group activities available for your party of 12.
+
+user:
+Perfect! The group is excited about the park view. Are there any group activities today?
+
+assistant channel=final:
+Welcome to Parkline Suites! We have group activities available including park tours and group dining options. The park view is perfect for group relaxation.
+
+user:
+Can you also arrange for group transportation to the local attractions tomorrow?
+
+assistant channel=final:
+[ATTENTION] Group transportation arrangements require coordination with our transportation services. Reviewing available options.

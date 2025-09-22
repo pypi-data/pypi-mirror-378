@@ -1,0 +1,80 @@
+"""
+Guest reports minor nosebleed; requests gauze and saline; confirm inventory and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (guest), assistant (first aid support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"nosebleed_check","description":"Check gauze pads and saline packets availability.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"location":{"type":"string","enum":["front_desk"]}},
+     "required":["location"]},"strict":true},
+  {"name":"nosebleed_deliver","description":"Deliver nosebleed care items to room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},
+                  "priority":{"type":"string","enum":["standard","urgent"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Midtown Tower Hotel (hotel_id: MTH_nyc_02)
+Address: 350 Lexington Ave, New York, NY 10016 | TZ: America/New_York
+
+First Aid Inventory:
+- Gauze pads
+- Saline packets
+- Antiseptic wipes
+- Delivery: 24/7 for medical supplies
+- Sky lounge 30th floor
+
+user:
+I’ve got a small nosebleed—could you send gauze and saline to room 1807?
+
+assistant channel=analysis:
+Check inventory and deliver urgently.
+
+assistant channel=commentary to=tool.nosebleed_check:
+{"location":"front_desk"}
+
+tool.nosebleed_check channel=commentary to=assistant:
+{"available":true,"items":["gauze","saline_packets","antiseptic_wipes"]}
+
+assistant channel=commentary to=tool.nosebleed_deliver:
+{"room_number":"1807","items":["gauze","saline_packets"],"priority":"urgent"}
+
+tool.nosebleed_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":6,"runner":"tower-ops","ticket":"MTH-1807-NB"}
+
+assistant channel=final:
+We’ll deliver gauze and saline packets to room 1807—about 6 minutes (tower-ops, ticket MTH-1807-NB).
+
+user:
+Is the sky lounge on the 30th floor?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—the sky lounge is on the 30th floor.
+
+user:
+The view up Lexington is amazing at night.
+
+assistant channel=analysis:
+Chitchat grounded in address.
+
+assistant channel=final:
+It’s a great vantage point down the avenue.
+
+user:
+Can you advise on how long to pinch my nose?
+
+assistant channel=analysis:
+Medical advice specifics beyond supplies—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I can’t provide medical advice; I’ll check appropriate guidance options.
+

@@ -1,0 +1,74 @@
+"""
+Guest checks dress code and window views before making plans.
+
+ROLES: user (guest planning a date night), assistant (restaurant concierge advising dress policy and table views)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_dress_code","description":"Provide dress code policy for Azure Quay.","parameters":{"type":"object","properties":{},"required":[],"additionalProperties":false},"strict":true},
+  {"name":"get_view_info","description":"Describe window table view orientation and best times.","parameters":{"type":"object","properties":{},"required":[],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Restaurant: Azure Quay (restaurant_id: rest_azure_quay)
+Cuisine: Seafood-centric, line-caught focus
+Location: Level 3, Bay-facing windows along the east wing
+Dress code: Smart casual; tailored denim acceptable; no athletic shorts; collared shirts preferred
+Seating types: 2-top bay window rail; booths; chef counter (8 seats)
+Sommelier: On duty nightly; Coravin by-the-glass list available
+Corkage: $35 per 750 ml (2 bottles max per table)
+Accessibility: Step-free; aisle width ≥ 36"; one ADA-height window table
+Sound: Low ambient; soft playlist (no live music)
+Photography: Discreet, no flash
+
+user:
+Is smart casual okay with dark jeans?
+
+assistant channel=analysis:
+Answer from the system dress code and confirm tailored denim acceptable; then offer view details via tool.
+
+assistant channel=commentary to=tool.get_dress_code:
+{}
+
+tool.get_dress_code channel=commentary to=assistant:
+{"policy":"Smart casual; tailored denim acceptable; no athletic shorts; collared shirts preferred"}
+
+assistant channel=final:
+Yes—smart casual with tailored denim is acceptable at Azure Quay. No athletic shorts; collared shirts are preferred.
+
+user:
+Do the 2-tops by the window face the bay at sunset?
+
+assistant channel=analysis:
+Use the view info tool to describe orientation and timing; keep to the tool facts.
+
+assistant channel=commentary to=tool.get_view_info:
+{}
+
+tool.get_view_info channel=commentary to=assistant:
+{"orientation":"East/Northeast bay outlook","best_light":"Golden hour ~18:30–19:30 (seasonal)","note":"Direct sunset is not visible; reflected glow over the water."}
+
+assistant channel=final:
+The window 2‑tops look East/Northeast over the bay. Best light is around golden hour (about 6:30–7:30 PM, seasonally); you won’t see the sun set directly, but you’ll get a warm reflected glow on the water.
+
+user:
+Sounds romantic.
+
+assistant channel=analysis:
+Respond with a quick, warm note—no tools.
+
+assistant channel=final:
+It’s a lovely setting for a relaxed evening.
+
+user:
+Can you guarantee we’ll catch the exact sunset at 7:12 PM?
+
+assistant channel=analysis:
+Guarantees aren’t in tools or system; use attention flag.
+
+assistant channel=final:
+[ATTENTION] Understood about exact sunset timing. Checking available options.
+

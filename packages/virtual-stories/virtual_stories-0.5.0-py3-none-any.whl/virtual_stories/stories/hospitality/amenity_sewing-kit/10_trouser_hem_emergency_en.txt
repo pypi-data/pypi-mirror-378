@@ -1,0 +1,110 @@
+"""
+Business traveler needs temporary trouser hem fix; deliver emergency kit and offer on-site.
+
+ROLES: user (business traveler with loose hem), assistant (evening housekeeping lead)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Pacific Congress Center Tokyo (hotel_id: pct_hnd_10)
+Address: 1-9-1 Daiba, Minato City, Tokyo 135-8625, Japan
+Timezone: Asia/Tokyo
+
+Sewing Provisioning:
+- Emergency kits: quick hem strips, pre-threaded needles (black/grey), safety pins
+- Executive kits: hem tape, charcoal/black thread, small scissors
+- On-site assistance: 07:00–22:00
+- Delivery targets: 6–15 minutes
+- Policy: first kit complimentary per night
+
+Logistics:
+- Conference tower: floors 20–28
+- Guest services desk adjacent to elevators
+- Contact: Service Line 0
+- Advisory: remove quick hem strips before dry cleaning
+
+user:
+Hi—my trouser hem dropped. I’m in 2103; can you send something fast?
+
+assistant channel=analysis:
+Conference tower floor 21; check emergency kit; deliver fast; include advisory about hem strips.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type":"emergency","floor_level":"21"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available":true,"kit_contents":["quick_hem_strips","pre_threaded_black","safety_pins"],"eta_minutes":7}
+
+assistant channel=analysis:
+Arrange kit delivery to 2103.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number":"2103","service_type":"kit_delivery","urgency":"emergency","garment_type":"trousers"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged":true,"delivery_time":"7_minutes","assistance_offered":true}
+
+assistant channel=final:
+Yes—we’ll send an emergency kit with quick hem strips and a pre-threaded needle to 2103; arrival in about 7 minutes. Please remove the hem strips before dry cleaning; we can assist on-site until 22:00.
+
+user:
+Is the first kit free tonight?
+
+assistant channel=analysis:
+From system: first kit complimentary per night.
+
+assistant channel=final:
+Yes—the first kit each night is complimentary.
+
+user:
+Thanks for the speedy help.
+
+assistant channel=analysis:
+Chit-chat closure.
+
+assistant channel=final:
+Happy to help—good luck with your evening!
+
+user:
+Do you know a late ramen spot nearby?
+
+assistant channel=analysis:
+Beyond system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up late-night ramen spots and get back to you.

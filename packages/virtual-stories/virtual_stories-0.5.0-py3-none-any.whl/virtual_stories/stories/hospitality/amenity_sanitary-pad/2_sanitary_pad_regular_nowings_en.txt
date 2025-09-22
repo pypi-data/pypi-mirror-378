@@ -1,0 +1,81 @@
+"""
+Guest requests regular pads without wings; confirm availability and deliver discreetly; include small talk and one acknowledgment turn.
+
+ROLES: user (guest requesting personal care), assistant (front desk arranging delivery)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check sanitary pads by absorbency and wings.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_pad"]},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"}},"required":["item_code","absorbency","with_wings"]},"strict":true},
+  {"name":"deliver_personal_care","description":"Deliver personal care items discreetly in a paper bag.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"},"quantity":{"type":"integer","minimum":1},"bag_type":{"type":"string","enum":["discreet_paper"]}},"required":["room_number","item_code","absorbency","with_wings","quantity","bag_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Bluefern Hotel (hotel_id: bf_bos_09)
+Address: 200 Stuart St, Boston, MA 02116
+Personal care coverage: 06:30–23:30; ETA 8–14 minutes
+Wi‑Fi: 300/300 Mbps; room casting enabled
+Dining: breakfast 06:30–11:00; lounge 17:00–23:00
+Scent: eucalyptus in spa corridor; unscented lobby
+Check-in/out: 15:00 / 12:00
+Accessibility: ADA kits available on request
+
+Pads availability:
+- Absorbency: light, regular, super
+- Wings: yes/no
+- Snapshot: regular/no_wings(28), regular/with_wings(22), light/no_wings(16), super/with_wings(25)
+- Delivery packaging: discreet_paper
+
+user:
+Could I get one pack of regular pads without wings to 714?
+
+assistant channel=analysis:
+Check regular/no_wings; deliver 1 pack discreetly to 714.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"item_code":"sanitary_pad","absorbency":"regular","with_wings":false}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_pad","absorbency":"regular","with_wings":false,"on_hand_packs":28}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_personal_care:
+{"room_number":"714","item_code":"sanitary_pad","absorbency":"regular","with_wings":false,"quantity":1,"bag_type":"discreet_paper"}
+
+tool.deliver_personal_care channel=commentary to=assistant:
+{"ticket_id":"PC-714-3102","eta_minutes":9}
+
+assistant channel=final:
+Certainly—one pack of regular pads without wings will arrive at 714 in a discreet paper bag. Ticket PC-714-3102, about 9 minutes.
+
+user:
+Is delivery available past 11 pm?
+
+assistant channel=analysis:
+Answer from system coverage hours.
+
+assistant channel=final:
+Yes—personal care deliveries run until 23:30.
+
+user:
+The spa hallway smelled like eucalyptus.
+
+assistant channel=analysis:
+Acknowledge scent detail.
+
+assistant channel=final:
+We keep a eucalyptus note in the spa corridor—thanks for noticing.
+
+user:
+Do you have organic overnight options?
+
+assistant channel=analysis:
+Organic not specified; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check for organic overnight options. Reviewing supplier data.
+

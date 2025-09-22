@@ -1,0 +1,110 @@
+"""
+Traveler needs quick patch for small tear on backpack before checkout; provide emergency kit and timing.
+
+ROLES: user (traveler with torn backpack), assistant (bell & housekeeping liaison)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harbor Promenade Hotel Sydney (hotel_id: hph_syd_07)
+Address: 18 Macquarie St, Sydney NSW 2000, Australia
+Timezone: Australia/Sydney
+
+Amenity Details:
+- Emergency kits include heavy-duty needle, strong thread (black), fabric adhesive patch
+- Basic kits include standard needles, black/white thread, safety pins
+- Assistance: 06:30–22:30 for minor fixes; bags stitched only as a courtesy quick fix
+- Delivery goals: 6–12 minutes for harbor-view floors (20–28)
+- Policy: 1 emergency kit per room per day complimentary
+
+Operations:
+- Housekeeping pantry floors: 21, 24, 27
+- Bell desk can escort kits to lobby for checkout repairs
+- Contact: Guest Services ext 3
+- Note: adhesive patches are temporary; reinforce later
+
+user:
+Hello—I’ve got a small tear on my backpack seam. I’m in 2405 and checking out in 45 minutes. Can you send something up?
+
+assistant channel=analysis:
+Harbor-view floor 24; check emergency kit; deliver promptly; offer bell desk assist at checkout.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type":"emergency","floor_level":"24"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available":true,"kit_contents":["heavy_duty_needle","strong_black_thread","fabric_adhesive_patch"],"eta_minutes":7}
+
+assistant channel=analysis:
+Arrange emergency delivery to 2405; mention adhesive is temporary; offer bell desk escort.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number":"2405","service_type":"kit_delivery","urgency":"emergency","garment_type":"backpack"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged":true,"delivery_time":"7_minutes","assistance_offered":true}
+
+assistant channel=final:
+Yes—we’ll send an emergency kit with a heavy-duty needle, strong thread, and a fabric adhesive patch to 2405 in about 7 minutes. The patch is a temporary fix; bell desk can assist as you check out.
+
+user:
+Thanks! Do I need to pay for this kit?
+
+assistant channel=analysis:
+Policy: 1 emergency kit per room per day complimentary.
+
+assistant channel=final:
+Today’s first emergency kit is complimentary.
+
+user:
+The harbor view is stunning this morning.
+
+assistant channel=analysis:
+Chit-chat reply.
+
+assistant channel=final:
+It’s a beautiful day—safe travels after checkout!
+
+user:
+Any hiking trail recommendations for later?
+
+assistant channel=analysis:
+Beyond system scope—use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up nearby hiking trails and share a few options.

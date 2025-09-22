@@ -1,0 +1,79 @@
+"""
+Parent requests child-safe bandages; confirm availability and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (parent), assistant (front desk medical support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"kid_bandage_check","description":"Check child-safe bandages and antiseptic availability.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"location":{"type":"string","enum":["front_desk"]}},
+     "required":["location"]},"strict":true},
+  {"name":"kid_bandage_deliver","description":"Deliver child-safe bandages to a room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},
+     "required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeshore Family Suites (hotel_id: LFS_mke_07)
+Address: 210 Bayview Pkwy, Milwaukee, WI 53202 | TZ: America/Chicago
+
+Family First Aid:
+- Child-safe bandages with fun prints
+- Alcohol-free antiseptic wipes
+- Mini thermometers at desk
+- Delivery: 07:00–22:00 | Fee: none
+- Playroom and story time in lobby
+
+user:
+Do you have kid-friendly bandages? Room 604.
+
+assistant channel=analysis:
+Check child-safe bandages at front desk, then deliver to 604.
+
+assistant channel=commentary to=tool.kid_bandage_check:
+{"location":"front_desk"}
+
+tool.kid_bandage_check channel=commentary to=assistant:
+{"available":true,"items":["child_bandages","alcohol_free_wipes"],"note":"fun_prints"}
+
+assistant channel=commentary to=tool.kid_bandage_deliver:
+{"room_number":"604","items":["child_bandages","alcohol_free_wipes"]}
+
+tool.kid_bandage_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":10,"runner":"family-team","ticket":"LFS-604-KID"}
+
+assistant channel=final:
+Yes—child-friendly bandages (fun prints) and alcohol-free wipes are on the way to 604. ETA ~10 minutes (family-team, ticket LFS-604-KID).
+
+user:
+Do you have a playroom?
+
+assistant channel=analysis:
+Answer from Family First Aid extras.
+
+assistant channel=final:
+Yes—there’s a playroom and lobby story time.
+
+user:
+The bay view is beautiful.
+
+assistant channel=analysis:
+Chitchat tied to address.
+
+assistant channel=final:
+Sunsets over the water are lovely from this side of the parkway.
+
+user:
+Can you arrange a babysitter tonight?
+
+assistant channel=analysis:
+Not in this system—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check babysitting options and availability for tonight.
+

@@ -1,0 +1,62 @@
+"""
+Extension request at heritage property; assistant verifies with tool and states only tool output and policy; answers a system item; includes small talk and an [ATTENTION] query.
+
+ROLES: user (guest), assistant (Old Port Heritage Hotel desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_extension_availability",
+    "description": "Check if the current room category can be extended with the new checkout date.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"new_checkout":{"type":"string","format":"date"}},"required":["reservation_id","new_checkout"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+[Old Port Heritage Hotel]
+Address: 7 Wharf St, Portland, ME 04101, USA
+Check‑in/out: 15:00 / 11:00
+Extension: Availability‑based; nightly rate can change
+Breakfast: 07:00–10:00
+Wi‑Fi: 200 Mbps
+Parking: Valet $32/night
+Quiet Hours: 22:00–07:00
+Rooms: Wharf King (27 m²), Brick View Queen (25 m²), Harbor Suite (39 m²)
+
+user:
+Please extend OP-10221 to check out on 2025-03-24.
+
+assistant channel=analysis:
+Use tool; echo room and rate; include policy note from system.
+
+assistant channel=commentary to=tool.check_extension_availability:
+{"reservation_id":"OP-10221","new_checkout":"2025-03-24"}
+
+tool.check_extension_availability channel=commentary to=assistant:
+{"available":true,"room_id":"Wharf King 403","rate":"USD 159/night"}
+
+assistant channel=final:
+Extension confirmed to 2025-03-24 in Wharf King 403 at USD 159/night. Extensions depend on availability and rates may change nightly.
+
+user:
+Thanks—harbor calm?
+
+assistant channel=final:
+Appreciate you at Old Port Heritage.
+
+user:
+What time is checkout?
+
+assistant channel=final:
+Checkout is 11:00.
+
+user:
+Could you add a free harbor tour?
+
+assistant channel=final:
+[ATTENTION] Harbor tours aren’t covered by the provided details. Processing your request.
+

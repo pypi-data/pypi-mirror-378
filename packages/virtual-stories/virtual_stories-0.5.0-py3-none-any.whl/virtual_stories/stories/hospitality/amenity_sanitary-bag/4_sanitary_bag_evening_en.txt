@@ -1,0 +1,80 @@
+"""
+Guest asks for sanitary bags in the evening; confirm availability and deliver; include small talk and property acknowledgment; answer a question from system hours.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bathroom_supplies","description":"Check availability for sanitary bags.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_bag"]}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_bathroom_supplies","description":"Deliver bathroom supplies to a room with placement.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1},"placement":{"type":"string","enum":["bathroom_counter","under_sink"]}},"required":["room_number","item_code","quantity","placement"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Highline District Hotel (hotel_id: hd_nyc_21)
+Address: 540 W 28th St, New York, NY 10001
+Bathroom supply coverage: 07:00–23:45; ETA 8–16 minutes
+Rooftop bar: 17:00–23:00; city views
+Wi‑Fi: 400/400 Mbps; art floor bandwidth priority 10:00–18:00
+Fitness: 24h; cold brew on tap 06:00–10:00
+Scent: green tea and fig in the lobby
+Check-in/out: 15:00 / 12:00
+
+Sanitary bag program:
+- Opaque, biodegradable sleeves
+- Inventory: 162 sleeves
+- Placement choices: bathroom_counter or under_sink
+
+user:
+Could I get four sanitary bags to 1708, placed on the counter?
+
+assistant channel=analysis:
+Check stock; deliver 4 to bathroom_counter.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"item_code":"sanitary_bag"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_bag","on_hand":162}
+
+assistant channel=analysis:
+Place delivery to 1708.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"1708","item_code":"sanitary_bag","quantity":4,"placement":"bathroom_counter"}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"ticket_id":"BS-1708-7014","eta_minutes":11}
+
+assistant channel=final:
+Done—four sanitary bag sleeves will be on your bathroom counter in 1708. Ticket BS-1708-7014, ETA about 11 minutes.
+
+user:
+The green tea and fig scent downstairs is lovely.
+
+assistant channel=analysis:
+Reference the scent detail.
+
+assistant channel=final:
+Thank you—we use a green tea and fig diffuser in the lobby.
+
+user:
+Do you run bathroom supply service past midnight?
+
+assistant channel=analysis:
+Answer based on system coverage.
+
+assistant channel=final:
+Service runs until 23:45 each night.
+
+user:
+Do you provide cosmetic cotton pads too?
+
+assistant channel=analysis:
+Not specified here; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on cosmetic pads. Reviewing stock info.
+

@@ -1,0 +1,145 @@
+"""
+Business traveler needs binder clips and basic presentation supplies for an offsite client meeting; arrange inventory confirmation and delivery.
+
+ROLES: user (consultant preparing materials), assistant (business center coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_office_supplies",
+    "description": "Check availability of office supplies and stationery items.
+Categories: clips_fasteners, writing, paper, presentation, all",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["clips_fasteners", "writing", "paper", "presentation", "all"] },
+        "quantity_needed": { "type": "integer" }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_supply_delivery",
+    "description": "Request office supply delivery to a guest room or business center pickup.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item_code": { "type": "string" },
+              "quantity": { "type": "integer" }
+            },
+            "required": ["item_code", "quantity"],
+            "additionalProperties": false
+          }
+        },
+        "delivery_preference": { "type": "string", "enum": ["room_delivery", "business_center_pickup"] },
+        "urgency": { "type": "string", "enum": ["standard", "priority", "urgent"] }
+      },
+      "required": ["room_number", "items", "delivery_preference"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_presentation_setup",
+    "description": "Schedule business center assistance for presentation preparation or material organization.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["document_binding", "presentation_printing", "materials_organization"] },
+        "scheduled_time": { "type": "string" },
+        "duration_minutes": { "type": "integer" }
+      },
+      "required": ["room_number", "service_type", "scheduled_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Skyline Central Convention Hotel (hotel_id: scch_chi_01)
+Address: 255 N Wacker Dr, Chicago, IL 60606
+Timezone: America/Chicago
+Profile: High-rise convention property serving Loop and River North
+
+Business Center Snapshot:
+- Supply tiers: clips_fasteners, writing, paper, presentation
+- Clips on hand: small (19mm), medium (32mm), large (51mm)
+- Executive floors: 28–36 get same-floor delivery
+- Standard delivery SLA: 30–45 minutes hotel-wide
+- On-demand binding and printing support upon appointment
+
+Operational Notes (table-style):
+| Service | Hours | Location |
+| Delivery | 24/7 | Business Center L3 |
+| Printing | 6:00–22:00 | L3 East Wing |
+| Binding  | 8:00–20:00 | L3 Bind Station |
+
+Contact & Policy:
+- Extension: 77 (Business Center Desk)
+- Complimentary basics for platinum corporate accounts
+- Max per-room quick pick: 20 binder clips without charge
+
+user:
+Hi! I’m putting together client packets. Do you have medium binder clips, and what’s the usual delivery time?
+
+assistant channel=analysis:
+Answer policy question from system, then check inventory for clips_fasteners.
+
+assistant channel=final:
+Yes—our standard delivery window is 30–45 minutes hotel-wide. Let me check what we have in clips and fasteners for you.
+
+assistant channel=commentary to=tool.check_office_supplies:
+{"category":"clips_fasteners"}
+
+tool.check_office_supplies channel=commentary to=assistant:
+{"available_items":[{"code":"BINDER_SMALL","name":"Small Binder Clips (19mm)","quantity_available":60},{"code":"BINDER_MEDIUM","name":"Medium Binder Clips (32mm)","quantity_available":42},{"code":"BINDER_LARGE","name":"Large Binder Clips (51mm)","quantity_available":18},{"code":"PAPER_CLIPS","name":"Paper Clips","quantity_available":250}]}
+
+assistant channel=final:
+We do—medium binder clips (32mm) are in stock with 42 available. What quantity do you need and which room should we deliver to?
+
+user:
+Room 3116, please send 12 medium clips. Also, is 3116 considered an executive floor for same-floor delivery?
+
+assistant channel=analysis:
+Confirm executive floor policy from system and create delivery request.
+
+assistant channel=final:
+Yes—floors 28–36 are executive, so 3116 qualifies for same-floor delivery.
+
+assistant channel=commentary to=tool.request_supply_delivery:
+{"room_number":"3116","items":[{"item_code":"BINDER_MEDIUM","quantity":12}],"delivery_preference":"room_delivery","urgency":"standard"}
+
+tool.request_supply_delivery channel=commentary to=assistant:
+{"delivery_id":"SUP-3116-CH-8127","estimated_delivery_minutes":30,"items_confirmed":["12x Medium Binder Clips (32mm)"],"charge":"complimentary_quick_pick"}
+
+assistant channel=final:
+All set—delivery SUP-3116-CH-8127 is scheduled. Twelve medium clips will arrive in about 30 minutes and are complimentary under the quick-pick policy.
+
+user:
+Thanks! And hey, how’s your day going?
+
+assistant channel=final:
+Appreciate you asking—it’s been busy with conference traffic, but smooth.
+
+user:
+Do you happen to know a good deep-dish place nearby for tonight?
+
+assistant channel=analysis:
+This is beyond system context and tools—flag with ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Great idea for tonight—checking nearby options.
+

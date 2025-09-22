@@ -1,0 +1,61 @@
+"""
+Guest confirms phone number and asks for help dialing while roaming; include out-of-scope request about carrier-specific codes.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Maple Quay Inn (hotel_id: maple_quay)
+Main phone: +1 416 555 9020 | Email stay@maplequay.ca | Web https://maplequay.ca
+Tip: From abroad, dial your international exit code, then 1, then 416 555 9020
+Extras: River sauna 18:00–22:00; Board games lounge 3F.
+
+user:
+Could you confirm your phone number?
+
+assistant channel=analysis:
+Use contact tool for main phone.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"maple_quay","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+1 416 555 9020"}
+
+assistant channel=final:
+Our number is +1 416 555 9020.
+
+user:
+How would I dial that while roaming?
+
+assistant channel=analysis:
+Provide dialing tip from system.
+
+assistant channel=final:
+Dial your international exit code, then 1, then 416 555 9020.
+
+user:
+Can you tell me my carrier’s specific exit code?
+
+assistant channel=analysis:
+Out of scope—no carrier codes.
+
+assistant channel=final:
+[ATTENTION] Carrier-specific exit codes aren’t available within the provided resources.
+
+user:
+By the way, love the board games lounge.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Happy to hear that—the lounge is on 3F.
+

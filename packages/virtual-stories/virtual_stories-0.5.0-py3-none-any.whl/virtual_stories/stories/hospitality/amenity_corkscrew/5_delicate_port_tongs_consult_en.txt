@@ -1,0 +1,94 @@
+"""
+Guest has an aged fortified wine and requests guidance for safe opening.
+Offer Ah-So or assisted opening per service options.
+
+ROLES: user (guest with delicate bottle), assistant (wine amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "advise_opening_method",
+    "description": "Suggest appropriate opener based on wine age and cork condition.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "wine_type": { "type": "string", "enum": ["sparkling", "still", "fortified"] },
+        "estimated_age": { "type": "string" },
+        "cork_condition": { "type": "string", "enum": ["unknown", "fragile", "firm"] }
+      },
+      "required": ["wine_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "book_assisted_opening",
+    "description": "Book assisted opening with staff and deliver tools.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "location": { "type": "string" },
+        "time": { "type": "string" }
+      },
+      "required": ["location"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Old Town Heritage House (hotel_id: oth_prague_03)
+Address: 8 Karlova, Prague 1, Czech Republic 110 00
+Timezone: Europe/Prague
+Historic Setting: Stone-vault cellars adapted as guest lounges
+
+Wine Service Notes:
+- Tool Options: Ah-So two-prong, waiter’s knife, lever opener
+- Assisted Opening: 14:00–22:00 in lounges or in-room
+- Delivery: 15–25 min standard; 10–15 min express
+- Fees: complimentary tool loan; assisted opening complimentary
+- Glassware: universal stems available on request
+
+user:
+I’ve got an old bottle of tawny port and the cork looks fragile. What’s the safest way to open it?
+
+assistant channel=analysis:
+Recommend Ah-So or assisted opening from system options.
+
+assistant channel=commentary to=tool.advise_opening_method:
+{"wine_type":"fortified","estimated_age":"old","cork_condition":"fragile"}
+
+tool.advise_opening_method channel=commentary to=assistant:
+{"recommendation":"Ah-So","reason":"reduces risk of crumbling cork","assisted_opening_available":true}
+
+assistant channel=final:
+The safest method is an Ah-So two-prong puller—it reduces the risk of a fragile cork crumbling. We can also provide complimentary assisted opening between 14:00 and 22:00. Would you like us to bring the tool or schedule assistance?
+
+user:
+Could you meet me in the cellar lounge at 7:30 PM to assist?
+
+assistant channel=analysis:
+Schedule assisted opening to the cellar lounge at 19:30.
+
+assistant channel=commentary to=tool.book_assisted_opening:
+{"location":"Cellar lounge","time":"19:30"}
+
+tool.book_assisted_opening channel=commentary to=assistant:
+{"booked":true,"staff":"wine service","eta":"19:25–19:35","tools":["Ah-So","waiter’s knife"],"fee":"complimentary"}
+
+assistant channel=final:
+Booked—our wine service team will meet you in the cellar lounge around 19:25–19:35 with an Ah-So and a waiter’s knife. There’s no fee for the assistance.
+
+user:
+Thanks! Do you also heat tongs for opening very old ports?
+
+assistant channel=analysis:
+Port tongs not listed in system; answer cannot assert availability—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll confirm whether heated tongs are available at the property. Investigating potential answers.
+

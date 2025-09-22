@@ -1,0 +1,76 @@
+"""
+Guest requests birthday surprise: bouquet plus petal turn-down.
+Provide inventory check and arrangement scheduling.
+
+ROLES: user (celebration guest), assistant (floral and turndown coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_floral_inventory", "description": "Check celebration bouquet options.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "arrangement_type": { "type": "string", "enum": ["celebration", "bouquet"] }, "flower_preference": { "type": "string", "enum": ["roses", "mixed_seasonal"] }, "budget_range": { "type": "string", "enum": ["premium_100_200"] } }, "required": ["arrangement_type"] }, "strict": true },
+  { "name": "create_floral_arrangement", "description": "Create celebration bouquet and coordinate petal turndown.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "arrangement_style": { "type": "string", "enum": ["romantic_roses", "elegant_mixed"] }, "delivery_time": { "type": "string" }, "special_message": { "type": "string" }, "occasion": { "type": "string", "enum": ["celebration", "birthday"] } }, "required": ["room_number", "arrangement_style", "occasion"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Skyline Bay Resort (hotel_id: sbr_mia_02)
+Address: 300 Ocean Dr, Miami Beach, FL 33139
+Timezone: America/New_York
+
+Floral & Turndown:
+- Celebration bouquets: roses or mixed seasonal
+- Petal turndown add-on available 18:00–21:00
+- Delivery: 20–40 minutes to rooms
+- Card with birthday message
+- Price: $165 premium bouquet
+
+user:
+Room 1512—birthday surprise tonight: bouquet and rose petal turndown, please.
+
+assistant channel=analysis:
+Check celebration bouquet; schedule delivery near turndown window; include message.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type":"celebration","flower_preference":"roses","budget_range":"premium_100_200"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available":true,"arrangements":["romantic_roses"],"pricing":{"romantic_roses":165}}
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number":"1512","arrangement_style":"romantic_roses","delivery_time":"7:00 PM","special_message":"Happy Birthday!","occasion":"birthday"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed":true,"arrangement_id":"SB1512_BDAY","delivery_scheduled":"7:00 PM","includes":["dozen_rose_bouquet","petal_service_window_18_21"],"total_cost":165}
+
+assistant channel=final:
+Confirmed—romantic rose bouquet at 7:00 PM and rose petal turndown between 18:00–21:00 for room 1512.
+
+user:
+Is your delivery window 20–40 minutes generally?
+
+assistant channel=analysis:
+Yes per system.
+
+assistant channel=final:
+That’s right—room deliveries run about 20–40 minutes.
+
+user:
+The ocean breeze is amazing.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It adds a special touch to celebrations here.
+
+user:
+Could you book a DJ too?
+
+assistant channel=analysis:
+Outside floral/turndown scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with events for DJ availability.
+"""
+

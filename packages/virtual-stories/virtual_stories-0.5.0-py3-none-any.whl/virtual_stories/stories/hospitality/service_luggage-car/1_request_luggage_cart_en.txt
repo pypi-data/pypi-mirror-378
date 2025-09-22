@@ -1,0 +1,60 @@
+"""
+Guest requests a luggage cart to be sent to their room for checkout.
+
+ROLES: user (guest needing a luggage cart), assistant (bell desk coordinating cart dispatch and timing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_luggage_cart",
+    "description": "Send a luggage cart to a room or hold at bell desk.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "delivery_option": {"type": "string", "enum": ["deliver_to_room", "hold_at_bell_desk"]},
+        "needed_time": {"type": "string"}
+      },
+      "required": ["room_number", "delivery_option"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Seaside Promenade Hotel
+Bell Desk:
+- Luggage carts available 06:00–23:00
+- Options: deliver to room or hold at Bell Desk
+- Courtesy time: 15-minute window; carts should be returned to corridor alcove
+
+user:
+Can you send a luggage cart to 1502 in about 10 minutes?
+
+assistant channel=analysis:
+Deliver to room 1502 with needed_time 10 minutes from now.
+
+assistant channel=commentary to=tool.request_luggage_cart:
+{"room_number":"1502","delivery_option":"deliver_to_room","needed_time":"in 10 minutes"}
+
+tool.request_luggage_cart channel=commentary to=assistant:
+{"dispatch_id":"cart_8841","eta_minutes":10}
+
+assistant channel=final:
+We’ll deliver a luggage cart to room 1502 (dispatch cart_8841) in about 10 minutes. Please leave it in the corridor alcove after use.
+
+user:
+Thanks—your ocean mural by the elevators is cool.
+
+assistant channel=final:
+Bell Desk hours are 06:00–23:00 if you need assistance again.
+
+user:
+Can someone ride the cart with us for speed?
+
+assistant channel=final:
+[ATTENTION] Riding on carts isn’t part of our bell policy. Reviewing available resources.

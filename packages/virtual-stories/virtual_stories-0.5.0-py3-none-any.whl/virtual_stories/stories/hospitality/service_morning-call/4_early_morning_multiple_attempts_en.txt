@@ -1,0 +1,48 @@
+"""
+Guest wants an early morning call and asks how many attempts are made.
+
+ROLES: user (guest scheduling very early wake‑up), assistant (operator confirming attempt count and setting call)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_wake_up_call","description":"Set a wake‑up call for a room at a given time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time":{"type":"string"}},"required":["room_number","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Riverbend Suites — Wake‑Up Service
+Attempts: Up to 3 rings if unanswered
+Time Formats: 24‑hour or am/pm
+Knocks: Not included
+Desk Location: Opposite the atrium waterfall
+Availability: 24/7 automated
+
+user:
+I need a 4:30 am wake‑up in 605. How many times will it ring?
+
+assistant channel=analysis:
+Confirm attempt count; set the wake‑up at 04:30.
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"605","time":"04:30"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_605_0430","time":"04:30"}
+
+assistant channel=final:
+Wake‑up is scheduled for room 605 at 04:30 (wakeup_605_0430). The system rings up to three times if not answered; no courtesy knocks are included.
+
+user:
+That waterfall is relaxing.
+
+assistant channel=final:
+Our desk is directly opposite the atrium waterfall.
+
+user:
+If I sleep through, can someone come knock afterward?
+
+assistant channel=final:
+[ATTENTION] Door knocks aren’t part of the wake‑up options. Verifying information.
+

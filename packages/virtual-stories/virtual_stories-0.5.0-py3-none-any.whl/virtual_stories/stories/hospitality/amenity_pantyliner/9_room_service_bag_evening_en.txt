@@ -1,0 +1,75 @@
+"""
+Guest requests evening delivery of pantyliners via room service bag for extra discretion.
+Confirm availability and arrange the specified delivery method.
+
+ROLES: user (guest preferring room service bag method), assistant (night wellness staff)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check availability of personal care and hygiene supplies.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_category":{"type":"string","enum":["feminine_hygiene","personal_care","wellness_supplies","comfort_items"]},"specific_item":{"type":"string","enum":["pantyliners","sanitary_pads","tampons","intimate_wipes","pain_relief"]}},"required":["product_category"]},"strict":true},
+  {"name":"arrange_discreet_delivery","description":"Arrange private delivery of personal care items to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items_requested":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["housekeeping_discrete","wellness_staff","room_service_bag"]},"timing_preference":{"type":"string"}},"required":["room_number","items_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lantern Row Spa Hotel (hotel_id: lrsh_chi_48)
+Address: 221 N Columbus Dr, Chicago, IL 60601
+Timezone: America/Chicago
+
+Evening Wellness:
+- Pantyliners: Always (regular), Natracare (ultra‑thin)
+- Delivery: room_service_bag on request
+- ETA: 8–12 minutes
+- Extras: calming lavender sachet
+- 24/7 night staff
+
+user:
+Hi—room 2006. Could you send pantyliners in a room service bag this evening?
+
+assistant channel=analysis:
+Confirm availability; arrange room_service_bag.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"product_category":"feminine_hygiene","specific_item":"pantyliners"}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"brands":["Always","Natracare"],"types":["regular","ultra_thin"],"stock_sufficient":true,"delivery_options":["room_service_bag"]}
+
+assistant channel=final:
+Yes—Always regular and Natracare ultra‑thin are available. Which would you like for room 2006?
+
+user:
+Always regular.
+
+assistant channel=analysis:
+Arrange delivery with lavender sachet.
+
+assistant channel=commentary to=tool.arrange_discreet_delivery:
+{"room_number":"2006","items_requested":["always_pantyliners_regular"],"delivery_method":"room_service_bag","timing_preference":"evening"}
+
+tool.arrange_discreet_delivery channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":10,"package_contents":["always_regular_20ct","lavender_sachet"],"discreet_packaging":true}
+
+assistant channel=final:
+Confirmed—Always regular pantyliners will arrive in a room service bag to room 2006 in about 10 minutes, with a lavender sachet.
+
+user:
+Thanks! The skyline is gorgeous.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+It’s a beautiful backdrop tonight.
+
+user:
+Could you arrange dry cleaning pickup right now?
+
+assistant channel=analysis:
+Dry cleaning pickup not defined; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Accessing relevant resources.
+

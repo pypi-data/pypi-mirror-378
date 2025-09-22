@@ -1,0 +1,58 @@
+"""
+Guest needs a 12-page contract scanned duplex to USB; include in-context limits and one [ATTENTION] tool flow.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"quote_scan_job","description":"Quote scan","parameters":{"type":"object","properties":{"pages":{"type":"integer"},"color":{"type":"string","enum":["b&w","color"]}},"required":["pages","color"]}},
+  {"name":"scan_document","description":"Scan","parameters":{"type":"object","properties":{"pages":{"type":"integer"},"dpi":{"type":"integer"},"color":{"type":"string","enum":["b&w","color"]},"duplex":{"type":"boolean"},"ocr":{"type":"boolean"}},"required":["pages","dpi","color","duplex","ocr"]}}
+]
+"""
+
+system:
+Venue: Harborview Grand – Business Center (hotel_id: harborview_grand_bos)
+Scanner: ADF up to 50 pages per job; supports duplex and OCR.
+Recommended: 300 dpi b&w for text contracts.
+File format: PDF only.
+Turnaround: under 10 minutes for <30 pages.
+
+user:
+Can you scan a 12-page contract double-sided and save it to my USB?
+
+assistant channel=analysis:
+Confirm capability and limits from system; offer quote.
+
+assistant channel=final:
+Yes—we can do a duplex OCR scan to PDF and save to your USB. Our ADF supports up to 50 pages per job. Would you like a quick cost estimate?
+
+user:
+What would it cost in black and white?
+
+assistant channel=analysis:
+Use quote tool: 12 pages b&w at $0.25/page.
+
+assistant channel=commentary to=quote_scan_job:
+{"pages":12,"color":"b&w"}
+
+tool.quote_scan_job:
+{"currency":"USD","per_page":0.25,"pages":12,"total":3.0}
+
+assistant channel=final:
+It would be $3.00 in total for 12 b&w pages.
+
+user:
+[ATTENTION] Please scan now at 300 dpi, duplex on, OCR on.
+
+assistant channel=analysis:
+Run scan_document with pages=12, dpi=300, b&w, duplex=true, ocr=true.
+
+assistant channel=commentary to=scan_document:
+{"pages":12,"dpi":300,"color":"b&w","duplex":true,"ocr":true}
+
+tool.scan_document:
+{"status":"scanned","filename":"contract_duplex_bw_12pp.pdf"}
+
+assistant channel=final:
+Scan complete—contract saved as contract_duplex_bw_12pp.pdf. I can copy it to your USB when you’re ready.
+

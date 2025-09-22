@@ -1,0 +1,62 @@
+"""
+Guest requests to print a PDF document with page count and pickup spot.
+
+ROLES: user (guest needing document printing), assistant (business center agent handling prints and billing per page)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "print_document",
+    "description": "Print a PDF document for guest pickup and estimate cost.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "color": {"type": "boolean"},
+        "pickup_location": {"type": "string", "enum": ["front_desk", "business_center"]}
+      },
+      "required": ["room_number", "pages", "color", "pickup_location"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Beacon Square Hotel
+Printing:
+- File type: PDF only
+- Rates: B/W $0.20 per page; Color $0.50 per page
+- Pickup: Front Desk or Business Center
+• Billing: Posted to room folio
+
+user:
+I need 12 pages printed in black and white for room 1904. I’ll grab them at the front desk.
+
+assistant channel=analysis:
+Print 12 B/W pages, front desk pickup, estimate cost.
+
+assistant channel=commentary to=tool.print_document:
+{"room_number":"1904","pages":12,"color":false,"pickup_location":"front_desk"}
+
+tool.print_document channel=commentary to=assistant:
+{"job_id":"prt_6689","estimated_cost":2.4,"currency":"USD"}
+
+assistant channel=final:
+Printing queued—12 B/W pages for room 1904 (prt_6689). Estimated cost is $2.40 USD, and they’ll be ready at the Front Desk; the charge posts to your folio.
+
+user:
+Your lobby clock is handy.
+
+assistant channel=final:
+Pickup is at the Front Desk, and the print charge will post to your folio.
+
+user:
+Can you print from a Word document instead of PDF?
+
+assistant channel=final:
+[ATTENTION] Non‑PDF formats aren’t included in our print setup. Accessing relevant resources.

@@ -1,0 +1,65 @@
+"""
+Guest asks the exact Bluetooth name and quiet policy; then pairs.
+
+ROLES: user (guest), assistant (tech support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_room_audio_status","description":"Confirm room speaker name and status.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"pair_bluetooth","description":"Pair device to speaker.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"device_name":{"type":"string"}},"required":["room_number","device_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Indigo Wharf (hotel_id: inw_bos_17)
+Address: 70 Rowes Wharf, Boston, MA 02110
+Timezone: America/New_York
+
+Audio:
+- Speaker: IndigoBeat; name pattern "INW-ROOM-<room>"
+- Pairing: hold power 3s; timeout 120s
+- Quiet hours: 22:00–07:00
+- AUX available on request x0
+- Lobby evening playlist: “Harbor Neon”
+
+user:
+What exact name should I see in 1109?
+
+assistant channel=analysis:
+Check status to get the display_name; respond with it.
+
+assistant channel=commentary to=tool.check_room_audio_status:
+{"room_number":"1109"}
+
+tool.check_room_audio_status channel=commentary to=assistant:
+{"room_number":"1109","speaker_online":true,"pairing_mode":true,"display_name":"INW-ROOM-1109"}
+
+assistant channel=final:
+Look for “INW-ROOM-1109”. Hold the power button ~3 seconds if you need to re‑enter pairing.
+
+user:
+Pair to “Chris Pixel 8”. Also what are quiet hours?
+
+assistant channel=analysis:
+Pair to device; answer quiet hours from system.
+
+assistant channel=commentary to=tool.pair_bluetooth:
+{"room_number":"1109","device_name":"Chris Pixel 8"}
+
+tool.pair_bluetooth channel=commentary to=assistant:
+{"paired":true,"room_number":"1109","device_name":"Chris Pixel 8"}
+
+assistant channel=final:
+Done—“Chris Pixel 8” is connected to INW-ROOM-1109. Quiet hours are 22:00–07:00.
+
+user:
+Can you suggest a live jazz venue nearby?
+
+assistant channel=analysis:
+Recommendations not in system; mark attention.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your jazz venue request. Looking into it.
+

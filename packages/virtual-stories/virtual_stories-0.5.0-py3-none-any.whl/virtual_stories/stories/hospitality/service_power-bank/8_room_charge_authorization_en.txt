@@ -1,0 +1,50 @@
+"""
+Guest wants to confirm room charge authorization; we create a hold via tool, include small talk, and flag an out‑of‑scope external billing request.
+
+ROLES: user (guest preferring room charges), assistant (front desk setting a room charge hold)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"create_room_charge_hold","description":"Create a room charge hold for power bank lending.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]}}
+]
+```
+"""
+
+system:
+Hotel: Seabreeze Hotel
+Charging options:
+- Post to room or use a card at the desk
+- 1 unit per room; 24‑hour courtesy; $20 hold may apply after 24h
+- Front Desk pickup/return
+
+user:
+Can you set it to charge to room 808 if there are any fees?
+
+assistant channel=analysis:
+Create a room charge hold for room 808 via tool and confirm options.
+
+assistant channel=commentary to=tool.create_room_charge_hold:
+{"room":"808"}
+
+tool.create_room_charge_hold channel=commentary to=assistant:
+{"hold_id":"hold_room_808"}
+
+assistant channel=final:
+Room‑charge is set for room 808 (hold hold_room_808). We can post to the room or use a card at the desk. One unit per room; after 24 hours a $20 hold may apply.
+
+user:
+Great—thank you.
+
+assistant channel=final:
+Happy to help.
+
+user:
+Can you charge my corporate account directly?
+
+assistant channel=analysis:
+External billing isn’t defined; use special flag.
+
+assistant channel=final:
+[ATTENTION] External billing isn’t described here. Checking available options.
+

@@ -1,0 +1,89 @@
+"""
+Guest requests a custom fruit basket with delivery timing and asks follow-ups.
+
+ROLES: user (guest in room 721 requesting fruit basket), assistant (concierge coordinating room service and amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service",
+    "description": "Order food and beverages to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_name": {"type": "string"},
+        "room_number": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "notes": {"type": "string"}
+      },
+      "required": ["item_name", "room_number", "quantity"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Aurora Quay Hotel | Waterfront Wing
+Address: 88 Pierfront Ave, Marina District
+Check-in/Check-out: 15:00 / 12:00
+Room Service (Food & Beverage): 06:30–23:30 daily
+Contact: In-room dining ext. 55 | Concierge ext. 0
+
+Fruit Program (details):
+- Standard bowl: apples, bananas, grapes
+- Seasonal upgrade: mango, dragon fruit, berries
+- Allergy handling: peel-only option; knife-free prep available
+- Pricing: Standard $14 | Seasonal $24 | Add coconut water $5
+- Delivery window: 15–25 min standard; 8–12 min priority (floors 6–10)
+
+Sustainability & sourcing (JSON):
+{
+  "local_farms": ["Bayview Orchards", "Sunrise Valley"],
+  "composting": true,
+  "plastic_free_packaging": true,
+  "daily_quality_checks": "07:00"
+}
+
+user:
+Hi, I’m in 721. Could I get a seasonal fruit basket with extra berries?
+
+assistant channel=analysis:
+Place a seasonal fruit order to room 721 with a note about extra berries. Use room service tool.
+
+assistant channel=commentary to=tool.order_room_service:
+{"item_name":"seasonal fruit basket","room_number":"721","quantity":1,"notes":"extra berries"}
+
+tool.order_room_service channel=commentary to=assistant:
+{"status":"success","eta_minutes":20,"order_id":"AUR-721-FRUIT-2002"}
+
+assistant channel=final:
+All set—your seasonal fruit basket with extra berries is on its way to 721. Estimated delivery is about 20 minutes.
+
+user:
+Thanks! Until what time does room service run tonight?
+
+assistant channel=analysis:
+Answer from system: Room Service 06:30–23:30 daily.
+
+assistant channel=final:
+Room Service runs 06:30–23:30.
+
+user:
+The marina views look calming.
+
+assistant channel=final:
+Enjoy the waterfront—hope the fruit pairs nicely with the view.
+
+user:
+Do you happen to know if the nearby aquarium has late-night hours today?
+
+assistant channel=analysis:
+Beyond system context; flag with [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] I’m checking on those aquarium hours for you.
+

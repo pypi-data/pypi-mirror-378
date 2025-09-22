@@ -1,0 +1,71 @@
+"""
+Guest plans patio dinner and asks for one device with extra mats and setup tips.
+
+ROLES: user (guest dining outdoors), assistant (amenity runner with setup guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"send","description":"Send amenity to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","item","qty"]},"strict":true},
+  {"name":"tips","description":"Provide outdoor dinner setup tips.","parameters":{"type":"object","additionalProperties":false,"properties":{"scope":{"type":"string","enum":["patio_dinner"]}},"required":["scope"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Jardin del Mar (hotel_id: jdm_es_11)
+Address: Paseo del Faro 10, Marbella 29602, Spain
+Hours: 10:00–22:00 amenity delivery
+Kits include: device + 2 mats
+Extra info:
+- Refill packs available in sets of 2, 4, 6
+- Suggested placement: leeward side of table, 1 m away
+- Wind note: block breeze with screen for consistency
+- Power points: patio column outlets, waterproof
+- Standard ETA: 12–18 minutes
+
+user:
+Room 310—we’re having dinner on the patio. Could you send one device and a 4-pack of refills? Any placement tips?
+
+assistant channel=analysis:
+Send device and four mats; provide patio tips from tool. Keep to provided facts.
+
+assistant channel=commentary to=tool.send:
+{"room":"310","item":"electric_mosquito_coil_device","qty":1}
+
+tool.send channel=commentary to=assistant:
+{"ticket":"JDM-310-EMC-551","eta_minutes":15}
+
+assistant channel=commentary to=tool.send:
+{"room":"310","item":"mosquito_coil_refill_mat","qty":4}
+
+tool.send channel=commentary to=assistant:
+{"ticket":"JDM-310-REF-552","eta_minutes":15}
+
+assistant channel=commentary to=tool.tips:
+{"scope":"patio_dinner"}
+
+tool.tips channel=commentary to=assistant:
+{"tips":["Place leeward, ~1 m from seating","Use patio outlet on column","Shield from wind with screen"]}
+
+assistant channel=final:
+On the way to 310: device (JDM-310-EMC-551) and 4-pack of refills (JDM-310-REF-552), ETA ~15 minutes. Tips: place leeward about 1 m from the table, use the patio column outlet, and shield from wind with a screen for steady effect.
+
+user:
+Great—thank you. The bougainvillea is beautiful.
+
+assistant channel=analysis:
+Chitchat response.
+
+assistant channel=final:
+It adds a vibrant touch to the patio.
+
+user:
+Can you provide a citronella candle too?
+
+assistant channel=analysis:
+Candles are not mentioned in system/tools.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability of citronella candles.
+

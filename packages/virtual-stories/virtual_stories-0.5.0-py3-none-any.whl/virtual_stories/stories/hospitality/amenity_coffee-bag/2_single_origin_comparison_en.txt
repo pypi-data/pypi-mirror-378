@@ -1,0 +1,85 @@
+"""
+Guest compares two single-origin coffee bags and orders one for delivery.
+
+ROLES: user (guest exploring specialty coffee), assistant (concierge/boutique liaison)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_coffee_inventory","description":"List boutique coffee bags with prices","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["single_origin","all"]}},"required":[]},"strict":true},
+  {"name":"get_coffee_details","description":"Get details for a coffee SKU","parameters":{"type":"object","additionalProperties":false,"properties":{"product_sku":{"type":"string"}},"required":["product_sku"]},"strict":true},
+  {"name":"place_boutique_order","description":"Place room delivery order","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"qty":{"type":"integer"}},"required":["sku","qty"],"additionalProperties":false}},"delivery_option":{"type":"string","enum":["room_delivery","front_desk_pickup"]}},"required":["room_number","items","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Redwood Wharf Hotel (hotel_id: rwh_san_francisco)
+Address: 415 Embarcadero Ave, San Francisco, CA 94111
+Timezone: America/Los_Angeles
+
+Boutique Coffee Program:
+- Curated single-origin selection rotates weekly
+- Complimentary delivery for boutique orders over $30; otherwise $6 fee
+Operating hours: boutique 9:00–20:00; delivery until 21:30
+
+Sample SKUs:
+- COF_SO_COLOMBIA_8: Colombia Huila 8oz
+- COF_SO_ETHIOPIA_8: Ethiopia Guji 8oz
+- COF_BLEND_HOUSE_12: House Blend 12oz
+
+Roasting Notes:
+- Ethiopia Guji: jasmine, bergamot, apricot; light roast
+- Colombia Huila: caramel, cacao nibs; medium roast
+
+user:
+Hi! I’d like to compare your Ethiopia Guji and Colombia Huila coffees. What are the differences and prices?
+
+assistant channel=analysis:
+Pull inventory single_origin and details for both SKUs; present notes and prices.
+
+assistant channel=commentary to=tool.get_coffee_inventory:
+{"category":"single_origin"}
+
+tool.get_coffee_inventory channel=commentary to=assistant:
+{"products":[{"sku":"COF_SO_ETHIOPIA_8","name":"Ethiopia Guji 8oz","price":34},{"sku":"COF_SO_COLOMBIA_8","name":"Colombia Huila 8oz","price":28}]}
+
+assistant channel=commentary to=tool.get_coffee_details:
+{"product_sku":"COF_SO_ETHIOPIA_8"}
+
+tool.get_coffee_details channel=commentary to=assistant:
+{"sku":"COF_SO_ETHIOPIA_8","origin":"Guji, Ethiopia","roast":"Light","notes":"jasmine, bergamot, apricot","process":"Washed","roast_date":"2025-08-25"}
+
+assistant channel=commentary to=tool.get_coffee_details:
+{"product_sku":"COF_SO_COLOMBIA_8"}
+
+tool.get_coffee_details channel=commentary to=assistant:
+{"sku":"COF_SO_COLOMBIA_8","origin":"Huila, Colombia","roast":"Medium","notes":"caramel, cacao nibs","process":"Washed","roast_date":"2025-08-26"}
+
+assistant channel=final:
+Ethiopia Guji 8oz ($34) is a light roast with jasmine, bergamot, and apricot notes; Colombia Huila 8oz ($28) is a medium roast with caramel and cacao nibs. Which would you like?
+
+user:
+I’ll take the Ethiopia Guji to room 936. Also, your lobby has a great view.
+
+assistant channel=final:
+Thank you—our lobby looks straight across the Embarcadero.
+
+assistant channel=commentary to=tool.place_boutique_order:
+{"room_number":"936","items":[{"sku":"COF_SO_ETHIOPIA_8","qty":1}],"delivery_option":"room_delivery"}
+
+tool.place_boutique_order channel=commentary to=assistant:
+{"order_id":"RWH-COF-209","total_amount":34,"delivery_fee":6,"delivery_eta_minutes":22}
+
+assistant channel=final:
+Order RWH-COF-209 is placed—$34 plus $6 delivery, arriving in about 22 minutes.
+
+user:
+Do you know if the farmers are paid Fairtrade premiums for this lot?
+
+assistant channel=analysis:
+Not in context; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check what we have on sourcing certifications.
+

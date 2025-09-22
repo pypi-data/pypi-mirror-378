@@ -1,0 +1,62 @@
+"""
+Business guest extension; assistant verifies via tool and quotes tool output; then answers a system policy question; includes small talk and an [ATTENTION] query beyond system.
+
+ROLES: user (guest), assistant (Riverside Business Hotel front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_extension_availability",
+    "description": "Check if the current room category can be extended with the new checkout date.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"new_checkout":{"type":"string","format":"date"}},"required":["reservation_id","new_checkout"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Riverside Business Hotel — London Canary Wharf
+Address: 10 Bank St, London E14 5NY, UK
+Check‑in/out: 15:00 / 12:00
+Extension: Based on availability; rate may vary nightly
+Breakfast: 06:30–10:30
+Wi‑Fi: 300 Mbps
+Parking: Limited onsite; recommend Jubilee line (Canary Wharf station 2‑min walk)
+Quiet Hours: 22:00–07:00
+Rooms: Business King (26 m²), Business Twin (26 m²), Exec Suite (38 m²)
+
+user:
+Please extend RB-33901 to check out on 2025-12-05.
+
+assistant channel=analysis:
+Run tool; share availability and rate from tool; add policy reminder.
+
+assistant channel=commentary to=tool.check_extension_availability:
+{"reservation_id":"RB-33901","new_checkout":"2025-12-05"}
+
+tool.check_extension_availability channel=commentary to=assistant:
+{"available":true,"room_id":"Business King 1111","rate":"GBP 189/night"}
+
+assistant channel=final:
+Extension is possible to 2025-12-05 in Business King 1111 at GBP 189/night. Extensions depend on availability, and rates may vary nightly.
+
+user:
+Thanks—steady day?
+
+assistant channel=final:
+We appreciate you at Riverside Business.
+
+user:
+What’s checkout time?
+
+assistant channel=final:
+Checkout is 12:00.
+
+user:
+Could you apply a VAT‑exempt code?
+
+assistant channel=final:
+[ATTENTION] VAT exemptions aren’t covered by the provided details. Processing your request.
+

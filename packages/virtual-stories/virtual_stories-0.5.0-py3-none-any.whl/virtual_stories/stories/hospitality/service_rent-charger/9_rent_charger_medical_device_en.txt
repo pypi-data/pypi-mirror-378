@@ -1,0 +1,54 @@
+"""
+Guest with medical device needs specialized charger; confirm medical device compatibility, discuss medical support, and arrange delivery.
+
+ROLES: user (guest with medical device requiring specialized charging), assistant (front desk providing medical device support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check charger stock (USB-C/Lightning/Micro-USB)","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create charger rental order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Midtown Arc Toronto (MATO-06), 200 Front St W, Toronto, ON M5V 3J1, Canada.
+Business hotel; 32 floors; Front Desk 24/7.
+Phone chargers: USB-C (15), Lightning (10), Micro-USB (6); complimentary up to 4 hours, then CAD 3/hour; code RENT-CHGR.
+Medical support: Medical device chargers available; Specialized charging for medical equipment; Medical concierge services; Emergency medical support.
+Other facts: Medical concierge available; Local hospital partnerships; Emergency medical equipment; Accessibility services.
+
+user:
+I have a continuous glucose monitor that needs charging, and I need a reliable charger that won't interfere with medical devices. Room 2003.
+
+assistant channel=analysis:
+The guest has a medical device (continuous glucose monitor) that requires specialized charging. I should prioritize medical-grade chargers and discuss medical support services.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"MATO-06","item":"charger_medical","quantity":1,"room":"2003"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["CHG-MED-02"],"notes":"Medical device compatible; interference-free; medical-grade"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"MATO-06","room":"2003","item":"charger_medical","duration_hours":8,"charge_code":"MEDICAL-SUPPORT","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CHG-2003-8849","status":"created","charge_policy":"Medical support: complimentary","medical_features":"interference-free, medical-grade"}
+
+assistant channel=final:
+Perfect for your medical device! Medical charger CHG-MED-02 is designed to be interference-free and compatible with continuous glucose monitors. Order CHG-2003-8849 is complimentary for medical support. We'll deliver it to room 2003, and our medical concierge is available if you need any assistance.
+
+user:
+Thank you! The medical support here gives me peace of mind.
+
+assistant channel=final:
+We're committed to supporting our guests' health needs and ensuring medical devices work properly throughout your stay.
+
+user:
+Do you have any partnerships with local medical device suppliers for specialized equipment?
+
+assistant channel=final:
+[ATTENTION] Checking available medical partnerships.

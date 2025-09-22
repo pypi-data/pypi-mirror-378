@@ -1,0 +1,59 @@
+"""
+Guest requests a razor and inquires about shaving cream; assistant clarifies scope, confirms complimentary status, and delivery timing.
+
+ROLES: user (Traveler packing light.), assistant (Helpful front desk.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "send_complimentary_item",
+    "description": "Sends a complimentary item to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"}
+      },
+      "required": ["room_number", "item_name"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Hillcrest Garden Hotel
+Complimentary Amenity Kits: Razor, Dental, Sewing
+Delivery Time: 10 minutes average
+Limit: Two per room per day
+Extra: Each kit includes a small disposal pouch
+Contact: 0
+
+user:
+Hello—room 1519. Could I get a razor and maybe a small shaving cream?
+
+assistant channel=analysis:
+We provide razors (complimentary) but no shaving cream is listed. I’ll send the razor and clarify scope.
+
+assistant channel=commentary to=tool.send_complimentary_item:
+{"room_number": "1519", "item_name": "razor"}
+
+tool.send_complimentary_item channel=commentary to=assistant:
+{"status": "success", "message": "Razor sent to 1519."}
+
+assistant channel=final:
+I’ve sent a complimentary razor to 1519—ETA about 10 minutes. I don’t have shaving cream in my system.
+
+user:
+Is the razor free?
+
+assistant channel=final:
+Yes—razor, dental, and sewing kits are complimentary. You can request up to two per day.
+
+user:
+[ATTENTION] Can you bring a beard trimmer too?
+
+assistant channel=final:
+I don’t have trimmers available in my system—only the listed amenity kits.
+

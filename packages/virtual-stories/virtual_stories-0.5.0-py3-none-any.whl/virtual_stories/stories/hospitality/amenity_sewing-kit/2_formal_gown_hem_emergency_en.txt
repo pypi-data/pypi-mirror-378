@@ -1,0 +1,115 @@
+"""
+Guest needs emergency hem fix for formal gown before gala dinner; deliver sewing kit or arrange assistance.
+
+ROLES: user (guest attending gala with hem issue), assistant (housekeeping supervisor with sewing amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Midtown Heritage Hotel Chicago (hotel_id: mhh_ord_02)
+Address: 233 W Ontario St, Chicago, IL 60654
+Timezone: America/Chicago
+
+Sewing Support Program:
+- Kits: basic (needle, thread black/white/beige, safety pins), executive (micro-scissors, hem tape, fabric chalk, extra buttons), emergency (pre-threaded needles, quick-hem strips)
+- Assistance window: 06:30–23:00 daily for on-site assistance
+- Valet tailoring: pick-up by 20:00, next-day by 12:00
+- Color threads stocked: black, white, beige, navy, charcoal
+- Sterilization: tools sanitized with UV cabinet after each use
+
+Floors & Access:
+- Floors 3–12: basic kit stations near elevators
+- Floors 13–22: executive kits via housekeeping pantries every 3 floors
+- Club Level (23–25): emergency kits on demand; priority delivery < 10 minutes
+
+Contact & Notes:
+- Housekeeping desk ext: 63
+- Typical delivery: 8–20 minutes depending on floor
+- Limit: 1 emergency kit per room per day without charge
+- Safety advisory: do not apply hem tape on silk longer than 12 hours
+
+user:
+Hi—my evening gown’s hem came loose. I’m in 2312 and the gala starts in an hour. Do you have anything I can use to fix it quickly?
+
+assistant channel=analysis:
+Gown hem fix; floor 23 Club Level. Check emergency kit for 23 and deliver; offer on-site assistance within program hours.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type":"emergency","floor_level":"23"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available":true,"kit_contents":["pre_threaded_needles","quick_hem_strips","mini_scissors","safety_pins"],"eta_minutes":6}
+
+assistant channel=analysis:
+Emergency kit is available with quick hem strips. Arrange emergency kit delivery to 2312; include on-site assistance offer.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number":"2312","service_type":"kit_delivery","urgency":"emergency","garment_type":"evening_gown"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged":true,"delivery_time":"6_minutes","staff_assigned":"club_level_attendant","assistance_offered":true}
+
+assistant channel=final:
+Yes—we have an emergency kit with quick hem strips and pre-threaded needles. I’m sending it to room 2312 now; it’ll arrive in 6 minutes. I can also have our attendant assist right away.
+
+user:
+That’s a relief. Is your on-site assistance available this late?
+
+assistant channel=analysis:
+Answer using system: assistance window 06:30–23:00; it’s within hours.
+
+assistant channel=final:
+Yes—our on-site assistance runs 06:30–23:00 daily, so you’re within the window.
+
+user:
+Thanks! Also, quick question—favorite deep-dish spot nearby?
+
+assistant channel=analysis:
+Local restaurant advice is beyond system context. Use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look into nearby deep-dish options and get back to you.
+
+user:
+Appreciate the rescue. Your lobby looked lovely earlier.
+
+assistant channel=analysis:
+Chit-chat acknowledgment; do not add new facts beyond system.
+
+assistant channel=final:
+Thank you! I’m glad you’re enjoying your evening—your kit is moments away.

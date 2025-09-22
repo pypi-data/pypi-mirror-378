@@ -1,0 +1,52 @@
+"""
+Guest asks whether there’s a voice menu and requests the main number; include an out-of-scope request for menu audio.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Bluewake Pier Hotel (hotel_id: bluewake_pier)
+Main phone: +33 1 79 55 4000 | Email bonjour@bluewakepier.fr | Web https://bluewakepier.fr
+Phone system: Simple voice menu during day; operator answers directly after 21:00
+Extras: Oyster bar 17:00–22:00; Riverside promenade.
+
+user:
+Do you have a voice menu? What’s your main number?
+
+assistant channel=analysis:
+Answer from system and provide number via tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"bluewake_pier","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+33 1 79 55 4000"}
+
+assistant channel=final:
+We use a simple voice menu during the day. Our main number is +33 1 79 55 4000.
+
+user:
+The oyster bar was fantastic.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+Delighted you enjoyed it—open 17:00–22:00.
+
+user:
+Can you send me the audio file of the menu?
+
+assistant channel=analysis:
+Out of scope—no audio files available.
+
+assistant channel=final:
+[ATTENTION] We don’t have an audio file available within the provided resources.
+

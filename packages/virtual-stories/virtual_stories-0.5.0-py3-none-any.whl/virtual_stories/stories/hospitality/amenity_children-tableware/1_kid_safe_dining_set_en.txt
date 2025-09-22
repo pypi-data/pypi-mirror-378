@@ -1,0 +1,107 @@
+"""
+Guest requests child-safe tableware for a toddler; confirm available materials and sizes, then arrange delivery with sterilization.
+
+ROLES: user (parent requesting children’s tableware), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "list_children_tableware",
+    "description": "List available children’s tableware sets and components.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "age_group": { "type": "string", "enum": ["toddler_1_3", "child_4_7", "child_8_12"] },
+        "material_pref": { "type": "string", "enum": ["silicone", "bamboo", "pp_bpa_free", "any"] }
+      }
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_children_tableware",
+    "description": "Deliver selected children’s tableware to the room with optional sterilization.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "set_name": { "type": "string" },
+        "pieces": { "type": "array", "items": { "type": "string" } },
+        "sterilize": { "type": "boolean" }
+      },
+      "required": ["room_number", "set_name"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_family_policy",
+    "description": "Return family amenities policy and safety notes.",
+    "parameters": { "type": "object", "additionalProperties": false },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Sunbeam Family Resort (hotel_id: sfr_orl_07)
+Address: 950 Sunshine Way, Orlando, FL 32821
+Timezone: America/New_York
+
+Family Amenities:
+- Children’s tableware sets: silicone (soft-edged), bamboo (lightweight), PP BPA-free (durable)
+- Pieces: suction bowl, divided plate, spill-proof cup, training fork/spoon
+- Sterilization: steam cabinet available on request
+
+Policy:
+- Family items are loaned and collected during evening turndown
+- Delivery window: 10–20 minutes; priority for guests with infants
+- Safety notes: soft-edged utensils; no sharp knives in children sets
+
+Design Notes:
+- Lobby mural features sun rays and playful cloud motifs
+
+user:
+Hi! Do you have toddler-safe tableware for room 241? We’ve got a 2-year-old who needs a suction bowl and a small spoon.
+
+assistant channel=analysis:
+List available sets for toddler age group and suitable materials.
+
+assistant channel=commentary to=tool.list_children_tableware:
+{"age_group":"toddler_1_3","material_pref":"any"}
+
+tool.list_children_tableware channel=commentary to=assistant:
+{"sets":[{"name":"Silicone Starter","pieces":["suction_bowl","training_spoon","spill_cup"],"notes":"soft_edges"},{"name":"Bamboo Buddy","pieces":["bamboo_bowl","small_spoon","spill_cup"],"notes":"lightweight"},{"name":"PP Durable Mini","pieces":["divided_plate_small","spoon","cup_with_lid"],"notes":"bpa_free"}]}
+
+assistant channel=final:
+Yes—we have three toddler-friendly options: Silicone Starter (suction bowl, training spoon, spill cup), Bamboo Buddy (bamboo bowl, small spoon, spill cup), and PP Durable Mini (divided plate small, spoon, cup with lid). Which set would you like for room 241, and would you prefer it steam-sterilized?
+
+user:
+Let’s do the Silicone Starter, and please sterilize it. Also, the lobby mural is adorable!
+
+assistant channel=analysis:
+Respond to the design compliment, then arrange delivery with sterilize=true.
+
+assistant channel=final:
+Thank you—the sun-and-clouds mural is a guest favorite.
+
+assistant channel=commentary to=tool.deliver_children_tableware:
+{"room_number":"241","set_name":"Silicone Starter","pieces":["suction_bowl","training_spoon","spill_cup"],"sterilize":true}
+
+tool.deliver_children_tableware channel=commentary to=assistant:
+{"ticket_id":"FAM-241-3328","eta_minutes":14,"set":"Silicone Starter","sterilized":"steam_cabinet"}
+
+assistant channel=final:
+Great—ticket FAM-241-3328 is confirmed for room 241. The Silicone Starter set will arrive in about 14 minutes, steam-sterilized in our cabinet.
+
+user:
+Do you also rent out strollers?
+
+assistant channel=analysis:
+Stroller rentals are outside the defined tools here; use special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking on stroller rentals. Looking up the latest information.
+

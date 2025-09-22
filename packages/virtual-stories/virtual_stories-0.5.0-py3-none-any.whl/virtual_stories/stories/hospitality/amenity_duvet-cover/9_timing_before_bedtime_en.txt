@@ -1,0 +1,52 @@
+"""
+Guest wants cover delivered before bedtime; include window query, chat, and attention.
+
+ROLES: user (guest 723), assistant (housekeeping scheduling)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_housekeeping_window","description":"Return evening service end time.","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true},
+  {"name":"request_linen_delivery","description":"Deliver a queen cover.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"linen_type":{"type":"string","enum":["duvet_cover"]},"size":{"type":"string","enum":["queen"]},"quantity":{"type":"integer"}},"required":["room_number","linen_type","size","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Willow Creek Hotel (hotel_id: wch_den)
+Address: 910 Creek Ln, Denver, CO 80202
+Timezone: America/Denver
+Evening Service:
+- Hours: 18:30–21:30
+- Items supported: duvet_cover
+- Average ETA: 12–20 min
+- Stock: queen 19
+- Note: Quiet floors after 21:00
+
+user:
+Could I get a queen duvet cover to 723 before 9 pm?
+
+assistant channel=analysis:
+Deliver now; within evening hours.
+
+assistant channel=commentary to=tool.request_linen_delivery:
+{"room_number":"723","linen_type":"duvet_cover","size":"queen","quantity":1}
+
+tool.request_linen_delivery channel=commentary to=assistant:
+{"ok":true,"eta_minutes":13}
+
+assistant channel=final:
+Yes—one queen cover is on the way. ETA about 13 minutes, well before 21:00.
+
+user:
+The fireplace lounge downstairs was cozy.
+
+assistant channel=final:
+It’s a comfortable spot to unwind.
+
+user:
+Do you use down-alternative inserts by default?
+
+assistant channel=final:
+[ATTENTION] I’ll confirm insert details.
+

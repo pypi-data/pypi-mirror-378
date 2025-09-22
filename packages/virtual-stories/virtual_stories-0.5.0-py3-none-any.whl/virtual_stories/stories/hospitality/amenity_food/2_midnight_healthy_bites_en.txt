@@ -1,0 +1,108 @@
+"""
+Guest asks for healthy late-night bites and delivery ETA.
+Provide menu options and order placement.
+
+ROLES: user (health-conscious traveler), assistant (room service coordinator with kitchen access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_kitchen_availability","description":"Check kitchen hours and late-night status.","parameters":{"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["late_night_menu","room_service"]},"time_requested":{"type":"string"}},"required":["service_type"]},"strict":true},
+  {"name":"get_available_menu_items","description":"List menu items by category/diet.","parameters":{"type":"object","additionalProperties":false,"properties":{"menu_type":{"type":"string","enum":["healthy_options","late_night","room_service"]},"dietary_restrictions":{"type":"array","items":{"type":"string","enum":["vegetarian","vegan","gluten_free","dairy_free","keto","none"]}},"portion_size":{"type":"string","enum":["light_snack","regular_meal"]}},"required":["menu_type"]},"strict":true},
+  {"name":"place_food_order","description":"Place a food order for delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"special_instructions":{"type":"string"},"estimated_delivery":{"type":"string"},"total_cost":{"type":"number"}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Canyon Vista Wellness Retreat (hotel_id: cvw_12)
+Address: 240 Ridge Trail, Sedona, AZ 86336
+Timezone: America/Phoenix
+
+Food Services:
+- Late-night window: 10:30 PM – 5:30 AM
+- Healthy options focus: low-sodium, whole grains, light proteins
+- Infused water carafes: cucumber-mint or lemon-ginger
+- Average delivery: 20–30 minutes
+- Complimentary delivery fee for in-room wellness menu
+
+Healthy Menu Highlights:
+- Light snacks: hummus & veggie sticks ($14), almond-butter rice cakes ($12), Greek yogurt with honey ($13)
+- Bowls: quinoa roasted veggie bowl ($22), miso tofu and brown rice bowl ($20)
+- Sides: mixed berries ($10), avocado toast mini ($12)
+
+user:
+Are you still serving healthy late-night snacks right now?
+
+assistant channel=analysis:
+Verify late-night availability for healthy options.
+
+assistant channel=commentary to=tool.check_kitchen_availability:
+{"service_type":"late_night_menu","time_requested":"current"}
+
+tool.check_kitchen_availability channel=commentary to=assistant:
+{"available":true,"window":"10:30 PM – 5:30 AM","status":"open","eta":"20–30 minutes"}
+
+assistant channel=final:
+Yes—our late-night menu is open, and healthy options are available with a 20–30 minute delivery time. What are you in the mood for—light snacks or a warm bowl?
+
+user:
+Light snack please. I'm in room 332.
+
+assistant channel=analysis:
+Fetch healthy light snacks then place the order.
+
+assistant channel=commentary to=tool.get_available_menu_items:
+{"menu_type":"healthy_options","dietary_restrictions":["none"],"portion_size":"light_snack"}
+
+tool.get_available_menu_items channel=commentary to=assistant:
+{"menu_items":[{"name":"hummus_veggie_sticks","price":14},{"name":"almond_butter_rice_cakes","price":12},{"name":"greek_yogurt_honey","price":13}],"prep_time":"10–12 minutes"}
+
+assistant channel=analysis:
+Offer choices; confirm one and place order for room 332.
+
+assistant channel=final:
+We can do hummus with veggie sticks ($14), almond‑butter rice cakes ($12), or Greek yogurt with honey ($13). Which would you like?
+
+user:
+Hummus and veggies, thanks.
+
+assistant channel=analysis:
+Place the order for room 332.
+
+assistant channel=commentary to=tool.place_food_order:
+{"room_number":"332","items":["hummus_veggie_sticks"],"estimated_delivery":"~25 minutes","total_cost":14}
+
+tool.place_food_order channel=commentary to=assistant:
+{"order_confirmed":true,"order_id":"CVW-332-020","eta":"25 minutes","items":["hummus_veggie_sticks"],"total":14}
+
+assistant channel=final:
+Order CVW-332-020 is placed—hummus with veggie sticks will arrive in about 25 minutes. Delivery is complimentary.
+
+user:
+Is infused water included?
+
+assistant channel=analysis:
+Answer from system—infused water carafes exist; not stated as included. Only delivery fee complimentary. Avoid assumptions; answer with available info only.
+
+assistant channel=final:
+We offer cucumber‑mint or lemon‑ginger infused water carafes. Would you like one added?
+
+user:
+The red rocks look surreal at night.
+
+assistant channel=analysis:
+Small talk response.
+
+assistant channel=final:
+They do—moonlit trails make them glow softly.
+
+user:
+Can you secure a hiking permit for sunrise?
+
+assistant channel=analysis:
+Out of scope—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

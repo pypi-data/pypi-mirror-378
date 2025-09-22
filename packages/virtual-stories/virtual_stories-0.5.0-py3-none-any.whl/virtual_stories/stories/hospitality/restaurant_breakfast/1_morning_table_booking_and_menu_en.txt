@@ -1,0 +1,130 @@
+"""
+Guest requests a breakfast table and asks for a quick menu preview; include small talk and one out-of-scope follow-up using the special flag.
+
+ROLES: user (guest planning breakfast), assistant (restaurant concierge handling breakfast seating and menu previews)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "list_restaurants",
+    "description": "List on-property restaurants with cuisine and hours.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": { "type": "string" },
+        "meal_period": { "type": "string", "enum": ["breakfast","lunch","dinner","late_night"] }
+      },
+      "required": ["hotel_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_table_availability",
+    "description": "Check table availability for a restaurant.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "restaurant_id": { "type": "string" },
+        "party_size": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "datetime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["restaurant_id","party_size","datetime"]
+    },
+    "strict": true
+  },
+  {
+    "name": "book_table",
+    "description": "Book a table when availability exists.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "restaurant_id": { "type": "string" },
+        "guest_name": { "type": "string" },
+        "contact": { "type": "string" },
+        "party_size": { "type": "integer" },
+        "datetime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["restaurant_id","guest_name","contact","party_size","datetime"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_menu_section",
+    "description": "Fetch a menu section preview for a restaurant.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "restaurant_id": { "type": "string" },
+        "section": { "type": "string", "enum": ["starters","mains","desserts","beverages"] }
+      },
+      "required": ["restaurant_id","section"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harborlight Suites Boston (hotel_id: harborlight_suites_bos)
+Address: 12 Atlantic Wharf, Boston, MA 02210
+Timezone: America/New_York
+Dining Venues:
+- Sunrise Pantry (restaurant_id: rest_sunrise_pantry) — Breakfast 06:30–10:30; casual buffet + à la carte; ocean-facing seating.
+- Seaside Bistro (restaurant_id: rest_seaside_bistro) — Lunch & dinner 11:30–22:00; New England classics.
+Notes:
+• Step-free access to Sunrise Pantry via Lobby A.
+• Families welcome; high chairs available on request.
+
+user:
+Could you book breakfast for 3 tomorrow at 9:00 at Sunrise Pantry under Alex Morgan? Also, can I see some beverages?
+
+assistant channel=analysis:
+List breakfast venues to confirm Sunrise Pantry serves breakfast; then check 09:00 availability for 3 and, if available, book. After booking, fetch beverages section preview.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"harborlight_suites_bos","meal_period":"breakfast"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_sunrise_pantry","name":"Sunrise Pantry","hours":"06:30-10:30","cuisine":"breakfast"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_sunrise_pantry","party_size":3,"datetime":"2025-09-01T09:00:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"B07","hold_until":"2025-09-01T09:10:00"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_sunrise_pantry","guest_name":"Alex Morgan","contact":"","party_size":3,"datetime":"2025-09-01T09:00:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"SUN-BRK-3102"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_sunrise_pantry","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"Freshly Squeezed Orange Juice"},{"name":"Cold Brew Coffee"},{"name":"Harborlight Breakfast Tea"}]}
+
+assistant channel=final:
+Your 9:00 AM table for 3 at Sunrise Pantry is confirmed (SUN-BRK-3102). Beverages preview: Freshly Squeezed Orange Juice, Cold Brew Coffee, Harborlight Breakfast Tea. Anything else for your morning?
+
+user:
+By the way, the lobby coffee aroma is lovely this morning.
+
+assistant channel=final:
+Thanks for the kind words.
+
+user:
+Do you have details on who roasts your coffee beans and their sourcing notes?
+
+assistant channel=analysis:
+No tool or system details for vendor sourcing; use the neutral processing flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for the thoughtful question about our coffee roaster. Checking available options.

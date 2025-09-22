@@ -1,0 +1,62 @@
+"""
+Conference attendee requests extension; assistant checks via tool and reports tool outcome with policy; answers a system detail; includes small talk and an [ATTENTION] query outside system.
+
+ROLES: user (guest), assistant (Capital Centre Hotel desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_extension_availability",
+    "description": "Check if the current room category can be extended with the new checkout date.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"new_checkout":{"type":"string","format":"date"}},"required":["reservation_id","new_checkout"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Capital Centre Hotel — Ottawa
+Address: 88 Wellington St, Ottawa, ON K1A 0A6, Canada
+Check‑in/out: 15:00 / 12:00
+Extension: Availability‑based; nightly rate may change
+Breakfast: 06:30–10:00
+Wi‑Fi: 250 Mbps
+Parking: Self CAD 28/night; Valet CAD 42/night; EV 6 ports
+Quiet Hours: 22:00–07:00
+Rooms: Parliament King (28 m²), Parliament Twin (28 m²), Corner King (32 m²)
+
+user:
+Could you extend CC-77890 to check out on 2025-02-17?
+
+assistant channel=analysis:
+Check extension and present room/rate from tool; mention policy from system.
+
+assistant channel=commentary to=tool.check_extension_availability:
+{"reservation_id":"CC-77890","new_checkout":"2025-02-17"}
+
+tool.check_extension_availability channel=commentary to=assistant:
+{"available":true,"room_id":"Parliament King 1602","rate":"CAD 229/night"}
+
+assistant channel=final:
+We can extend to 2025-02-17 in Parliament King 1602 at CAD 229/night. Extensions are subject to availability, and rates may change nightly.
+
+user:
+Thanks. Smooth day?
+
+assistant channel=final:
+Happy to assist at Capital Centre.
+
+user:
+What time is checkout?
+
+assistant channel=final:
+Checkout is 12:00.
+
+user:
+Can you apply a government rate after booking?
+
+assistant channel=final:
+[ATTENTION] Applying government rates after booking isn’t covered by the provided details. Processing your request.
+

@@ -1,0 +1,58 @@
+"""
+Guest asks what data is kept for LINE chats; provide retention window from system and include out-of-scope data residency request.
+
+ROLES: user (guest), assistant (guest relations)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Silver Kettle House (hotel_id: silver_kettle)
+Contacts: LINE @silverkettle | Email welcome@silverkettle.ie | Phone +353 1 555 8801 | Web https://silverkettle.ie
+LINE privacy: Message summaries retained 45 days for service quality; not for emergencies; hours 07:00–22:00 GMT
+Extras: Fireplace lounge 1F; Riverwalk maps at concierge; Live fiddle Thu 20:00.
+
+user:
+What data do you keep from LINE chats?
+
+assistant channel=analysis:
+Answer from system privacy note.
+
+assistant channel=final:
+We keep brief message summaries for 45 days to support service quality.
+
+user:
+Could you remind me of your LINE handle?
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"silver_kettle","channel":"line"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"line":"@silverkettle"}
+
+assistant channel=final:
+Please add @silverkettle.
+
+user:
+The fireplace lounge is charming.
+
+assistant channel=analysis:
+Small talk referencing extras.
+
+assistant channel=final:
+We’re delighted you like it—cozy seats are just off 1F.
+
+user:
+Where is LINE chat data physically stored?
+
+assistant channel=analysis:
+Out of scope—no data residency details.
+
+assistant channel=final:
+[ATTENTION] Data residency information isn’t available within the provided resources.
+

@@ -1,0 +1,60 @@
+"""
+Guest asks what services reception provides and the desk hours.
+
+ROLES: user (guest approaching reception), assistant (receptionist explaining desk coverage and core services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_reception_services",
+    "description": "Return reception hours and core services available at the desk.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Reception: Lobby front desk
+Coverage: 24/7
+Core services: Check-in/out processing, key re-encoding, general inquiries, billing copy printouts
+Amenities at desk: Express check-out box, luggage labels, city maps
+Notes: Currency exchange not available; can provide nearby bank information on request
+
+user:
+When is reception open, and what can you help with at the desk?
+
+assistant channel=analysis:
+Use the tool for hours and core services; add amenity notes from system.
+
+assistant channel=commentary to=tool.get_reception_services:
+{}
+
+tool.get_reception_services channel=commentary to=assistant:
+{"hours":"24/7 coverage","services":["check-in/out","key re-encoding","general inquiries","billing copy printouts"]}
+
+assistant channel=analysis:
+Compose a friendly summary.
+
+assistant channel=final:
+Reception runs 24/7. We handle check‑in/out, key re‑encoding, general inquiries, and billing copy printouts at the desk. You’ll also find an express check‑out box, luggage labels, and city maps there.
+
+user:
+Appreciate the info.
+
+assistant channel=analysis:
+Short small‑talk reply.
+
+assistant channel=final:
+Anytime—have a pleasant stay.
+
+user:
+Can you notarize documents at the front desk right now?
+
+assistant channel=analysis:
+Notarization isn’t described anywhere and no tool supports it—use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking on notarization. Cross-referencing sources.

@@ -1,0 +1,77 @@
+"""
+Engineering team requests extra-large clamps or large binder clips for drawings; confirm what’s available.
+
+ROLES: user (field engineer), assistant (business center lead)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supplies","description":"List clamps/clips","parameters":{"type":"object","properties":{"category":{"type":"string","enum":["clips_fasteners","all"]}},"required":["category"],"additionalProperties":false},"strict":true},
+  {"name":"request_supply_delivery","description":"Queue delivery","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_preference":{"type":"string","enum":["room_delivery","business_center_pickup"]}},"required":["room_number","items","delivery_preference"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Seaside Innovation Center Hotel (hotel_id: sich_sd_01)
+Address: 500 Harbor Dr, San Diego, CA 92101
+Timezone: America/Los_Angeles
+
+Business Provisions (multi-format):
+- Clips: 19/32/51mm
+- Clamps: 75mm heavy-duty (limited)
+- SLA: 20–30 min standard
+- Executive corridor: floors 21–28 same-corridor runs
+- Plotter access: not available; referrals on request
+
+Contact JSON:
+{"desk_ext": 74, "loaner_tubes": true, "max_complimentary": 15}
+
+user:
+Do you have anything big enough for rolled set drawings? I’m in 2307.
+
+assistant channel=analysis:
+Check clamps and large clips.
+
+assistant channel=commentary to=tool.check_office_supplies:
+{"category":"clips_fasteners"}
+
+tool.check_office_supplies channel=commentary to=assistant:
+{"available_items":[{"code":"CLAMP_75MM","name":"Binder Clamp 75mm","quantity_available":6},{"code":"BINDER_LARGE","name":"Large 51mm","quantity_available":20}]}
+
+assistant channel=final:
+We can help—75mm binder clamps (6 available) and large 51mm clips (20 available). What quantities would you like for room 2307?
+
+user:
+Two clamps and six large clips please. Also, is 2307 considered an executive corridor?
+
+assistant channel=analysis:
+Answer from system, then deliver.
+
+assistant channel=final:
+Yes—floors 21–28 are on the executive corridor schedule.
+
+assistant channel=commentary to=tool.request_supply_delivery:
+{"room_number":"2307","items":[{"item_code":"CLAMP_75MM","quantity":2},{"item_code":"BINDER_LARGE","quantity":6}],"delivery_preference":"room_delivery"}
+
+tool.request_supply_delivery channel=commentary to=assistant:
+{"delivery_id":"SICH-2307-771","estimated_delivery_minutes":22,"items_confirmed":["2x 75mm Clamps","6x Large 51mm"],"charge":"complimentary_upto_15"}
+
+assistant channel=final:
+Confirmed—order SICH-2307-771 will reach you in about 22 minutes with two clamps and six large clips (complimentary within the limit).
+
+user:
+Nice, thanks. The harbor view is fantastic.
+
+assistant channel=final:
+We love that view too—sunsets are especially good from this side.
+
+user:
+Any surf lessons you recommend?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] Noted—I’ll check local options for lessons.
+

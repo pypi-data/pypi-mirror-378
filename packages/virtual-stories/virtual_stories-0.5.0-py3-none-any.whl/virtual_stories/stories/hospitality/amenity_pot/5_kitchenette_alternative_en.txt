@@ -1,0 +1,50 @@
+"""
+Guest asks for pot and about pantry hours; include tool use, confirm hours, and include an out-of-scope nutrition query.
+
+ROLES: user (caregiver), assistant (front desk)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"request_kitchen_item","description":"Request a specific item from the hotel kitchen.",
+   "parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_name":{"type":"string"}},"required":["room_number","item_name"]}}
+]
+```
+"""
+
+system:
+Cedar Grove Inn — Family Support
+Available: small pot; silicone trivet; bottle brush
+Pantry hours: floor 1 pantry 06:00–23:00
+Delivery estimate: ~10 minutes; call front desk for rush
+Hygiene: sanitized; sealed package
+Returns: place outside room door
+Dispatch using request_kitchen_item
+
+user:
+Hi, room 236—could I borrow a small pot? Also, when’s the pantry open?
+
+assistant channel=analysis:
+Send small_pot to 236; then answer pantry hours from system context.
+
+assistant channel=commentary to=tool.request_kitchen_item:
+{"room_number": "236", "item_name": "small_pot"}
+
+tool.request_kitchen_item channel=commentary to=assistant:
+{"status":"success","message":"Small pot dispatched to room 236."}
+
+assistant channel=final:
+On the way—expect it in about 10 minutes. The floor‑1 pantry is open 06:00–23:00.
+
+user:
+Thanks! Hope your evening’s not too busy.
+
+assistant channel=final:
+Appreciate that—doing well so far.
+
+user:
+What’s the daily calcium requirement for a 9‑month‑old?
+
+assistant channel=final:
+[ATTENTION] Nutritional guidelines aren’t included in these resources.
+

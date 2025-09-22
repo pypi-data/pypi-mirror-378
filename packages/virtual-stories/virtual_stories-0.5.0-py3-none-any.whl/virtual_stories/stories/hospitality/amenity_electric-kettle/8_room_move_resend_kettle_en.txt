@@ -1,0 +1,57 @@
+"""
+Guest moved rooms and needs the kettle re-sent; arrange prompt re-delivery and include quick guidance. Include small talk and [ATTENTION].
+
+ROLES: user (guest who changed rooms), assistant (amenities coordinator handling re-delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_item","description":"Send an amenity item to a room","parameters":{"type":"object","properties":{"item_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["item_name","room_number","quantity"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Rainier View Hotel (hotel_id: rvh_sea_08)
+Address: 210 Pine St, Seattle, WA 98101, USA
+Timezone: America/Los_Angeles
+
+Notes:
+- Kettle available on request
+- Voltage: 120V
+- Delivery ETA: 10–15 minutes
+
+YAML Facilities:
+---
+rooftop: true
+gym: 24_7
+sprinklers: true
+---
+
+JSON Runner:
+{"primary":"Theo","backup":"Avery"}
+
+user:
+Hi—I moved from 715 to 923. Could you re-send a kettle to 923?
+
+assistant channel=analysis:
+Arrange new delivery to 923.
+
+assistant channel=commentary to=tool.request_item:
+{"item_name":"electric_kettle","room_number":"923","quantity":1}
+
+tool.request_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":12,"runner":"Theo"}
+
+assistant channel=final:
+Done—kettle heading to 923 in about 12 minutes (Theo). If you need quick-use pointers, I’m happy to share them.
+
+user:
+Is the rooftop open now?
+
+assistant channel=analysis:
+We only know rooftop exists; no hours specified—beyond scope. Use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

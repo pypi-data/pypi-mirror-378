@@ -1,0 +1,114 @@
+"""
+Guest experiences power fluctuation affecting AC and requests backup cooling solutions.
+
+ROLES: user (concerned guest during power issues), assistant (facilities manager with emergency protocols)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_power_status",
+    "description": "Check electrical systems and backup power status.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string", "description": "Room number" },
+        "system_type": { "type": "string", "enum": ["hvac", "lighting", "outlets", "all"] }
+      },
+      "required": ["room_number", "system_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "activate_emergency_cooling",
+    "description": "Activate backup cooling systems during power issues.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "backup_type": { "type": "string", "enum": ["battery_fan", "generator_ac", "portable_unit"] },
+        "duration_hours": { "type": "number", "minimum": 1, "maximum": 24 }
+      },
+      "required": ["room_number", "backup_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Tropical Paradise Island Resort (hotel_id: tp_key_largo_01)
+Address: 97000 Overseas Highway, Key Largo, FL 33037
+Timezone: America/New_York
+Rating: 4-star tropical island resort with hurricane preparedness
+CEO: Captain Roberto Storm-Weatherly
+Phone: +1-305-664-2800
+Email: paradise@tropicalkeys.com
+Website: tropicalparadiseresort.com
+
+Island Infrastructure:
+- Hurricane-resistant construction with reinforced windows and doors
+- Backup generator systems providing 72-hour emergency power
+- Seawater desalination plant for independent water supply
+- Solar panel arrays with battery storage systems
+- Emergency communication systems including satellite uplinks
+- Weather monitoring station with real-time storm tracking
+
+Emergency Cooling Systems:
+- Battery-powered ceiling fans with 8-hour runtime in all rooms
+- Portable AC units available from facilities (generator-powered)
+- Natural ventilation systems designed for tropical airflow
+- Emergency cooling stations in lobby and common areas
+- Ice delivery service during extended power outages
+- Guest relocation protocols to generator-powered suites when needed
+
+user:
+Hi, I'm in room 245 and the lights just flickered and my air conditioner stopped working. With this Florida heat, I'm getting worried. Is everything okay?
+
+assistant channel=analysis:
+Guest in room 245 experienced power issues affecting AC during hot Florida weather. I should check power status immediately and assess backup cooling needs.
+
+assistant channel=commentary to=tool.check_power_status:
+{"room_number": "245", "system_type": "all"}
+
+tool.check_power_status channel=commentary to=assistant:
+{"room_number": "245", "main_power": "intermittent", "hvac_status": "offline", "backup_generator": "standby", "battery_systems": "active", "estimated_restoration": "45 minutes"}
+
+assistant channel=analysis:
+Main power is intermittent, AC is offline, but backup systems are ready. I should activate emergency cooling to keep the guest comfortable during restoration.
+
+assistant channel=commentary to=tool.activate_emergency_cooling:
+{"room_number": "245", "backup_type": "battery_fan", "duration_hours": 2}
+
+tool.activate_emergency_cooling channel=commentary to=assistant:
+{"success": true, "cooling_type": "battery_fan", "runtime_remaining": "8 hours", "comfort_level": "moderate", "generator_eta": "if_needed_30_minutes"}
+
+assistant channel=final:
+No need to worry! We experienced a brief power fluctuation, but everything is under control. I've activated your battery-powered ceiling fan which will keep you comfortable for up to 8 hours. Main power should restore in about 45 minutes. As an island resort, we're fully prepared for these situations with multiple backup systems.
+
+user:
+Oh good! I was wondering about that - being on an island must present unique challenges.
+
+assistant channel=analysis:
+Guest is making conversation about our island location and infrastructure challenges. I can share information about our hurricane preparedness and island capabilities.
+
+assistant channel=final:
+Exactly! Tropical Paradise Island Resort is designed for complete self-sufficiency. We have our own backup generators, seawater desalination plant, and even hurricane-resistant construction. Living on an island teaches you to be prepared for anything Mother Nature sends our way!
+
+user:
+That's really impressive! How often do you get power outages here?
+
+assistant channel=analysis:
+Guest is asking about power outage frequency, which would require historical operational data that's not in my system knowledge or available through my emergency response tools.
+
+assistant channel=final:
+[ATTENTION] Good question about our power reliability history. Looking into this for you.
+
+user:
+No worries! The fan is working great and I feel much more comfortable now.
+
+assistant channel=final:
+Excellent! The battery fan should keep you comfortable, and I'll monitor the power restoration progress. If you need anything else during the repair, just give us a call - we're always ready for island life adventures!

@@ -1,0 +1,64 @@
+"""
+Guest requests better back/neck support; adjust head zone and deliver cervical pillow.
+
+ROLES: user (guest needing support), assistant (sleep support concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"adjust_mattress_firmness","description":"Adjust head/foot zones for support.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"firmness_level":{"type":"integer","minimum":1,"maximum":10},"zone":{"type":"string","enum":["head_section","foot_section","full_bed"]}},"required":["room_number","firmness_level","zone"]},"strict":true},
+  {"name":"order_pillow_menu","description":"Deliver cervical support pillow.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pillow_types":{"type":"array","items":{"type":"object","properties":{"pillow_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["pillow_code","quantity"],"additionalProperties":false}},"delivery_priority":{"type":"string","enum":["standard","express","tonight"]}},"required":["room_number","pillow_types"]},"strict":true}
+]
+```
+"""
+
+system:
+Summit Ridge Hotel (hotel_id: srh_aspen)
+Address: 210 Snowmass Rd, Aspen, CO 81611
+Timezone: America/Denver
+
+Support Options:
+1) Head section can be firmed separately to improve cervical alignment.
+2) Cervical pillows cradle the neck and reduce strain.
+3) Typical head‑zone change takes effect within 3 minutes.
+4) Delivery windows: 10–15 minutes for pillows.
+5) Ideal starting levels: head 6–7, foot 4–5 for mixed sleepers.
+
+user:
+Hi, my neck’s a bit sore—can we firm up the head area of the bed in 718 and send a cervical pillow?
+
+assistant channel=analysis:
+Set head zone to 7; deliver one cervical pillow express.
+
+assistant channel=commentary to=tool.adjust_mattress_firmness:
+{"room_number":"718","firmness_level":7,"zone":"head_section"}
+
+tool.adjust_mattress_firmness channel=commentary to=assistant:
+{"adjustment_applied":true,"zone":"head_section","new_level":7}
+
+assistant channel=commentary to=tool.order_pillow_menu:
+{"room_number":"718","pillow_types":[{"pillow_code":"CERVICAL_CONTOUR","quantity":1}],"delivery_priority":"express"}
+
+tool.order_pillow_menu channel=commentary to=assistant:
+{"order_id":"PIL-718-3302","eta_minutes":12}
+
+assistant channel=final:
+Absolutely—your head zone is now at level 7, and an express Cervical Contour pillow is on its way (about 12 minutes).
+
+user:
+Perfect, thanks! Fresh snow looks great from the window.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Glad the winter view feels peaceful.
+
+user:
+Could you also arrange a late-night massage?
+
+assistant channel=analysis:
+Out of scope; flag it.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability for a late‑night massage.

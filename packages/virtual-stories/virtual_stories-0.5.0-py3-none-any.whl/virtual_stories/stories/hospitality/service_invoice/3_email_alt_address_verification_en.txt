@@ -1,0 +1,67 @@
+"""
+Guest requests folio emailed to an alternate address; verify delivery and include beyond-scope attachment request.
+
+ROLES: user (guest requesting emailed folio), assistant (front desk agent sending PDF folio)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "email_folio_pdf",
+    "description": "Send folio PDF to a specified email.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": {"type": "string"},
+        "email": {"type": "string"}
+      },
+      "required": ["room", "email"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harbor Quay Business Hotel
+Contact: +1 212-555-0140 • Front Desk 24/7
+Folio Delivery:
+1) Email: PDF to verified or provided address
+2) Print: Front Desk pickup
+Included Details: dates, nightly rates, taxes, incidentals, payment summary
+Security: Email sent upon room verification; printed copies require in-person verification
+Notes:
+• File name pattern: HQBH_<room>_folio.pdf
+• Reissue window: within 30 days of checkout
+• Local Time: Eastern Time (ET)
+• Print station: PRN-LB-01 (Lobby)
+• Languages: English-only folio layout
+
+user:
+Please email my invoice for room 803 to work@contoso.example.
+
+assistant channel=analysis:
+Send folio PDF to provided email, referencing policy.
+
+assistant channel=commentary to=tool.email_folio_pdf:
+{"room":"803","email":"work@contoso.example"}
+
+tool.email_folio_pdf channel=commentary to=assistant:
+{"request_id":"EML-803-9921","status":"sent","filename":"HQBH_803_folio.pdf"}
+
+assistant channel=final:
+Sent—request EML-803-9921. The PDF (HQBH_803_folio.pdf) has been emailed to work@contoso.example.
+
+user:
+By the way, the lounge music is relaxing.
+
+assistant channel=final:
+Thanks for the note—your PDF should arrive shortly.
+
+user:
+Can you attach my scanned passport to the email thread as well?
+
+assistant channel=final:
+[ATTENTION] Attachment handling isn’t covered here. Checking available options.

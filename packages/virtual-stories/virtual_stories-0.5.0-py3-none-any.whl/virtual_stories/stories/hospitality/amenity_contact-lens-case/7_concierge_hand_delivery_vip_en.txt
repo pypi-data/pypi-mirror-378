@@ -1,0 +1,49 @@
+"""
+VIP guest requests concierge hand delivery for premium kit.
+
+ROLES: user (VIP guest), assistant (guest services coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_amenities","description":"Check availability of personal care and optical amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["contact_lens_case","lens_solution","eye_drops","complete_kit","travel_size"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_amenity_delivery","description":"Arrange delivery or pickup of personal care amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["room_delivery","front_desk_pickup","concierge_hand_delivery"]},"timing":{"type":"string","enum":["immediate","within_hour","specific_time"]}},"required":["room_number","items","delivery_method"]},"strict":true}
+]
+```
+"""
+
+system:
+Royal Capital Hotel (hotel_id: rch_london)
+Address: 1 Westminster Way, London, UK
+Timezone: Europe/London
+
+Premium Kit:
+- Designer case, 120ml solution, comfort drops, wipes
+
+user:
+Could a concierge bring a premium lens kit up now?
+
+assistant channel=analysis:
+Check premium kit and arrange concierge delivery.
+
+assistant channel=commentary to=tool.check_personal_care_amenities:
+{"amenity_type":"complete_kit"}
+
+tool.check_personal_care_amenities channel=commentary to=assistant:
+{"available_items":[{"type":"Premium Contact Lens Kit","availability":"in_stock"}]}
+
+assistant channel=commentary to=tool.arrange_amenity_delivery:
+{"room_number":"1601","items":["Premium Contact Lens Kit"],"delivery_method":"concierge_hand_delivery","timing":"immediate"}
+
+tool.arrange_amenity_delivery channel=commentary to=assistant:
+{"delivery_id":"RCH-1601-PK-06","estimated_delivery":"15 minutes"}
+
+assistant channel=final:
+Certainly—RCH-1601-PK-06 is on the way via concierge, ~15 minutes.
+
+user:
+Great, thanks! Your staff has been wonderful.
+
+assistant channel=final:
+Thank you for the kind words—we appreciate it.
+

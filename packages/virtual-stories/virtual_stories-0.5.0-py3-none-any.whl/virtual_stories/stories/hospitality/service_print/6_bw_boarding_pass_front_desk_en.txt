@@ -1,0 +1,68 @@
+"""
+Guest asks to print a black-and-white boarding pass and makes a casual remark plus an unsupported question.
+
+ROLES: user (guest catching a flight), assistant (front desk agent)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "print_boarding_pass",
+    "description": "Submit a small B/W print and return job details.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "pickup": {"type": "string", "enum": ["front_desk", "business_center"]}
+      },
+      "required": ["room", "pages", "pickup"],
+      "additionalProperties": false
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Old Quarter Residency
+Address: 12 Lantern Lane, Boston, MA 02114
+Print Policy: PDF only; jobs up to 30 pages
+Pricing: B/W $0.15; Color $0.45 per page
+Pickup Points: Front Desk or Business Center
+Posting: Charges added to room folio at pickup
+Timing: About 5 minutes for short jobs
+
+user:
+Can you print my 2-page boarding pass for room 317 and I’ll pick it up at the front desk?
+
+assistant channel=analysis:
+Submit 2-page B/W print (boarding pass typically B/W) for room 317, pickup front desk. Use tool to supply job id.
+
+assistant channel=commentary to=tool.print_boarding_pass:
+{"room":"317","pages":2,"pickup":"front_desk"}
+
+tool.print_boarding_pass channel=commentary to=assistant:
+{"job":"oqr_bp_317","estimated_cost":0.30,"currency":"USD"}
+
+assistant channel=final:
+Queued—2 B/W pages for room 317 (oqr_bp_317). Estimated cost $0.30 USD. Pick up at the Front Desk; we’ll post to your folio on collection.
+
+user:
+The brass keys on display are charming.
+
+assistant channel=analysis:
+Reply with light small talk.
+
+assistant channel=final:
+They’re a nod to the neighborhood’s history.
+
+user:
+Can you also check me in for the flight?
+
+assistant channel=analysis:
+Flight check-in isn’t in system; flag [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] I see your request. Reviewing options for airline check-in support.
+

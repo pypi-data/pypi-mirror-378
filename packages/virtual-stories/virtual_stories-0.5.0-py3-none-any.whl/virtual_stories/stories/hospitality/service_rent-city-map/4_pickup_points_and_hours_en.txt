@@ -1,0 +1,54 @@
+"""
+Guest asks where to pick up the map and when desks are open; include small talk and [ATTENTION].
+
+ROLES: user (guest confirming logistics), assistant (front desk clarifying pickup points and hours, then logging request)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"log_map","description":"Log map ready for pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"location":{"type":"string"}},"required":["hotel_id","room","location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Bayview Marina Sydney (BVMS-19)
+Address: 2 Marine Parade, Sydney NSW 2000
+Map desk:
+- Concierge 08:00–21:00 at the dockside counter
+- Front Desk 24/7 for late pickup
+- Stock: 400 complimentary maps; languages EN/ZH
+- Suggested routes printed: Harbor Walk (90m), Botanic Loop (60m)
+- Waterproof sleeve (paper) on request, no deposit
+
+user:
+Where do I pick up the map? I’m in 1607.
+
+assistant channel=analysis:
+Answer with dockside counter for Concierge hours, Front Desk late; then log ready at dockside counter.
+
+assistant channel=final:
+During 08:00–21:00, please pick it up at the Concierge dockside counter; otherwise the Front Desk can help any time.
+
+assistant channel=commentary to=tool.log_map:
+{"hotel_id":"BVMS-19","room":"1607","location":"Concierge dockside counter"}
+
+tool.log_map channel=commentary to=assistant:
+{"logged":true,"ticket":"MAP-1607-DSK"}
+
+assistant channel=final:
+Ticket MAP-1607-DSK is ready at the dockside counter.
+
+user:
+Great view of the bay.
+
+assistant channel=final:
+Enjoy the Harbor Walk—it’s marked on the map.
+
+user:
+Do you carry cycling maps of regional trails?
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

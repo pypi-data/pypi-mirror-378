@@ -1,0 +1,118 @@
+"""
+Guest reports emergency exit lighting not working; run diagnostics, dispatch maintenance, include small talk, and one background acknowledgment.
+
+ROLES: user (guest reporting safety concern), assistant (maintenance coordinator for emergency systems)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_emergency_systems",
+    "description": "Check the status of emergency systems including lighting, alarms, and exit signs.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "system_type": { "type": "string", "enum": ["emergency_lighting", "exit_signs", "fire_alarms", "sprinkler_systems"] },
+        "location": { "type": "string" }
+      },
+      "required": ["system_type", "location"]
+    },
+    "strict": true
+  },
+  {
+    "name": "dispatch_emergency_maintenance",
+    "description": "Dispatch maintenance technician for emergency system repairs.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "location": { "type": "string" },
+        "issue": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "emergency"] }
+      },
+      "required": ["location", "issue", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Starlight Hotel (hotel_id: st_nyc_15)
+Address: 123 Broadway, New York, NY 10001
+Timezone: America/New_York
+
+Emergency Safety Features:
+- Emergency exits: Clearly marked with illuminated signs on every floor
+- Fire safety: Smoke detectors, sprinkler systems, and fire extinguishers throughout
+- Emergency lighting: Battery-powered backup lighting in all corridors
+- Stairwells: Fire-rated stairwells with emergency lighting and handrails
+- Elevator safety: Emergency stop buttons and communication systems
+- Guest room safety: Emergency evacuation plans posted in each room
+- Assembly point: Designated meeting area in the parking garage
+
+Hotel Layout:
+- 25 floors with 4 emergency stairwells (A, B, C, D)
+- Main lobby on ground floor with multiple exit points
+- Guest rooms: Floors 3-25 with emergency exits on each floor
+- Public areas: Restaurant, spa, conference rooms, pool, fitness center
+- Emergency assembly point: Parking garage level B2
+
+Emergency Systems:
+- Exit signs: LED illuminated signs with battery backup (24-hour runtime)
+- Emergency lighting: Battery-powered corridor lighting (90-minute runtime)
+- Fire alarms: Smoke detectors with strobe lights and audio alerts
+- Sprinkler systems: Automatic fire suppression with water flow sensors
+- PA system: Emergency announcements with backup power
+- Generator backup: 72-hour emergency power for critical systems
+
+Maintenance Protocols:
+- Daily inspections: Visual checks of all emergency exit signs and lighting
+- Weekly testing: Battery backup systems and emergency lighting
+- Monthly drills: Full system testing and staff training
+- Emergency response: Priority dispatch for safety system failures
+- Compliance: All systems meet NYC fire department requirements
+
+user:
+I noticed the emergency exit sign near the elevators on the 8th floor isn't lit up. That seems like a safety concern.
+
+assistant channel=analysis:
+This is a safety issue with emergency exit lighting. I need to check the system status and dispatch maintenance immediately.
+
+assistant channel=commentary to=tool.check_emergency_systems:
+{"system_type":"exit_signs","location":"8th floor near elevators"}
+
+tool.check_emergency_systems channel=commentary to=assistant:
+{"status":"malfunction","battery_backup":"failed","last_inspection":"2024-01-15","recommendation":"immediate_replacement_required"}
+
+assistant channel=analysis:
+The exit sign has a failed battery backup which is a critical safety issue. I need to dispatch emergency maintenance immediately.
+
+assistant channel=commentary to=tool.dispatch_emergency_maintenance:
+{"location":"8th floor near elevators","issue":"exit_sign_battery_backup_failed","priority":"emergency"}
+
+tool.dispatch_emergency_maintenance channel=commentary to=assistant:
+{"scheduled":true,"assigned":"tech_emergency_team","eta_minutes":5,"equipment":["replacement_exit_sign","battery_backup","testing_equipment"]}
+
+assistant channel=final:
+Thank you for reporting this safety concern! The exit sign has a failed battery backup, which is critical. Our emergency maintenance team is on the way to the 8th floor—they'll arrive in 5 minutes to replace the sign and restore proper emergency lighting.
+
+user:
+The hotel's attention to safety details really gives me peace of mind during my stay.
+
+assistant channel=analysis:
+Acknowledge the positive feedback about safety measures despite the current issue.
+
+assistant channel=final:
+I'm glad you feel secure! Safety is our top priority, and we appreciate guests like you who help us maintain the highest standards by reporting any concerns.
+
+user:
+Could you install additional emergency lighting throughout the entire building for extra safety?
+
+assistant channel=analysis:
+Building-wide lighting upgrades aren't available through standard maintenance requests; use background acknowledgment flag.
+
+assistant channel=final:
+[ATTENTION] I understand you'd like enhanced lighting coverage. Reviewing available resources.

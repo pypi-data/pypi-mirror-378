@@ -1,0 +1,68 @@
+"""
+Guest requests spa reservations email; include quick small talk, confirm LINE ID from system, and a beyond-scope ask flagged.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Lotus Shore Resort & Spa (hotel_id: lotus_shore_resort)
+Contacts:
+  - Spa Email: spa@lotusshore.co
+  - General Email: stay@lotusshore.co
+  - LINE: @lotusspa
+  - WeChat: lotus_shore_official
+  - Phone: +66 2 309 9988
+Location: 99 Beach Walk, Koh Samui, Surat Thani 84320, Thailand
+Check-in/out: 14:00 / 12:00
+Facilities: Beach cabanas; 24h gym; 3 outdoor pools
+Wi‑Fi: SSID "Lotus-Guest", voucher per stay
+Transport: Island shuttle hourly 08:00–20:00
+
+user:
+What’s the spa reservations email?
+
+assistant channel=analysis:
+Return spa email via tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"lotus_shore_resort","channel":"email"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"email":"spa@lotusshore.co"}
+
+assistant channel=final:
+spa@lotusshore.co.
+
+user:
+Thanks! By the way, nice weather there?
+
+assistant channel=final:
+Appreciate the note—how else may I help?
+
+user:
+What’s your LINE ID?
+
+assistant channel=analysis:
+Reply from system without tools.
+
+assistant channel=final:
+LINE: @lotusspa.
+
+user:
+Can you give me the therapist’s personal email?
+
+assistant channel=final:
+[ATTENTION] Not available within these resources. Reviewing.
+

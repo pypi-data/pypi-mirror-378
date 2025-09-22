@@ -1,0 +1,82 @@
+"""
+Guest inquires about cooling gel pillows due to warm room and sensitive skin.
+Provide inventory check, delivery, and allergy-friendly details.
+
+ROLES: user (warm sleeper with sensitive skin), assistant (sleep concierge managing cooling options)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_pillow_inventory","description":"Check cooling pillow models and availability.","parameters":{"type":"object","properties":{"pillow_type":{"type":"string","enum":["cooling_gel","latex","down_alternative"]},"size":{"type":"string","enum":["standard","queen","king"]},"firmness":{"type":"string","enum":["soft","medium","firm"]}},"required":["pillow_type"]},"strict":true},
+  {"name":"deliver_sleep_amenities","description":"Deliver pillows with selected cases and protectors.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"pillow_model":{"type":"string"},"case":{"type":"string"},"protector":{"type":"string"},"timing":{"type":"string","enum":["immediate","during_turndown"]}},"required":["room_number","pillow_model"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Urban Tranquil Suites (hotel_id: uts_tyo_03)
+Address: 2-11-7 Shinjuku, Shinjuku City, Tokyo 160-0022, Japan
+Timezone: Asia/Tokyo
+
+Cooling Sleep Program:
+- Phase-change gel pillows (medium/firm) in standard/queen/king
+- Breathable bamboo-viscose cases; hypoallergenic knit options
+- Airflow gussets for heat dissipation; moisture-wicking protectors
+- Skin-sensitive textiles (dermatologist tested), fragrance-free laundry
+- Quiet HVAC night mode preset and humidity balance
+
+Service Details:
+- Same-floor delivery within 10–15 minutes
+- Turndown swap: we remove originals and bag for later
+- Complimentary for Premier floors; otherwise complimentary upon request
+- Sanitization: detergent-free rinse; UV inspection lamp for stains
+- Recycling: retired cores sent to cushion upcycling partners
+
+user:
+Hi! Room 2113 here. Do you have any cooling gel pillows in queen size?
+
+assistant channel=analysis:
+Check cooling gel queen availability; ensure hypoallergenic case.
+
+assistant channel=commentary to=tool.check_pillow_inventory:
+{"pillow_type":"cooling_gel","size":"queen","firmness":"medium"}
+
+tool.check_pillow_inventory channel=commentary to=assistant:
+{"available":true,"models":["pc_gel_medium_queen","pc_gel_firm_queen"],"stock":22,"case_options":["bamboo","hypoallergenic_knit"],"protector":"moisture_wicking"}
+
+assistant channel=final:
+Yes—queen-size cooling gel pillows are available in medium or firm. Would you like the bamboo case or the hypoallergenic knit, and should I include a moisture‑wicking protector?
+
+user:
+Go with medium and the hypoallergenic knit, please.
+
+assistant channel=analysis:
+Arrange immediate delivery with requested model and case.
+
+assistant channel=commentary to=tool.deliver_sleep_amenities:
+{"room_number":"2113","pillow_model":"pc_gel_medium_queen","case":"hypoallergenic_knit","protector":"moisture_wicking","timing":"immediate"}
+
+tool.deliver_sleep_amenities channel=commentary to=assistant:
+{"sent":true,"eta_minutes":10,"runner":"Aya","items":["pc_gel_medium_queen","hypoallergenic_knit_case","moisture_wicking_protector"],"swap_originals":true}
+
+assistant channel=final:
+Done—Aya will arrive in about 10 minutes with a medium cooling gel queen pillow, hypoallergenic knit case, and moisture‑wicking protector. We’ll swap out the originals for you.
+
+user:
+Is the program complimentary on my floor?
+
+assistant channel=analysis:
+Answer from system Service Details.
+
+assistant channel=final:
+Yes—Premier floors receive this complimentary, and requests like yours are also complimentary upon request.
+
+user:
+Any late-night ramen nearby you’d recommend?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Searching for more information.
+

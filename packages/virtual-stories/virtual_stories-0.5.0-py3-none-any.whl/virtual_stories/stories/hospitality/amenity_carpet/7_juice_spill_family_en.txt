@@ -1,0 +1,78 @@
+"""
+Family guest reports small orange juice spill; asks if it stains; provide reassurance and schedule standard window.
+
+ROLES: user (family guest), assistant (family services liaison)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"family_slot","description":"Return family-priority spot-clean window.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"create_family_ticket","description":"Create family-priority ticket.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","method":"string"},"required":["room","method"]}}
+]
+```
+"""
+
+system:
+Suncrest Family Suites (hotel_id: sfs_orl_15)
+Address: 400 Celebration Ave, Kissimmee, FL 34747
+Timezone: America/New_York
+
+Spill Guidance:
+- Juice: water blot + low oxidizer if tinted
+
+Priority:
+- Families with young children: scheduling priority
+
+Windows:
+- Standard 25–45 min; Expedite 10–18 min
+
+Noise:
+- Low; brief only
+
+Contact:
+- Family line ext. 88; Housekeeping ext. 20
+
+user:
+Hi—tiny orange juice spill in room 321. Will it stain if we wait? Can you schedule someone?
+
+assistant channel=analysis:
+Reassure using system; provide standard/expe windows; then create ticket.
+
+assistant channel=commentary to=tool.family_slot:
+{}
+
+tool.family_slot channel=commentary to=assistant:
+{"standard":"25-45_min","expedite":"10-18_min"}
+
+assistant channel=final:
+Juice is usually handled with a water blot and, if needed, a low oxidizer—waiting a short time is okay. I can place you in the 25–45 minute window or expedite at 10–18 minutes. Which do you prefer for room 321?
+
+user:
+Standard is fine.
+
+assistant channel=commentary to=tool.create_family_ticket:
+{"room":"321","method":"water_blot_then_low_oxidizer"}
+
+tool.create_family_ticket channel=commentary to=assistant:
+{"ticket":"SFS-321-665","eta_minutes":34}
+
+assistant channel=final:
+Booked—ticket SFS-321-665 with ETA about 34 minutes.
+
+user:
+Thanks—the kids love the splash pad.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Happy to hear it—the splash pad is a family favorite.
+
+user:
+Do you have babysitting services on-site?
+
+assistant channel=analysis:
+Out of scope here; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on babysitting options beyond our carpet services.

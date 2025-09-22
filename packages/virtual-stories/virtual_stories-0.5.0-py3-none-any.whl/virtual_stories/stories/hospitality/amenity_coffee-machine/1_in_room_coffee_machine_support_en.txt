@@ -1,0 +1,140 @@
+"""
+Guest requests assistance with in-room coffee machine including troubleshooting and supplies.
+Includes technical support, supplies delivery, and usage guidance.
+
+ROLES: user (guest having coffee machine issues), assistant (room service technical support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_coffee_machine_status",
+    "description": "Check the operational status and model of in-room coffee machine.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "order_coffee_supplies",
+    "description": "Order coffee pods, filters, or cleaning supplies for in-room coffee machine.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": { 
+            "type": "object", 
+            "properties": { 
+              "item_type": { "type": "string", "enum": ["coffee_pods", "tea_pods", "filters", "cleaning_tablets", "cream_packets", "sugar_packets"] },
+              "quantity": { "type": "integer" }
+            }, 
+            "required": ["item_type", "quantity"], 
+            "additionalProperties": false 
+          }
+        }
+      },
+      "required": ["room_number", "items"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_machine_maintenance",
+    "description": "Request technical maintenance for coffee machine issues.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "issue_description": { "type": "string" },
+        "urgency": { "type": "string", "enum": ["low", "medium", "high"] }
+      },
+      "required": ["room_number", "issue_description", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Oceanview Resort & Spa (hotel_id: ors_monterey)
+Address: 17 Mile Dr, Pebble Beach, CA 93953
+Timezone: America/Los_Angeles
+
+In-Room Coffee Service:
+- Nespresso Vertuo machines in all premium rooms
+- Complimentary daily pod refills (4 coffee pods, 2 tea pods)
+- Available pod varieties: Espresso Intenso, Medium Roast Blend, Decaf Colombia, Earl Grey Tea, Chamomile Tea
+- Cleaning tablets provided weekly during housekeeping
+- Technical support available 24/7 for machine issues
+- Replacement machines available within 30 minutes for urgent issues
+
+Amenity Standards:
+- Daily housekeeping restocks basic supplies
+- Premium guests receive upgraded pod selections
+- Maintenance response: low (next day), medium (4 hours), high (30 minutes)
+
+user:
+Hi, the coffee machine in my room isn't working properly. It's making weird noises and won't brew.
+
+assistant channel=analysis:
+Guest has a technical issue with their coffee machine. I should check the machine status first and likely request maintenance.
+
+assistant channel=commentary to=tool.check_coffee_machine_status:
+{"room_number": "What's your room number?"}
+
+assistant channel=final:
+I'm sorry to hear about the coffee machine issue. Could you please provide your room number so I can check the machine status and arrange support?
+
+user:
+I'm in room 3028. The machine lights up but makes grinding sounds when I press brew.
+
+assistant channel=analysis:
+Now I can check the machine status and request maintenance for the grinding noise issue.
+
+assistant channel=commentary to=tool.check_coffee_machine_status:
+{"room_number": "3028"}
+
+tool.check_coffee_machine_status channel=commentary to=assistant:
+{"room_number":"3028","machine_model":"Nespresso Vertuo Plus","last_service":"2025-08-25","pod_count":2,"status":"operational_with_alerts","alerts":["grinding_mechanism_wear"]}
+
+assistant channel=commentary to=tool.request_machine_maintenance:
+{"room_number": "3028", "issue_description": "Guest reports grinding sounds during brew cycle, machine showing grinding mechanism wear alert", "urgency": "medium"}
+
+tool.request_machine_maintenance channel=commentary to=assistant:
+{"request_id":"MAINT-3028-CF","technician_eta_minutes":45,"temporary_solution":"replacement_machine_available"}
+
+assistant channel=final:
+I see the issue - your Nespresso Vertuo Plus is showing a grinding mechanism wear alert. I've scheduled maintenance request MAINT-3028-CF with a technician arriving in about 45 minutes. We can also provide a replacement machine immediately if you'd prefer.
+
+user:
+That would be great! I really need my morning coffee. Can you also send up some extra coffee pods?
+
+assistant channel=analysis:
+Guest wants the replacement machine and extra coffee pods. I should order additional supplies for their room.
+
+assistant channel=commentary to=tool.order_coffee_supplies:
+{"room_number": "3028", "items": [{"item_type": "coffee_pods", "quantity": 6}, {"item_type": "tea_pods", "quantity": 2}]}
+
+tool.order_coffee_supplies channel=commentary to=assistant:
+{"order_id":"SUP-3028-89","items":[{"item_type":"coffee_pods","quantity":6,"varieties":["Espresso Intenso","Medium Roast Blend","Decaf Colombia"]},{"item_type":"tea_pods","quantity":2,"varieties":["Earl Grey","Chamomile"]}],"delivery_eta_minutes":15,"replacement_machine_included":true}
+
+assistant channel=final:
+Perfect! Order SUP-3028-89 includes a replacement Nespresso machine plus 6 coffee pods (Espresso Intenso, Medium Roast, Decaf Colombia) and 2 tea pods (Earl Grey, Chamomile). Everything will arrive in about 15 minutes to room 3028.
+
+user:
+Wonderful! By the way, do you know if there are any good coffee roasteries I should visit while I'm in town?
+
+assistant channel=analysis:
+Guest is asking about local coffee roasteries, which is outside my defined hotel amenity services scope.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

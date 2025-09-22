@@ -1,0 +1,76 @@
+"""
+Guest requests matching floral sets for multiple rooms in a wedding party.
+Provide check and creation.
+
+ROLES: user (wedding coordinator), assistant (floral/event liaison)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_floral_inventory", "description": "Verify multiple matching sets availability.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "arrangement_type": { "type": "string", "enum": ["room_decor", "celebration"] }, "flower_preference": { "type": "string", "enum": ["mixed_seasonal", "roses"] }, "budget_range": { "type": "string", "enum": ["luxury_200_plus"] } }, "required": ["arrangement_type"] }, "strict": true },
+  { "name": "create_floral_arrangement", "description": "Create multiple matching arrangements and route deliveries.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "arrangement_style": { "type": "string", "enum": ["elegant_mixed"] }, "delivery_time": { "type": "string" }, "special_message": { "type": "string" }, "occasion": { "type": "string", "enum": ["celebration"] } }, "required": ["room_number", "arrangement_style", "occasion"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Royal Crescent Hotel (hotel_id: rch_par_01)
+Address: 12 Rue Royale, 75008 Paris, France
+Timezone: Europe/Paris
+
+Floral & Events:
+- Matching sets for wedding parties
+- Delivery 15:00–19:00; coordination across floors
+- Pricing: €220 per arrangement luxury tier
+- Card for each room
+- Maintenance on request
+
+user:
+We need 5 matching arrangements for rooms 701–705 at 5 PM.
+
+assistant channel=analysis:
+Check luxury matching sets; schedule deliveries to a room block; confirm pricing and time.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type":"celebration","flower_preference":"mixed_seasonal","budget_range":"luxury_200_plus"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available":true,"arrangements":["elegant_seasonal_luxury"],"pricing":{"elegant_seasonal_luxury":220}}
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number":"701-705","arrangement_style":"elegant_mixed","delivery_time":"5:00 PM","special_message":"Best wishes","occasion":"celebration"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed":true,"arrangement_id":"RC_WED701_705","delivery_scheduled":"5:00 PM","includes":["5_matching_arrangements","room_block_drop"],"total_cost":1100}
+
+assistant channel=final:
+Confirmed—5 matching luxury arrangements will be delivered to rooms 701–705 at 5:00 PM with cards.
+
+user:
+Do you coordinate across floors?
+
+assistant channel=analysis:
+From system: coordination across floors yes.
+
+assistant channel=final:
+Yes—we coordinate deliveries across floors for wedding blocks.
+
+user:
+The lobby is elegant.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It complements the seasonal floral palette beautifully.
+
+user:
+Can you source vintage cars for photos?
+
+assistant channel=analysis:
+Outside floral scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with concierge about vintage car rentals.
+"""
+

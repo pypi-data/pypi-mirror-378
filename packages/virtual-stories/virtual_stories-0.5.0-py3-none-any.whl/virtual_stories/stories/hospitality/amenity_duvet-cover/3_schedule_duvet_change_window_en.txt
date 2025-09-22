@@ -1,0 +1,90 @@
+"""
+Guest wants to schedule a duvet cover change within housekeeping window; include chit-chat and an out-of-scope question.
+
+ROLES: user (guest in 614, planning schedule), assistant (housekeeping coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_housekeeping_window",
+    "description": "Get today’s housekeeping service windows and blackout times.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  },
+  {
+    "name": "schedule_linen_change",
+    "description": "Schedule a duvet cover change for a specific room and time slot.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type":"string"},
+        "item": {"type":"string", "enum":["duvet_cover"]},
+        "size": {"type":"string", "enum":["queen","king"]},
+        "slot": {"type":"string"}
+      },
+      "required": ["room_number","item","size","slot"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Desert Lantern Hotel (hotel_id: dlh_phx)
+Address: 2200 Camelback Rd, Phoenix, AZ 85016
+Timezone: America/Phoenix
+Duvet Program:
+• Fabric: percale, 300TC; Colors: white only
+• Sizes: queen, king
+• Daily window: 10:00–15:30; Blackout: 15:30–17:00; Evening: 17:00–20:00 (limited)
+• Express fee: waived for Premier rooms
+• Notes: Outdoor dust mitigation—covers sealed in storage
+Tabular Snapshot:
+slot|capacity
+10:00–12:00|6
+12:00–14:00|5
+14:00–15:30|3
+17:00–20:00|2
+
+user:
+I’m in 614. Can you swap the duvet cover around 12:30?
+
+assistant channel=analysis:
+Check windows then schedule slot 12:00–14:00 for 614, queen/king unknown—ask? But the user requested swap around 12:30; assume size from system? Not provided. Ask for size would break flow; instead, schedule specifying slot only if system allows size-less? Tool requires size; we need size from user. So ask a clarifying question first.
+
+assistant channel=final:
+Happy to set that up. Do you have a queen or king bed in 614 so I can place the correct cover?
+
+user:
+It’s a queen.
+
+assistant channel=analysis:
+Now schedule queen in 12:00–14:00 block.
+
+assistant channel=commentary to=tool.schedule_linen_change:
+{"room_number":"614","item":"duvet_cover","size":"queen","slot":"12:00–14:00"}
+
+tool.schedule_linen_change channel=commentary to=assistant:
+{"scheduled":true,"slot":"12:00–14:00","ref":"DLH-SCH-4410"}
+
+assistant channel=final:
+All set. Duvet cover (queen) is scheduled between 12:00–14:00. Reference DLH-SCH-4410.
+
+user:
+By the way, the lobby cactus display is cute.
+
+assistant channel=analysis:
+Small talk acknowledge.
+
+assistant channel=final:
+It adds a fun local touch.
+
+user:
+What detergent scent do you use here?
+
+assistant channel=final:
+[ATTENTION] I’ll check on that.
+

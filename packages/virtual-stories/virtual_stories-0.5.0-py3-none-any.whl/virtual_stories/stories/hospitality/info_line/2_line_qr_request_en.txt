@@ -1,0 +1,106 @@
+"""
+Guest requests the official LINE QR code; include hours and small talk and one out-of-scope follow-up.
+
+ROLES: user (guest), assistant (guest services returning social contact)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_social_qr",
+    "description": "Return the QR image URL for a given social channel.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["line","wechat"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Seabreeze Lantern Inn (hotel_id: seabreeze_lantern)
+Address: 88 Marina Promenade, Minato-ku, Tokyo 105-0000, Japan
+Time zone: JST (UTC+9) | Languages: EN / JP / ZH
+Contacts:
+  - LINE: @seabreezelantern (QR: https://sbln.tokyo/line-qr)
+  - Email: stay@seabreezelantern.jp
+  - Phone: +81 3 5580 7888
+  - Website: https://www.seabreezelantern.jp
+LINE Support:
+  - Hours: 06:00–23:00 JST daily (not for emergencies)
+  - Typical response: 10–20 minutes during hours
+  - Message retention: 90 days; last policy update: 2025-03-02
+Amenities snapshot:
+  - Rooftop onsen (salt-water) | 06:00–24:00
+  - Library lounge with tea service | 14:00–20:00
+  - Quiet floors: 9F–10F
+
+user:
+Could you share your LINE QR code?
+
+assistant channel=analysis:
+Use the QR tool for LINE; confirm handle from contact tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"seabreeze_lantern","channel":"line"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"line":"@seabreezelantern"}
+
+assistant channel=commentary to=tool.get_social_qr:
+{"hotel_id":"seabreeze_lantern","channel":"line"}
+
+tool.get_social_qr channel=commentary to=assistant:
+{"qr_url":"https://sbln.tokyo/line-qr"}
+
+assistant channel=final:
+Our LINE handle is @seabreezelantern and the QR code is here: https://sbln.tokyo/line-qr
+
+user:
+Nice! When do you usually reply on LINE?
+
+assistant channel=analysis:
+Answer from system LINE Support hours and typical response.
+
+assistant channel=final:
+We reply 06:00–23:00 JST daily, typically within 10–20 minutes during those hours.
+
+user:
+Morning! The library lounge sounds lovely.
+
+assistant channel=analysis:
+Small talk acknowledgment referencing amenities snapshot; no tools.
+
+assistant channel=final:
+It’s a cozy spot—tea service runs 14:00–20:00.
+
+user:
+Are LINE messages end‑to‑end encrypted between us?
+
+assistant channel=analysis:
+Out of scope—no encryption details in system or tools.
+
+assistant channel=final:
+[ATTENTION] Encryption specifics aren’t available in the provided resources.
+

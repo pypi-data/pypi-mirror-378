@@ -1,0 +1,124 @@
+"""
+Guest reports television signal/input issues; provide tool-led troubleshooting, offer technician dispatch, and support streaming login as defined.
+
+ROLES: user (guest needing in-room TV help), assistant (in-room technology concierge handling TV and streaming support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "diagnose_tv_issue",
+    "description": "Run a remote diagnostic on the in-room TV to check power, input, and signal state.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "dispatch_tv_technician",
+    "description": "Dispatch an in-room technician for TV support.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "required": ["room_number", "reason"]
+    },
+    "strict": true
+  },
+  {
+    "name": "enable_guest_streaming_mode",
+    "description": "Enable privacy sandbox for guest streaming logins (auto-clears at checkout).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Skyline Vista Hotel (hotel_id: sv_nyc_34)
+Location: 455 West 34th Street, New York, NY 10001
+Timezone: America/New_York
+
+In-Room TV Details:
+- Display: 55" Samsung QLED (2024 series) with HDMI 1/2, TV tuner, and casting
+- Sound: Integrated soundbar mode enabled by default
+- Channels: Premium sports, international news, and film classics package
+- Privacy: Guest Streaming Mode wipes credentials at checkout
+
+Spaces & Ambience:
+- 34th-floor skyline lounge with floor-to-ceiling windows
+- Lobby espresso cart serving single-origin roasts from 6–11AM
+
+user:
+Hi—TV in room 2217 says “No Signal.” Can you help me get it working?
+
+assistant channel=analysis:
+Run a remote diagnostic on room 2217 to confirm input state and signal; if needed, dispatch technician.
+
+assistant channel=commentary to=tool.diagnose_tv_issue:
+{"room_number":"2217"}
+
+tool.diagnose_tv_issue channel=commentary to=assistant:
+{"powered_on":true,"active_input":"HDMI1","signal":"none","recommendation":"switch_to_tv_tuner_or_hdmi2","panel_controls_available":true}
+
+assistant channel=analysis:
+Recommend input change per tool output; offer technician if guest prefers hands-on help.
+
+assistant channel=final:
+Thanks for the details—your TV is on HDMI1 with no signal. Please press Input and select either TV Tuner or HDMI2; that should restore the picture. If you’d like, I can also send a technician to room 2217 to handle it for you.
+
+user:
+Please do send someone. Also, can you turn on Guest Streaming Mode so I can sign in to my apps?
+
+assistant channel=analysis:
+Dispatch technician with reason; then enable guest streaming mode for privacy.
+
+assistant channel=commentary to=tool.dispatch_tv_technician:
+{"room_number":"2217","reason":"no_signal_on_hdmi1; assist with input selection and verification"}
+
+tool.dispatch_tv_technician channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":12,"assigned":"tech_marco"}
+
+assistant channel=commentary to=tool.enable_guest_streaming_mode:
+{"room_number":"2217"}
+
+tool.enable_guest_streaming_mode channel=commentary to=assistant:
+{"enabled":true,"auto_clear_on_checkout":true}
+
+assistant channel=final:
+All set—Marco is on the way in about 12 minutes, and Guest Streaming Mode is enabled for room 2217 with automatic credential clearing at checkout.
+
+user:
+That skyline lounge view last night was stunning.
+
+assistant channel=analysis:
+Offer a friendly acknowledgment tied to the lounge fact.
+
+assistant channel=final:
+It’s a favorite—the 34th-floor lounge has full-height windows for that sweeping view.
+
+user:
+Could you install a third‑party app on the TV for me?
+
+assistant channel=analysis:
+App installation beyond Guest Streaming Mode isn’t provided by tools or system; acknowledge and use background flag.
+
+assistant channel=final:
+[ATTENTION] Noted. Reviewing available resources.
+

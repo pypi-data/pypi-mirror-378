@@ -1,0 +1,110 @@
+"""
+Guest requests patch application supplies for travel uniform; provide executive kit and timing.
+
+ROLES: user (crew member needing quick patch), assistant (housekeeping operations with amenity access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Airport Transit Suites Doha (hotel_id: ats_doh_09)
+Address: Airside, Hamad International Airport, Doha, Qatar
+Timezone: Asia/Qatar
+
+Transit Sewing Amenities:
+- Executive kits: strong navy/black thread, spare uniform buttons, fabric chalk, needles
+- Basic kits: black/white thread, standard needles, safety pins
+- Rapid response: 5–10 minutes due to compact footprint
+- Assistance window: 24/7 limited to quick fixes in transit
+- Policy: first kit free per layover; additional billed
+
+Service Points:
+- Lounges A/B connected; runners stationed near Gate C
+- Contact: Front Desk ext 1
+- Advisory: limited valet; no overnight at airside
+- Note: adhesives restricted by security—thread-only solutions
+
+user:
+Hi, cabin crew here—need to sew a name patch fast. I’m in room 318. Can I get strong navy thread and a needle?
+
+assistant channel=analysis:
+Transit property; check executive kit for floor 3; arrange rapid delivery.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type":"executive","floor_level":"3"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available":true,"kit_contents":["strong_navy_thread","spare_uniform_buttons","fabric_chalk","needles"],"eta_minutes":6}
+
+assistant channel=analysis:
+Arrange immediate delivery to 318; note 24/7 assistance limited to quick fixes.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number":"318","service_type":"kit_delivery","urgency":"emergency","garment_type":"uniform"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged":true,"delivery_time":"6_minutes","assistance_offered":true}
+
+assistant channel=final:
+Absolutely—we’ll bring strong navy thread and a needle in an executive kit to room 318 in about 6 minutes. Our assistance is 24/7 for quick fixes here in transit.
+
+user:
+Is the first kit complimentary during my layover?
+
+assistant channel=analysis:
+Answer policy from system: first kit free per layover.
+
+assistant channel=final:
+Yes—the first kit is complimentary for your layover.
+
+user:
+Thanks! Smooth operation here.
+
+assistant channel=analysis:
+Chit-chat reply.
+
+assistant channel=final:
+Thank you—safe flights ahead!
+
+user:
+Any chance to buy a travel adapter near Gate E?
+
+assistant channel=analysis:
+External retail question; beyond system; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check Gate E retail for adapters and report back.

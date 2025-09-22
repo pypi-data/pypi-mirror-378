@@ -1,0 +1,71 @@
+"""
+Guest requests a wheat beer with proper glass and asks about delivery timing; verify age and place order.
+
+ROLES: user (guest wanting wheat beer), assistant (room service beverages)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_drinking_age","description":"Verify legal drinking age.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"get_beer_selection","description":"Get beer options.","parameters":{"type":"object","additionalProperties":false,"properties":{"beer_type":{"type":"string","enum":["wheat","all"]},"region_preference":{"type":"string","enum":["local","domestic","imported","no_preference"]},"alcohol_content":{"type":"string","enum":["light","standard","strong","no_preference"]}},"required":["beer_type"]},"strict":true},
+  {"name":"place_beer_order","description":"Place in-room beer order.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"beer_items":{"type":"array","items":{"type":"object","properties":{"beer_sku":{"type":"string"},"quantity":{"type":"integer"},"temperature":{"type":"string","enum":["ice_cold","chilled","cellar_temp"]}},"required":["beer_sku","quantity"],"additionalProperties":false}},"delivery_instructions":{"type":"string"}},"required":["room_number","beer_items"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeview Pavilion Hotel (hotel_id: lph_minnetonka)
+Address: 200 Bayview Ln, Minnetonka, MN 55305
+Timezone: America/Chicago
+
+Wheat Beer Service:
+1) Serve chilled (38–42°F) in a Weizen glass to enhance aromatics.
+2) Orange slice garnish available on request.
+3) Local options include Surly and Fulton wheat beers.
+4) Standard delivery 10–20 minutes based on route.
+5) Quiet floor policy after 22:00.
+
+user:
+Hi—can I get a chilled wheat beer to 1115 with an orange slice? How long will it take?
+
+assistant channel=analysis:
+Verify age; fetch wheat options; place order with garnish.
+
+assistant channel=commentary to=tool.verify_drinking_age:
+{"room_number":"1115"}
+
+tool.verify_drinking_age channel=commentary to=assistant:
+{"room_number":"1115","guest_age_verified":true,"legal_drinking_age_met":true}
+
+assistant channel=commentary to=tool.get_beer_selection:
+{"beer_type":"wheat","region_preference":"domestic","alcohol_content":"no_preference"}
+
+tool.get_beer_selection channel=commentary to=assistant:
+{"selections":[{"sku":"MN_SURLY_WHEAT","name":"Surly Wheat","style":"Wheat"},{"sku":"MN_FULTON_WHEAT","name":"Fulton Wheat","style":"Wheat"}]}
+
+assistant channel=commentary to=tool.place_beer_order:
+{"room_number":"1115","beer_items":[{"beer_sku":"MN_SURLY_WHEAT","quantity":1,"temperature":"chilled"}],"delivery_instructions":"Weizen glass with orange slice garnish"}
+
+tool.place_beer_order channel=commentary to=assistant:
+{"order_id":"BEER-LPH-4402","estimated_delivery_minutes":13}
+
+assistant channel=final:
+All set—one chilled wheat beer with an orange slice is on its way with a Weizen glass. Expect delivery in about 13 minutes.
+
+user:
+Thanks! The lake looked glassy at sunset.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Sounds like a beautifully calm evening by the lake.
+
+user:
+Can you open the pool early for me tomorrow?
+
+assistant channel=analysis:
+Out of scope for beer; flag it.
+
+assistant channel=final:
+[ATTENTION] I’ll check on early pool access for tomorrow.

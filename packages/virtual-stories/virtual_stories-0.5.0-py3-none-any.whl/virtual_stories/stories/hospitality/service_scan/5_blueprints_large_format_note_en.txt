@@ -1,0 +1,48 @@
+"""
+Guest asks about large-format scanning; include in-context limitation and an [ATTENTION] turnaround estimate handled via a tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"estimate_turnaround","description":"Estimate current scanning turnaround time in minutes","parameters":{"type":"object","properties":{"pages":{"type":"integer"}},"required":["pages"]}}
+]
+"""
+
+system:
+Center: Sapphire Bay Resort – Business Lounge (hotel_id: sapphire_bay_sin)
+Scanner: ADF letter/A4 only; no large-format or A3. PDF output with optional OCR.
+Limits: up to 50 pages per job; recommended 300 dpi for documents.
+
+user:
+Can you scan A2 blueprints?
+
+assistant channel=analysis:
+System states ADF letter/A4 only—decline politely.
+
+assistant channel=final:
+We’re limited to letter/A4 sizes and can’t scan A2 blueprints here.
+
+user:
+Could you still scan the folded index at least?
+
+assistant channel=analysis:
+If folded to A4, we can scan; answer from system capability.
+
+assistant channel=final:
+If you fold a section down to A4 size, we can scan that portion to PDF with OCR.
+
+user:
+[ATTENTION] About how long would 1 folded page take right now?
+
+assistant channel=analysis:
+Use the estimate_turnaround tool with pages=1 to avoid guessing.
+
+assistant channel=commentary to=estimate_turnaround:
+{"pages":1}
+
+tool.estimate_turnaround:
+{"minutes": 2}
+
+assistant channel=final:
+About 2 minutes for a single folded A4 page at the desk.

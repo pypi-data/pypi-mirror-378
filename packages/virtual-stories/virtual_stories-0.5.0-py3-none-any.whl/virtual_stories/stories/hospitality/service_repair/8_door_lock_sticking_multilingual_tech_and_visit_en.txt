@@ -1,0 +1,57 @@
+"""
+Guest reports door lock sticking; asks if multilingual technicians are available and when they can visit.
+
+ROLES: user (guest struggling with door lock), assistant (front desk arranging engineering and confirming language support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"ticket_create","description":"Create door lock ticket","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"issue":{"type":"string"},"priority":{"type":"string","enum":["low","normal","high","urgent"]}},"required":["hotel_id","room","issue","priority"],"additionalProperties":false},"strict":true},
+  {"name":"eta_lookup","description":"Lookup ETA","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"ticket_id":{"type":"string"}},"required":["hotel_id","ticket_id"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Plaza Madrid (PLM-58)
+Address: Gran Vía 55, 28013 Madrid, Spain
+Engineering: 08:00–22:00; on-call overnight
+Languages: Engineers available with Spanish/English support
+Response: Normal 15–30 minutes
+Scope: Door locks, faucets, TV inputs, AC
+Dispatch: Ticket required
+
+user:
+The door lock in 111 sticks. Do you have English-speaking techs? When can they come?
+
+assistant channel=analysis:
+Confirm English support; create a normal ticket; fetch ETA.
+
+assistant channel=commentary to=tool.ticket_create:
+{"hotel_id":"PLM-58","room":"111","issue":"Door lock sticking","priority":"normal"}
+
+tool.ticket_create channel=commentary to=assistant:
+{"ticket_id":"PLM-ENG-611","status":"open"}
+
+assistant channel=commentary to=tool.eta_lookup:
+{"hotel_id":"PLM-58","ticket_id":"PLM-ENG-611"}
+
+tool.eta_lookup channel=commentary to=assistant:
+{"eta_minutes":19,"assigned":"Engineer Ruiz"}
+
+assistant channel=final:
+Yes—our engineers support Spanish and English. I’ve opened ticket PLM-ENG-611; Engineer Ruiz will arrive in about 19 minutes to service the door lock.
+
+user:
+The lobby chandelier is grand.
+
+assistant channel=final:
+It’s a restored original—glad you noticed.
+
+user:
+Can you share the lock vendor’s service bulletin set?
+
+assistant channel=final:
+[ATTENTION] Reviewing available information.
+

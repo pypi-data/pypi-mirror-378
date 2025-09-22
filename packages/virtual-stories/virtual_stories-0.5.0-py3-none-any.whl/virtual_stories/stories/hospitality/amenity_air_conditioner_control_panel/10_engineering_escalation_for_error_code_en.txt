@@ -1,0 +1,65 @@
+"""
+Guest reports an error code on the panel; verify status and create engineering ticket.
+
+ROLES: user (guest with panel error), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_panel_status", "description": "Get panel status including error codes.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "create_engineering_ticket", "description": "Create engineering ticket for panel faults.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"category":{"type":"string"},"priority":{"type":"string","enum":["low","medium","high","urgent"]},"note":{"type":"string"}},"required":["room_number","category","priority"]}, "strict": true }
+]
+```
+"""
+
+system:
+Oceanside Tech Hotel (hotel_id: oth_san_diego)
+Address: 9 Harbor Dr, San Diego, CA 92101
+Timezone: America/Los_Angeles
+
+Panel Policy:
+- Error codes require engineering ticket
+- Engineering hours: 07:00–22:00; urgent response for cooling faults
+Amenities: Marina walk 06:00–22:00
+Accessibility: High‑contrast panels
+Sustainability: Energy set‑back when unoccupied
+
+user:
+My panel in 143 shows E21. Can you take a look?
+
+assistant channel=analysis:
+Check status; if error present, create engineering ticket with high priority.
+
+assistant channel=commentary to=tool.get_panel_status:
+{"room_number":"143"}
+
+tool.get_panel_status channel=commentary to=assistant:
+{"room_number":"143","locked":false,"error_code":"E21"}
+
+assistant channel=commentary to=tool.create_engineering_ticket:
+{"room_number":"143","category":"HVAC panel error E21","priority":"high","note":"Guest reports E21; panel unlocked"}
+
+tool.create_engineering_ticket channel=commentary to=assistant:
+{"ticket_id":"ENG-HVAC-143-5527","eta_minutes":35}
+
+assistant channel=final:
+I’ve created engineering ticket ENG-HVAC-143-5527 for room 143 (ETA about 35 minutes). We’ll resolve the E21 panel error promptly.
+
+user:
+Thanks—the marina walk looks inviting later.
+
+assistant channel=analysis:
+Small talk referencing system.
+
+assistant channel=final:
+It’s open 06:00–22:00—nice for a stroll.
+
+user:
+Can you comp tonight if it takes too long?
+
+assistant channel=analysis:
+Comp decisions outside system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check on compensation policies regarding delays.
+

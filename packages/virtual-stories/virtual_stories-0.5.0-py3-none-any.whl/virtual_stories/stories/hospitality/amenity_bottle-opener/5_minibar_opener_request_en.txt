@@ -1,0 +1,81 @@
+"""
+Guest asks if an opener can be left with minibar restock and requests glassware; confirm options and arrange.
+
+ROLES: user (guest planning in-room drinks), assistant (minibar services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"minibar_tools","description":"List tools and glassware available with minibar.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"queue_minibar_request","description":"Queue a minibar visit with tools.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","items":{"type":"array","items":{"type":"string"}}},"required":["room","items"]}}
+]
+```
+"""
+
+system:
+Desert Star Resort (hotel_id: dsr_phx_11)
+Address: 700 E Camelback Rd, Phoenix, AZ 85014
+Timezone: America/Phoenix
+Setting: Desert-modern resort with shaded courtyards
+
+Minibar Add-ons:
+- Cap lifter (handheld)
+- Multitool opener
+- Rocks glasses (2)
+- Wine stems (2)
+
+Service Windows:
+- Minibar rounds: 14:00–18:00 daily
+- Special queue: 20–35 minutes
+
+Charges:
+- Tools loan: no deposit; replacement if unreturned
+- Glassware: complimentary on request (2 pieces)
+
+Hygiene:
+- Tools sanitized; glassware rinsed and wrapped
+
+Contact:
+- Minibar ext. 34; Guest Services ext. 0
+
+user:
+Hi! Can a bottle opener come with today’s minibar restock to room 512? And could we get two rocks glasses too?
+
+assistant channel=analysis:
+Confirm availability and queue special request.
+
+assistant channel=commentary to=tool.minibar_tools:
+{}
+
+tool.minibar_tools channel=commentary to=assistant:
+{"tools":["cap_lifter","multitool"],"glassware":["rocks_pair","wine_stems_pair"]}
+
+assistant channel=final:
+Yes—cap lifter or multitool, plus a pair of rocks glasses, are available. I’ll queue this for room 512 now.
+
+assistant channel=commentary to=tool.queue_minibar_request:
+{"room":"512","items":["cap_lifter","rocks_pair"]}
+
+tool.queue_minibar_request channel=commentary to=assistant:
+{"ticket":"MB-512-773","eta_minutes":25}
+
+assistant channel=final:
+Queued—ticket MB-512-773. Expect delivery in about 25 minutes with the restock.
+
+user:
+Thanks! By the way, those courtyards are so relaxing.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+We’re glad you’re enjoying the shade—perfect for the afternoon.
+
+user:
+Do you rent ice coolers for day trips?
+
+assistant channel=analysis:
+Not listed; mark attention.
+
+assistant channel=final:
+[ATTENTION] I’ll look into day-trip cooler rentals and get back to you.

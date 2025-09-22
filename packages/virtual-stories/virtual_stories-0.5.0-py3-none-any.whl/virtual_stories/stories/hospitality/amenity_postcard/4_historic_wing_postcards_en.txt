@@ -1,0 +1,55 @@
+"""
+Guest asks for heritage postcards and mailing details; include tool use, small talk, and one out-of-scope query.
+
+ROLES: user (history enthusiast), assistant (heritage desk clerk)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "get_gift_shop_inventory",
+    "description": "Checks the inventory of the hotel gift shop.",
+    "parameters": {"type": "object","properties": {"item_name": {"type": "string"}},"required": ["item_name"]}
+  }
+]
+```
+"""
+
+system:
+Grand Meridian Hotel — Heritage Wing Boutique
+Opened: 1912 (Art Deco façade)
+Postcard series: archival lobby (sepia), rooftop garden 1938, bellhop uniforms timeline
+Price list: $2.25 each; 5-pack $10.00; rigid mailer $0.50; stamps domestic $0.68, intl $1.35
+Hours: 09:30–20:00; closed Tuesdays
+Mail service: concierge dispatch at 16:00 (weekdays only)
+Location guide: Heritage Wing, ground floor, under the grand staircase
+Sourcing: archival prints from city museum partnership
+Policy: confirm counts via get_gift_shop_inventory
+
+user:
+Do you have the rooftop garden 1938 postcards?
+
+assistant channel=analysis:
+Check inventory for rooftop_garden_1938_postcard; then mention pricing and boutique hours from system.
+
+assistant channel=commentary to=tool.get_gift_shop_inventory:
+{"item_name": "rooftop_garden_1938_postcard"}
+
+tool.get_gift_shop_inventory channel=commentary to=assistant:
+{"item_name": "rooftop_garden_1938_postcard", "quantity": 19, "price": 2.25}
+
+assistant channel=final:
+Yes—19 left, priced at $2.25 each. The Heritage Boutique is open 09:30–20:00 (closed Tuesdays). We can mail them via concierge at 16:00 on weekdays.
+
+user:
+Charming! The staircase feels like a movie set.
+
+assistant channel=final:
+It’s one of our most photographed spots.
+
+user:
+Can you share the museum’s internal accession numbers for those images?
+
+assistant channel=final:
+[ATTENTION] Those accession identifiers aren’t included in the available resources.
+

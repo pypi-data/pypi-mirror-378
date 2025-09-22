@@ -1,0 +1,112 @@
+"""
+Guest requests an 80 cm birch round tea table with specific placement and timing; verify stock and schedule setup; include one casual remark and one [ATTENTION] query.
+
+ROLES: user (guest), assistant (concierge arranging in-room furniture)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_furniture_inventory",
+    "description": "Check stock for round tea tables by size and finish.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "enum": ["round_tea_table"] },
+        "size_cm": { "type": "integer", "enum": [60, 80] },
+        "finish": { "type": "string", "enum": ["walnut", "birch"] }
+      },
+      "required": ["item_code", "size_cm", "finish"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_in_room_setup",
+    "description": "Deliver and place a furniture item in-room with surface protectors.
+Notes: placement options are near_window, center, sofa_side.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "size_cm": { "type": "integer", "enum": [60, 80] },
+        "finish": { "type": "string", "enum": ["walnut", "birch"] },
+        "placement": { "type": "string", "enum": ["near_window", "center", "sofa_side"] },
+        "surface_protectors": { "type": "boolean" },
+        "priority": { "type": "string", "enum": ["normal", "high"] }
+      },
+      "required": ["room_number", "item_code", "size_cm", "finish", "placement", "surface_protectors", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: The Copper Lantern (hotel_id: cl_oxf_11)
+Address: 5 Folly Bridge Way, Oxford OX1
+Service window: 08:30–22:00; standard furniture ETA 12–20 minutes
+
+Round Tea Table — Catalog Snapshot
+- Diameters: 60 cm, 80 cm
+- Finishes: birch (satin), walnut (matte)
+- Today’s counts: 60/birch(3), 60/walnut(2), 80/birch(2), 80/walnut(1)
+- Best placement tip: sofa_side works well in smaller lounges
+
+Hotel quick facts (extended)
+1) Check-in 15:00; Check-out 11:00
+2) Power: Type G outlets; 230V
+3) Quiet hours: 22:00–07:00
+4) Elevators: 2 guest lifts; 1 service lift
+5) Laundry pickups: 09:00 and 18:00 daily
+6) Scent program: light cedar in lobby
+
+Facility map cues
+Level 4 lounge: bay window alcove; rug with copper thread trim
+Tea service set: kept in service cupboard L4-C
+
+user:
+Could you place an 80 cm birch round tea table by the sofa in room 412?
+
+assistant channel=analysis:
+Confirm availability for 80/birch, then submit setup request for room 412 with sofa_side placement and protectors.
+
+assistant channel=commentary to=tool.check_furniture_inventory:
+{"item_code":"round_tea_table","size_cm":80,"finish":"birch"}
+
+tool.check_furniture_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":2,"item_code":"round_tea_table","size_cm":80,"finish":"birch"}
+
+assistant channel=analysis:
+Proceed to request in-room setup at sofa_side with normal priority.
+
+assistant channel=commentary to=tool.request_in_room_setup:
+{"room_number":"412","item_code":"round_tea_table","size_cm":80,"finish":"birch","placement":"sofa_side","surface_protectors":true,"priority":"normal"}
+
+tool.request_in_room_setup channel=commentary to=assistant:
+{"ticket_id":"FN-412-2074","eta_minutes":14,"placement":"sofa_side"}
+
+assistant channel=final:
+Scheduled: an 80 cm birch round tea table will be placed sofa-side in room 412 with surface protectors. Ticket FN-412-2074, ETA about 14 minutes.
+
+user:
+The cedar scent in the lobby is calming.
+
+assistant channel=analysis:
+Acknowledge using the scent program detail.
+
+assistant channel=final:
+It’s our light cedar scent program—kept subtle in the lobby.
+
+user:
+Can I move my checkout to 2 PM?
+
+assistant channel=analysis:
+Late checkout policy isn’t specified in system or tools; flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking late check-out availability. Reviewing options.
+

@@ -1,0 +1,55 @@
+"""
+Guest asks about cancellation timing and associated fees for a scheduled transfer.
+
+ROLES: user (guest considering booking but wants terms), assistant (concierge providing policy details)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_cancellation_policy","description":"Return limousine cancellation policy details.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Pavilion at Riverfront (hotel_id: tpr_den_01)
+Address: 500 W Colfax Ave, Denver, CO 80204
+Timezone: America/Denver
+
+Limousine Terms:
+- Cancellation: Free until 2 hours before pickup; inside 2 hours = 1 hour charge
+- No‑show: Full base fare for flat transfers; 2 hours for hourly charters
+- Grace Period: 10 minutes at pickup
+- Billing: Room or card on file
+- Luggage: 2 checked + 2 carry‑ons
+
+user:
+If I cancel 90 minutes before pickup, what happens?
+
+assistant channel=analysis:
+Inside 2 hours triggers a 1‑hour charge per policy. Use tool to echo policy.
+
+assistant channel=commentary to=tool.get_cancellation_policy:
+{}
+
+tool.get_cancellation_policy channel=commentary to=assistant:
+{"free_window_minutes":120,"inside_window_fee":"1_hour_charge","no_show":"flat_full_or_2h_charter"}
+
+assistant channel=final:
+If you cancel 90 minutes before, it falls inside the 2‑hour window, so a 1‑hour charge applies.
+
+user:
+Cool lobby art, by the way.
+
+assistant channel=final:
+Thank you—glad you noticed.
+
+user:
+Can you waive it if my flight is delayed?
+
+assistant channel=analysis:
+Waiver policy not provided. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Noted. Evaluating applicable options.
+

@@ -1,0 +1,63 @@
+"""
+Parent requests fragrance-free sanitation confirmation and a high chair for an allergy-sensitive toddler.
+
+ROLES: user (parent with allergy concerns), assistant (guest services providing sanitized equipment)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"assign_serial","description":"Assign a specific sanitized chair by serial","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"notes":{"type":"string"}},"required":["hotel_id","room"]},"strict":true},
+  {"name":"confirm_sanitization","description":"Return last sanitization record for a serial","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"serial":{"type":"string"}},"required":["hotel_id","serial"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Willow & Stone Edinburgh (WSED-31)
+Address: 12 Royal Mile, Edinburgh EH1 1RF, United Kingdom
+Kids’ High Chairs: 10 units; complimentary; sanitation uses hypoallergenic, fragrance-free cleaner (EN 14476); air-dried 30 minutes.
+Records: Each chair retains a last-sanitized timestamp and staff initials; straps UV-sterilized daily at 03:00.
+Limits: Max weight 15 kg; indoor use only; never place on tables.
+Delivery: Typical ETA 10–18 minutes; runners confirm placement location verbally.
+Other: Bottle warmers available on request; dish soap provided in-room on demand.
+
+user:
+My child has allergies—can you send a fragrance-free sanitized high chair to 604?
+
+assistant channel=analysis:
+Assign a serial, then confirm its sanitization record for assurance.
+
+assistant channel=commentary to=tool.assign_serial:
+{"hotel_id":"WSED-31","room":"604","notes":"allergy_sensitive"}
+
+tool.assign_serial channel=commentary to=assistant:
+{"serial":"KCH-ED-05","order_id":"WS-604-221"}
+
+assistant channel=commentary to=tool.confirm_sanitization:
+{"hotel_id":"WSED-31","serial":"KCH-ED-05"}
+
+tool.confirm_sanitization channel=commentary to=assistant:
+{"last_sanitized":"2025-09-05T11:40:00Z","method":"hypoallergenic_cleaner","uv_straps":"2025-09-06T03:00:00Z"}
+
+assistant channel=final:
+We’ll send chair KCH-ED-05 (sanitized at 11:40 with hypoallergenic cleaner; straps UV-sterilized at 03:00). Expect delivery in about 10–18 minutes.
+
+user:
+Is there any deposit?
+
+assistant channel=analysis:
+System states complimentary—no deposit.
+
+assistant channel=final:
+No deposit—the loan is complimentary.
+
+user:
+Could you email the MSDS sheet for the cleaner?
+
+assistant channel=analysis:
+Beyond system scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

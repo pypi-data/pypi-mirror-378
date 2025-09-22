@@ -1,0 +1,73 @@
+"""
+Guest requests travel-size nail clippers for carry-on; prefers front desk pickup.
+Provide availability of compact clippers and prepare pickup.
+
+ROLES: user (guest needing compact grooming tool), assistant (guest services coordinating quick pickup of sanitized clippers)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_grooming_supplies","description":"Check nail clipper types and sizes.","parameters":{"type":"object","properties":{"tool_type":{"type":"string","enum":["nail_clippers"]},"quality_level":{"type":"string","enum":["basic","premium"]}},"required":["tool_type"]},"strict":true},
+  {"name":"deliver_grooming_tools","description":"Stage tools for front desk pickup or deliver to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"tools_requested":{"type":"array","items":{"type":"object","properties":{"tool_name":{"type":"string"},"quality":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_priority":{"type":"string","enum":["standard","urgent"]},"method":{"type":"string","enum":["front_desk_pickup","room_delivery"]}},"required":["tools_requested","method"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seaside Boardwalk Hotel (hotel_id: sbh_scz_51)
+Address: 101 Beach St, Santa Cruz, CA 95060
+Timezone: America/Los_Angeles
+
+Grooming Amenities:
+- Travel-size clippers with safety cap; keyring loop
+- Premium stainless clippers; curved or straight blade
+- Disposable emery boards available
+- UV‑C sanitized; sealed pouches
+- Complimentary at front desk
+
+Pickup Ops:
+- Labelled packet at Desk Bin C within 5 minutes
+- 24/7 availability; night bell service
+- Optional room delivery on request
+- Recycling for worn tools
+- Hand wipe included in packet
+
+user:
+Hi, can I pick up a travel-size clipper set at the front desk?
+
+assistant channel=analysis:
+Confirm travel-size availability and prepare front desk pickup.
+
+assistant channel=commentary to=tool.check_grooming_supplies:
+{"tool_type":"nail_clippers","quality_level":"basic"}
+
+tool.check_grooming_supplies channel=commentary to=assistant:
+{"available_tools":["travel_clippers_safety_cap"],"sanitization":"UV-C","disposable_files":true}
+
+assistant channel=commentary to=tool.deliver_grooming_tools:
+{"room_number":"","tools_requested":[{"tool_name":"travel_clippers_safety_cap","quality":"basic","quantity":1}],"delivery_priority":"standard","method":"front_desk_pickup"}
+
+tool.deliver_grooming_tools channel=commentary to=assistant:
+{"pickup_id":"SBH-SCZ-PU-02","ready_in":"5 minutes","desk_bin":"C","items":["travel_clippers_safety_cap","emery_board"],"sealed":true}
+
+assistant channel=final:
+Yes—your travel-size clippers will be ready for pickup at the front desk in about 5 minutes (Bin C) with a sealed emery board.
+
+user:
+Are they sanitized?
+
+assistant channel=analysis:
+Answer from Grooming Amenities.
+
+assistant channel=final:
+Yes—they’re UV‑C sanitized and sealed in individual pouches.
+
+user:
+Any boardwalk snack stand you like?
+
+assistant channel=analysis:
+Out of scope; apply ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Researching available details.
+

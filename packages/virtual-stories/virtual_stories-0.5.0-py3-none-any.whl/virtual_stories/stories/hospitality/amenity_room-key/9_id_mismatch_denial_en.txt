@@ -1,0 +1,73 @@
+"""
+Guest provides mismatched ID digits; assistant denies issuance until verified, then issues after correction; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 623 initially provides wrong last four), assistant (front desk enforcing verification before issuing spare)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_guest_identity","description":"Verify guest identity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"last_name":{"type":"string"},"id_last4":{"type":"string"}},"required":["room_number","last_name","id_last4"]}},
+  {"name":"issue_spare_key","description":"Issue spare for pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pickup_location":{"type":"string","enum":["front_desk"]}},"required":["room_number","pickup_location"]}}
+]
+```
+"""
+
+system:
+Hotel: Riverbend Hotel — Southbank Tower
+Front desk: 24/7
+Room 623: Deluxe Twin
+Policy: Verify last name + ID last four; pickup front_desk only; max 2 active spares; auto-deactivate at 00:00
+Notes: Southbank elevator S2 to 6th floor; breakfast 06:30–10:30
+Contacts: Front Desk 0
+
+user:
+Hi, Johnson in 623—ID ends 8420. I need a spare key.
+
+assistant channel=analysis:
+Attempt verification; if fails, ask to recheck and proceed once corrected.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"623","last_name":"Johnson","id_last4":"8420"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":false,"room_number":"623"}
+
+assistant channel=final:
+I’m not able to verify with those digits. Could you please confirm the last four of your ID?
+
+user:
+Apologies, it’s 8429.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"623","last_name":"Johnson","id_last4":"8429"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"623"}
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"623","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-623-1180","pickup_location":"front_desk"}
+
+assistant channel=final:
+Thanks for confirming—your spare (SP-623-1180) is ready at the front desk.
+
+user:
+Breakfast hours again?
+
+assistant channel=final:
+Breakfast runs 06:30–10:30.
+
+user:
+Hope your morning’s going well.
+
+assistant channel=final:
+It is—thank you!
+
+user:
+Could housekeeping slide the key under my door?
+
+assistant channel=final:
+[ATTENTION] Delivery to the room isn’t supported under the provided policy.
+

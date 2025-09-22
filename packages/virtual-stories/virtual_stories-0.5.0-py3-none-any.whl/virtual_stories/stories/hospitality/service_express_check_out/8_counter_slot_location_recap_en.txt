@@ -1,0 +1,52 @@
+"""
+Express checkout highlighting the exact slot location at Reception; include a chitchat and an [ATTENTION] policy question.
+
+ROLES: user (guest departing mid-morning), assistant (front desk clarifying express drop location and receipt timing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"initiate_express_checkout","description":"Start express checkout and email a digital receipt.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"email":{"type":"string"}},"required":["reservation_id","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Site: Coral Quay Hotel
+Details:
+- Express Checkout Slot: brass plate with “Express Checkout” at Reception’s right corner.
+- Receipts: emailed after folio completion; paper available upon request at desk.
+- Standard checkout: 12:00; Wi‑Fi: CoralQuay-Guest; Parking: P1–P2; EV: P2 Row A.
+- Elevators: Bank 1 (floors 2–10), Bank 2 (11–20).
+- Quiet hours: 22:00–07:00.
+
+user:
+Express checkout CQ-66108 to mina@sample.com.
+
+assistant channel=analysis:
+Call the tool; reply with slot location and receipt policy from system.
+
+assistant channel=commentary to=tool.initiate_express_checkout:
+{"reservation_id":"CQ-66108","email":"mina@sample.com"}
+
+tool.initiate_express_checkout channel=commentary to=assistant:
+{"status":"initiated","receipt":"queued"}
+
+assistant channel=final:
+Express checkout started. Drop your keys at the brass plate marked “Express Checkout” on the Reception’s right corner. Your receipt will arrive by email after the folio completes.
+
+user:
+The elevator bank was quick today.
+
+assistant channel=final:
+Good to hear—Bank 1 serves floors 2–10 and Bank 2 serves 11–20.
+
+user:
+Do you keep CCTV footage of the checkout area for 60 days?
+
+assistant channel=analysis:
+No retention details in system; mark with [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Reviewing available resources regarding CCTV retention.
+

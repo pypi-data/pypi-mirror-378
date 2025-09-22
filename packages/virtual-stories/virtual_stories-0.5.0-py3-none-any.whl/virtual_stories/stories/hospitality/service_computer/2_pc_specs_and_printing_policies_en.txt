@@ -1,0 +1,81 @@
+"""
+Guest asks about installed software and printing costs; we confirm via tools, include small talk, and handle an out-of-scope software installation with the special flag.
+
+ROLES: user (guest needing specific software and print rates), assistant (business center attendant providing specs and printing info)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_pc_specs","description":"Get installed software and hardware specs for business center PCs.","parameters":{"type":"object","additionalProperties":false,"properties":{"zone":{"type":"string","enum":["quiet_zone","general","dual_monitor"]}},"required":["zone"]},"strict":true},
+  {"name":"get_print_rates","description":"Retrieve current mono/color print pricing and paper sizes.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"required":[]},
+  {"name":"get_printer_status","description":"Check laser printer readiness.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"required":[]}
+]
+```
+"""
+
+system:
+Aurora Quays Hotel — Business Center (Level M, opposite lifts)
+Core facts:
+- Hours: 06:30–23:00 daily (staffed 08:00–20:00)
+- Stations: 10 PCs total | Zones: Quiet (4), General (4), Dual‑monitor (2)
+- Session: 50 minutes; grace 10 minutes; auto‑logout on idle > 5 minutes
+- Printing: A4/A3 laser; pay‑per‑page; USB printing enabled; scan‑to‑email kiosk
+- Network: Guest VLAN "AQH_BC"; 1 Gbps wired; Wi‑Fi 5 supported
+
+Helpful references (redundant for clarity):
+• Location text: "Level M corridor, opposite lifts, signposted in blue."
+• Contact: +44 20 0000 1100 (Business Center Desk)
+• Power: 230V outlets + universal adapters at each station
+• Accessibility: height‑adjustable desk (Quiet #Q2); screen reader available
+• Supplies: A4/A3 plain paper included; specialty paper not provided
+
+JSON snapshot:
+{
+  "pc_os": "Windows 11 Pro",
+  "default_apps": ["MS Office 365", "Adobe Reader", "VLC"],
+  "printers": [{"id": "BC-LASER-01", "type": "mono/color a4_a3"}],
+  "policy": {"usb_allowed": true, "file_retention_minutes": 0}
+}
+
+user:
+Do your Quiet Zone PCs have Adobe Illustrator, and how much is color printing?
+
+assistant channel=analysis:
+Use tools to list specs for Quiet Zone and fetch print rates; only report returned details.
+
+assistant channel=commentary to=tool.get_pc_specs:
+{"zone":"quiet_zone"}
+
+tool.get_pc_specs channel=commentary to=assistant:
+{"zone":"quiet_zone","os":"Windows 11 Pro","software":["MS Office 365","Adobe Reader","VLC","GIMP"],"cpu":"i7-1265U","ram_gb":16}
+
+assistant channel=commentary to=tool.get_print_rates:
+{}
+
+tool.get_print_rates channel=commentary to=assistant:
+{"mono_per_a4":"$0.10","color_per_a4":"$0.40","mono_per_a3":"$0.20","color_per_a3":"$0.80"}
+
+assistant channel=commentary to=tool.get_printer_status:
+{}
+
+tool.get_printer_status channel=commentary to=assistant:
+{"status":"ready","printer_id":"BC-LASER-01"}
+
+assistant channel=final:
+Quiet Zone PCs run Windows 11 Pro with MS Office 365, Adobe Reader, VLC, and GIMP (Illustrator isn’t listed). Color print rates: A4 $0.40, A3 $0.80 (printer BC‑LASER‑01 is ready).
+
+user:
+The blue signs make it easy to find.
+
+assistant channel=final:
+Glad the Level M signage helped.
+
+user:
+Could you install Adobe Illustrator for me today?
+
+assistant channel=analysis:
+Installation capability isn’t provided by system or tools; use special flag.
+
+assistant channel=final:
+[ATTENTION] Understood regarding Illustrator. Checking available options.
+

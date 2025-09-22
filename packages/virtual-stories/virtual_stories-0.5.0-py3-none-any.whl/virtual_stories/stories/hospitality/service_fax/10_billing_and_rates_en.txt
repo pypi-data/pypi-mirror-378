@@ -1,0 +1,47 @@
+"""
+Guest asks about billing and rates before sending; confirm policy and submit a domestic fax; include chitchat and ATTENTION for coupon discounts.
+
+ROLES: user (guest confirming cost and billing), assistant (concierge clarifying rates and posting charges then submitting fax)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"send_fax","description":"Submit a fax job for billing to folio.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"recipient_number":{"type":"string"},"pages":{"type":"integer"},"cover_note":{"type":"string"},"destination_type":{"type":"string","enum":["domestic","international"]}},"required":["room_number","recipient_number","pages","destination_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Aurora City Hotel — Business Desk
+Hours: 08:00–22:00
+Rates: Domestic USD 2/page; International USD 5/page; cover complimentary
+Billing: Charges posted to guest folio; receipt available on request
+Limit: 20 pages per job
+
+user:
+What’s the cost setup? And please send 2 domestic pages to +1-646-555-0170.
+
+assistant channel=analysis:
+Explain rates and billing per system, then submit domestic 2‑page fax.
+
+assistant channel=commentary to=tool.send_fax:
+{"room_number":"605","recipient_number":"+1-646-555-0170","pages":2,"cover_note":"Short note","destination_type":"domestic"}
+
+tool.send_fax channel=commentary to=assistant:
+{"job_id":"fax_2025_09_07_1001","status":"queued","billed_pages":2,"rate_per_page":2,"currency":"USD"}
+
+assistant channel=final:
+Rates are USD 2/page domestic and USD 5/page international; the cover page is complimentary. We’ve queued job fax_2025_09_07_1001 for 2 domestic pages and will post charges to your folio.
+
+user:
+Thanks—lobby is calm tonight.
+
+assistant channel=final:
+We’ll dispatch it now.
+
+user:
+Can I apply a coupon to reduce the fax fee?
+
+assistant channel=final:
+[ATTENTION] Coupon application isn’t available in these resources. Checking available options.
+

@@ -1,0 +1,73 @@
+"""
+Guest requests low‑odor presentation markers and asks about colors; needs quick delivery.
+Provide marker color availability and delivery window.
+
+ROLES: user (guest presenting soon), assistant (stationery concierge ensuring low‑odor markers)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_writing_instruments","description":"Check low‑odor marker colors and availability.","parameters":{"type":"object","properties":{"pen_type":{"type":"string","enum":["marker"]},"quality_tier":{"type":"string","enum":["premium"]}},"required":["pen_type"]},"strict":true},
+  {"name":"deliver_writing_supplies","description":"Deliver low‑odor markers to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"pen_selection":{"type":"array","items":{"type":"string"}},"accessories_included":{"type":"boolean"},"delivery_priority":{"type":"string","enum":["immediate"]}},"required":["room_number","pen_selection"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbour Bridge Executive (hotel_id: hbe_cpt_102)
+Address: 1 Lower Long St, Cape Town, 8001, South Africa
+Timezone: Africa/Johannesburg
+
+Presentation Markers:
+- Low‑odor formula; chisel tips
+- Colors: black, blue, red, green
+- Flipchart‑safe; quick‑wipe
+- Sealed 4‑packs
+- Complimentary for executive floors
+
+Delivery:
+- Immediate run 5–8 minutes
+- Add cloth eraser on request
+- Sealed packs
+- Concierge checklist sign‑off
+- Recycling for plastics
+
+user:
+Hi, room 1803. I need a low‑odor marker set—do you have black and blue available immediately?
+
+assistant channel=analysis:
+Check marker colors; deliver immediate 4‑pack that includes black and blue to 1803.
+
+assistant channel=commentary to=tool.check_writing_instruments:
+{"pen_type":"marker","quality_tier":"premium"}
+
+tool.check_writing_instruments channel=commentary to=assistant:
+{"available":true,"colors":["black","blue","red","green"],"pack":"sealed_4_pack"}
+
+assistant channel=commentary to=tool.deliver_writing_supplies:
+{"room_number":"1803","pen_selection":["sealed_4_pack_low_odor"],"accessories_included":true,"delivery_priority":"immediate"}
+
+tool.deliver_writing_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta_minutes":6,"items":["low‑odor marker 4‑pack","cloth eraser"],"runner":"Naledi"}
+
+assistant channel=final:
+Yes—our sealed low‑odor 4‑pack includes black and blue. Naledi will deliver it to 1803 in about 6 minutes with a cloth eraser.
+
+user:
+Do you recycle the plastic once I’m done?
+
+assistant channel=analysis:
+Answer from Delivery section.
+
+assistant channel=final:
+Yes—we collect used plastics for recycling at concierge after your session.
+
+user:
+Any Table Mountain cableway tips?
+
+assistant channel=analysis:
+Out of scope; ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Searching for more information.
+

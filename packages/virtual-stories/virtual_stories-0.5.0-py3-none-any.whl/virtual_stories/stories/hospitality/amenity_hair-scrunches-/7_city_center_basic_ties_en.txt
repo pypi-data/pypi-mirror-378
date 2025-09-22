@@ -1,0 +1,67 @@
+"""
+City-center guest requests basic ties; includes limit Q&A and beyond-context check.
+
+ROLES: user (guest in 1901), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check amenity stock.","parameters":{"type":"object","properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Central Exchange
+Amenity: basic hair ties (black)
+Hours: 06:30–22:00
+SLA: 12–20 min
+Limit: 6/night
+Ext: Concierge 0
+
+user:
+1901 here—can I get 4 hair ties?
+
+assistant channel=analysis:
+Check stock; deliver 4 basic hair ties to 1901.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"basic hair ties","quantity":4}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"available":true,"in_stock":200}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1901","amenity_name":"basic hair ties","quantity":4,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"CE-1901-HT-04","eta_minutes":16}
+
+assistant channel=final:
+Confirmed—4 hair ties are en route to 1901. ETA ~16 minutes.
+
+user:
+Is there a nightly limit?
+
+assistant channel=analysis:
+System: 6/night.
+
+assistant channel=final:
+Yes—the limit is 6 per night.
+
+user:
+Nice city lights.
+
+assistant channel=final:
+Enjoy the view.
+
+user:
+Do you validate parking for the theater next door?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I’ll check theater parking validation.
+

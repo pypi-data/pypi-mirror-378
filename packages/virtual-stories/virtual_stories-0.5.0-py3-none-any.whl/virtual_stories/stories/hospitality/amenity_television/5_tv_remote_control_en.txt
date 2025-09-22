@@ -1,0 +1,122 @@
+"""
+Guest has issues with the TV remote control and asks about remote functions, battery replacement, and troubleshooting.
+
+ROLES: user (guest having remote control issues), assistant (in-room technology concierge helping with remote control problems)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "diagnose_tv_issue",
+    "description": "Run a remote diagnostic on the in-room TV to check power, input, and signal state.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "dispatch_tv_technician",
+    "description": "Dispatch an in-room technician for TV support.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "required": ["room_number", "reason"]
+    },
+    "strict": true
+  },
+  {
+    "name": "enable_guest_streaming_mode",
+    "description": "Enable privacy sandbox for guest streaming logins (auto-clears at checkout).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Skyline Vista Hotel (hotel_id: sv_nyc_34)
+Location: 455 West 34th Street, New York, NY 10001
+Timezone: America/New_York
+
+In-Room TV Details:
+- Display: 55" Samsung QLED (2024 series) with HDMI 1/2, TV tuner, and casting
+- Sound: Integrated soundbar mode enabled by default
+- Channels: Premium sports, international news, and film classics package
+- Privacy: Guest Streaming Mode wipes credentials at checkout
+
+Spaces & Ambience:
+- 34th-floor skyline lounge with floor-to-ceiling windows
+- Lobby espresso cart serving single-origin roasts from 6–11AM
+
+Remote control features: Universal Samsung remote with smart functions; Guide button for channel navigation; Input button for HDMI selection; Menu button for settings access; dedicated streaming app buttons; volume and channel controls; power button; backlight for low-light use; battery indicator; pairing mode for device connection
+
+user:
+Hi! The remote control in room 2217 isn't working properly. Some buttons respond but others don't. Can you help?
+
+assistant channel=analysis:
+Run a diagnostic to check TV status and provide remote troubleshooting guidance.
+
+assistant channel=commentary to=tool.diagnose_tv_issue:
+{"room_number":"2217"}
+
+tool.diagnose_tv_issue channel=commentary to=assistant:
+{"powered_on":true,"active_input":"TV","signal":"good","recommendation":"remote_battery_check","panel_controls_available":true}
+
+assistant channel=analysis:
+Provide remote troubleshooting steps based on diagnostic results.
+
+assistant channel=final:
+I can see your TV is working properly. For remote control issues, try these steps: 1) Check if the remote has a backlight (press any button in low light), 2) Try pointing the remote directly at the TV sensor, 3) Check the battery indicator, 4) If needed, you can use the panel controls on the TV itself. Would you like me to send a technician to replace the remote or check the batteries?
+
+user:
+The battery indicator shows low battery. Can you send someone to replace them?
+
+assistant channel=analysis:
+Dispatch technician to replace remote batteries.
+
+assistant channel=commentary to=tool.dispatch_tv_technician:
+{"room_number":"2217","reason":"remote_control_battery_replacement_needed"}
+
+tool.dispatch_tv_technician channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":8,"assigned":"tech_sarah"}
+
+assistant channel=analysis:
+Confirm technician dispatch for battery replacement.
+
+assistant channel=final:
+Perfect! Sarah is on her way to room 2217 to replace the remote batteries. She'll be there in about 8 minutes. In the meantime, you can use the panel controls on the TV if needed.
+
+user:
+Great! The universal remote with smart functions sounds very convenient.
+
+assistant channel=analysis:
+Acknowledge their interest in the remote features without adding new information.
+
+assistant channel=final:
+Yes, the universal Samsung remote makes it easy to control all the TV functions and access streaming apps with dedicated buttons!
+
+user:
+Do you have any backup remotes available in case this happens again?
+
+assistant channel=analysis:
+Backup remote availability isn't mentioned in system prompt, so use attention flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for your question. Reviewing available resources.

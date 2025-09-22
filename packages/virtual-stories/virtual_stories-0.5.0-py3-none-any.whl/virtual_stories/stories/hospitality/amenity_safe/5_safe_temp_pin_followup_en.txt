@@ -1,0 +1,63 @@
+"""
+Guest needs a temporary PIN and asks about lockout policy; include small talk and an out-of-scope ask.
+
+ROLES: user (guest locked out), assistant (front desk providing reset and policy information)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_safe_status","description":"Verify safe status.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"reset_safe_pin","description":"Issue temporary PIN.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Coral Keys (hotel_id: ck_keywest)
+Address: 2801 N Roosevelt Blvd, Key West, FL
+Safe Program:
+- Model: IslandSafe IS-300
+- PIN length: 4–6 digits
+- Lockout: 3 failed attempts → 5-minute lockout
+Support: 24/7 front desk
+Guest Tip: Sunset pier lights up at golden hour
+
+user:
+I’m in 332 and forgot my PIN. Can you help?
+
+assistant channel=analysis:
+Verify status and issue a temporary PIN.
+
+assistant channel=commentary to=tool.verify_safe_status:
+{"room_number":"332"}
+
+tool.verify_safe_status channel=commentary to=assistant:
+{"status":"locked","error_code":null}
+
+assistant channel=commentary to=tool.reset_safe_pin:
+{"room_number":"332"}
+
+tool.reset_safe_pin channel=commentary to=assistant:
+{"temporary_pin":"2749","instructions":"open with temp PIN, then set new 4–6 digit code"}
+
+assistant channel=final:
+Use temporary PIN 2749 to open, then set a new 4–6 digit code.
+
+user:
+What happens if I enter the wrong code too many times?
+
+assistant channel=final:
+After 3 failed attempts, the safe locks out for 5 minutes.
+
+user:
+The sunset pier sounds lovely.
+
+assistant channel=final:
+Golden hour there is a guest favorite.
+
+user:
+Can you insure items placed in the safe?
+
+assistant channel=final:
+[ATTENTION] Evaluating this request beyond our current resources.
+

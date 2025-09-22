@@ -1,0 +1,59 @@
+"""
+Guest confirms ID requirement and scope of calls, then proceeds. Include small talk and an [ATTENTION] query.
+
+ROLES: user (guest preparing documents), assistant (concierge confirming ID/scopes and creating rental)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"rent_phone","description":"Rent a handset and note ID verified","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"id_checked":{"type":"boolean"}},"required":["hotel_id","room","id_checked"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Sunport Inn Tokyo (SPTK-11)
+Address: 3-2-5 Shiodome, Minato City, Tokyo 105-0021
+Facts:
+- Local calls only; no international dialing; no data
+- Rate: ¥2,100/day incl. ¥800 credit; charge code RENT-PHONE
+- Deposit: ¥6,000 refundable on return; ID required
+- Hours: Concierge 08:00–22:00; Front Desk 24/7
+Further details:
+- Inventory: 10 units (SPT-PHN-41…50)
+- Accessories: USB‑C charger bundled
+- Languages: EN/JA on device, quick‑start in EN/JA
+- Pickup point: Concierge counter near atrium; after hours Front Desk
+- Reset: devices wiped on return
+
+user:
+Do I need to show ID to rent? Room 2216.
+
+assistant channel=analysis:
+Answer ID requirement directly; then create the rental noting ID checked.
+
+assistant channel=final:
+Yes—an ID is required for the rental and deposit.
+
+assistant channel=commentary to=tool.rent_phone:
+{"hotel_id":"SPTK-11","room":"2216","id_checked":true}
+
+tool.rent_phone channel=commentary to=assistant:
+{"order_id":"PHN-2216-55","serial":"SPT-PHN-44"}
+
+assistant channel=final:
+Your rental is set—order PHN-2216-55 with unit SPT-PHN-44. Pickup at the Concierge counter by the atrium.
+
+user:
+Thanks!
+
+assistant channel=final:
+You’re welcome—Concierge operates 08:00–22:00.
+
+user:
+Can I get international dialing unblocked?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

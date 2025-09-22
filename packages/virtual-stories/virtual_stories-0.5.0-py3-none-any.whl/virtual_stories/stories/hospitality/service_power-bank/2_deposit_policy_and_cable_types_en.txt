@@ -1,0 +1,52 @@
+"""
+Guest asks about deposits and cable types; we verify inventory via tool, include small talk, and handle an out‑of‑scope bulk purchase request with the special flag.
+
+ROLES: user (guest wanting to borrow a charger), assistant (front desk managing power bank loans)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_power_bank_inventory","description":"Show available units and included cables.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"required":[]}
+]
+```
+"""
+
+system:
+Hotel: Riverside Exchange
+Lending summary:
+- Hours: 24/7 via Front Desk
+- Policy: 1 unit per room; 24‑hour courtesy; late hold $20
+- Return: Front Desk drop
+- Cables: USB‑C and USB‑A included with each unit
+Contact: Dial 0
+
+user:
+What cables are included, and is there any deposit?
+
+assistant channel=analysis:
+List inventory details and restate deposit/hold policy from system/tools only.
+
+assistant channel=commentary to=tool.check_power_bank_inventory:
+{}
+
+tool.check_power_bank_inventory channel=commentary to=assistant:
+{"available":true,"cables":["USB-C","USB-A"]}
+
+assistant channel=final:
+Units include USB‑C and USB‑A cables. It’s one unit per room for up to 24 hours; after 24 hours a $20 hold may apply. Pick up and return at the Front Desk.
+
+user:
+Thanks—the desk team has been great.
+
+assistant channel=final:
+Appreciate the kind words.
+
+user:
+Can I buy three of these chargers from you?
+
+assistant channel=analysis:
+Sales aren’t described; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Retail sales aren’t covered in these resources. Checking available options.
+

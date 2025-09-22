@@ -1,0 +1,64 @@
+"""
+Guest asks if two active spares are allowed and requests one more; assistant verifies identity and issues spare; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 431 confirming spare count), assistant (front desk issuing within max limits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_guest_identity","description":"Verify guest identity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"last_name":{"type":"string"},"id_last4":{"type":"string"}},"required":["room_number","last_name","id_last4"]}},
+  {"name":"issue_spare_key","description":"Issue spare key","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pickup_location":{"type":"string","enum":["front_desk"]}},"required":["room_number","pickup_location"]}}
+]
+```
+"""
+
+system:
+Hotel: Stonebridge Hotel — Heritage Tower
+Front desk: 24/7
+Room 431: Classic Queen
+Spare key policy: Verify last name + ID last four; pickup front_desk only; max 2 active spares; auto-deactivate at 00:00
+Notes: Heritage elevator H1 to 4th floor; library 10:00–20:00
+Contacts: Front Desk 0
+
+user:
+Hi, Roberts in 431 (ID 1190). Are two active spares allowed? I’d like another.
+
+assistant channel=analysis:
+Confirm policy allows two; verify identity and issue another spare for pickup.
+
+assistant channel=final:
+Yes—up to two active spares are allowed. I’ll verify and prepare one for pickup.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"431","last_name":"Roberts","id_last4":"1190"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"431"}
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"431","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-431-5523","pickup_location":"front_desk"}
+
+assistant channel=final:
+Verified—your spare (SP-431-5523) is ready at the front desk.
+
+user:
+Thanks! When’s the library open?
+
+assistant channel=final:
+The library is open 10:00–20:00.
+
+user:
+How’s your afternoon?
+
+assistant channel=final:
+Quite good—thanks for asking!
+
+user:
+Could you courier the key to my office?
+
+assistant channel=final:
+[ATTENTION] External couriering isn’t included in the provided system policy.
+

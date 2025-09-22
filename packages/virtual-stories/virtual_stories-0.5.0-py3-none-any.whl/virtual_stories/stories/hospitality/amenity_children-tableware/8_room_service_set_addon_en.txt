@@ -1,0 +1,76 @@
+"""
+Guest asks to add a children’s set to a room service order; confirm pieces and timing alignment.
+
+ROLES: user (ordering parent), assistant (room service liaison)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"align_with_room_service","description":"Check if amenity can align with an active room service ticket.","parameters":{"type":"object","additionalProperties":false,"properties":{"ticket":"string"},"required":["ticket"]}},
+  {"name":"add_child_set_to_order","description":"Add children’s set to room service drop.","parameters":{"type":"object","additionalProperties":false,"properties":{"ticket":"string","set":"string"},"required":["ticket","set"]}}
+]
+```
+"""
+
+system:
+Blue Heron Resort (hotel_id: bhr_orl_20)
+Address: 860 Lakefront Dr, Orlando, FL 32821
+Timezone: America/New_York
+
+Children’s Sets:
+- Silicone starter (bowl + spoon)
+- PP durable mini (plate + cup)
+
+Coordination:
+- Amenity can align with room service deliveries
+
+Timing:
+- Add-on typically 10–15 minutes extra
+
+Policy:
+- Loan; collect at turndown
+
+Contact:
+- Room Service ext. 50; Family line ext. 88
+
+user:
+Hi—we have room service ticket RS-220 for room 1604. Can you add a children’s plate and cup to arrive together?
+
+assistant channel=analysis:
+Check alignment; add PP durable mini to the ticket.
+
+assistant channel=commentary to=tool.align_with_room_service:
+{"ticket":"RS-220"}
+
+tool.align_with_room_service channel=commentary to=assistant:
+{"can_align":true,"extra_minutes":12}
+
+assistant channel=final:
+Yes—we can align a children’s set with your room service order, adding about 12 minutes. I’ll add the PP durable mini (plate + cup) to RS-220 for room 1604.
+
+assistant channel=commentary to=tool.add_child_set_to_order:
+{"ticket":"RS-220","set":"pp_durable_mini"}
+
+tool.add_child_set_to_order channel=commentary to=assistant:
+{"updated_ticket":"RS-220","amenity_added":"pp_durable_mini"}
+
+assistant channel=final:
+Done—your room service will include the children’s plate and cup.
+
+user:
+The lakeside boardwalk is lovely.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s a peaceful stroll, especially around sunset.
+
+user:
+Do you rent bikes with child seats?
+
+assistant channel=analysis:
+Out of scope; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on bike rentals with child seats beyond room service coordination.

@@ -1,0 +1,63 @@
+"""
+Family requests two baby cots for siblings; confirm policy on max units per room and arrange setup across two rooms.
+
+ROLES: user (parent with two infants), assistant (guest services coordinating multi-room cot setup)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check and hold baby cots","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"schedule_housekeeping_setup","description":"Schedule housekeeping setup with notes","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_note":{"type":"string"}},"required":["hotel_id","room","order_note"]},"strict":true}
+]
+```
+"""
+
+system:
+Palm Court Doha (PCDH-22)
+Address: West Bay, Diplomatic Area, Doha, Qatar
+Category: Family-friendly; Timezone AST; Arabic/English service
+Baby cots: 20 units; complimentary; max 1 per room per safety; setup by housekeeping; bedding provided; setup window ~20–30 minutes
+Policy: For 2 cots, use two rooms; guest must be present during setup; keep away from windows/cords
+Hours: Front Desk 24/7; Housekeeping 07:00–23:00; Kids Club 10:00–18:00
+Only services listed are available.
+
+user:
+We need two cots for twins. We have rooms 1521 and 1523.
+
+assistant channel=analysis:
+Hold 2 cots and schedule setups in each room with safety notes.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"PCDH-22","item":"baby_cot","quantity":2,"room":"1521"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":2}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"PCDH-22","room":"1521","order_note":"Deliver and set up 1 baby cot; guest present; keep away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":22,"ticket":"HK-1521-7710"}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"PCDH-22","room":"1523","order_note":"Deliver and set up 1 baby cot; guest present; keep away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":28,"ticket":"HK-1523-7711"}
+
+assistant channel=final:
+We’ve reserved two cots. Housekeeping tickets HK-1521-7710 and HK-1523-7711 are scheduled for ~22 and ~28 minutes respectively.
+
+user:
+Is the Kids Club open now?
+
+assistant channel=final:
+Kids Club hours are 10:00 to 18:00.
+
+user:
+Can you send the manufacturer’s internal stress-test data for the cots?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

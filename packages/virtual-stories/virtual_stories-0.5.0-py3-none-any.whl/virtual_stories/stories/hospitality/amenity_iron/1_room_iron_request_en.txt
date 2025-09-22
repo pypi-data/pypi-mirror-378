@@ -1,0 +1,61 @@
+"""
+Guest requests an iron and asks an unrelated question later.
+
+ROLES: user (guest in room 1508 asking for an iron), assistant (service agent arranging amenity delivery and sharing policy details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "check_amenity_availability",
+    "description": "Check if a specified amenity is available for loan and how many units are free.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},
+    "strict": true
+  },
+  {
+    "name": "request_amenity_delivery",
+    "description": "Dispatch a loaner amenity to the room.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Skyline Forum — East Tower
+Room 1508 (Executive Queen)
+Loaner policy: Irons and boards available on request; first-come-first-served; limit 1 iron per room
+Safety: Please use on the ironing mat provided with the iron
+Service hours: 07:00–23:00 normal; urgent limited 23:00–01:00
+SLA to floors 14–18: 12–20 minutes
+
+user:
+Can I borrow an iron for room 1508?
+
+assistant channel=analysis:
+Check availability (1 unit) and, if available, arrange delivery to 1508.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"iron","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"iron","available":true,"in_stock":7}
+
+assistant channel=analysis:
+Proceed to deliver one iron to room 1508 under normal priority.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1508","amenity_name":"iron","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IR-1508-3380","eta_minutes":15}
+
+assistant channel=final:
+Confirmed—an iron is on its way to room 1508 with an ETA of about 15 minutes. Please use the ironing mat that comes with it.
+
+user:
+Do you also provide sewing kits?
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.

@@ -1,0 +1,73 @@
+"""
+Guest needs a travel pillow for a red‑eye departure and brief rest now.
+Provide travel pillow options, pickup/delivery, and timing.
+
+ROLES: user (guest catching a red‑eye flight), assistant (sleep concierge arranging compact travel pillows)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_travel_pillow","description":"Check travel pillow (U-shape/flat pack) availability.","parameters":{"type":"object","properties":{"style":{"type":"string","enum":["u_shape","flat_pack","inflatable"]}},"required":["style"]},"strict":true},
+  {"name":"deliver_travel_pillow","description":"Deliver or hold at front desk.","parameters":{"type":"object","properties":{"room":{"type":"string"},"model":{"type":"string"},"method":{"type":"string","enum":["room_delivery","front_desk_pickup"]},"eta_pref_minutes":{"type":"integer"}},"required":["model","method"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Savannah Heritage Inn (hotel_id: shi_sav_18)
+Address: 201 E River St, Savannah, GA 31401
+Timezone: America/New_York
+
+Travel Pillow Cart:
+- U‑shape memory foam (compact roll strap)
+- Flat pack cooling gel insert (fits tote)
+- Inflatable with soft knit cover; quick valve
+- Sanitized covers; sealed pouches for travel
+- Optional eye mask + earplugs kit
+
+Logistics:
+- Front desk pickup or in‑room delivery
+- Typical ETA 6–10 minutes on River Wing
+- Complimentary loaner; keepable travel set available on request
+- Laundry: fragrance‑free cycle; sealed after wash
+- Overnight departures assistance at bell desk
+
+user:
+Hi, room 742. I have a red‑eye tonight—do you have a U‑shape travel pillow I can use and also take with me?
+
+assistant channel=analysis:
+Check U‑shape availability; deliver to room with travel kit; choose method room delivery.
+
+assistant channel=commentary to=tool.check_travel_pillow:
+{"style":"u_shape"}
+
+tool.check_travel_pillow channel=commentary to=assistant:
+{"available":true,"models":["u_shape_memoryfoam_compact"],"travel_kits":["eye_mask","earplugs"],"sealed":true}
+
+assistant channel=commentary to=tool.deliver_travel_pillow:
+{"room":"742","model":"u_shape_memoryfoam_compact","method":"room_delivery","eta_pref_minutes":8}
+
+tool.deliver_travel_pillow channel=commentary to=assistant:
+{"queued":true,"eta_minutes":8,"runner":"Miles","items":["u_shape_memoryfoam_compact","eye_mask","earplugs"],"sealed":true}
+
+assistant channel=final:
+Yes—our compact memory‑foam U‑shape is available and sealed for travel. Miles will deliver it to 742 in about 8 minutes with an eye mask and earplugs.
+
+user:
+Is it complimentary to keep?
+
+assistant channel=analysis:
+Answer from system Logistics about keepable set.
+
+assistant channel=final:
+We offer a complimentary loaner; a keepable travel set is available on request.
+
+user:
+Any late‑night coffee spots open near the riverfront?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Accessing relevant resources.
+

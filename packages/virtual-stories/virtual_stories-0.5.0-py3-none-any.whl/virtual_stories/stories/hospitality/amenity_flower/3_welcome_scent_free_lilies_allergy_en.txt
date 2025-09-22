@@ -1,0 +1,76 @@
+"""
+Guest requests scent-free arrangement due to allergies.
+Provide inventory check and create arrangement.
+
+ROLES: user (allergy-sensitive guest), assistant (floral coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_floral_inventory", "description": "Find low-scent/lily options.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "arrangement_type": { "type": "string", "enum": ["room_decor", "bouquet"] }, "flower_preference": { "type": "string", "enum": ["lilies", "orchids", "modern_minimalist"] }, "budget_range": { "type": "string", "enum": ["standard_50_100", "premium_100_200"] } }, "required": ["arrangement_type"] }, "strict": true },
+  { "name": "create_floral_arrangement", "description": "Create low-scent room decor arrangement.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "arrangement_style": { "type": "string", "enum": ["elegant_mixed", "modern_minimalist"] }, "delivery_time": { "type": "string" }, "special_message": { "type": "string" }, "occasion": { "type": "string", "enum": ["welcome", "celebration"] } }, "required": ["room_number", "arrangement_style", "occasion"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Riverside Park Suites (hotel_id: rps_lon_02)
+Address: 200 Bayswater Rd, London W2
+Timezone: Europe/London
+
+Floral Service:
+- Low-scent options: lilies, orchids, greenery-forward designs
+- Delivery window: 10:00–18:00 studio; 20–40 minutes to rooms
+- Allergy-aware handling on request
+- Maintenance: water refresh daily on request
+- Pricing: £85 standard, £165 premium
+
+user:
+Room 714, please—scent-free arrangement if possible; I’m sensitive to fragrance.
+
+assistant channel=analysis:
+Check low-scent inventory; propose lilies/orchids; schedule delivery.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type":"room_decor","flower_preference":"lilies","budget_range":"standard_50_100"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available":true,"arrangements":["elegant_white_lilies","orchid_minimalist"],"pricing":{"elegant_white_lilies":85,"orchid_minimalist":165}}
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number":"714","arrangement_style":"elegant_mixed","delivery_time":"today 3:30 PM","special_message":"Welcome to Riverside Park Suites","occasion":"welcome"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed":true,"arrangement_id":"RPS714_LOWSCENT","delivery_scheduled":"3:30 PM","includes":["white_lilies","eucalyptus","clear_glass_vase"],"total_cost":85}
+
+assistant channel=final:
+Certainly. A low‑scent white lily arrangement will arrive to 714 at 3:30 PM with a welcome card.
+
+user:
+Do you have maintenance for the flowers daily?
+
+assistant channel=analysis:
+From system: water refresh daily on request.
+
+assistant channel=final:
+Yes—daily water refresh is available on request; just tell us your preferred time.
+
+user:
+The park across the street is lovely.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s a beautiful spot for a stroll after check‑in.
+
+user:
+Could you source a last-minute birthday cake too?
+
+assistant channel=analysis:
+Outside floral scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with room dining about a birthday cake.
+"""
+

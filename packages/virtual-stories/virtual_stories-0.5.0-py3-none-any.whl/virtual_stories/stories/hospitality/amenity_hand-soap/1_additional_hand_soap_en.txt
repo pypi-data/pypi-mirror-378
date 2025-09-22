@@ -1,0 +1,85 @@
+"""
+Guest requests additional hand soap for their bathroom and makes small talk.
+
+ROLES: user (guest in room 2314 requesting more hand soap), assistant (concierge coordinating amenity dispatch and providing hotel-specific guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "check_amenity_availability",
+    "description": "Verify if a specific amenity is available and how many units remain.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1}
+      },
+      "required": ["amenity_name", "quantity"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_amenity_delivery",
+    "description": "Request that an amenity be delivered to a specific room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Old Port Granary — Warehouse Wing
+Floors: 20; Room 2314 is a typo; Warehouse Wing rooms are 2101–2340; assuming 2314 per guest statement
+Housekeeping window: 06:30–22:30; Night runner 22:30–02:00 limited
+Amenity policy: Hand soap bars or liquid pumps available; up to 3 extra units per night per room
+Extensions: Front Desk 0; Housekeeping 7711
+SLA: Normal 15–25 minutes on floors 20–24; urgent 8–12 minutes
+
+user:
+Hi, can I please get two more hand soap pumps for 2314?
+
+assistant channel=analysis:
+Confirm stock for hand soap pumps and arrange a normal delivery of 2 to room 2314.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"hand soap pump","quantity":2}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"hand soap pump","available":true,"in_stock":22}
+
+assistant channel=analysis:
+Proceed to create a delivery request for 2 pumps to room 2314 (normal priority).
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2314","amenity_name":"hand soap pump","quantity":2,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HP-2314-2217","eta_minutes":19}
+
+assistant channel=final:
+All set—two hand soap pumps are on the way to room 2314. Estimated arrival is about 19 minutes within our Warehouse Wing window.
+
+user:
+Thanks! Also, how are you today?
+
+assistant channel=final:
+Doing well, thank you for asking. If anything else comes up, just let me know.
+
+user:
+Do you know the exact supplier brand of the hand soap?
+
+assistant channel=final:
+[ATTENTION] Analyzing the request.

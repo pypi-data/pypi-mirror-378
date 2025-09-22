@@ -1,0 +1,50 @@
+"""
+Guest opts to skip service for eco reasons and asks for confirmation.
+
+ROLES: user (guest choosing eco skip), assistant (housekeeping coordinator recording skip window)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_skip_service","description":"Record a guest’s request to skip housekeeping service for a day.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"date":{"type":"string","description":"YYYY-MM-DD"}},"required":["room_number","date"]},"strict":true}
+]
+```
+"""
+
+system:
+Greenway Urban Hotel — Housekeeping & Sustainability
+Hours: 09:00–20:00
+Menu: full_clean, refresh, turn_down
+Policy: Guests may skip service as part of eco program
+DND: Always respected
+Extra: Recycling totes available on request
+Floors: 5–18, core C
+Note: Confirm skip by date
+
+user:
+Please skip housekeeping for room 712 today. Can you confirm it’s noted?
+
+assistant channel=analysis:
+Use set_skip_service with today’s date provided by the user context.
+
+assistant channel=commentary to=tool.set_skip_service:
+{"room_number":"712","date":"2025-09-07"}
+
+tool.set_skip_service channel=commentary to=assistant:
+{"status":"recorded","skip_date":"2025-09-07","ref":"eco_712_20250907"}
+
+assistant channel=final:
+Skip is recorded for room 712 on 2025-09-07 (ref eco_712_20250907). Housekeeping operates 09:00–20:00 and will honor DND and eco preferences.
+
+user:
+Your recycling totes are handy.
+
+assistant channel=final:
+Recycling totes are available on request as noted.
+
+user:
+Can you provide a certificate showing my eco impact in kilograms saved?
+
+assistant channel=final:
+[ATTENTION] Impact certificates aren’t listed in our program details. Examining the possibilities.
+

@@ -1,0 +1,77 @@
+"""
+Guest requests color-safe shampoo and asks for quick delivery with matching conditioner. Include chit-chat and one [ATTENTION] query.
+
+ROLES: user (guest with color-treated hair requesting gentle products), assistant (spa amenities concierge for hair care)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hair_care_inventory","description":"Check premium hair care availability","parameters":{"type":"object","properties":{"hair_type":{"type":"string","enum":["color_treated","dry","oily","normal","curly","fine"]},"scalp_condition":{"type":"string","enum":["sensitive","normal","dry","oily"]},"product_preference":{"type":"string","enum":["sulfate_free","organic","luxury_brand","hypoallergenic","standard"]}},"required":["hair_type"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_hair_care_amenity","description":"Deliver selected hair care to room","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"product_selection":{"type":"string"},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown","morning_refresh"]},"include_conditioner":{"type":"boolean"}},"required":["room_number","product_selection","delivery_timing"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Azure Dunes Resort & Spa (hotel_id: adr_miami_06)
+Address: 201 Ocean Dr, Miami Beach, FL 33139, USA
+Timezone: America/New_York
+
+Premium Hair Care Program:
+- Product lines: color-safe, sulfate-free, organic botanicals, hypoallergenic
+- Luxury brands available: Oribe, Davines, Kerastase, Kevin Murphy
+- Delivery windows: 10–20 minutes during spa hours (6AM–11PM)
+
+YAML Features:
+---
+ocean_view_levels: [14,15,16]
+sprinklers: true
+spa_levels: [3,4]
+---
+
+JSON Selections:
+{"color_safe": ["Davines_MINU", "Kerastase_Reflection"], "hypoallergenic": ["Free_and_Clear"]}
+
+CSV Nearby (place,walk_min):
+Beach_Access,1
+Lummus_Park,5
+
+user:
+Hi—my hair is color-treated. Do you have a color-safe, sulfate-free shampoo? I’m in 1507 and would like it right away with the conditioner.
+
+assistant channel=analysis:
+Check inventory for color_treated and sulfate_free; deliver to 1507 with conditioner.
+
+assistant channel=commentary to=tool.check_hair_care_inventory:
+{"hair_type":"color_treated","product_preference":"sulfate_free"}
+
+tool.check_hair_care_inventory channel=commentary to=assistant:
+{"available_products":["Davines_MINU","Kerastase_Reflection"],"recommended":"Davines_MINU","benefits":"color_safe,sulfate_free"}
+
+assistant channel=commentary to=tool.deliver_hair_care_amenity:
+{"room_number":"1507","product_selection":"Davines_MINU","delivery_timing":"immediate","include_conditioner":true}
+
+tool.deliver_hair_care_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"12_minutes","products_included":["Davines_MINU_Shampoo_250ml","Davines_MINU_Conditioner_250ml"],"delivery_staff":"spa_concierge"}
+
+assistant channel=final:
+Yes—we have color-safe, sulfate-free options. I’ve set up delivery of Davines MINU shampoo and conditioner to room 1507, arriving in about 12 minutes.
+
+user:
+The ocean view from 15 is stunning.
+
+assistant channel=analysis:
+Chit-chat referencing ocean-view levels array.
+
+assistant channel=final:
+Levels 14–16 face the water—sunrise is especially good.
+
+user:
+Can you also arrange a beach cabana for tomorrow?
+
+assistant channel=analysis:
+Beyond hair care scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

@@ -1,0 +1,61 @@
+"""
+Prepare meeting handouts with large clips and manila folders.
+
+ROLES: user (team lead preparing handouts), assistant (floor runner handling meeting packs)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"avail","description":"Availability of large clips and folders.","parameters":{"type":"object","additionalProperties":false,"properties":{"clip":"string","folder":"string"},"required":[]},"strict":true},
+  {"name":"drop","description":"Drop items to meeting room or guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"target":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"required":["target","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeside Forum (hotel_id: lsf_msp_03)
+Address: 225 S 6th St, Minneapolis, MN 55402
+Timezone: America/Chicago
+Business Hours: 06:00–21:00; delivery 10–15 min
+Complimentary: manila folders (letter), large paper clips, scratch pads
+Ext: x2205
+
+user:
+I need large paper clips and manila folders to 1512.
+
+assistant channel=analysis:
+Verify availability; arrange drop to room 1512.
+
+assistant channel=commentary to=tool.avail:
+{"clip":"large","folder":"manila_letter"}
+
+tool.avail channel=commentary to=assistant:
+{"available":true,"counts":{"large_clips":32,"manila_letter":50}}
+
+assistant channel=commentary to=tool.drop:
+{"target":"1512","items":["large_clips","manila_folders_letter"]}
+
+tool.drop channel=commentary to=assistant:
+{"ok":true,"eta":11}
+
+assistant channel=final:
+On it—large clips and manila folders will arrive at 1512 in about 11 minutes.
+
+user:
+It’s chilly today.
+
+assistant channel=analysis:
+Keep to neutral chitchat.
+
+assistant channel=final:
+The Lakeside Forum’s downtown setting keeps things brisk and efficient.
+
+user:
+Can you reserve NHL tickets for tonight?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Analyzing the situation.
+

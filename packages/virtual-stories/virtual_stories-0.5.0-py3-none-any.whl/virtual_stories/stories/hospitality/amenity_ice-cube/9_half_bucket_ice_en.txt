@@ -1,0 +1,65 @@
+"""
+Guest asks for a half bucket; includes small talk and hours lookup.
+
+ROLES: user (guest in room 214 asking for half bucket), assistant (services arranging smaller quantity and quoting hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Deliver amenity",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Venue: Terrace House — Garden Wing
+Room: 214 (King Garden)
+Ice: Half bucket option available; cap 2 half buckets per hour
+Hours: 07:00–23:00; Urgent 23:00–00:30
+SLA floors 2–4: 8–12 minutes
+Dispatch: GW-2 closet; S1 service elevator
+Lines: 0 | 7880 | 7881
+
+user:
+Could I get a half bucket of ice to 214?
+
+assistant channel=analysis:
+Place normal delivery for one half bucket to room 214.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"214","amenity_name":"ice (half bucket)","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-214-7712","eta_minutes":8}
+
+assistant channel=final:
+All set—one half bucket of ice is scheduled for room 214 with an ETA of about 8 minutes.
+
+user:
+Thanks! Do you run urgent later?
+
+assistant channel=final:
+Yes—urgent coverage is available 23:00–00:30.
+
+user:
+Is the scoop food-grade steel?
+
+assistant channel=final:
+[ATTENTION] Verifying information.
+

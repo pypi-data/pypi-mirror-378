@@ -1,0 +1,61 @@
+"""
+Guest asks to customize spice level on a late-night noodle bowl and pickup time.
+
+ROLES: user (guest customizing order), assistant (night F&B attendant)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_noodle_options","description":"Return spice levels and broth options.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"}},"required":["restaurant_id"]}},
+  {"name":"place_takeaway_order","description":"Place a takeaway order for pickup.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"pickup_time":{"type":"string"}},"required":["restaurant_id","items","pickup_time"]}}
+]
+```
+"""
+
+system:
+Hotel: Aurora Portland (hotel_id: aur_pdx)
+Address: 1022 SW Taylor St, Portland, OR 97205
+Timezone: America/Los_Angeles
+
+Late-Night Noodles (restaurant_id: r_aur_noodles)
+- Hours: 23:00–01:00 (last order 00:45)
+- Spice: mild, medium, hot
+- Broth: shoyu, miso, veggie
+- Pickup: counter pickup in 15–20 minutes
+
+user:
+Can I get a miso ramen, medium spice, to pick up at 00:15?
+
+assistant channel=analysis:
+Confirm options from tool and place takeaway for 00:15.
+
+assistant channel=commentary to=tool.get_noodle_options:
+{"restaurant_id":"r_aur_noodles"}
+
+tool.get_noodle_options channel=commentary to=assistant:
+{"spice":["mild","medium","hot"],"broth":["shoyu","miso","veggie"],"last_order":"00:45"}
+
+assistant channel=commentary to=tool.place_takeaway_order:
+{"restaurant_id":"r_aur_noodles","items":["miso ramen (medium)"],"pickup_time":"00:15"}
+
+tool.place_takeaway_order channel=commentary to=assistant:
+{"order_id":"NOOD-5512","status":"queued"}
+
+assistant channel=final:
+Order NOOD-5512 placed for miso ramen, medium spice, ready for 00:15 counter pickup. Last order is 00:45.
+
+user:
+Smells amazing in the hallway.
+
+assistant channel=final:
+Enjoy your ramen.
+
+user:
+Can you send it to my room instead?
+
+assistant channel=analysis:
+Delivery not defined—pickup only in system. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Request noted. Checking available options.
+

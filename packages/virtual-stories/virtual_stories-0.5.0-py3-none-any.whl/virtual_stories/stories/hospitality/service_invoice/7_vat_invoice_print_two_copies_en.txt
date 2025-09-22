@@ -1,0 +1,67 @@
+"""
+Guest needs two printed folio copies for expense and VAT review; confirm copies and pickup.
+
+ROLES: user (guest needing printed folios), assistant (front desk handling print issuance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "issue_printed_folios",
+    "description": "Print N folio copies for the specified room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": {"type": "string"},
+        "copies": {"type": "integer", "minimum": 1},
+        "size": {"type": "string", "enum": ["A4", "Letter"]}
+      },
+      "required": ["room", "copies", "size"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Grand Meridian Hotel — Tower B
+Location: 88 Embassy Row, London W1, United Kingdom
+Folio Delivery Options:
+- Print at Front Desk (A4/Letter)
+- Email PDF to verified address
+Data Fields: nightly room, VAT itemized, city tax, incidentals, payment method
+Verification: In-person ID/room number verification, or email on file
+Printer: PRN-GMH-FD-04 (Front Desk Back Office)
+Hours: Front Desk 24/7; printing available anytime
+Retention: Reprint window 30 days post-checkout
+Time Zone: Europe/London (GMT/BST)
+Document Notes: PDF labeled "Guest Copy"; prints are not watermarked
+
+user:
+Could you print two copies of my invoice for room 611?
+
+assistant channel=analysis:
+Use print tool for 2 copies on A4 and confirm Front Desk pickup.
+
+assistant channel=commentary to=tool.issue_printed_folios:
+{"room":"611","copies":2,"size":"A4"}
+
+tool.issue_printed_folios channel=commentary to=assistant:
+{"print_job_id":"GMH-611-2C","status":"queued","pickup":"Front Desk"}
+
+assistant channel=final:
+Queued—job GMH-611-2C for two A4 copies. Please pick them up at the Front Desk.
+
+user:
+Where do I collect them again?
+
+assistant channel=final:
+Front Desk.
+
+user:
+Can you pre‑fill my UK VAT ID on the folio header?
+
+assistant channel=final:
+[ATTENTION] Field customization isn’t available here. Reviewing available resources.

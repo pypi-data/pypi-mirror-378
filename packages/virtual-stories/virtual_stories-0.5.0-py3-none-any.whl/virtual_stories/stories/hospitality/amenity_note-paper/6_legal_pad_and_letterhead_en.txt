@@ -1,0 +1,86 @@
+"""
+Guest asks for a ruled writing pad and some hotel letterhead for formal notes.
+Provide standard pad plus letterhead with quick dispatch.
+
+ROLES: user (consultant preparing deliverables), assistant (front desk associate facilitating stationery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check available stationery supplies in hotel inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_type":{"type":"string","enum":["note_paper","letterhead","envelopes","memo_pads","writing_pads","sticky_notes"]},"quality_level":{"type":"string","enum":["standard","premium","luxury"]}},"required":["item_type"]},"strict":true},
+  {"name":"deliver_stationery_supplies","description":"Arrange delivery of stationery items to guest room or business center.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center","meeting_room"]},"quantity_per_item":{"type":"number"},"special_requests":{"type":"string"}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Name: Capitol Center Downtown (hotel_id: ccd_dc_05)
+Addr: 1000 H St NW, Washington, DC 20001
+TZ: America/New_York
+
+Inventory Quick List:
+- Writing pad: ruled, 80gsm, A5 and A4
+- Letterhead: hotel logo, 80gsm white
+- Envelopes: DL, windowless
+- Sticky notes: 76x76, hotel mark
+- Binder clips: assorted
+
+Delivery SLA (rooms): 8–12 minutes
+
+user:
+Room 933. Could I get a ruled writing pad and a few sheets of letterhead?
+
+assistant channel=analysis:
+Check writing_pads standard and letterhead standard; then deliver.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"writing_pads","quality_level":"standard"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"writing_pads","quality_level":"standard","options":["A5_ruled_80gsm","A4_ruled_80gsm"],"stock_count":52}
+
+assistant channel=analysis:
+Confirm letterhead availability as standard.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"letterhead","quality_level":"standard"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"letterhead","quality_level":"standard","options":["80gsm_logo_letterhead"],"stock_count":260}
+
+assistant channel=final:
+We have A5 and A4 ruled writing pads, plus 80gsm logo letterhead. Which pad size do you prefer for room 933?
+
+user:
+A4 pad, and five sheets please.
+
+assistant channel=analysis:
+Deliver A4 pad and five letterhead sheets.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"933","items":["A4_ruled_80gsm","80gsm_logo_letterhead"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"include 5 sheets of letterhead"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":10,"items_included":["A4_ruled_pad_1","letterhead_5"],"delivery_team":"front_desk_runner"}
+
+assistant channel=final:
+On the way: one A4 ruled pad and five sheets of logo letterhead will arrive at room 933 in about 10 minutes.
+
+user:
+Thanks—by the way, long day of meetings.
+
+assistant channel=analysis:
+Simple empathy without new facts.
+
+assistant channel=final:
+Fresh paper can make the wrap‑up easier.
+
+user:
+Can you bind my printout into a booklet right now?
+
+assistant channel=analysis:
+Binding service not present in system or tool output. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

@@ -1,0 +1,111 @@
+"""
+Guest requests thread and needle to repair shirt cuff before dinner; confirm availability and timing.
+
+ROLES: user (guest with torn cuff), assistant (evening housekeeping runner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Alpine View Grand Zurich (hotel_id: avg_zrh_06)
+Address: Bahnhofstrasse 122, 8001 Zürich, Switzerland
+Timezone: Europe/Zurich
+
+Sewing Amenities Overview:
+- Basic kits: needles, black/white/blue thread, safety pins
+- Executive kits: micro-scissors, charcoal/navy thread, spare shirt buttons
+- Emergency courier: 8–12 minutes to Club rooms
+- Assistance hours: 07:00–22:00 for on-site stitches
+- Valet repair: collected by 18:00 for next-day 09:00
+
+Logistics & Floors:
+- Club floors: 17–21
+- Standard: 5–16
+- Delivery window: 8–18 minutes depending on floor
+- Contact: Housekeeping Service Center +41 44 000 1122 (ext 9)
+- Policy: first kit complimentary per day; extra billed
+
+user:
+Hello, my shirt cuff seam split. I’m in 1808—can I get a needle and navy thread quickly?
+
+assistant channel=analysis:
+Club floor 18; check executive kit for 18; deliver; offer on-site assistance.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type":"executive","floor_level":"18"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available":true,"kit_contents":["navy_thread","spare_shirt_buttons","micro_scissors","fine_needles"],"eta_minutes":9}
+
+assistant channel=analysis:
+Arrange kit delivery to 1808; mention assistance hours.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number":"1808","service_type":"kit_delivery","urgency":"urgent","garment_type":"dress_shirt"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged":true,"delivery_time":"9_minutes","assistance_offered":true}
+
+assistant channel=final:
+Certainly—sending an executive kit with navy thread and fine needles to 1808; it’ll be there in about 9 minutes. We can also assist on-site until 22:00 if you prefer.
+
+user:
+Great, thanks. Do you charge for the first kit?
+
+assistant channel=analysis:
+Answer policy from system: first kit complimentary per day.
+
+assistant channel=final:
+The first kit each day is complimentary; additional kits are billed.
+
+user:
+The lobby pastry display was tempting!
+
+assistant channel=analysis:
+Chit-chat acknowledgment only.
+
+assistant channel=final:
+It does look delightful—enjoy your evening!
+
+user:
+Can you suggest a tailor near Bahnhofstrasse for tomorrow?
+
+assistant channel=analysis:
+Beyond system scope; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up nearby tailors for you and share options.

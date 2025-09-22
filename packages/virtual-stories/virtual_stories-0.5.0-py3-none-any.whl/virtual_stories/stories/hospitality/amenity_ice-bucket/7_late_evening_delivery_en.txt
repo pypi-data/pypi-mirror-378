@@ -1,0 +1,51 @@
+"""
+Late evening normal delivery for ice bucket; include chat and [ATTENTION].
+
+ROLES: user (guest 2719), assistant (night services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"request_amenity_delivery","description":"Deliver amenity item.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+North Star Residence (hotel_id: nsr_bos)
+Address: 15 Atlantic Ave, Boston, MA 02110
+Timezone: America/New_York
+Evening Service:
+- Hours: 17:00–23:00
+- Amenities: ice bucket replacements supported
+- ETA: 12–18 minutes
+- Ice machine: 3rd floor by laundry
+- Contact: Night Services x60
+
+user:
+Could I get an ice bucket to 2719 tonight?
+
+assistant channel=analysis:
+Arrange normal delivery.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2719","amenity_name":"ice bucket","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ok":true,"eta_minutes":16,"ticket":"NSR-ICE-2719-1"}
+
+assistant channel=final:
+Absolutely—one ice bucket is on its way to 2719. ETA about 16 minutes. Ref NSR-ICE-2719-1.
+
+user:
+The lobby fireplace looked cozy earlier.
+
+assistant channel=final:
+It makes the entry feel warm in the evenings.
+
+user:
+Is the bucket insulated?
+
+assistant channel=final:
+[ATTENTION] I’ll verify the bucket’s insulation details.
+

@@ -1,0 +1,71 @@
+"""
+Guest requests an additional key and asks about limits; assistant verifies identity and issues a spare; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 714 requesting an additional key), assistant (front desk verifying identity and issuing key under policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_guest_identity","description":"Verify guest identity for key issuance","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"last_name":{"type":"string"},"id_last4":{"type":"string"}},"required":["room_number","last_name","id_last4"]}},
+  {"name":"issue_spare_key","description":"Issue a spare key for front desk pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pickup_location":{"type":"string","enum":["front_desk"]}},"required":["room_number","pickup_location"]}},
+  {"name":"log_lost_key","description":"Log key events","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"note":{"type":"string"}},"required":["room_number","note"]}}
+]
+```
+"""
+
+system:
+Hotel: Lakeside Pavilion — North Tower
+Front desk: 24/7
+Room 714: Superior King
+Spare key policy:
+- Verification: last name + ID last four
+- Pickup: front_desk only
+- Limits: up to 2 active spares; all spares auto-deactivate at 00:00
+Notes: North Tower elevators N1/N2 serve 7th floor; lobby fountain operates 08:00–22:00
+Contacts: Front Desk 0
+
+user:
+Hi, it’s Kim in 714—ID ending 9931. Could I get an extra key?
+
+assistant channel=analysis:
+Verify identity for room 714, then issue a spare for front desk pickup and log event.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"714","last_name":"Kim","id_last4":"9931"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"714"}
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"714","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-714-2219","pickup_location":"front_desk"}
+
+assistant channel=commentary to=tool.log_lost_key:
+{"room_number":"714","note":"spare key issued SP-714-2219 upon guest request"}
+
+tool.log_lost_key channel=commentary to=assistant:
+{"logged":true}
+
+assistant channel=final:
+Thanks, Ms./Mr. Kim—your identity is verified. A spare key (SP-714-2219) is ready for front desk pickup.
+
+user:
+How many active spares can I have?
+
+assistant channel=final:
+You may have up to two active spare keys.
+
+user:
+That fountain in the lobby is calming.
+
+assistant channel=final:
+It runs daily from 08:00 to 22:00.
+
+user:
+Could you send the key up to my door instead?
+
+assistant channel=final:
+[ATTENTION] Door delivery isn’t supported in the provided system policy.
+

@@ -1,0 +1,63 @@
+"""
+Guest with glass enclosure requests soft-brush only; verify and deliver with quick ETA.
+
+ROLES: user (guest mindful of glass), assistant (housekeeping supply coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_supply_stock","description":"Check stock for soft brush.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_code":{"type":"string","enum":["shower_scrubber_soft_brush"]}},"required":["supply_code"]},"strict":true},
+  {"name":"deliver_supply","description":"Deliver item to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"supply_code":{"type":"string"},"quantity":{"type":"integer","minimum":1,"maximum":1}},"required":["room_number","supply_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Bay Suites (hotel_id: sbs_tpa_01)
+Address: 600 Bayshore Blvd, Tampa, FL 33606
+Timezone: America/New_York
+
+Glass Care:
+- Use soft-brush only on glass
+- No abrasive sponges permitted
+- Delivery window: 8–14 minutes
+
+user:
+Hi—can I get a soft-brush scrubber for 2006?
+
+assistant channel=analysis:
+Check stock, deliver one soft-brush to 2006.
+
+assistant channel=commentary to=tool.check_supply_stock:
+{"supply_code":"shower_scrubber_soft_brush"}
+
+tool.check_supply_stock channel=commentary to=assistant:
+{"supply_code":"shower_scrubber_soft_brush","on_hand":5,"estimated_delivery_minutes":8}
+
+assistant channel=commentary to=tool.deliver_supply:
+{"room_number":"2006","supply_code":"shower_scrubber_soft_brush","quantity":1}
+
+tool.deliver_supply channel=commentary to=assistant:
+{"delivery_id":"SUP-DEL-8820","room_number":"2006","supply_code":"shower_scrubber_soft_brush","quantity":1,"eta_minutes":8}
+
+assistant channel=final:
+Soft-brush scrubber is en route to 2006 (SUP-DEL-8820) with an ETA of about 8 minutes.
+
+user:
+Thanks! Do you avoid abrasive sponges here?
+
+assistant channel=analysis:
+Answer from Glass Care.
+
+assistant channel=final:
+Correct—we do not permit abrasive sponges on glass.
+
+user:
+Any recommendations for manatee viewing?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about manatee viewing and will review external info.
+

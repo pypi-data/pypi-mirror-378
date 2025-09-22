@@ -1,0 +1,118 @@
+"""
+Guest with a cat inquires about pet sitting services during business meetings.
+
+ROLES: user (business traveler with a cat), assistant (guest services coordinator explaining pet care options)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_pet_care",
+    "description": "Arrange on‑property pet walking with duration and start time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "start_time": {"type": "string"},
+        "duration_minutes": {"type": "integer", "enum": [15, 30, 45, 60]}
+      },
+      "required": ["room_number", "start_time", "duration_minutes"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_pet_amenities",
+    "description": "Check available pet amenities and services.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pet_type": {"type": "string", "enum": ["dog", "cat", "small_animal"]},
+        "service": {"type": "string", "enum": ["walking", "sitting", "feeding", "grooming"]}
+      },
+      "required": ["pet_type", "service"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Metropolitan Business Suites — Executive-level accommodations in financial district
+LOCATION: 45-story tower with sky bridge connections to convention center and shopping plaza  
+STAR RATING: 4.5-star business hotel with comprehensive corporate amenities
+GUEST CAPACITY: 380 executive suites, 25 penthouse units with private terraces
+Pet Care Services:
+- On‑property walks only; designated relief area by the east garden gate and rooftop terrace
+- Professional pet sitters available for in-room companionship services
+- Durations: 15/30/45/60 minutes for walks, 2/4/6/8 hours for sitting
+- Walk rates: $15/15 min, $25/30 min, $35/45 min, $45/60 min
+- Sitting rates: $35/2hr, $60/4hr, $85/6hr, $110/8hr
+- Meet point: Room door or executive lobby per guest preference
+- Emergency veterinary coordination available 24/7
+BUSINESS FACILITIES:
+- Executive conference center with 12 private meeting rooms and boardroom suites
+- Business concierge services with administrative support and document preparation
+- High-speed fiber internet with dedicated business bandwidth (1GB+ guaranteed)
+- Private dining rooms with catering services for client entertainment
+- Helicopter landing pad on roof level for VIP business arrivals
+- 24-hour room service with international cuisine menu
+
+user:
+I have a 2-day conference and my cat gets anxious alone. Do you offer pet sitting services?
+
+assistant channel=analysis:
+Guest has a cat and needs sitting service - should check what services are available for cats specifically.
+
+assistant channel=commentary to=tool.check_pet_amenities:
+{"pet_type": "cat", "service": "sitting"}
+
+tool.check_pet_amenities channel=commentary to=assistant:
+{"pet_type": "cat", "service": "sitting", "available": true, "duration_options": "2/4/6/8 hours", "rates": "$35/2hr, $60/4hr, $85/6hr, $110/8hr", "location": "in-room companionship"}
+
+assistant channel=final:
+Yes, we offer professional pet sitting with in-room companionship for cats. Options are 2, 4, 6, or 8 hours at $35, $60, $85, or $110 respectively.
+
+user:
+Perfect! Can I book 6 hours tomorrow starting at 9 AM from room 2847?
+
+assistant channel=analysis:
+Guest wants 6-hour sitting service, but the tool only handles walking requests with limited durations. This is beyond system capabilities.
+
+assistant channel=final:
+[ATTENTION] Let me coordinate the 6-hour pet sitting service booking with our specialized pet care team.
+
+user:
+The helicopter pad must be convenient for executive arrivals.
+
+assistant channel=analysis:
+Chitchat about helicopter pad - can share system information about VIP business arrivals.
+
+assistant channel=final:
+Yes, our rooftop helicopter pad is perfect for VIP business arrivals and adds efficiency for executive travel schedules.
+
+user:
+Do you have emergency vet contacts in case something happens?
+
+assistant channel=analysis:
+Guest asking about emergency vet services - system mentions 24/7 veterinary coordination is available.
+
+assistant channel=final:
+Absolutely - we provide 24/7 emergency veterinary coordination as part of our comprehensive pet care services.
+
+user:
+What if my cat needs feeding during the sitting session?
+
+assistant channel=analysis:
+Guest asking about feeding services during sitting - should check what feeding services are available.
+
+assistant channel=commentary to=tool.check_pet_amenities:
+{"pet_type": "cat", "service": "feeding"}
+
+tool.check_pet_amenities channel=commentary to=assistant:
+{"pet_type": "cat", "service": "feeding", "available": true, "included_in": "sitting service", "special_diet": "accommodated with instructions"}
+
+assistant channel=final:
+Feeding is included in our sitting service, and we can accommodate special diets with your specific instructions.

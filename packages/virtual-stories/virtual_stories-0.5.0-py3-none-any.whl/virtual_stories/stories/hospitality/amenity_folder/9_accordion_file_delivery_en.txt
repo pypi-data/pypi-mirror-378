@@ -1,0 +1,75 @@
+"""
+Guest needs accordion files for receipts and warranties.
+Confirm types and deliver.
+
+ROLES: user (household organizer on staycation), assistant (amenities coordinator for filing products)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supply_inventory","description":"Check accordion file availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_category":{"type":"string","enum":["accordion_files"]},"quantity_needed":{"type":"number"}},"required":["supply_category"]},"strict":true},
+  {"name":"deliver_office_supplies","description":"Deliver to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center"]}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Garden Court Residences (hotel_id: gcr_15)
+Address: 600 Olive Way, Seattle, WA 98101
+Timezone: America/Los_Angeles
+
+Filing Products:
+- Accordion files: 13-pocket letter, 21-pocket letter with elastic
+- Colors: smoke gray, teal
+- Receipt envelopes included on request
+- Delivery: 10–20 minutes
+- Complimentary first unit; $8 each additional
+
+user:
+Could I get two accordion files—one 13-pocket and one 21-pocket—to 504?
+
+assistant channel=analysis:
+Check accordion file availability then deliver to 504.
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"accordion_files","quantity_needed":2}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true,"types":["13_pocket_letter","21_pocket_letter"],"colors":["smoke_gray","teal"]}
+
+assistant channel=commentary to=tool.deliver_office_supplies:
+{"room_number":"504","items":["accordion_13_pocket","accordion_21_pocket"],"delivery_location":"guest_room"}
+
+tool.deliver_office_supplies channel=commentary to=assistant:
+{"delivered":true,"eta":"16 minutes","ticket":"GCR-504-088"}
+
+assistant channel=final:
+Yes—one 13‑pocket and one 21‑pocket accordion file are on the way to room 504 (ticket GCR-504-088). ETA about 16 minutes.
+
+user:
+Is the first one complimentary?
+
+assistant channel=analysis:
+Yes per system note.
+
+assistant channel=final:
+Yes—the first unit is complimentary; the second is $8.
+
+user:
+The indoor garden smells like citrus.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+That’s our seasonal bergamot diffuser—subtle and bright.
+
+user:
+Do you have onsite legal counsel for contracts?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Assessing options.
+

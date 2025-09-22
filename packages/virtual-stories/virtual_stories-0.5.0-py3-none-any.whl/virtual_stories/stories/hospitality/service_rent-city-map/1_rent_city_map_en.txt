@@ -1,0 +1,54 @@
+"""
+Guest requests a city map; confirm availability and pickup location; log request.
+
+ROLES: user (guest planning sightseeing), assistant (concierge providing maps and guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check printed city map stock","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"log_service_request","description":"Log non-billable concierge request","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"note":{"type":"string"}},"required":["hotel_id","room","note"]},"strict":true}
+]
+```
+"""
+
+system:
+Riverbend Suites Chicago (RBSC-07), 233 N Canal St, Chicago, IL 60606.
+Concierge 8:00–22:00; Front Desk 24/7.
+Printed city maps: 300 copies; complimentary; pickup at Concierge or Front Desk.
+Other facts: Riverwalk access behind hotel; L station 5 min walk.
+
+user:
+Can I get a city map? I’m in 910.
+
+assistant channel=analysis:
+Confirm map availability and log the request; advise pickup locations.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"RBSC-07","item":"city_map_printed","quantity":1,"room":"910"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"notes":"Complimentary; pick up at Concierge/Front Desk"}
+
+assistant channel=commentary to=tool.log_service_request:
+{"hotel_id":"RBSC-07","room":"910","note":"Guest requested printed city map; hold 1 copy at Concierge."}
+
+tool.log_service_request channel=commentary to=assistant:
+{"logged":true,"ticket":"LOG-910-221"}
+
+assistant channel=final:
+Yes—one printed city map is set aside under ticket LOG-910-221. You can pick it up at the Concierge or Front Desk.
+
+user:
+Thanks! The riverwalk sounds nice.
+
+assistant channel=final:
+It’s a pleasant stroll right behind the hotel.
+
+user:
+Do you have archival maps from the 1920s?
+
+assistant channel=final:
+[ATTENTION] Exploring different approaches.
+

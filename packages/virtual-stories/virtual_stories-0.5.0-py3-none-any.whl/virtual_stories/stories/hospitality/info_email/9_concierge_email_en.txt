@@ -1,0 +1,56 @@
+"""
+Guest asks for concierge email; include luggage assistance hours from system, small talk, and out-of-scope personal guide email.
+
+ROLES: user (guest), assistant (concierge desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Old Mill Riverside (hotel_id: old_mill_riverside)
+Concierge Email: concierge@oldmillriverside.ie
+Concierge Hours: 07:00–23:00 daily; luggage assistance 07:00–22:00
+Phone: +353 1 555 9000
+Address: 5 Riverwalk, Dublin D08, Ireland
+Transport: Airport coach stop 180 m; city bikes at bridge
+Wi‑Fi: SSID "OldMill-Guest"; captive portal
+Dining: Brasserie till 22:30; room service till 23:00
+
+user:
+What’s the concierge email?
+
+assistant channel=analysis:
+Use tool to return the concierge email.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"old_mill_riverside","channel":"email"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"email":"concierge@oldmillriverside.ie"}
+
+assistant channel=final:
+concierge@oldmillriverside.ie.
+
+user:
+Thanks—busy along the river today?
+
+assistant channel=final:
+Thanks for asking—what else can I help with?
+
+user:
+What time do you handle luggage?
+
+assistant channel=final:
+07:00–22:00.
+
+user:
+Can you share your favorite private guide’s email?
+
+assistant channel=final:
+[ATTENTION] That contact isn’t available within these resources. Reviewing.
+

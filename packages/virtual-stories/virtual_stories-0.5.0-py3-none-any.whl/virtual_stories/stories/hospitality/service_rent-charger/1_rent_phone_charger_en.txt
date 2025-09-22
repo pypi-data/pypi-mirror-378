@@ -1,0 +1,54 @@
+"""
+Guest requests a phone charger rental; verify models supported, confirm fee policy, and arrange pickup at desk.
+
+ROLES: user (guest with low battery), assistant (front desk managing small electronics lending)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check charger stock (USB-C/Lightning/Micro-USB)","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create charger rental order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Midtown Arc Toronto (MATO-06), 200 Front St W, Toronto, ON M5V 3J1, Canada.
+Business hotel; 32 floors; Front Desk 24/7.
+Phone chargers: USB-C (15), Lightning (10), Micro-USB (6); complimentary up to 4 hours, then CAD 3/hour; code RENT-CHGR.
+Pick up at desk preferred; room drop on request.
+
+user:
+Do you have a USB-C phone charger I can borrow? Room 2019.
+
+assistant channel=analysis:
+Hold one USB-C charger for 4 hours complimentary; create order for pickup at desk.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"MATO-06","item":"charger_usb_c","quantity":1,"room":"2019"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["CHG-C-14"],"notes":"Complimentary up to 4h; then CAD 3/h"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"MATO-06","room":"2019","item":"charger_usb_c","duration_hours":4,"charge_code":"RENT-CHGR","delivery_option":"pick_up_at_desk"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CHG-2019-8841","status":"created","charge_policy":"0 for 4h; CAD 3/h after"}
+
+assistant channel=final:
+Yes—one USB‑C charger is reserved (CHG-C-14). Order CHG-2019-8841 is set for 4 hours complimentary; please pick it up at the Front Desk.
+
+user:
+Appreciate it! Nice lobby lighting.
+
+assistant channel=final:
+Thank you—enjoy your evening.
+
+user:
+Could you share the exact vendor invoice for these chargers?
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

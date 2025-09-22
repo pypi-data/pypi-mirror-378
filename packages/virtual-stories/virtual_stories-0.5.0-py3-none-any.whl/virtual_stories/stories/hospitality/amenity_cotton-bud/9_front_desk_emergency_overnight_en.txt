@@ -1,0 +1,70 @@
+"""
+Guest requests cotton buds overnight and asks about pickup versus delivery.
+Provide after-hours routing and timing.
+
+ROLES: user (overnight guest), assistant (amenities specialist)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "overnight_dispatch",
+    "description": "Dispatch after-hours amenity delivery or stage pickup.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": { "type": "string" },
+        "method": { "type": "string", "enum": ["delivery","pickup"] }
+      },
+      "required": ["method"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Nightfall Boutique (hotel_id: nb_reykjavik_02)
+Address: Laugavegur 55, 101 Reykjavík, Iceland
+Timezone: Atlantic/Reykjavik
+After-Hours: operator routes amenity requests overnight
+
+Amenity Policy:
+- Cotton Buds: available 24/7
+- Delivery: overnight 15–25 minutes typical
+- Pickup: front desk staging on request
+- Fees: complimentary
+- Note: quiet corridors after 22:00
+
+user:
+Hi—it’s pretty late. Could I get cotton buds now? I’m awake in room 410 and not sure if pickup or delivery is faster.
+
+assistant channel=analysis:
+Offer both options with typical times; if delivery chosen, dispatch overnight.
+
+assistant channel=final:
+We can do either: delivery to room 410 in about 15–25 minutes, or stage a pack at the front desk for immediate pickup. Which do you prefer?
+
+user:
+Delivery would be best—thanks.
+
+assistant channel=commentary to=tool.overnight_dispatch:
+{"room":"410","method":"delivery"}
+
+tool.overnight_dispatch channel=commentary to=assistant:
+{"dispatched":true,"eta":"20 minutes","note":"observe quiet corridor policy"}
+
+assistant channel=final:
+All set—overnight delivery is on the way and should arrive in about 20 minutes. We’ll observe quiet corridor guidelines. Complimentary.
+
+user:
+Thanks! Also, will the Northern Lights be visible tonight?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the current aurora forecast and visibility. Investigating potential answers.
+

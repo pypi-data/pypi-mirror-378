@@ -1,0 +1,73 @@
+"""
+Guest requests kettle for preparing infant formula; provide appliance and safety emphasis. Include chitchat and one [ATTENTION] query.
+
+ROLES: user (parent requesting kettle for formula), assistant (amenities desk with safety knowledge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_item","description":"Send an amenity item to a room","parameters":{"type":"object","properties":{"item_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["item_name","room_number","quantity"],"additionalProperties":false},"strict":true},
+  {"name":"provide_appliance_guide","description":"Return quick guidance for an appliance","parameters":{"type":"object","properties":{"appliance":{"type":"string","enum":["kettle"]},"mode":{"type":"string","enum":["safety"]}},"required":["appliance","mode"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Jardin des Arts (hotel_id: jda_paris_14)
+Address: 12 Rue Bonaparte, 75006 Paris, France
+Timezone: Europe/Paris
+
+Info:
+- Kettles on request; 230V outlets
+- Safety: Keep base dry; never leave unattended while boiling
+- Complimentary still water provided
+
+YAML Family:
+---
+cribs: available
+bottle_warmers: limited
+non_slip_mats: available
+---
+
+JSON Runner:
+{"primary":"Émile","backup":"Claire"}
+
+user:
+Hi, could we get a kettle to 405 for preparing infant formula?
+
+assistant channel=analysis:
+Arrange kettle and include safety guidance.
+
+assistant channel=commentary to=tool.request_item:
+{"item_name":"electric_kettle","room_number":"405","quantity":1}
+
+tool.request_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":10,"runner":"Émile"}
+
+assistant channel=commentary to=tool.provide_appliance_guide:
+{"appliance":"kettle","mode":"safety"}
+
+tool.provide_appliance_guide channel=commentary to=assistant:
+{"appliance":"kettle","mode":"safety","tips":["Use freshly drawn water.","Keep base dry and unplug before pouring.","Do not leave unattended while boiling."]}
+
+assistant channel=final:
+Certainly—a kettle is on its way to 405 in about 10 minutes (Émile). Safety tips: Use freshly drawn water, keep the base dry and unplug before pouring, and don’t leave it unattended while boiling.
+
+user:
+The neighborhood feels charming.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+Saint‑Germain’s streets are lovely for a short stroll.
+
+user:
+Do you provide bottle warmers as well?
+
+assistant channel=analysis:
+We have limited bottle warmers noted in system, but no tool to arrange; safer to use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Looking deeper into this issue.
+

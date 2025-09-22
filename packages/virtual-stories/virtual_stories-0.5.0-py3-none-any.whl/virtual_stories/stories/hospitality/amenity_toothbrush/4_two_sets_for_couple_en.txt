@@ -1,0 +1,89 @@
+"""
+Guest requests two toothbrush sets for a couple; confirm soft/medium mix and delivery. Include friendly chat and an [ATTENTION] query.
+
+ROLES: user (guest requesting two toothbrushes for couple), assistant (amenities coordinator handling personal care delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_toothbrush_stock","description":"Check toothbrush availability","parameters":{"type":"object","properties":{"adult_soft":{"type":"boolean"},"adult_medium":{"type":"boolean"}},"required":[],"additionalProperties":false},"strict":true},
+  {"name":"deliver_toothbrush_set","description":"Deliver multiple toothbrushes","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"soft_qty":{"type":"integer"},"medium_qty":{"type":"integer"}},"required":["room_number"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Casa de Mar Azul (hotel_id: cdm_tulum_09)
+Address: Carretera Tulum-Boca Paila Km 6.5, Tulum, Q.R., Mexico
+Timezone: America/Cancun
+
+Service Scope:
+- Complimentary toothbrushes: adult soft, adult medium
+- Delivery: 10–18 minutes along beachfront villas
+- Mouthwash available (alcohol-free)
+
+YAML Beachfront Layout:
+---
+villas:
+  south_cluster: 8
+  north_cluster: 7
+paths:
+  lighting: solar
+  surface: sand_stabilized
+  emergency_access: yes
+---
+
+JSON Housekeeping Windows:
+{"am":"09:30-11:30","pm":"14:30-16:30","evening":"18:30-20:00"}
+
+CSV Amenities (item,notes):
+toothbrush_soft,adult size
+toothbrush_medium,adult size
+mouthwash,alcohol_free
+
+Notes:
+- Quiet hours: 9PM–7AM
+- Drinking water: in-room glass bottles, UV-treated
+
+user:
+Hi! Could we have two toothbrushes to villa 12—one soft and one medium?
+
+assistant channel=analysis:
+Check availability of both bristles; then schedule a dual delivery.
+
+assistant channel=commentary to=tool.check_toothbrush_stock:
+{"adult_soft":true,"adult_medium":true}
+
+tool.check_toothbrush_stock channel=commentary to=assistant:
+{"soft_available":true,"medium_available":true,"brand":"MarAzul Care"}
+
+assistant channel=analysis:
+Proceed to deliver one soft and one medium to villa 12.
+
+assistant channel=commentary to=tool.deliver_toothbrush_set:
+{"room_number":"12","soft_qty":1,"medium_qty":1}
+
+tool.deliver_toothbrush_set channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":14,"runner":"Reyna"}
+
+assistant channel=final:
+On the way—MarAzul Care toothbrushes (1 soft, 1 medium) to villa 12. ETA about 14 minutes (runner: Reyna). Alcohol-free mouthwash is available if you need it.
+
+user:
+The solar path lights look beautiful at night.
+
+assistant channel=analysis:
+Chitchat acknowledging solar lighting noted in YAML.
+
+assistant channel=final:
+They’re solar-powered along the beach paths—subtle and gentle after dusk.
+
+user:
+Can you arrange a private sunrise yoga class tomorrow?
+
+assistant channel=analysis:
+Outside current amenity scope; use ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

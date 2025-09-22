@@ -1,0 +1,57 @@
+"""
+Guest says bathroom phone ringer is too loud at night; adjust ringer profile and confirm quiet hours.
+
+ROLES: user (guest requesting quieter ringer), assistant (front desk configuring profile)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_ringer_profile","description":"Set bathroom phone ringer profile.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"profile":{"type":"string","enum":["day","evening","night_quiet"]}},"required":["room_number","profile"]},"strict":true}
+]
+```
+"""
+
+system:
+Sunset Promenade Hotel (hotel_id: sph_santamonica)
+Address: 1201 Ocean Ave, Santa Monica, CA 90401
+Timezone: America/Los_Angeles
+
+Ringer Profiles:
+1) Day: 80 dBA peak with short cadence.
+2) Evening: 70 dBA with soft attack.
+3) Night Quiet: 60 dBA with extended cadence, visual flash enabled.
+4) Quiet hours policy: 22:00–07:00 building-wide courtesy.
+5) Security and emergency will still ring through at configured level.
+
+user:
+Hi, could you make the bathroom phone in 927 less loud at night? It startled me.
+
+assistant channel=analysis:
+Set night_quiet profile for room 927 and confirm quiet hours.
+
+assistant channel=commentary to=tool.set_ringer_profile:
+{"room_number":"927","profile":"night_quiet"}
+
+tool.set_ringer_profile channel=commentary to=assistant:
+{"applied":true,"profile":"night_quiet"}
+
+assistant channel=final:
+Done. The bathroom phone in 927 is now set to Night Quiet—softer tone with visual flash between 22:00 and 07:00.
+
+user:
+Thanks! The ocean breeze sounds great from the balcony.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+Enjoy the fresh night air.
+
+user:
+Can you also silence the desk phone completely overnight?
+
+assistant channel=analysis:
+Desk phone silencing isn’t defined here; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for overnight desk phone silencing.

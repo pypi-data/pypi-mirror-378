@@ -1,0 +1,56 @@
+"""
+Guest asks if cot has guardrails/high sides for an active toddler; confirm design and arrange setup.
+
+ROLES: user (parent of active toddler), assistant (front desk confirming features and coordinating setup)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Hold a cot","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"schedule_housekeeping_setup","description":"Schedule setup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_note":{"type":"string"}},"required":["hotel_id","room","order_note"]},"strict":true}
+]
+```
+"""
+
+system:
+Sunbay Resort Miami (SBMI-08)
+Address: 2201 Collins Ave, Miami Beach, FL 33139, USA
+Cot features: High-sided crib design; suitable up to 2 years; bedding included; complimentary; placement away from windows/cords; guest present
+Inventory: 18 cots; setup window 15–25 minutes; Housekeeping 07:00–23:00
+Facilities: Pool 08:00–20:00; Fitness 05:30–22:30
+Only services listed are available.
+
+user:
+Does your baby cot have high sides? Our toddler is pretty active. Room 502.
+
+assistant channel=analysis:
+Confirm from system (high-sided design), then hold a cot and schedule setup.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"SBMI-08","item":"baby_cot","quantity":1,"room":"502"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"SBMI-08","room":"502","order_note":"Set up high-sided baby cot; guest present; away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":16,"ticket":"HK-502-6651"}
+
+assistant channel=final:
+Yes—our cots are high-sided and suitable up to age 2. Setup ticket HK-502-6651 is scheduled in about 16 minutes.
+
+user:
+Is the pool still open?
+
+assistant channel=final:
+Pool hours are 08:00 to 20:00.
+
+user:
+Could you share internal fall‑prevention inspection records?
+
+assistant channel=final:
+[ATTENTION] Compiling available data.
+
