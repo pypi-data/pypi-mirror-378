@@ -1,0 +1,201 @@
+# Security-focused configuration for MCP Code Scanner
+# This configuration prioritizes security scanning and vulnerability detection
+
+# Tool selection - security-focused tools
+enabled_tools:
+  - bandit
+  - safety
+  - ruff  # For security-related rules
+  - fastapi_security  # Custom FastAPI security scanner
+  - ai_security      # Custom AI/LLM security scanner
+
+# Scan options
+include_tests: false  # Focus on production code for security
+auto_fix: false  # Don't auto-fix security issues
+safe_fixes_only: true
+max_line_length: 88
+
+# Output options
+output_format: json
+show_source: true
+group_by_file: true
+
+# Security-focused severity filtering
+min_severity: warning  # Only show warnings and above for security
+exclude_rules: []
+
+# Performance settings
+parallel_execution: true
+timeout_seconds: 300
+
+# Tool-specific configurations
+tool_configs:
+  bandit:
+    exclude_dirs:
+      - tests
+      - test
+      - testing
+      - docs
+      - examples
+    skips: []  # Don't skip any security tests
+    confidence: low  # Catch even low-confidence issues
+    severity: low    # Catch all severity levels
+    tests:
+      # Enable specific security tests
+      - B101  # assert_used
+      - B102  # exec_used
+      - B103  # set_bad_file_permissions
+      - B104  # hardcoded_bind_all_interfaces
+      - B105  # hardcoded_password_string
+      - B106  # hardcoded_password_funcarg
+      - B107  # hardcoded_password_default
+      - B108  # hardcoded_tmp_directory
+      - B110  # try_except_pass
+      - B112  # try_except_continue
+      - B201  # flask_debug_true
+      - B301  # pickle
+      - B302  # marshal
+      - B303  # md5
+      - B304  # des
+      - B305  # cipher
+      - B306  # mktemp_q
+      - B307  # eval
+      - B308  # mark_safe
+      - B309  # httpsconnection
+      - B310  # urllib_urlopen
+      - B311  # random
+      - B312  # telnetlib
+      - B313  # xml_bad_cElementTree
+      - B314  # xml_bad_ElementTree
+      - B315  # xml_bad_expatreader
+      - B316  # xml_bad_expatbuilder
+      - B317  # xml_bad_sax
+      - B318  # xml_bad_minidom
+      - B319  # xml_bad_pulldom
+      - B320  # xml_bad_etree
+      - B321  # ftplib
+      - B322  # input
+      - B323  # unverified_context
+      - B324  # hashlib_new_insecure_functions
+      - B325  # tempnam
+      - B501  # request_with_no_cert_validation
+      - B502  # ssl_with_bad_version
+      - B503  # ssl_with_bad_defaults
+      - B504  # ssl_with_no_version
+      - B505  # weak_cryptographic_key
+      - B506  # yaml_load
+      - B507  # ssh_no_host_key_verification
+      - B601  # paramiko_calls
+      - B602  # subprocess_popen_with_shell_equals_true
+      - B603  # subprocess_without_shell_equals_true
+      - B604  # any_other_function_with_shell_equals_true
+      - B605  # start_process_with_a_shell
+      - B606  # start_process_with_no_shell
+      - B607  # start_process_with_partial_path
+      - B608  # hardcoded_sql_expressions
+      - B609  # linux_commands_wildcard_injection
+      - B610  # django_extra_used
+      - B611  # django_rawsql_used
+      - B701  # jinja2_autoescape_false
+      - B702  # use_of_mako_templates
+      - B703  # django_mark_safe
+    
+  safety:
+    # Safety checks for known security vulnerabilities in dependencies
+    ignore: []  # Don't ignore any vulnerabilities
+    full_report: true
+    json: true
+    
+  ruff:
+    target_version: py312
+    line_length: 88
+    select:
+      # Security-focused rules
+      - S    # bandit
+      - B    # flake8-bugbear  
+      - E9   # syntax errors
+      - F    # pyflakes
+      - UP   # pyupgrade
+    ignore:
+      - E501 # line too long
+    
+    # Security-specific rule configuration
+    flake8-bandit:
+      hardcoded-tmp-directory:
+        - /tmp
+        - /var/tmp
+        - /dev/shm
+
+# Security-specific project structure
+project_structure:
+  source_dirs:
+    - src
+    - lib
+    - app
+  exclude_dirs:
+    - __pycache__
+    - .pytest_cache
+    - .mypy_cache
+    - .ruff_cache
+    - .venv
+    - venv
+    - env
+    - .env
+    - .git
+    - .tox
+    - node_modules
+    - build
+    - dist
+    - tests  # Exclude tests from security scanning
+    - test
+    - docs
+    - examples
+
+# Security quality gates
+quality_gates:
+  max_critical_security_issues: 0
+  max_high_security_issues: 0
+  max_medium_security_issues: 5
+  max_vulnerable_dependencies: 0
+
+# Security-focused reporting
+reporting:
+  include_cve_details: true
+  include_fix_recommendations: true
+  include_security_score: true
+  generate_security_report: true
+  
+# Additional security checks
+security_checks:
+  check_dependencies: true
+  check_secrets: true
+  check_permissions: true
+  check_crypto: true
+  check_injection: true
+  check_authentication: true
+  check_authorization: true
+  
+# Vulnerability database settings
+vulnerability_db:
+  update_before_scan: true
+  sources:
+    - pypa  # PyPA Advisory Database
+    - osv   # OSV Database
+    - ghsa  # GitHub Security Advisories
+
+# Custom security rules (examples)
+custom_rules:
+  - name: "no_hardcoded_secrets"
+    pattern: "(?i)(password|pwd|secret|key|token|api_key)\\s*[=:]\\s*['\"][^'\"]+['\"]"
+    message: "Potential hardcoded secret detected"
+    severity: "critical"
+    
+  - name: "no_debug_in_production"
+    pattern: "DEBUG\\s*=\\s*True"
+    message: "Debug mode should not be enabled in production"
+    severity: "high"
+    
+  - name: "secure_random_usage"
+    pattern: "random\\.(random|randint|choice)"
+    message: "Use secrets module for cryptographically secure random numbers"
+    severity: "medium"
