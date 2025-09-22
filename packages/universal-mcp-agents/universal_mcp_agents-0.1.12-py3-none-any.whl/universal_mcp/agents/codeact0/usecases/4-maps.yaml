@@ -1,0 +1,41 @@
+base_prompt: 'Objective: Find businesses from Google Maps for a given category & location,
+  store them in a Google Sheet, then process unprocessed leads to scrape emails and
+  sync with HubSpot CRM. Stage 1 - Lead Discovery Get coordinates of Area + City.
+  Search on Google Maps  with category & coordinates.
+  Extract: Name, Google Maps URL, Address, Phone, Website; leave Email & CRM Status
+  blank. Sheet: Name: {Area}, {City} Leads - {Category} - {dd-mmm} If exists → append
+  non-duplicate rows; else create in folder "Leads from Google Maps" (ID: 142QBejJX0jAqzDz_NHdwVTkcmagoog__).
+  Add headers: Name | Google Maps URL | Address | Phone | Website | Email | CRM Status.
+  Populate with businesses found. Edge Cases: No results → return message, skip sheet
+  creation. Missing data → leave blank. Stage 2 - Lead Processing & CRM Sync Locate
+  sheet in Google Drive, ensure headers match. Parse category from sheet name. Identify
+  unprocessed rows (CRM Status blank) — by default process the first, or a specified
+  row/range/count. Scrape Website for Email: If website exists → scrape homepage/contact
+  page; fallback to firecrawl_scrape_url. Save found email in sheet. HubSpot Handling:
+  Search contact by email/website/phone. If not found → create with available details,
+  Lead Status = New, add note {Area, City} — {Category} — {Google Maps URL}. If exists
+  → append note; keep other fields unchanged. Save HubSpot Contact URL/ID in sheet.
+  Update CRM Status: Lead Created, Lead Creation Failed, Website not found, Email
+  not found, etc. Edge Cases: No Website → create with phone; mark Website not found.
+  No Email → create; mark Email not found. Email already in sheet → skip row. Execute immediately for "Cafes" near "IIT Bombay" in "Mumbai" without asking for confirmation.'
+tools:
+- serpapi__google_maps_search
+- firecrawl__scrape_url
+- google_drive__get_file_details
+- google_drive__create_folder
+- google_drive__find_folder_id_by_name
+- google_drive__search_files
+- google_sheet__update_values
+- google_sheet__get_values
+- google_sheet__get_spreadsheet_metadata
+- google_sheet__batch_get_values_by_range
+- google_sheet__create_spreadsheet
+- google_sheet__clear_values
+- hubspot__search_contacts_post
+- hubspot__batch_read_contacts_post
+- hubspot__get_contacts
+- hubspot__get_contact_by_id
+- hubspot__update_contact_by_id
+- hubspot__batch_update_contacts
+- hubspot__create_contacts_batch
+- hubspot__create_contact
