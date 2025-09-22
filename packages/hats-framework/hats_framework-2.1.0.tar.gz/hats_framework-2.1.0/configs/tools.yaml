@@ -1,0 +1,679 @@
+# Tool definitions for HATS framework
+# Comprehensive collection of Kali Linux CLI tools (excluding GUI/menu-driven)
+
+tools:
+  # ============ NETWORK SCANNING & RECONNAISSANCE ============
+  nmap:
+    command: nmap
+    category: scanning
+    description: "Network discovery and security auditing"
+    args: ["-p", "{ports}", "-oX", "-", "{flags}", "{target}"]
+    defaults:
+      ports: "1-1000"
+      flags: "-T2 -sS --randomize-hosts"
+    parser: parse_nmap_xml
+    version_cmd: "nmap --version"
+    install:
+      ubuntu: "sudo apt-get install nmap"
+
+  masscan:
+    command: masscan
+    category: scanning
+    description: "High-speed TCP port scanner"
+    args: ["-p", "{ports}", "--rate={rate}", "{flags}", "{target}"]
+    defaults:
+      ports: "1-65535"
+      rate: "100"
+      flags: "--randomize-hosts"
+    parser: parse_masscan
+    version_cmd: "masscan --version"
+    install:
+      ubuntu: "sudo apt-get install masscan"
+
+  rustscan:
+    command: rustscan
+    category: scanning
+    description: "Fast port scanner written in Rust"
+    args: ["-a", "{target}", "-p", "{ports}", "{flags}"]
+    defaults:
+      ports: "1-65535"
+      flags: "--ulimit 1000 --timeout 3000 --tries 1 --batch-size 512"
+    parser: parse_rustscan
+    version_cmd: "rustscan --version"
+    install:
+      ubuntu: "sudo apt-get install rustscan"
+
+  zmap:
+    command: zmap
+    category: scanning
+    description: "Internet-wide network scanner"
+    args: ["-p", "{port}", "{flags}", "{target}"]
+    defaults:
+      port: "80"
+      flags: "-B 1M --probe-module=tcp_synscan --source-port=32000"
+    parser: parse_zmap
+    version_cmd: "zmap --version"
+    install:
+      ubuntu: "sudo apt-get install zmap"
+
+  # ============ WEB APPLICATION SCANNING ============
+  gobuster:
+    command: gobuster
+    category: web_scanning
+    description: "URI/DNS/VHost busting tool"
+    args: ["dir", "-u", "{target}", "-w", "{wordlist}", "{flags}"]
+    defaults:
+      wordlist: "/usr/share/wordlists/dirb/common.txt"
+      flags: "-t 10 --delay 100ms --random-agent"
+    parser: parse_gobuster
+    version_cmd: "gobuster version"
+    install:
+      ubuntu: "sudo apt-get install gobuster"
+
+  dirb:
+    command: dirb
+    category: web_scanning
+    description: "Web content scanner"
+    args: ["{target}", "{wordlist}", "{flags}"]
+    defaults:
+      wordlist: "/usr/share/wordlists/dirb/common.txt"
+      flags: "-r -S -z 500"
+    parser: parse_dirb
+    version_cmd: "dirb"
+    install:
+      ubuntu: "sudo apt-get install dirb"
+
+  nikto:
+    command: nikto
+    category: web_scanning
+    description: "Web server scanner"
+    args: ["-h", "{target}", "{flags}"]
+    defaults:
+      flags: "-Format txt -useragent 'Mozilla/5.0 (compatible; Scanner/1.0)' -Pause 2"
+    parser: parse_nikto
+    version_cmd: "nikto -Version"
+    install:
+      ubuntu: "sudo apt-get install nikto"
+
+  whatweb:
+    command: whatweb
+    category: web_scanning
+    description: "Web technology identifier"
+    args: ["{target}", "{flags}"]
+    defaults:
+      flags: "--aggression=3 --color=never"
+    parser: parse_whatweb
+    version_cmd: "whatweb --version"
+    install:
+      ubuntu: "sudo apt-get install whatweb"
+
+  wfuzz:
+    command: wfuzz
+    category: web_scanning
+    description: "Web application fuzzer"
+    args: ["-w", "{wordlist}", "-u", "{target}/FUZZ", "{flags}"]
+    defaults:
+      wordlist: "/usr/share/wordlists/dirb/common.txt"
+      flags: "--hc 404 -s 0.5"
+    parser: parse_wfuzz
+    version_cmd: "wfuzz --version"
+    install:
+      ubuntu: "sudo apt-get install wfuzz"
+
+  ffuf:
+    command: ffuf
+    category: web_scanning
+    description: "Fast web fuzzer written in Go"
+    args: ["-w", "{wordlist}", "-u", "{target}/FUZZ", "{flags}"]
+    defaults:
+      wordlist: "/usr/share/wordlists/dirb/common.txt"
+      flags: "-fc 404 -rate 10 -p 0.5"
+    parser: parse_ffuf
+    version_cmd: "ffuf --version"
+    install:
+      ubuntu: "sudo apt-get install ffuf"
+
+  # ============ VULNERABILITY SCANNERS ============
+  nuclei:
+    command: nuclei
+    category: vulnerability
+    description: "Fast vulnerability scanner"
+    args: ["-u", "{target}", "{flags}"]
+    defaults:
+      flags: "-silent -nc"
+    parser: parse_nuclei
+    version_cmd: "nuclei -version"
+    install:
+      ubuntu: "sudo apt-get install nuclei"
+
+  # ============ EXPLOITATION TOOLS ============
+  sqlmap:
+    command: sqlmap
+    category: exploitation
+    description: "SQL injection testing tool"
+    args: ["-u", "{target}", "{flags}"]
+    defaults:
+      flags: "--batch --random-agent --delay=1 --timeout=30"
+    parser: parse_sqlmap
+    version_cmd: "sqlmap --version"
+    install:
+      ubuntu: "sudo apt-get install sqlmap"
+
+  hydra:
+    command: hydra
+    category: exploitation
+    description: "Network login cracker"
+    args: ["-l", "{username}", "-P", "{password_list}", "{target}", "{service}", "{flags}"]
+    defaults:
+      username: "user"
+      password_list: "/usr/share/wordlists/rockyou.txt"
+      service: "ssh"
+      flags: "-t 1 -w 30 -f"
+    parser: parse_hydra
+    version_cmd: "hydra -h"
+    install:
+      ubuntu: "sudo apt-get install hydra"
+
+  medusa:
+    command: medusa
+    category: exploitation
+    description: "Speedy, parallel brute forcing tool"
+    args: ["-h", "{target}", "-u", "{username}", "-P", "{password_list}", "-M", "{service}", "{flags}"]
+    defaults:
+      username: "user"
+      password_list: "/usr/share/wordlists/rockyou.txt"
+      service: "ssh"
+      flags: "-t 1 -T 1 -f"
+    parser: parse_medusa
+    version_cmd: "medusa -d"
+    install:
+      ubuntu: "sudo apt-get install medusa"
+
+  ncrack:
+    command: ncrack
+    category: exploitation
+    description: "Network authentication cracking tool"
+    args: ["-p", "{port}", "-u", "{username}", "-P", "{password_list}", "{target}", "{flags}"]
+    defaults:
+      port: "22"
+      username: "user"
+      password_list: "/usr/share/wordlists/rockyou.txt"
+      flags: "-T 1 --connection-limit 1"
+    parser: parse_ncrack
+    version_cmd: "ncrack --version"
+    install:
+      ubuntu: "sudo apt-get install ncrack"
+
+  # ============ PASSWORD TOOLS ============
+  john:
+    command: john
+    category: password
+    description: "John the Ripper password cracker"
+    args: ["{hash_file}", "{flags}"]
+    defaults:
+      flags: "--wordlist=/usr/share/wordlists/rockyou.txt --rules"
+    parser: parse_john
+    version_cmd: "john --version"
+    install:
+      ubuntu: "sudo apt-get install john"
+
+  hashcat:
+    command: hashcat
+    category: password
+    description: "Advanced password recovery"
+    args: ["-m", "{hash_mode}", "{hash_file}", "{wordlist}", "{flags}"]
+    defaults:
+      hash_mode: "0"
+      wordlist: "/usr/share/wordlists/rockyou.txt"
+      flags: "--potfile-disable --logfile-disable"
+    parser: parse_hashcat
+    version_cmd: "hashcat --version"
+    install:
+      ubuntu: "sudo apt-get install hashcat"
+
+  crunch:
+    command: crunch
+    category: password
+    description: "Wordlist generator"
+    args: ["{min_len}", "{max_len}", "{charset}", "-o", "{output_file}", "{flags}"]
+    defaults:
+      min_len: "4"
+      max_len: "8"
+      charset: "abcdefghijklmnopqrstuvwxyz0123456789"
+      output_file: "wordlist.txt"
+      flags: ""
+    parser: parse_crunch
+    version_cmd: "crunch --version"
+    install:
+      ubuntu: "sudo apt-get install crunch"
+
+  cewl:
+    command: cewl
+    category: password
+    description: "Custom word list generator"
+    args: ["{target}", "-w", "{output_file}", "{flags}"]
+    defaults:
+      output_file: "wordlist.txt"
+      flags: "-m 6"
+    parser: parse_cewl
+    version_cmd: "cewl --version"
+    install:
+      ubuntu: "sudo apt-get install cewl"
+
+  # ============ WIRELESS TOOLS ============
+  aircrack:
+    command: aircrack-ng
+    category: wireless
+    description: "WEP and WPA-PSK cracking"
+    args: ["{capture_file}", "-w", "{wordlist}", "{flags}"]
+    defaults:
+      wordlist: "/usr/share/wordlists/rockyou.txt"
+      flags: "-l output.log"
+    parser: parse_aircrack
+    version_cmd: "aircrack-ng --help"
+    install:
+      ubuntu: "sudo apt-get install aircrack-ng"
+
+  airodump:
+    command: airodump-ng
+    category: wireless
+    description: "802.11 packet capture"
+    args: ["{interface}", "-w", "{output_file}", "{flags}"]
+    defaults:
+      interface: "wlan0"
+      output_file: "capture"
+      flags: "--write-interval 1"
+    parser: parse_airodump
+    version_cmd: "airodump-ng --help"
+    install:
+      ubuntu: "sudo apt-get install aircrack-ng"
+
+  reaver:
+    command: reaver
+    category: wireless
+    description: "WPS brute force attack tool"
+    args: ["-i", "{interface}", "-b", "{bssid}", "{flags}"]
+    defaults:
+      interface: "wlan0"
+      flags: "-vv"
+    parser: parse_reaver
+    version_cmd: "reaver --help"
+    install:
+      ubuntu: "sudo apt-get install reaver"
+
+  # ============ NETWORK TOOLS ============
+  netcat:
+    command: nc
+    category: networking
+    description: "Network connection utility"
+    args: ["{target}", "{port}", "{flags}"]
+    defaults:
+      flags: "-v"
+    parser: parse_netcat
+    version_cmd: "nc -h"
+    install:
+      ubuntu: "sudo apt-get install netcat"
+
+  socat:
+    command: socat
+    category: networking
+    description: "Multipurpose relay tool"
+    args: ["{source}", "{destination}", "{flags}"]
+    defaults:
+      flags: ""
+    parser: parse_socat
+    version_cmd: "socat -h"
+    install:
+      ubuntu: "sudo apt-get install socat"
+
+  tcpdump:
+    command: tcpdump
+    category: networking
+    description: "Network packet analyzer"
+    args: ["-i", "{interface}", "{flags}"]
+    defaults:
+      interface: "any"
+      flags: "-n -c 100"
+    parser: parse_tcpdump
+    version_cmd: "tcpdump --version"
+    install:
+      ubuntu: "sudo apt-get install tcpdump"
+
+  wireshark:
+    command: tshark
+    category: networking
+    description: "Network protocol analyzer (CLI)"
+    args: ["-i", "{interface}", "{flags}"]
+    defaults:
+      interface: "any"
+      flags: "-c 100"
+    parser: parse_tshark
+    version_cmd: "tshark --version"
+    install:
+      ubuntu: "sudo apt-get install tshark"
+
+  # ============ POST-EXPLOITATION TOOLS ============
+  linpeas:
+    command: linpeas.sh
+    category: post_exploit
+    description: "Linux privilege escalation script"
+    args: ["{flags}"]
+    defaults:
+      flags: ""
+    parser: parse_linpeas
+    version_cmd: "linpeas.sh --version"
+    install:
+      download: "wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh"
+
+  winpeas:
+    command: winPEAS.exe
+    category: post_exploit
+    description: "Windows privilege escalation script"
+    args: ["{flags}"]
+    defaults:
+      flags: ""
+    parser: parse_winpeas
+    version_cmd: "winPEAS.exe --version"
+    install:
+      download: "wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/winPEAS.exe"
+
+  msfvenom:
+    command: msfvenom
+    category: exploitation
+    description: "Metasploit payload generator"
+    args: ["-p", "{payload}", "LHOST={lhost}", "LPORT={lport}", "-f", "{format}", "{flags}"]
+    defaults:
+      payload: "linux/x64/meterpreter/reverse_tcp"
+      lhost: "10.0.0.1"
+      lport: "8443"
+      format: "elf"
+      flags: "--platform linux"
+    parser: parse_msfvenom
+    version_cmd: "msfvenom --version"
+    install:
+      ubuntu: "sudo apt-get install metasploit-framework"
+
+  # ============ FORENSICS TOOLS ============
+  binwalk:
+    command: binwalk
+    category: forensics
+    description: "Firmware analysis tool"
+    args: ["{file}", "{flags}"]
+    defaults:
+      flags: "-e"
+    parser: parse_binwalk
+    version_cmd: "binwalk --help"
+    install:
+      ubuntu: "sudo apt-get install binwalk"
+
+  foremost:
+    command: foremost
+    category: forensics
+    description: "File carving tool"
+    args: ["-i", "{input_file}", "-o", "{output_dir}", "{flags}"]
+    defaults:
+      output_dir: "output"
+      flags: "-v"
+    parser: parse_foremost
+    version_cmd: "foremost -V"
+    install:
+      ubuntu: "sudo apt-get install foremost"
+
+  volatility:
+    command: volatility
+    category: forensics
+    description: "Memory forensics framework"
+    args: ["-f", "{memory_dump}", "--profile={profile}", "{plugin}", "{flags}"]
+    defaults:
+      profile: "Win10x64_19041"
+      plugin: "pslist"
+      flags: "--output=text"
+    parser: parse_volatility
+    version_cmd: "volatility --info"
+    install:
+      ubuntu: "sudo apt-get install volatility"
+
+  # ============ DNS TOOLS ============
+  dnsrecon:
+    command: dnsrecon
+    category: scanning
+    description: "DNS enumeration script"
+    args: ["-d", "{domain}", "{flags}"]
+    defaults:
+      flags: "-t std"
+    parser: parse_dnsrecon
+    version_cmd: "dnsrecon --version"
+    install:
+      ubuntu: "sudo apt-get install dnsrecon"
+
+  dnsenum:
+    command: dnsenum
+    category: scanning
+    description: "DNS enumeration tool"
+    args: ["{domain}", "{flags}"]
+    defaults:
+      flags: ""
+    parser: parse_dnsenum
+    version_cmd: "dnsenum --help"
+    install:
+      ubuntu: "sudo apt-get install dnsenum"
+
+  fierce:
+    command: fierce
+    category: scanning
+    description: "DNS reconnaissance tool"
+    args: ["--domain", "{domain}", "{flags}"]
+    defaults:
+      flags: ""
+    parser: parse_fierce
+    version_cmd: "fierce --version"
+    install:
+      ubuntu: "sudo apt-get install fierce"
+
+  # ============ STEGANOGRAPHY ============
+  steghide:
+    command: steghide
+    category: steganography
+    description: "Steganography tool for hiding data"
+    args: ["{action}", "-cf", "{cover_file}", "-ef", "{embed_file}", "{flags}"]
+    defaults:
+      action: "embed"
+      flags: ""
+    parser: parse_steghide
+    version_cmd: "steghide --version"
+    install:
+      ubuntu: "sudo apt-get install steghide"
+
+  # ============ SYSTEM ANALYSIS TOOLS ============
+  strings:
+    command: strings
+    category: forensics
+    description: "Display printable strings in files"
+    args: ["{flags}", "{file}"]
+    defaults:
+      flags: ""
+    parser: parse_generic
+    version_cmd: "strings --version"
+    install:
+      ubuntu: "sudo apt-get install binutils"
+
+  file:
+    command: file
+    category: forensics
+    description: "Determine file type"
+    args: ["{flags}", "{file}"]
+    defaults:
+      flags: ""
+    parser: parse_generic
+    version_cmd: "file --version"
+    install:
+      ubuntu: "sudo apt-get install file"
+
+  hexdump:
+    command: hexdump
+    category: forensics
+    description: "Display file contents in hexadecimal"
+    args: ["{flags}", "{file}"]
+    defaults:
+      flags: "-C"
+    parser: parse_generic
+    version_cmd: "hexdump --version"
+    install:
+      ubuntu: "sudo apt-get install bsdutils"
+
+  netstat:
+    command: netstat
+    category: system_analysis
+    description: "Display network connections"
+    args: ["{flags}"]
+    defaults:
+      flags: "-tuln"
+    parser: parse_generic
+    version_cmd: "netstat --version"
+    install:
+      ubuntu: "sudo apt-get install net-tools"
+
+  ss:
+    command: ss
+    category: system_analysis
+    description: "Modern replacement for netstat"
+    args: ["{flags}"]
+    defaults:
+      flags: "-tuln"
+    parser: parse_generic
+    version_cmd: "ss --version"
+    install:
+      ubuntu: "sudo apt-get install iproute2"
+
+  lsof:
+    command: lsof
+    category: system_analysis
+    description: "List open files and network connections"
+    args: ["{flags}"]
+    defaults:
+      flags: "-i"
+    parser: parse_generic
+    version_cmd: "lsof -v"
+    install:
+      ubuntu: "sudo apt-get install lsof"
+
+  ps:
+    command: ps
+    category: system_analysis
+    description: "Display running processes"
+    args: ["{flags}"]
+    defaults:
+      flags: "aux"
+    parser: parse_generic
+    version_cmd: "ps --version"
+    install:
+      ubuntu: "sudo apt-get install procps"
+
+  dirsearch:
+    command: dirsearch
+    category: web_enumeration
+    description: "Web path scanner"
+    args: ["-u", "{target}", "{flags}"]
+    defaults:
+      flags: "-e php,html,js"
+    parser: parse_generic
+    version_cmd: "dirsearch --version"
+    install:
+      ubuntu: "sudo apt-get install dirsearch"
+
+  hash_identifier:
+    command: hash-identifier
+    category: password_cracking
+    description: "Identify hash types"
+    args: ["{hash}"]
+    defaults:
+      hash: ""
+    parser: parse_generic
+    version_cmd: "hash-identifier --version"
+    install:
+      ubuntu: "sudo apt-get install hash-identifier"
+
+  smbclient:
+    command: smbclient
+    category: active_directory
+    description: "SMB client for accessing Windows shares"
+    args: ["{target}", "{flags}"]
+    defaults:
+      flags: "-L"
+    parser: parse_generic
+    version_cmd: "smbclient --version"
+    install:
+      ubuntu: "sudo apt-get install smbclient"
+
+  rpcclient:
+    command: rpcclient
+    category: active_directory
+    description: "MS-RPC client tool"
+    args: ["{target}", "{flags}"]
+    defaults:
+      flags: "-U ''"
+    parser: parse_generic
+    version_cmd: "rpcclient --version"
+    install:
+      ubuntu: "sudo apt-get install samba-common-bin"
+
+  showmount:
+    command: showmount
+    category: active_directory
+    description: "Show mount information for NFS server"
+    args: ["{flags}", "{target}"]
+    defaults:
+      flags: "-e"
+    parser: parse_generic
+    version_cmd: "showmount --version"
+    install:
+      ubuntu: "sudo apt-get install nfs-common"
+
+  # ============ MISSING TOOLS ============
+  hashid:
+    command: hashid
+    category: password_cracking
+    description: "Identify hash types"
+    args: ["{hash}"]
+    defaults:
+      hash: ""
+    parser: parse_generic
+    version_cmd: "hashid --help"
+    install:
+      ubuntu: "sudo apt-get install hashid"
+
+  enum4linux:
+    command: enum4linux
+    category: active_directory
+    description: "Enumerate information from Windows and Samba systems"
+    args: ["{flags}", "{target}"]
+    defaults:
+      flags: "-a"
+    parser: parse_generic
+    version_cmd: "enum4linux --help"
+    install:
+      ubuntu: "sudo apt-get install enum4linux"
+
+  smbmap:
+    command: smbmap
+    category: active_directory
+    description: "SMB enumeration tool"
+    args: ["{flags}", "-H", "{target}"]
+    defaults:
+      flags: ""
+    parser: parse_generic
+    version_cmd: "smbmap --help"
+    install:
+      ubuntu: "sudo apt-get install smbmap"
+
+  searchsploit:
+    command: searchsploit
+    category: vulnerability_search
+    description: "Exploit database search tool"
+    args: ["{query}", "{flags}"]
+    defaults:
+      flags: ""
+    parser: parse_generic
+    version_cmd: "searchsploit --help"
+    install:
+      ubuntu: "sudo apt-get install exploitdb"
