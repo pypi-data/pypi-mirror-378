@@ -1,0 +1,162 @@
+<div align="center">
+  <img src="https://raw.githubusercontent.com/KiefStudioMA/LTFI-WSAP/main/assets/KS-FullLogo-DarkGrey-300dpi.png#gh-light-mode-only" alt="Kief Studio" height="80">
+  <img src="https://raw.githubusercontent.com/KiefStudioMA/LTFI-WSAP/main/assets/KS-FullLogo-LightSilver-300dpi.png#gh-dark-mode-only" alt="Kief Studio" height="80">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/KiefStudioMA/LTFI-WSAP/main/assets/LTFI-Logo.png#gh-light-mode-only" alt="LTFI" height="80">
+  <img src="https://raw.githubusercontent.com/KiefStudioMA/LTFI-WSAP/main/assets/LTFI-Logo-White.png#gh-dark-mode-only" alt="LTFI" height="80">
+</div>
+
+# FastAPI LTFI-WSAP Integration
+
+[![PyPI version](https://badge.fury.io/py/fastapi-ltfi-wsap.svg)](https://pypi.org/project/fastapi-ltfi-wsap/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/KiefStudioMA/ltfi-wsap-fastapi/blob/main/LICENSE)
+[![LTFI-WSAP](https://img.shields.io/badge/LTFI--WSAP-v2.0.0-blue.svg)](https://wsap.ltfi.ai)
+[![Kief Studio](https://img.shields.io/badge/By-Kief%20Studio-green.svg)](https://kief.studio)
+
+Official FastAPI Integration for **LTFI-WSAP** (Layered Transformer Framework Intelligence - Web System Alignment Protocol) by **Kief Studio**.
+
+Part of the [LTFI Ecosystem](https://ltfi.ai) • [WSAP Protocol](https://wsap.ltfi.ai)
+
+## 📦 Installation
+
+```bash
+pip install fastapi-ltfi-wsap
+```
+
+## 🚀 Quick Start
+
+### 1. Basic Setup
+
+```python
+from fastapi import FastAPI
+from fastapi_ltfi_wsap import WSAPApp
+
+# Create WSAP-enabled FastAPI app
+app = WSAPApp(
+    api_key="your-api-key-here",
+    entity_id="your-entity-id",
+    title="My API",
+    description="API with WSAP integration"
+)
+
+# Access the FastAPI instance
+fastapi_app = app.app
+
+# Or use the convenience function
+from fastapi_ltfi_wsap import create_wsap_app
+
+app = create_wsap_app(
+    api_key="your-api-key-here",
+    entity_id="your-entity-id"
+)
+```
+
+### 2. With Existing FastAPI App
+
+```python
+from fastapi import FastAPI
+from fastapi_ltfi_wsap import WSAPMiddleware, wsap_router
+
+app = FastAPI()
+
+# Add WSAP middleware
+app.add_middleware(
+    WSAPMiddleware,
+    api_key="your-api-key-here",
+    entity_id="your-entity-id"
+)
+
+# Include WSAP router
+app.include_router(wsap_router, prefix="/wsap", tags=["wsap"])
+```
+
+### 3. Configuration with Environment Variables
+
+```python
+import os
+from fastapi_ltfi_wsap import create_wsap_app
+
+app = create_wsap_app(
+    api_key=os.getenv("WSAP_API_KEY"),
+    entity_id=os.getenv("WSAP_ENTITY_ID"),
+    base_url=os.getenv("WSAP_BASE_URL", "https://api.ltfi.ai")
+)
+```
+
+### 4. Using Dependencies
+
+```python
+from fastapi import FastAPI, Depends
+from fastapi_ltfi_wsap import get_wsap_client, require_wsap_auth
+
+app = FastAPI()
+
+@app.get("/protected")
+async def protected_route(auth = Depends(require_wsap_auth)):
+    return {"message": "WSAP authenticated"}
+
+@app.get("/entity/{entity_id}")
+async def get_entity(entity_id: str, client = Depends(get_wsap_client)):
+    return await client.get_entity(entity_id)
+```
+
+## 🎯 Features
+
+- **FastAPI Integration**: Seamless integration with FastAPI applications
+- **WSAP Application Class**: Pre-configured FastAPI app with WSAP support
+- **Middleware**: Automatic WSAP header injection and endpoint handling
+- **Router**: Ready-to-use router with dashboard and API endpoints
+- **Dependencies**: Reusable dependencies for authentication and client access
+- **Domain Verification**: DNS TXT record verification for domain ownership
+- **Progressive Disclosure**: Multiple disclosure levels for information control
+- **Entity Management**: Support for various entity types
+- **Async Support**: Full async/await support throughout
+
+## 📚 Documentation
+
+- **Main Documentation**: [docs.ltfi.ai](https://docs.ltfi.ai)
+- **API Reference**: [api.ltfi.ai/docs](https://api.ltfi.ai/docs)
+- **FastAPI Guide**: [docs.ltfi.ai/fastapi](https://docs.ltfi.ai/fastapi)
+- **Examples**: [github.com/KiefStudioMA/LTFI-WSAP-Examples](https://github.com/KiefStudioMA/LTFI-WSAP-Examples)
+
+## 📄 License
+
+**MIT License** - This SDK is open source and free to use.
+
+See [LICENSE](LICENSE) for full terms.
+
+### LTFI-WSAP Service Usage
+
+While this SDK is open source, the LTFI-WSAP service has the following usage terms:
+
+- ✅ **FREE** for personal use, open source projects, and small businesses
+- ✅ **FREE** for most users and use cases
+- 💳 **Paid plans** required for:
+  - Enterprises with annual revenue exceeding $1M USD
+  - Organizations managing more than 100 domains
+  - High-volume API usage
+
+For pricing details: [wsap.ltfi.ai/pricing](https://wsap.ltfi.ai/pricing)
+
+- **Technical Support**: developers@kief.studio
+- **Business Inquiries**: business@kief.studio
+- **Discord**: [discord.gg/JfjyUdjJgP](https://discord.gg/JfjyUdjJgP)
+- **X (Twitter)**: [x.com/kief_ma](https://x.com/kief_ma)
+- **LinkedIn**: [linkedin.com/company/kief-studio](https://www.linkedin.com/company/kief-studio/)
+
+---
+
+<div align="center">
+  <br>
+  <img src="https://raw.githubusercontent.com/KiefStudioMA/LTFI-WSAP/main/assets/KS-icon-black-1024.png#gh-light-mode-only" alt="Kief Studio" width="64">
+  <img src="https://raw.githubusercontent.com/KiefStudioMA/LTFI-WSAP/main/assets/KS-icon-white-1024.png#gh-dark-mode-only" alt="Kief Studio" width="64">
+  <br><br>
+  
+  **Built with ❤️ by [Kief Studio](https://kief.studio)**
+  
+  Part of the [LTFI Ecosystem](https://ltfi.ai) • [WSAP Protocol](https://wsap.ltfi.ai)
+  
+  © 2025 Kief Studio, MA. All rights reserved.
+  
+  **Open Source SDK - Service usage subject to terms**
+</div>
