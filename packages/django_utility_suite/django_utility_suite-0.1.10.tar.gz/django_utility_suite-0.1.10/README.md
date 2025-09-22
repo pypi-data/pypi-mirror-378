@@ -1,0 +1,118 @@
+# Django Utility Suite
+
+## Description
+`django_utility_suite` is a set of utilities to enhance Django development
+
+
+## Installation
+
+You can install this package with:
+
+```bash
+pip install django-utility-suite
+```
+
+Or if you use Poetry:
+
+```bash
+poetry add django-utility-suite
+```
+
+## Usage
+
+### Django Configuration
+Add `django_utility_suite` to `INSTALLED_APPS` in your `settings.py`:
+
+```python
+INSTALLED_APPS = [
+    ...
+    'django_utility_suite',
+]
+```
+
+## Package utils
+### 1. Performance optimization and cache management.
+
+#### Using `ReadOnlyViewSetMixin`
+This mixin provides an optimized way to handle caching in read-only views.
+
+```python
+from django_utility_suite.api.mixins import ReadOnlyViewSetMixin
+from rest_framework.viewsets import ReadOnlyModelViewSet
+from .models import MyModel
+from .serializers import MyModelSerializer
+
+class MyModelViewSet(ReadOnlyViewSetMixin, ReadOnlyModelViewSet):
+    queryset = MyModel.objects.all()
+    serializer_class = MyModelSerializer
+    
+    def get_cache_key(self):
+        if self.action == "retrieve":
+            return f"mimodel-retrieve-{self.lookup_field}"
+        elif self.action == "list":
+            return f"mimodel-list"
+    
+    @property
+    def cache_prefix(self):
+        return "my_model"
+```
+
+### Using `create_key_from_list` (minimal if/else example)
+Use `create_key_from_list` to cache responses under a **short key** generated from a **hash** of the list (normalized, regardless of order or duplicates). This avoids very long keys and gives deterministic cache hits; you can adjust the length with `length_bytes`.
+
+**Example:** `["A", "b", "a"]` → `my_model:{list}:Q2r8y8tP` (same hash as `["b","a"]`).
+
+
+```python
+from django_utility_suite.api.mixins import ReadOnlyViewSetMixin
+from rest_framework.viewsets import ReadOnlyModelViewSet
+from .models import MyModel
+from .serializers import MyModelSerializer
+
+class MyModelViewSet(ReadOnlyViewSetMixin, ReadOnlyModelViewSet):
+    queryset = MyModel.objects.all()
+    serializer_class = MyModelSerializer
+
+    def get_cache_key(self):
+        params = self.request.query_params
+        data = getattr(self.request, "data", {})
+        lookup_value = self.kwargs.get(self.lookup_field, "")
+
+        if self.action == "retrieve":
+            # Simple scalar key for detail
+            return lookup_value
+
+        elif self.action == "list":
+            # Example: combine a scalar filter with a list-type query param (?slugs=a,b,c)
+            category = params.get("category", "")
+            slugs = (params.get("slugs") or "").split(",")
+            # Use an empty prefix so the mixin's cache_prefix is the only namespace
+            return f"list:{category}:{self.create_key_from_list(slugs, length_bytes=10, prefix='')}"
+
+        elif self.action == "search":
+            # Example: list-type input coming from JSON payload: {"ids": [1,2,3]}
+            ids = data.get("ids", [])
+            return f"search:{self.create_key_from_list(ids, length_bytes=10, prefix='')}"
+
+        # Default (no cache or unsupported action)
+        return ""
+
+    @property
+    def cache_prefix(self):
+        # Global namespace for this viewset in the cache backend
+        return "my_model"
+```
+
+
+
+## Development
+If you want to contribute, clone the repository and use Poetry to manage dependencies:
+
+```bash
+git clone https://github.com/yourusername/django-utility-suite.git
+cd django-utility-suite
+poetry install
+```
+
+## License
+This project is licensed under the MIT license.
