@@ -1,0 +1,146 @@
+# Shash Package
+
+A custom Python package for **data preparation, exploration, splitting, saving/loading datasets, and model evaluation (classification & regression)**.
+
+---
+
+## ✨ Features
+
+### 🔹 Data Preparation & EDA (`dataprep.py`)
+
+* `datacheck(df)`
+  Checks for missing/null values, unique counts, and duplicate rows in a DataFrame.
+* `dataeda(df)`
+  Prints dataset overview: head, shape, info, numerical & categorical statistics.
+* `auto_convert_dates(df)`
+  Automatically converts date-like object/string columns to datetime.
+
+---
+
+### 🔹 Dataset Splitting & Storage (`modelprep.py`)
+
+* `split_sets(features, target, test_val_ratio=0.3, stratify=False)`
+  Splits into Train, Validation, and Test sets (with optional stratification).
+* `save_sets_csv(...)`
+  Saves splits into CSV files (`../data/processed/` by default).
+* `load_sets_csv(...)`
+  Loads Train/Val/Test sets from CSV files.
+
+---
+
+### 🔹 Model Evaluation (`evaluation.py`)
+
+#### Classification
+
+* `evaluate_classifier(y_true, y_pred_labels, y_pred_proba=None, dataset_name="Dataset")`
+  Prints Accuracy, Precision, Recall, F1, ROC AUC (if probs available), classification report, and displays confusion matrix.
+
+#### Regression
+
+* `evaluate_regressor(y_true, y_pred, dataset_name="Dataset")`
+  Prints MAE, MSE, RMSE, MAPE, R², and displays residuals & true-vs-predicted plots.
+
+---
+
+### 🔹 Model Runner Wrappers (`model_runner.py`)
+
+* `fit_eval_classifier(model, X_train, y_train, X_val=None, y_val=None, X_test=None, y_test=None)`
+  Fits a classifier and evaluates on Train/Val/Test using `evaluate_classifier`.
+* `fit_eval_regressor(model, X_train, y_train, X_val=None, y_val=None, X_test=None, y_test=None)`
+  Fits a regressor and evaluates on Train/Val/Test using `evaluate_regressor`.
+
+---
+
+## 🚀 Installation
+
+Install from PyPI (after publishing):
+
+```bash
+pip install shash
+```
+
+Or install locally for development:
+
+```bash
+pip install -e .
+```
+
+---
+
+## 📌 Usage Examples
+
+### Data Preparation
+
+```python
+import pandas as pd
+from shash.dataprep import datacheck, dataeda, auto_convert_dates
+
+df = pd.read_csv("data/raw/sample.csv")
+
+# Quick checks
+print(datacheck(df))
+dataeda(df)
+
+# Convert string dates automatically
+df = auto_convert_dates(df)
+```
+
+---
+
+### Dataset Splitting
+
+```python
+from shash.modelprep import split_sets, save_sets_csv, load_sets_csv
+
+X_train, y_train, X_val, y_val, X_test, y_test = split_sets(features, target, stratify=True)
+save_sets_csv(X_train, y_train, X_val, y_val, X_test, y_test)
+
+# Later...
+X_train, y_train, X_val, y_val, X_test, y_test = load_sets_csv()
+```
+
+---
+
+### Model Evaluation
+
+```python
+from shash.evaluation import evaluate_classifier, evaluate_regressor
+from sklearn.linear_model import LogisticRegression, LinearRegression
+
+# Classification
+clf = LogisticRegression()
+clf.fit(X_train, y_train)
+evaluate_classifier(y_val, clf.predict(X_val), clf.predict_proba(X_val)[:,1], "Validation")
+
+# Regression
+reg = LinearRegression()
+reg.fit(X_train, y_train)
+evaluate_regressor(y_val, reg.predict(X_val), "Validation")
+```
+
+---
+
+### Model Runner
+
+```python
+from shash.model_runner import fit_eval_classifier, fit_eval_regressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+
+clf = RandomForestClassifier()
+fit_eval_classifier(clf, X_train, y_train, X_val, y_val, X_test, y_test)
+
+reg = RandomForestRegressor()
+fit_eval_regressor(reg, X_train, y_train, X_val, y_val, X_test, y_test)
+```
+
+---
+
+## ✅ Tests
+
+All tests are written with `pytest`. Run them with:
+
+```bash
+poetry run pytest -v
+```
+
+---
