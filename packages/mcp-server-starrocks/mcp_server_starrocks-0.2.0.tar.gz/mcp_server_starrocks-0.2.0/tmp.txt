@@ -1,0 +1,52 @@
+2025-09-03 13:55:19.075+08:00 ERROR (flight-server-default-executor-1|286) [BaseAllocator.close():503] Memory was leaked by query. Memory leaked: (16384)
+Allocator(ROOT) 0/16384/16384/9223372036854775807 (res/actual/peak/limit)
+
+2025-09-03 13:55:19.084+08:00 ERROR (arrow-flight-executor-0|290) [FlightService.handleExceptionWithMiddleware():300] Uncaught exception in Flight method body
+java.lang.IllegalStateException: Tried to complete already-completed call
+        at org.apache.arrow.flight.StreamPipe.onCompleted(StreamPipe.java:95) ~[flight-core-18.0.0.jar:18.0.0]
+        at com.starrocks.service.arrow.flight.sql.ArrowFlightSqlServiceImpl.lambda$createPreparedStatement$0(ArrowFlightSqlServiceImpl.java:169) ~[starrocks-fe.jar:?]
+        at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539) ~[?:?]
+        at java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[?:?]
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[?:?]
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[?:?]
+        at java.lang.Thread.run(Thread.java:833) ~[?:?]
+2025-09-03 13:55:19.095+08:00 ERROR (flight-server-default-executor-1|286) [BaseAllocator.close():503] Memory was leaked by query. Memory leaked: (16384)
+
+
+
+mysql> show data;
++-----------+----------------+---------------------+
+| TableName | Size           | ReplicaCount        |
++-----------+----------------+---------------------+
+| customer  | 1.285 GB       | 24                  |
+| lineitem  | 18.337 GB      | 48                  |
+| nation    | 2.269 KB       | 1                   |
+| orders    | 6.006 GB       | 48                  |
+| part      | 714.433 MB     | 24                  |
+| partsupp  | 4.189 GB       | 24                  |
+| region    | 946.000 B      | 1                   |
+| supplier  | 83.602 MB      | 12                  |
+| Total     | 30.595 GB      | 182                 |
+| Quota     | 8388608.000 TB | 9223372036854775807 |
+| Left      | 8388607.970 TB | 9223372036854775625 |
++-----------+----------------+---------------------+
+
+
+mysql> select table_name, column_name, ordinal_position, column_type from information_schema.columns where table_schema = 'tpch' limit 10;
++------------+-------------+------------------+----------------+
+| table_name | column_name | ordinal_position | column_type    |
++------------+-------------+------------------+----------------+
+| supplier   | s_suppkey   |                1 | int(11)        |
+| supplier   | s_name      |                2 | varchar(25)    |
+| supplier   | s_address   |                3 | varchar(40)    |
+| supplier   | s_nationkey |                4 | int(11)        |
+| supplier   | s_phone     |                5 | varchar(15)    |
+| supplier   | s_acctbal   |                6 | decimal(15, 2) |
+| supplier   | s_comment   |                7 | varchar(101)   |
+| part       | p_partkey   |                1 | int(11)        |
+| part       | p_name      |                2 | varchar(55)    |
+| part       | p_mfgr      |                3 | varchar(25)    |
++------------+-------------+------------------+----------------+
+10 rows in set (0.01 sec)
+
+
