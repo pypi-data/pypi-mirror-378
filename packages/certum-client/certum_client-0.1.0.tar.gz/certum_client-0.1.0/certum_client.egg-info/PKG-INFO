@@ -1,0 +1,164 @@
+Metadata-Version: 2.4
+Name: certum-client
+Version: 0.1.0
+Summary: Python client (sync + async) for the CertumTree API.
+Author-email: Mike Issakov <nye.ivangay@example.com>
+Project-URL: Repository, https://github.com/hex358/certum_client
+Keywords: certum,certumtree,client,http,async,httpx
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Typing :: Typed
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: httpx>=0.27.0
+Dynamic: license-file
+
+# certum-client
+
+Typed Python client for the **CertumTree API** with both **synchronous** and **asynchronous** support. Built on `httpx`, it provides a clean, type-safe interface for all endpoints exposed by the CertumTree service.
+
+---
+
+## Features
+
+* ✅ Synchronous (`CertumClient`) and asynchronous (`AsyncCertumClient`) APIs
+* ✅ Strong typing with PEP 561 (`py.typed` included)
+* ✅ Clear error handling (`APIError` for server/HTTP issues)
+* ✅ Built-in blob hash helper (`compute_blob_hash`) ensuring correct 16-character hex format
+* ✅ Service pagination with lazy iterators
+* ✅ Easy to extend and integrate
+
+---
+
+## Installation
+
+```bash
+pip install certum_client
+```
+
+Requires Python 3.8+ and `httpx>=0.27`.
+
+---
+
+## Quick Start
+
+### Synchronous Example
+
+```python
+from certum_client import CertumClient, compute_blob_hash
+
+with CertumClient("http://localhost:8000") as c:
+    c.user_login("alice", "secret")
+
+    token = c.register_service("notes", username="alice", password="secret")
+
+    # The API expects 16 hex characters (8-byte hash)
+    h = compute_blob_hash(b"hello world")
+    c.add_blob("alice.notes", token, h)
+
+    print("Root:", c.get_root_hash("alice.notes"))
+
+    # Lazy iteration through all services
+    for svc in c.iter_services("alice", per_page=50):
+        print(svc.service_name)
+```
+
+### Asynchronous Example
+
+```python
+import asyncio
+from certum_client import AsyncCertumClient, compute_blob_hash
+
+async def main():
+    async with AsyncCertumClient("http://localhost:8000") as c:
+        await c.user_login("bob", "p455")
+
+        token = await c.register_service("inbox", username="bob", password="p455")
+
+        h = compute_blob_hash(b"mail-42")
+        await c.add_blob("bob.inbox", token, h)
+
+        page = await c.list_services("bob", num_results=10)
+        print(page.total, [s.service_name for s in page.services])
+
+asyncio.run(main())
+```
+
+---
+
+## Endpoints Covered
+
+* **Users**
+
+  * `POST /user_signup`
+  * `POST /user_login`
+
+* **Services**
+
+  * `POST /register_service`
+  * `POST /delete_service`
+  * `POST /update_service`
+  * `POST /get_root_hash`
+  * `POST /has_service`
+  * `POST /get_service_metadata`
+  * `POST /list_services`
+  * `POST /get_my_services`
+
+* **Tokens & Blobs**
+
+  * `POST /get_token`
+  * `POST /add_blob`
+  * `POST /check_blob`
+
+---
+
+## API Overview
+
+### Errors
+
+All request failures raise `APIError` with attributes:
+
+* `message`: human-readable message
+* `status`: "ERR" or "OK"
+* `payload`: full JSON payload returned by the server
+
+### Blob Hashing
+
+The server requires 16-character hex strings (`len == 16`), which correspond to 8-byte hashes. Use the included helper:
+
+```python
+from certum_client import compute_blob_hash
+
+h = compute_blob_hash(b"hello")
+assert len(h) == 16  # Always correct for API
+```
+
+---
+
+## Development
+
+Clone and install locally:
+
+```bash
+git clone https://github.com/hex358/certum_client.git
+cd certum_client
+pip install -e .
+```
+
+
+
+---
+
+## License
+
+MIT License © 2025 Mike Issakov
