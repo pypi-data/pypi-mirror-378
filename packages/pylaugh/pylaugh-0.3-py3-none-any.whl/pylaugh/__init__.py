@@ -1,0 +1,1 @@
+from .humor import init, start
