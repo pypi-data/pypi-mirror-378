@@ -1,0 +1,397 @@
+Metadata-Version: 2.4
+Name: taiwan-law-mcp
+Version: 0.2.0
+Summary: 台灣法規查詢 MCP 伺服器 - 優化版本
+Project-URL: Homepage, https://github.com/your-username/taiwan-law-mcp
+Project-URL: Repository, https://github.com/your-username/taiwan-law-mcp
+Project-URL: Issues, https://github.com/your-username/taiwan-law-mcp/issues
+Author: Law MCP Developer
+License-Expression: MIT
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.8
+Requires-Dist: beautifulsoup4>=4.11.0
+Requires-Dist: lxml>=4.9.0; sys_platform != 'win32'
+Requires-Dist: mcp>=1.0.0
+Requires-Dist: requests>=2.28.0
+Provides-Extra: dev
+Requires-Dist: black>=23.0.0; extra == 'dev'
+Requires-Dist: pytest-asyncio>=0.21.0; extra == 'dev'
+Requires-Dist: pytest>=7.0.0; extra == 'dev'
+Requires-Dist: ruff>=0.1.0; extra == 'dev'
+Description-Content-Type: text/markdown
+
+# Taiwan Law MCP 台灣法規查詢 MCP 伺服器
+
+一個優化的台灣法規查詢系統，提供高效的法規搜尋和條文查詢功能。
+
+## 特色功能
+
+### 🚀 優化特性
+- **參數化內容控制** - 減少 token 消耗
+- **精確法規代碼搜尋** - 快速取得法規 pcode
+- **可配置搜尋結果** - 自定義結果數量
+- **摘要模式支援** - 完整模式與摘要模式切換
+- **專門的法條代碼查詢** - 輕量級代碼查詢功能
+
+### 📋 主要工具
+
+1. **search_law** - 搜尋法規名稱，取得基本資訊
+2. **get_law_pcode** - 快速取得法規代碼
+3. **get_full_law** - 取得完整法規條文（支援摘要模式）
+4. **get_single_article** - 查詢特定條文
+5. **search_by_keyword** - 關鍵字搜尋（可控制結果數量）
+6. **validate_pcode** - 驗證法規代碼有效性
+
+## 安裝使用
+
+### 使用 UVX（推薦）
+
+```bash
+# 直接運行
+uvx taiwan-law-mcp
+
+# 或者安裝後使用
+uv tool install taiwan-law-mcp
+taiwan-law-mcp
+```
+
+### 使用 pip
+
+```bash
+pip install taiwan-law-mcp
+taiwan-law-mcp
+```
+
+### 開發模式
+
+```bash
+# 克隆倉庫
+git clone <repository-url>
+cd legel-mcp
+
+# 安裝依賴
+uv sync
+
+# 運行伺服器
+python src/taiwan_law_mcp/server.py
+```
+
+## 作為 Python 套件使用
+
+```python
+from taiwan_law_mcp import LawClient
+
+# 使用客戶端
+with LawClient() as client:
+    # 搜尋法規
+    result = client.search_law("民法")
+    print(result)
+
+    # 取得法規代碼
+    pcode = client.get_pcode("民法")
+    print(f"民法代碼: {pcode}")
+
+    # 取得完整法規（摘要模式）
+    law = client.get_full_law(pcode="B0000001", summary_mode=True, max_articles=10)
+    print(law)
+
+    # 關鍵字搜尋
+    search_result = client.search_keyword("契約", max_results=5, summary_only=True)
+    print(search_result)
+```
+
+## API 範例
+
+### 搜尋法規
+
+```json
+{
+  "name": "search_law",
+  "arguments": {
+    "name": "民法",
+    "max_suggestions": 5
+  }
+}
+```
+
+### 取得法規代碼
+
+```json
+{
+  "name": "get_law_pcode",
+  "arguments": {
+    "name": "民法"
+  }
+}
+```
+
+### 取得完整法規（摘要模式）
+
+```json
+{
+  "name": "get_full_law",
+  "arguments": {
+    "pcode": "B0000001",
+    "summary_mode": true,
+    "max_articles": 20
+  }
+}
+```
+
+### 關鍵字搜尋
+
+```json
+{
+  "name": "search_by_keyword",
+  "arguments": {
+    "keyword": "契約",
+    "max_results": 10,
+    "summary_only": true
+  }
+}
+```
+
+## 優化說明
+
+### Token 消耗優化
+
+1. **摘要模式** - 每條法規只顯示第一行內容
+2. **結果數量限制** - 可設定最大搜尋結果數量
+3. **精簡搜尋** - 移除冗長的介紹文字
+4. **參數化內容** - 根據需求調整返回內容詳細程度
+
+### 搜尋改進
+
+1. **專門的 pcode 查詢** - 快速取得法規代碼
+2. **代碼驗證功能** - 驗證法規代碼有效性
+3. **更明確的搜尋結果** - 精確匹配 vs 多重匹配
+4. **可配置建議數量** - 自定義搜尋建議數量
+
+## 技術規格
+
+- **Python 版本**: 3.8+
+- **主要依賴**:
+  - requests >= 2.28.0
+  - beautifulsoup4 >= 4.11.0
+  - mcp >= 1.0.0
+  - lxml >= 4.9.0 (非 Windows)
+
+## 開發
+
+### 設置開發環境
+
+```bash
+# 使用 uv
+uv sync --dev
+
+# 運行測試
+uv run pytest
+
+# 代碼格式化
+uv run black src tests
+uv run ruff check src tests
+```
+
+### 建構套件
+
+```bash
+uv build
+```
+
+---
+
+## 💡 使用教學
+
+### 🗣️ 如何與AI對話？
+
+**不需要特殊指令**，就像與朋友聊天一樣：
+
+✅ **推薦說法**（自然、直接）：
+- 「我想了解民法第1條」
+- 「搜尋包含契約的法條」
+- 「公司設立需要什麼條件？」
+- 「勞工有什麼權利？」
+- 「房屋買賣要注意什麼法規？」
+
+❌ **不需要這樣說**（太技術性）：
+- 「執行search_law工具查詢民法」
+- 「使用get_full_law功能取得B0000001」
+
+### 🔄 如果AI沒有使用法律工具怎麼辦？
+
+有時候AI可能不知道有法律查詢功能，您可以這樣提醒：
+
+**方法1**：直接詢問功能
+- 「你有法律查詢工具嗎？」
+- 「可以幫我查詢台灣法規嗎？」
+
+**方法2**：明確要求介紹
+- 「請介紹法規查詢功能」
+- 「我想了解你的法律查詢能力」
+
+**方法3**：重新描述需求
+- 「我需要查詢台灣的法律條文」
+- 「幫我搜尋相關法規」
+
+### 🎓 進階使用技巧
+
+**組合查詢**：讓AI幫您做複雜分析
+- 「比較民法和商事法中關於契約的不同規定」
+- 「查詢所有與公司治理相關的法條並整理重點」
+
+**情境諮詢**：描述實際狀況獲得建議
+- 「我是公司老闆，想了解員工管理的法律規定」
+- 「作為房東，我需要知道哪些法律責任？」
+
+**學習導向**：請AI當您的法律老師
+- 「用簡單的話解釋這個條文」
+- 「這條法律在什麼情況下會用到？」
+- 「有沒有相關的案例可以參考？」
+
+---
+
+## 🔧 常見問題解決
+
+### ❓ 問題：「我按照步驟做了，但Claude沒反應」
+**解決方法**：
+1. 確認Python已正確安裝（執行 `python --version`）
+2. 確認已安裝必要套件（重新執行 `pip install -r requirements.txt`）
+3. 檢查claude_desktop_config.json的檔案路徑是否正確
+4. 重新啟動Claude Desktop
+
+### ❓ 問題：「AI查到的資訊不準確」
+**解決方法**：
+1. 使用更具體的法規名稱（例如：「中華民國民法」而不是「民法」）
+2. 嘗試用關鍵字搜尋找出相關法條
+3. 確認網路連線正常（需要連到政府網站）
+
+### ❓ 問題：「程式執行時出現錯誤」
+**解決方法**：
+1. 執行測試程式：`python test_mcp.py` 看看哪個功能有問題
+2. 檢查是否有防火牆或防毒軟體阻擋
+3. 嘗試重新安裝套件：`pip install -r requirements.txt --upgrade`
+
+### ❓ 問題：「我是Mac/Linux用戶，設定方式一樣嗎？」
+**Mac用戶**：
+- 設定檔位置：`~/Library/Application Support/Claude/claude_desktop_config.json`
+- 其他步驟相同
+
+**Linux用戶**：
+- 設定檔位置：`~/.config/Claude/claude_desktop_config.json`
+- 可能需要使用 `python3` 而非 `python`
+
+---
+
+## 🚀 未來發展計畫
+
+### 🔄 即將推出的功能
+
+#### 📜 立法沿革查詢
+**目標**：了解法條的修訂歷史和立法背景
+- 查詢條文的歷次修正內容
+- 了解修法的時間和原因
+- 追蹤法條演變過程
+
+**使用情境**：
+- 律師準備訴狀時，需要引用特定時期的法條版本
+- 學者研究法制變遷的歷史脈絡
+- 政府機關評估政策影響時的法規變遷分析
+
+#### ⚖️ 大法官解釋查詢
+**目標**：整合大法官解釋與相關法條
+- 自動找出與查詢條文相關的大法官解釋
+- 提供解釋文的重點摘要
+- 分析解釋對法條適用的影響
+
+**使用情境**：
+- 法官審理案件時參考大法官見解
+- 律師撰寫法律意見書時引用權威解釋
+- 學生學習憲法和行政法時的重要參考
+
+#### 📋 裁判書查詢
+**目標**：連結法條與實際判決案例
+- 搜尋引用特定法條的判決書
+- 分析法條在實務上的適用情況
+- 提供判決要旨和關鍵論述
+
+**使用情境**：
+- 律師研究類似案件的判決趨勢
+- 當事人了解自己案件的可能結果
+- 法學研究者分析司法實務見解
+
+#### 🌏 國際法規比較（日韓法律）
+**目標**：提供跨國法制比較研究
+- 整合日本和韓國的相關法規
+- 比較台日韓三地法制的異同
+- 提供國際法制發展趨勢分析
+
+**使用情境**：
+- 跨國企業了解不同地區的法律要求
+- 政府機關參考他國立法例制訂政策
+- 學者進行比較法學研究
+
+### 🎯 長期願景
+
+**成為台灣最完整的AI法律助手**：
+1. **覆蓋所有法律領域**：從基本法規到專業法規
+2. **即時更新**：法規修正後立即同步最新版本
+3. **智能分析**：不只查法條，還能分析適用和影響
+4. **多語言支援**：支援中、英、日、韓多種語言查詢
+5. **行動裝置優化**：手機、平板都能便利使用
+
+---
+
+## 📞 需要幫助？
+
+### 🆘 技術支援
+- 查看 `USAGE_GUIDE.md` 了解詳細使用方法
+- 執行 `python test_mcp.py` 檢測功能狀態
+- 問題回報：[GitHub Issues](https://github.com/your-repo/issues)
+
+### ⚖️ 免責聲明
+- 本工具僅提供法條查詢功能，**不提供法律建議**
+- 查詢結果僅供參考，正式用途請以官方公布為準
+- 如需專業法律意見，請諮詢合格律師或相關專業人士
+- 本工具不保證查詢結果的完整性和即時性
+
+### 📄 資料來源
+- 主要資料來源：[法務部全國法規資料庫](https://law.moj.gov.tw/)
+- 資料更新頻率：依政府公告更新
+- 查詢結果均提供官方網址供進一步查證
+
+---
+
+## 🤝 貢獻與回饋
+
+我們歡迎各界使用者的意見和建議：
+
+**法律專業人士**：
+- 提供實務使用經驗
+- 建議增加的功能
+- 回報查詢準確性問題
+
+**技術開發者**：
+- 程式碼優化建議
+- 新功能開發協作
+- 系統穩定性改善
+
+**一般使用者**：
+- 使用體驗反饋
+- 介面易用性建議
+- 功能需求提案
+
+讓我們一起打造更好的法律查詢工具，讓法律知識更容易親近！
+
+---
+
+*最後更新：2024年*  
+*版本：1.0.0*  
+*Made with ❤️ for Taiwan Legal Community*
