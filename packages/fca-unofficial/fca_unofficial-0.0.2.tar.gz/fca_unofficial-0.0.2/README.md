@@ -1,0 +1,120 @@
+# Using the Bot API (Group-only)
+
+This guide shows developers how to use your bot and the underlying `python_facebookapi` to send messages to a Messenger group thread and connect using `appstate.json`.
+
+If your deployment is currently group-only (commands work in group chats, not in 1:1 DMs), follow these steps.
+
+---
+
+## 1) Prepare appstate.json
+
+The API logs in with cookies stored in `appstate.json` at the repository root. This is a JSON array of objects like:
+
+```json
+[
+  { "key": "c_user", "value": "..." },
+  { "key": "xs", "value": "..." },
+  { "key": "datr", "value": "..." },
+  { "key": "sb", "value": "..." }
+]
+```
+
+Ways to create it:
+- If you have a cookie string, you can paste it on the first run and `a.py`/`bot.py` will write `appstate.json` for you.
+- Or set `FB_COOKIE` before running:
+
+```powershell
+$env:FB_COOKIE = "c_user=...; xs=...; datr=...; sb=..."
+python a.py
+```
+
+The bot stores the parsed cookies in `appstate.json` automatically.
+
+---
+
+## 2) Run the bot (group commands)
+
+To run the command-driven listener (recommended):
+
+```powershell
+# Optional diagnostics
+$env:DM_DEBUG = "1"
+
+python a.py
+```
+
+In your group thread, send:
+- `/ping` → bot replies `pong`
+- `/send group:<THREAD_ID> hello group` → bot sends "hello group" into the specified group thread
+- `/history <THREAD_ID> [amount]` → bot prints recent messages from that group
+
+Notes:
+- Use the `group:` prefix to force group mode when using `/send`.
+- The bot ignores its own messages, and you can restrict who can trigger commands using `ALLOW_USER_IDS` (comma-separated user IDs).
+
+---
+
+## 3) Send to a group programmatically
+
+If you want to send a message from a Python script without using chat commands, use the API like this:
+
+```python
+from python_facebookapi import login
+import json
+
+# Load appstate.json
+with open("appstate.json", "r", encoding="utf-8") as f:
+    appstate = json.load(f)
+
+# Login
+api = login({"appState": appstate}, options={"autoSaveAppState": True, "logging": True})
+
+# Send a message to a group thread
+GROUP_THREAD_ID = "758202360604154"  # replace with your group thread ID
+res = api.sendMessage("Hello, group!", GROUP_THREAD_ID, isSingleUser=False)
+print(res)  # {"messageID": "...", "threadID": "...", "timestamp": ...}
+```
+
+Tips to find a group thread ID:
+- Inspect logs printed by the bot when it receives messages (`threadID` field).
+- Use API methods like `getThreadList()` to enumerate threads and pick the group.
+
+---
+
+## 4) Example: minimal group bot
+
+If you prefer a tiny "bot.js-like" Python bot, use `bot.py`. It supports:
+- `/ping`, `/send group:<id> <msg>`, `/help`
+- Logging in via `appstate.json` or `FB_COOKIE`
+
+Run it:
+
+```powershell
+python bot.py
+```
+
+---
+
+## 5) Troubleshooting (group-only)
+
+- The bot replies in group but not in DMs:
+  - This is expected in a group-only deployment. DMs may require extra realtime parsing and/or fallback polling.
+  - You can enable a polling fallback in `bot.py` with:
+
+    ```powershell
+    $env:POLL_FALLBACK = "1"
+    python bot.py
+    ```
+
+  - Or keep sending commands from a group thread.
+
+- Login errors / disconnects:
+  - Refresh cookies in `appstate.json` (ensure `c_user`, `xs`, `datr`, `sb`).
+  - Keep `DM_DEBUG=1` to capture listener logs.
+
+---
+
+## 6) Security
+
+- `appstate.json` contains session cookies—keep it private.
+- Use a dedicated account for testing.
