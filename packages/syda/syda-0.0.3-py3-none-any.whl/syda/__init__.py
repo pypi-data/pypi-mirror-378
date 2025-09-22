@@ -1,0 +1,20 @@
+"""
+Syda - Synthetic Data Generation Library
+
+A Python library for AI-powered synthetic data generation with referential integrity.
+Supports multiple AI providers (OpenAI, Anthropic) and various schema formats.
+"""
+
+from .generate import SyntheticDataGenerator
+from .schemas import ModelConfig
+
+__all__ = [
+    'SyntheticDataGenerator',
+    'ModelConfig'
+]
+
+__version__ = '0.0.3'
+__author__ = 'Rama Krishna Kumar Lingamgunta'
+__email__ = 'lrkkumar2606@gmail.com'
+__license__ = 'MIT'
+__description__ = 'A Python library for AI-powered synthetic data generation with referential integrity'
