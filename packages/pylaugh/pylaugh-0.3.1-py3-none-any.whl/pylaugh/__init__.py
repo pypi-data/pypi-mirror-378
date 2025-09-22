@@ -1,0 +1,1 @@
+from .humor import init, tell_jokes, generate_docs, generate_puns
