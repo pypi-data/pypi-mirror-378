@@ -1,0 +1,96 @@
+
+# ixcpy [![PyPI downloads](https://img.shields.io/pypi/dm/ixcpy.svg)](https://pypi.org/project/ixcpy/)
+
+Wrapper não oficial para conexão com a API do sistema IXC Provedor
+
+Esta biblioteca não faz parte das bibliotecas oficiais do <a href="https://ixcsoft.com/ixc-provedor" target="_blank">IXC Provedor.</a>\
+O desenvolvimento é feito de forma independente e utiliza apenas uma "interface" de conexão com as funcionalidades providas pela API oficial do IXC.\
+Você poderá encontrar orientações de como parametrizar as requisições na <a href="https://wikiapiprovedor.ixcsoft.com.br/" target="_blank">WIKI oficial</a>, disponilizada pela própria <a href="https://ixcsoft.com/" target="_blank">IXC Soft.</a>
+
+## Disponível no reposítorio PyPI
+
+Esta biblioteca pode ser adicionada de foma simples ao seu projeto, utilizando o comando <a href="https://pypi.org/project/pip/" target="_blank">pip install</a>
+
+```bash
+pip install ixcpy
+```
+
+
+## Do jeito mais dinâmico 😎
+
+Para estabelecer uma conexão corretamente, é necessário fornecer o token de autenticação da API do IXC Provedor e o domínio do seu servidor, nos parâmetros do construtor da classe Connection.
+
+```python
+from ixcpy import Connection, Query
+
+connection = Connection(
+    server='seu_domínio_ixc.com.br',    # Pode ser substituído por um endereço IP (não recomendado)
+    token='seu_token_ixc',              # Verificar a última referência no final deste README
+    table='cliente',                    # Exemplo de requisição de busca na tabela "cliente"
+    ssl=True                            # Ativar https ou não (o padrão é True)
+)
+
+# O operador "%" fará a busca em todos os clientes que possuem "João" no campo "razao".
+connection.where(query=Query(arg='razao % "João"'))
+
+# Para encontrar um registro pelo nome que seja exatamente igual ao que você busca,
+# substitua o operador "%" pelo "=".
+connection.where(query=Query(arg='razao = "Nome Completo do João"'))
+
+# Para realizar a busca em qualquer outro campo, basta alterar a query,
+# como no exemplo abaixo.O campo deve corresponder a uma coluna da tabela
+# que você está buscando, no IXC (nesse caso, o campo "cnpj_cpf", na tabela "cliente")
+connection.where(query=Query(arg='cnpj_cpf = "123.456.789-10"'))
+
+```
+
+> Depois de invocar o método `where()` uma ou mais vezes, basta invocar o método `many()` na sua instância de `Connection`\
+> Então você irá obter a instância de um objeto do tipo `Response`, de onde poderá acessar a quantidade de registros retornados, através do método `total()`.\
+> E uma lista dos objetos, a partir do método `records()`, tudo através da instância de `Response`.
+
+
+## Do jeito mais simples 🎯
+
+Agora vamos supor que você possua o ID de um determinado registro e queira buscá-lo no IXC. Isso significa que seria contraproducente encadear "chamadas where". Nesse caso, basta invocar o método `one()` em uma instância de `Connection`, passando o ID como parâmetro, da seguinte forma...
+
+```python
+from ixcpy import Connection, Query
+
+connection = Connection(
+    server='seu_domínio_ixc.com.br',    # Pode ser substituído por um endereço IP (não recomendado)
+    token='seu_token_ixc',              # Verificar a última referência no final deste README
+    table='cliente',                    # Exemplo de requisição de busca na tabela "cliente"
+    ssl=True                            # Ativar https ou não (o padrão é True)
+)
+
+# Se o IXC encontrar um registro (na tabela "cliente" nesse caso), o método "one" retornará um 'dict'
+# onde as chaves serão do tipo 'str' e o valor de cada campo podendo ser 'str', 'int' ou 'bool',
+# dependendo do formato retornado pelo IXC Provedor. Se nenhum registro for encontrado,
+# o método "one" retornará um 'None'
+cliente = connection.one(record_id=12345)
+```
+
+## Clone & Setup
+
+```bash
+git clone https://github.com/SousaFelipe/ixcpy.git
+```
+```bash
+cd ixcpy
+```
+```bash
+python -m venv .venv
+```
+```bash
+.venv\Scripts\activate
+```
+```bash
+python -m pip install -r requirements.txt
+```
+
+
+## Referências
+
+  - [Site da IXCsoft](https://ixcsoft.com/)
+  - [Wiki oficial da API do IXC Provedor](https://wikiapiprovedor.ixcsoft.com.br/)
+  - [Tutorial de como gerar um Token de API no IXC](https://wiki.ixcsoft.com.br/pt-br/API/como_gerar_um_token_para_integra%C3%A7%C3%B5es_API)
