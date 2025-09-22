@@ -1,0 +1,132 @@
+Metadata-Version: 2.4
+Name: Flask-Multipass-Authentik
+Version: 0.0.2
+Summary: Flask-Multipass provider for Authentik
+License: MIT
+License-File: LICENSE
+Author: RobotHanzo
+Author-email: admin@robothanzo.dev
+Requires-Python: >=3.9,<4.0
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Flask
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: 3.14
+Requires-Dist: authentik-client (>=2025.8.3,<2026.0.0)
+Requires-Dist: flask-multipass[authlib] (>=0.4.3)
+Project-URL: Repository, https://github.com/RobotHanzo/flask-multipass-authentik
+Description-Content-Type: text/markdown
+
+# Flask-Multipass-Authentik
+
+This package provides the `authentik` authentication and identity providers for [Flask-Multipass][multipass].
+Inspired & adapted from [flask-multipass-keycloak](https://github.com/unconventionaldotdev/flask-multipass-keycloak)
+
+`AuthentikAuthProvider`
+This provider is a simple wrapper around [`AuthlibAuthProvider`](https://flask-multipass.readthedocs.io/en/latest/api/#flask_multipass.providers.authlib.AuthlibAuthProvider), since Authentik works well with the standard `authlib` provider in `flask-multipass`.
+
+`AuthentikIdentityProvider`
+This provider gives access to group information and members via Authentik REST API.
+
+## Install
+
+```
+pip install flask-multipass-authentik
+```
+
+## Usage
+
+### Configuration
+
+The configuration follows the standard [Flask-Multipass][multipass] way and the Authentik specific part placed into the `authentik_args` section.
+
+```python
+MULTIPASS_AUTH_PROVIDERS = {
+    'authentik': {
+        'type': 'authentik',
+        'title': 'Authentik Auth Provider',
+        'authlib_args': {
+            'client_id': '',  # put your client id here
+            'client_secret': '',  # put your client secret here
+            'client_kwargs': {'scope': 'email openid profile'},
+            'authorize_url': 'https://authentik.tld/application/o/authorize/', # Replace authentik.tld with your Authentik base URL
+            'access_token_url': 'https://authentik.tld/application/o/token/',
+            'userinfo_endpoint': 'https://authentik.tld/application/o/userinfo/',
+            'jwks_uri': 'https://authentik.tld/application/o/<app-id>/jwks/' # Replace <app-id> with your Authentik application ID
+        }
+    }
+}
+
+MULTIPASS_IDENTITY_PROVIDERS = {
+    'authentik': {
+        'type': 'authentik',
+        'title': 'Authentik Identity Provider',
+        'identifier_field': 'email',
+        'authentik_args': {
+            'api_url': 'https://authentik.tld/api/v3',
+            'api_key': 'your_api_key_here'
+        }
+    }
+}
+```
+
+The configuration values are following:
+
+- `client_id`: The OAuth2 client ID of the Authentik application.
+- `client_secret`: The OAuth2 client secret of the Authentik application.
+- `client_kwargs`: Additional arguments passed to the OAuth2 client. The `scope` key
+- `api_url`: The base URL of the Authentik API (e.g. `https://authentik.tld/api/v3`).
+- `api_key`: An API key for accessing the Authentik API. Required for group membership lookups.
+- `authorize_url`: The URL to redirect users to for authentication (e.g. `https://authentik.tld/application/o/authorize/`).
+- `access_token_url`: The URL to obtain access tokens (e.g. `https://authentik.tld/application/o/token/`).
+- `userinfo_endpoint`: The URL to obtain user information (e.g. `https://authentik.tld/application/o/userinfo/`).
+- `jwks_uri`: The URL to obtain the JSON Web Key Set (e.g.
+- `https://authentik.tld/application/o/<app-id>/jwks/`).
+- `identifier_field`: The field in the user info response to use as the unique identifier for users (e.g. `email`, `username`, etc.). Default is `email`.
+
+## Development
+
+In order to develop `flask-multipass-authentik`, install the project and its dependencies in a virtualenv. This guide assumes that you have the following tools installed and available in your path:
+
+- [`git`](https://git-scm.com/) (available in most systems)
+- [`make`](https://www.gnu.org/software/make/) (available in most systems)
+- [`poetry`](https://python-poetry.org/) ([installation guide](https://python-poetry.org/docs/#installation))
+- [`pyenv`](https://github.com/pyenv/pyenv) ([installation guide](https://github.com/pyenv/pyenv#installation))
+
+First, clone the repository locally with:
+
+```shell
+git clone https://github.com/RobotHanzo/flask-multipass-authentik
+cd flask-multipass-authentik
+```
+
+Before creating the virtualenv, make sure to be using the same version of Python that the development of the project is targeting. This is the first version specified in the `.python-version` file and you can install it with `pyenv`:
+
+```sh
+pyenv install
+```
+
+You may now create the virtualenv and install the project with its dependencies in it with `poetry`:
+
+```sh
+poetry install
+```
+
+### Contributing
+
+This project uses GitHub Actions to run the linter on every pull request. You are still encouraged to run the linter locally before pushing your changes.
+
+Run linter checks with:
+
+```sh
+poetry run -- make lint
+```
+
+[multipass]: https://github.com/indico/flask-multipass
+
