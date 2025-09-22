@@ -1,0 +1,81 @@
+[project]
+name = "orca_sdk"
+description = "SDK for interacting with Orca Services"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Orca DB Inc.", email = "dev-rel@orcadb.ai"}
+]
+
+dynamic = ["version", "readme", "dependencies", "requires-python"]
+
+[tool.poetry]
+version = "0.0.103" # Will be set by CI before building the wheel from the git tag. Do not set manually.
+readme = "README.md"
+packages = [{ include = "orca_sdk" }]
+
+[tool.poetry.dependencies]
+python = "^3.11,<3.14"
+datasets = "^3.1.0"
+httpx = "^0.28.1"
+python-dotenv = "^1.1.0"
+# TODO: make these optional dependencies
+gradio = "^5.44.1"
+numpy = "^2.1.0"
+pandas = "^2.2.3"
+pyarrow = "^18.0.0"
+scikit-learn = "^1.6.1"
+torch = "^2.8.0"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+isort = "^6.0.0"
+pytest = "^8.3.3"
+pytest-asyncio = "^0.25.3"
+pytest-timeout = "^2.3.1"
+pytest-cov = "^6.0.0"
+pyright = "^1.1.399"
+datamodel-code-generator = "^0.32.0"
+ipykernel = "^6.29.5"
+
+[tool.poetry.requires-plugins]
+poethepoet = { extras = ["poetry-plugin"], version = "^0.37.0" }
+poetry-plugin-export = ">=1.8"
+
+
+
+[tool.poe]
+poetry_command = ""
+
+[tool.poe.tasks]
+test = "pytest"
+typecheck = "pyright"
+codegen = "python -m scripts.codegen"
+lighthouse = { shell = "cd ../lighthouse && poetry run poe dev" }
+vulnerabilities = "trivy fs . --scanners vuln --ignore-unfixed"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)s] %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+addopts = "--color=yes -s"
+filterwarnings = ["ignore::DeprecationWarning"]
+asyncio_default_fixture_loop_scope = "session"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+known_first_party = ["orca_sdk"]
+
+[tool.pyright]
+include = ["./orca_sdk/**", "./scripts/**"]
