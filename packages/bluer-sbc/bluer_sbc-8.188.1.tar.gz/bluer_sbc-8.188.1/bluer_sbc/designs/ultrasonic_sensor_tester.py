@@ -1,0 +1,26 @@
+from bluer_objects import README
+
+from bluer_sbc.designs.consts import assets2
+
+
+image_template = assets2 + "ultrasonic-sensor-tester/{}?raw=true"
+
+marquee = README.Items(
+    [
+        {
+            "name": "ultrasonic-sensor-tester",
+            "marquee": image_template.format("00.jpg"),
+            "url": "./bluer_sbc/docs/ultrasonic-sensor-tester.md",
+        }
+    ]
+)
+
+items = README.Items(
+    [
+        {
+            "marquee": image_template.format(f"{index:02}.jpg"),
+            "name": "",
+        }
+        for index in range(6)
+    ]
+)
