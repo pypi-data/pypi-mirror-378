@@ -1,0 +1,611 @@
+# HybrIE Python SDK
+
+![Version](https://img.shields.io/badge/version-0.1.3-blue.svg)
+![Python](https://img.shields.io/badge/python-3.9+-green.svg)
+![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-orange.svg)
+
+Professional Python SDK for HybrIE - Hybrid Inference Engine for Heterogeneous Hardware to Power Generative AI Models.
+
+## 🚀 Features
+
+- **🖼️ Image Generation**: FLUX, Stable Diffusion, and Kontext models
+- **🧠 LLM Chat**: Multi-turn conversations with Qwen and other language models
+- **📝 Text Completion**: Single-prompt text generation with streaming
+- **💬 Real-time Streaming**: Live progress updates and token streaming for both image and text generation
+- **🔧 Model Management**: Load, unload, and list models across devices
+- **📊 System Info**: Device information and health monitoring
+- **⚡ High Performance**: Built with async/await and gRPC
+- **🛡️ Type Safe**: Full type hints and validation
+- **🎛️ Advanced Parameters**: Temperature, top-p, max tokens, and custom sampling
+
+## 📋 Prerequisites
+
+Before installing the Python SDK, you need to have the HybrIE CLI installed and a HybrIE server running:
+
+### 1. Install HybrIE CLI
+
+```bash
+# Install via npm (recommended)
+npm install -g @tosi-n/hybrie-cli
+
+# Verify installation
+hybrie --version
+```
+
+### 2. Start HybrIE Server
+
+```bash
+# Start server with default settings (port 9090)
+hybrie server start
+
+# Or with custom configuration
+hybrie server start --port 9090 --models flux-1-schnell,flux-1-dev
+
+# Check server status
+hybrie server status
+```
+
+## 📦 Installation
+
+### Using uv (Recommended)
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package installer and resolver:
+
+```bash
+# Install uv if you haven't already
+pip install uv
+
+# Install hybrie-py
+uv add hybrie-py
+
+# Install with development dependencies
+uv add --dev hybrie-py[dev]
+
+# Install with example dependencies  
+uv add hybrie-py[examples]
+```
+
+### Using pip
+
+```bash
+# Install from PyPI (coming soon)
+pip install hybrie-py
+
+# Install from source
+cd hybrie-py
+pip install -e .
+
+# Install with development dependencies
+pip install -e ".[dev]"
+
+# Install with example dependencies
+pip install -e ".[examples]"
+```
+
+## 🏁 Quick Start
+
+Make sure your HybrIE server is running first:
+
+```bash
+# Start the server (if not already running)
+hybrie server start
+
+# Verify it's running
+hybrie server status
+```
+
+### Basic Usage
+
+#### Image Generation
+```python
+import asyncio
+from hybrie_py import HybrieClient
+
+async def main():
+    # Connect to your HybrIE server (started via hybrie-cli)
+    async with HybrieClient("localhost:9090") as client:
+        # Generate an image
+        async for update in client.generate("A beautiful sunset over mountains"):
+            if update.progress:
+                print(f"Progress: {update.progress.percentage:.1f}% - {update.progress.message}")
+            elif update.result:
+                print(f"✅ Generated: {update.result.image_path}")
+                # Save the image
+                if update.result.image_data:
+                    await client.save_image(update.result.image_data, "sunset.png")
+                break
+            elif update.error:
+                print(f"❌ Error: {update.error.message}")
+                break
+
+asyncio.run(main())
+```
+
+#### LLM Chat
+```python
+import asyncio
+from hybrie_py import HybrieClient, ChatMessage
+
+async def chat_example():
+    async with HybrieClient("localhost:9090") as client:
+        # Multi-turn conversation
+        messages = [
+            ChatMessage(role="user", content="Explain quantum computing in simple terms")
+        ]
+
+        async for response in client.chat(messages, model="qwen3-4b", max_tokens=256):
+            if response.chunk:
+                print(response.chunk.content, end="", flush=True)
+            elif response.error:
+                print(f"\n❌ Error: {response.error.message}")
+                break
+
+        print("\n✅ Chat complete!")
+
+asyncio.run(chat_example())
+```
+
+#### Text Completion
+```python
+async def completion_example():
+    async with HybrieClient("localhost:9090") as client:
+        # Single prompt completion
+        async for response in client.complete(
+            prompt="The future of AI will be",
+            max_tokens=128,
+            temperature=0.7
+        ):
+            if response.chunk:
+                print(response.chunk.content, end="", flush=True)
+
+asyncio.run(completion_example())
+```
+
+### Advanced Usage
+
+```python
+import asyncio
+from hybrie_py import HybrieClient, GenerateRequest
+
+async def advanced_generation():
+    client = HybrieClient("localhost:9090", timeout=300.0)
+    await client.connect()
+    
+    try:
+        # Check available models
+        models = await client.list_models()
+        print("Available models:")
+        for model in models:
+            status = "✅ Loaded" if model.is_loaded else "⏳ Available"
+            print(f"  • {model.id} - {model.name} ({status})")
+        
+        # Load a model if not loaded
+        if not any(m.id == "flux-1-dev" and m.is_loaded for m in models):
+            print("Loading flux-1-dev model...")
+            await client.load_model("flux-1-dev")
+        
+        # High-quality generation with all options
+        async for update in client.generate(
+            prompt="A cyberpunk cityscape at night with neon reflections in rain puddles",
+            negative_prompt="blurry, low quality, distorted, bad anatomy",
+            model="flux-1-dev",
+            width=1536,
+            height=1024,
+            steps=50,
+            guidance_scale=3.5,
+            seed=42
+        ):
+            if update.progress:
+                # Progress bar simulation
+                filled = int(update.progress.percentage / 4)
+                bar = "█" * filled + "░" * (25 - filled)
+                print(f"\r🎨 [{bar}] {update.progress.percentage:.1f}% - {update.progress.stage}", end="")
+            elif update.result:
+                print(f"\n✅ Generation complete!")
+                print(f"   Time: {update.result.metadata.total_time_seconds:.1f}s")
+                print(f"   Device: {update.result.metadata.device_used}")
+                print(f"   Memory: {update.result.metadata.memory_peak_gb:.1f}GB")
+                
+                # Save with metadata filename
+                filename = f"cyberpunk_{update.result.metadata.seed_used}.png"
+                await client.save_image(update.result.image_data, filename)
+                break
+                
+    finally:
+        await client.close()
+
+asyncio.run(advanced_generation())
+```
+
+### Image-to-Image (Kontext)
+
+```python
+import asyncio
+from hybrie_py import HybrieClient
+
+async def image_to_image():
+    async with HybrieClient("localhost:9090") as client:
+        # Transform an existing image
+        async for update in client.generate(
+            prompt="Transform this into a vibrant oil painting",
+            model="flux-1-kontext-dev",
+            conditioning_image="input_photo.jpg",  # Can be path or bytes
+            strength=0.8,  # High strength for major transformation
+            steps=30,
+            width=1024,
+            height=1024
+        ):
+            if update.progress:
+                print(f"🎨 {update.progress.message} ({update.progress.percentage:.1f}%)")
+            elif update.result:
+                await client.save_image(update.result.image_data, "oil_painting.png")
+                print("✅ Image transformation complete!")
+                break
+
+asyncio.run(image_to_image())
+```
+
+## 🔧 API Reference
+
+### HybrieClient
+
+The main client class for interacting with HybrIE server.
+
+#### Constructor
+
+```python
+client = HybrieClient(
+    server_url="localhost:9090",
+    timeout=300.0,
+    max_message_length=100 * 1024 * 1024,  # 100MB
+    compression=grpc.Compression.Gzip
+)
+```
+
+#### Methods
+
+| Method | Description | Returns |
+|--------|-------------|---------|
+| `connect()` | Establish server connection | `None` |
+| `close()` | Close server connection | `None` |
+| `generate(prompt, **kwargs)` | Generate images with streaming | `AsyncIterator[GenerateResponse]` |
+| `chat(messages, **kwargs)` | Multi-turn conversation with LLM | `AsyncIterator[ChatResponse]` |
+| `complete(prompt, **kwargs)` | Single-prompt text completion | `AsyncIterator[ChatResponse]` |
+| `list_models()` | List available models | `List[ModelInfo]` |
+| `load_model(model_id)` | Load model into memory | `bool` |
+| `unload_model(model_id)` | Unload model from memory | `bool` |
+| `get_system_info()` | Get server system information | `SystemInfo` |
+| `health_check()` | Check server health | `bool` |
+| `save_image(data, path)` | Save image data to file | `None` |
+
+### Generate Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `prompt` | `str` | **required** | Text description of image to generate |
+| `model` | `str` | `"flux-1-schnell"` | Model ID to use |
+| `width` | `int` | `1024` | Image width (must be multiple of 64) |
+| `height` | `int` | `1024` | Image height (must be multiple of 64) |
+| `steps` | `int` | `4` | Number of inference steps |
+| `seed` | `Optional[int]` | `None` | Random seed for reproducibility |
+| `negative_prompt` | `Optional[str]` | `None` | What to avoid in generated image |
+| `guidance_scale` | `float` | `7.5` | Guidance strength (1.0-20.0) |
+| `conditioning_image` | `Optional[Union[str, Path, bytes]]` | `None` | Input image for Kontext models |
+| `strength` | `float` | `0.7` | Image-to-image strength (0.0-1.0) |
+| `advanced_params` | `Optional[Dict[str, str]]` | `None` | Model-specific parameters |
+| `timeout` | `Optional[float]` | `None` | Request timeout override |
+
+### Chat Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `messages` | `List[ChatMessage]` | **required** | Conversation history |
+| `model` | `str` | `"qwen3-4b"` | LLM model to use |
+| `max_tokens` | `int` | `128` | Maximum tokens to generate |
+| `temperature` | `float` | `0.7` | Sampling temperature (0.0-2.0) |
+| `top_p` | `float` | `0.9` | Nucleus sampling threshold |
+| `frequency_penalty` | `float` | `0.0` | Frequency penalty (-2.0 to 2.0) |
+| `presence_penalty` | `float` | `0.0` | Presence penalty (-2.0 to 2.0) |
+| `session_id` | `Optional[str]` | `None` | Session ID for conversation continuity |
+| `timeout` | `Optional[float]` | `None` | Request timeout override |
+
+### Complete Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `prompt` | `str` | **required** | Text prompt to complete |
+| `model` | `str` | `"qwen3-4b"` | LLM model to use |
+| `max_tokens` | `int` | `128` | Maximum tokens to generate |
+| `temperature` | `float` | `0.7` | Sampling temperature (0.0-2.0) |
+| `top_p` | `float` | `0.9` | Nucleus sampling threshold |
+| `frequency_penalty` | `float` | `0.0` | Frequency penalty (-2.0 to 2.0) |
+| `presence_penalty` | `float` | `0.0` | Presence penalty (-2.0 to 2.0) |
+| `timeout` | `Optional[float]` | `None` | Request timeout override |
+
+### Data Models
+
+#### GenerateResponse
+```python
+@dataclass
+class GenerateResponse:
+    progress: Optional[ProgressUpdate] = None
+    result: Optional[ImageResult] = None
+    error: Optional[ErrorResponse] = None
+```
+
+#### ChatResponse
+```python
+@dataclass
+class ChatResponse:
+    chunk: Optional[ChatChunk] = None
+    result: Optional[ChatResult] = None
+    error: Optional[ErrorResponse] = None
+```
+
+#### ChatMessage
+```python
+@dataclass
+class ChatMessage:
+    role: str                    # "user", "assistant", "system"
+    content: str                 # Message content
+    name: Optional[str] = None   # Optional speaker name
+```
+
+#### ChatChunk
+```python
+@dataclass
+class ChatChunk:
+    content: str                         # Token text content
+    role: Optional[str] = None           # Message role
+    finish_reason: Optional[str] = None  # "stop", "length", "content_filter"
+```
+
+#### ProgressUpdate
+```python
+@dataclass  
+class ProgressUpdate:
+    percentage: float        # 0.0 to 100.0
+    stage: str              # "starting", "encoding", "diffusing", "decoding"
+    message: str            # Human-readable status
+    eta_seconds: Optional[float] = None
+```
+
+#### ImageResult
+```python
+@dataclass
+class ImageResult:
+    image_data: bytes                      # PNG/JPEG image bytes
+    image_path: Optional[str]              # Server-side path (if saved)
+    metadata: Optional[GenerationMetadata] # Generation details
+    request_id: str                        # Unique request ID
+```
+
+#### ModelInfo
+```python
+@dataclass
+class ModelInfo:
+    id: str                              # Model identifier
+    name: str                            # Human-readable name
+    type: str                            # Model type (e.g., "flux")
+    variant: str                         # Model variant (e.g., "dev", "schnell")
+    is_loaded: bool                      # Whether model is loaded in memory
+    size_gb: Optional[float]             # Model size in GB
+    description: Optional[str]           # Model description
+    supported_sizes: List[str]           # Supported image sizes
+    recommended_steps: Optional[int]     # Recommended step count
+```
+
+### Exception Handling
+
+```python
+from hybrie_py import (
+    HybrieError,           # Base exception
+    ConnectionError,       # Server connection failed
+    ModelNotFoundError,    # Model not found/loaded
+    GenerationError,       # Generation process failed
+    ValidationError,       # Invalid parameters
+    ServerError,          # Server internal error
+    TimeoutError,         # Request timeout
+)
+
+# Image generation error handling
+try:
+    async for update in client.generate("A beautiful landscape"):
+        # Handle updates...
+        pass
+except ModelNotFoundError as e:
+    print(f"Model not available: {e}")
+except ValidationError as e:
+    print(f"Invalid parameters: {e}")
+except GenerationError as e:
+    print(f"Generation failed: {e}")
+except ConnectionError as e:
+    print(f"Connection error: {e}")
+
+# Chat error handling
+try:
+    messages = [ChatMessage(role="user", content="Hello")]
+    async for response in client.chat(messages):
+        if response.chunk:
+            print(response.chunk.content, end="")
+        elif response.error:
+            print(f"Error: {response.error.message}")
+            break
+except Exception as e:
+    print(f"Chat failed: {e}")
+```
+
+## 🧪 Examples
+
+The `examples/` directory contains practical examples:
+
+- **[basic_generate.py](examples/basic_generate.py)** - Simple image generation
+- **[batch_generate.py](examples/batch_generate.py)** - Generate multiple images
+- **[chat_example.py](examples/chat_example.py)** - LLM chat conversations
+- **[completion_example.py](examples/completion_example.py)** - Text completion
+- **[model_management.py](examples/model_management.py)** - Load/unload models
+- **[image_to_image.py](examples/image_to_image.py)** - Kontext transformations
+- **[progress_tracking.py](examples/progress_tracking.py)** - Advanced progress handling
+- **[error_handling.py](examples/error_handling.py)** - Comprehensive error handling
+- **[jupyter_notebook.ipynb](examples/jupyter_notebook.ipynb)** - Interactive notebook
+
+Run examples:
+```bash
+# Install dependencies
+uv sync
+
+# Run image generation examples
+uv run python examples/basic_generate.py
+uv run python examples/batch_generate.py --count 5 --prompt "A serene landscape"
+
+# Run LLM examples
+uv run python examples/chat_example.py
+uv run python examples/completion_example.py
+```
+
+## 🔧 Development
+
+### Setup Development Environment
+
+```bash
+# First, install HybrIE CLI
+npm install -g @tosi-n/hybrie-cli
+
+# Clone repository
+git clone https://github.com/tosi-n/hybrie-py.git
+cd hybrie-py
+
+# Using uv (recommended)
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv sync --dev
+
+# Or using pip
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -e ".[dev]"
+
+# Generate protobuf code
+./scripts/generate-proto.sh
+
+# Start HybrIE server for testing
+hybrie server start
+```
+
+### Generate Protobuf Code
+
+```bash
+# Install grpcio-tools if not already installed
+pip install grpcio-tools
+
+# Generate Python gRPC client from proto definitions
+./generate-proto.sh
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+python -m pytest
+
+# Run with coverage
+python -m pytest --cov=hybrie_py
+
+# Run specific test file
+python -m pytest tests/test_client.py
+
+# Run with verbose output
+python -m pytest -v
+```
+
+### Code Quality
+
+```bash
+# Format code
+black src/ tests/ examples/
+
+# Sort imports
+isort src/ tests/ examples/
+
+# Type checking
+mypy src/hybrie_py
+
+# Lint code
+flake8 src/ tests/
+```
+
+### Build and Publish
+
+```bash
+# Build distribution
+python -m build
+
+# Publish to PyPI (maintainers only)
+python -m twine upload dist/*
+```
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+#### "Module 'hybrie_sdk_pb2' not found"
+```bash
+# Generate protobuf files
+./scripts/generate-proto.sh
+```
+
+#### "Connection refused" Error
+```bash
+# Check if HybrIE server is running
+hybrie server status
+
+# If not running, start the server
+hybrie server start
+
+# Check health endpoint
+curl http://localhost:9090/health
+```
+
+#### "Model not found" Error
+```python
+# List available models
+models = await client.list_models()
+for model in models:
+    print(f"{model.id}: {model.is_loaded}")
+
+# Load the model
+await client.load_model("flux-1-dev")
+```
+
+#### Timeout Errors
+```python
+# Increase timeout
+client = HybrieClient("localhost:9090", timeout=600.0)  # 10 minutes
+
+# Or per-request timeout
+async for update in client.generate("prompt", timeout=300.0):
+    pass
+```
+
+### Debug Mode
+
+Enable debug logging:
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("hybrie_py")
+logger.setLevel(logging.DEBUG)
+```
+
+### Performance Tips
+
+1. **Reuse Client Instances**: Create one client per application
+2. **Use Async Context Manager**: Ensures proper cleanup
+3. **Handle Backpressure**: Don't buffer all progress updates
+4. **Set Appropriate Timeouts**: Adjust based on model complexity
+5. **Use Connection Pooling**: Enable gRPC keepalive
+
+## 📄 License
+
+This project is dual-licensed under MIT OR Apache-2.0. See the LICENSE files for details.
