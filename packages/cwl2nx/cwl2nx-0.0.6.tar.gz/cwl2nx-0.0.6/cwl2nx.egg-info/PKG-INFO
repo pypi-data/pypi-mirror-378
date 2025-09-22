@@ -1,0 +1,97 @@
+Metadata-Version: 2.4
+Name: cwl2nx
+Version: 0.0.6
+Summary: Lightweight python module to load, validate and visualize CWL (Common Workflow Language) files through networkx graphs.
+Author-email: Marius Garénaux Gruau <marius.garenaux-gruau@irisa.fr>
+Maintainer-email: Marius Garénaux Gruau <marius.garenaux-gruau@irisa.fr>
+License-Expression: Apache-2.0
+Project-URL: Repository, https://github.com/mariusgarenaux/cwl2nx
+Keywords: cwl,workflow,graphs,networkx,visualization
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE-2.0.txt
+Requires-Dist: backports.tarfile==1.2.0
+Requires-Dist: cwl-utils==0.40
+Requires-Dist: filelock==3.19.1
+Requires-Dist: importlib-metadata==8.0.0
+Requires-Dist: jaraco.collections==5.1.0
+Requires-Dist: matplotlib==3.10.6
+Requires-Dist: networkx>=2.8
+Requires-Dist: pandas==2.3.2
+Requires-Dist: platformdirs==4.2.2
+Requires-Dist: pyyaml==6.0.2
+Requires-Dist: scipy==1.16.2
+Requires-Dist: tomli==2.0.1
+Dynamic: license-file
+
+# CWL2Nx
+
+Lightweight python module to load, validate and visualize CWL (Common Workflow Language) files through networkx graphs.
+It uses [cwl_utils](https://github.com/common-workflow-language/cwl-utils) for parsing and validation.
+
+## Installation
+
+```
+pip install cwl2nx
+```
+
+## Example Usage
+
+> You will find an example of workflow in the GitHub repository : [workflow_example.cwl.yaml](https://raw.githubusercontent.com/mariusgarenaux/cwl2nx/refs/heads/main/workflow_example.cwl.yaml)
+
+### Straightforward conversion
+
+
+```python
+from cwl2nx import CWLToNetworkxConnector
+
+dir = "workflow_example.cwl.yaml"
+dag = CWLToNetworkxConnector(dir).convert_to_networkx() # dag is networkx.DiGraph
+print(dag.nodes, dag.edges)
+```
+
+### Basic networkx display
+
+Once .cwl is loaded in networkx, you can use any visualization tool to display the dag.
+
+```python
+from cwl2nx import CWLToNetworkxConnector
+import networkx as nx
+import matplotlib.pyplot as plt
+
+dir = "workflow_example.cwl.yaml"
+connector = CWLToNetworkxConnector(dir)
+dag = connector.convert_to_networkx(datasets_as_nodes=True)
+nx.draw_networkx(dag)
+plt.show()
+```
+
+![img](https://raw.githubusercontent.com/mariusgarenaux/cwl2nx/refs/heads/main/example_display.png)
+
+
+### Using visualization libraries
+
+> You'll need to install [`dagviz`](https://wimyedema.github.io/dagviz/index.html#installing) before
+
+> Run the cell below in a notebook
+
+```python
+from cwl2nx import CWLToNetworkxConnector
+import networkx as nx
+import dagviz
+
+dir = "workflow_example.cwl.yaml"
+connector = CWLToNetworkxConnector(dir)
+dag = connector.convert_to_networkx()
+
+
+dagviz.Dagre(dag)
+
+dagviz.Metro(dag) # github tree dag style
+```
+
+## License
+
+[Apache 2.0](LICENSE-2.0.txt)
