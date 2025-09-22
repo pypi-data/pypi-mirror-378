@@ -1,0 +1,459 @@
+# keepalived-api
+
+This project is a fork of [Slinred/keepalived-config](https://github.com/Slinred/keepalived-config). 
+Thanks to [Slinred](https://github.com/Slinred) for the original work on this Keepalived configuration API.
+
+Python API for configuration files for linux [keepalived package](https://www.keepalived.org/).
+
+## Features
+
+- Parse a keepalived configuration from file or string
+- Modify the config object and any parameter inside
+- Save back the (modified) config to another (or the same) file
+- Comments in the config file are supported and can also be added via the python API
+- Empty lines in the config file, can be kept and are represented as empty config parameters
+- Template-based configuration generation
+- Support for VRRP instances, virtual servers, and real servers
+- Support for TCP, HTTP, and UDP health checks
+- Chainable API for fluent configuration building
+- Parameter validation with detailed error messages
+- Configuration formatting with custom indentation
+- Rich template system with parameter descriptions
+
+## Installation
+
+```bash
+pip install keepalived-api
+```
+
+## Quick Start
+
+### Loading a configuration from file
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+# Load configuration from file
+config = KeepAlivedConfig.from_file('keepalived.conf')
+
+# Print formatted configuration
+print(config.format_config())
+```
+
+### Creating configuration from templates
+
+```python
+# Create a VRRP instance from template
+vrrp_config = KeepAlivedConfig.from_template("basic_vrrp", "VI_1")
+vrrp_config.apply_template_params({
+    "VRRP_STATE": "MASTER",
+    "INTERFACE_NAME": "eth0",
+    "VRRP_ROUTER_ID": "51",
+    "VRRP_PRIORITY": "100",
+    "VRRP_ADVERT_INT": "1"
+})
+
+# Create a virtual server from template
+virtual_server_config = KeepAlivedConfig.from_template("basic_virtual_server", "192.168.1.100 80")
+virtual_server_config.apply_template_params({
+    "VIRTUAL_SERVER_DELAY_LOOP": "6",
+    "VIRTUAL_SERVER_LB_ALGO": "rr",
+    "VIRTUAL_SERVER_LB_KIND": "DR",
+    "VIRTUAL_SERVER_PROTOCOL": "TCP",
+    "REAL_SERVER_WEIGHT": "1"
+})
+```
+
+### Fluent API for building configurations
+
+```python
+# Chainable configuration building
+config = KeepAlivedConfig() \
+    .add_vrrp_instance(
+        instance_name="VI_1",
+        state="MASTER",
+        interface="eth0",
+        virtual_router_id=51,
+        priority=100
+    ) \
+    .add_virtual_ipaddress("VI_1", "192.168.1.10/24") \
+    .add_virtual_server("192.168.1.100", 80) \
+    .add_real_server("192.168.1.100", 80, "10.0.0.10", 8080, health_check="http_check")
+```
+
+## Available Templates
+
+- `basic_vrrp`: Basic VRRP instance template
+- `basic_global`: Basic global definitions template
+- `complete_vrrp_master`: Complete MASTER VRRP instance template
+- `complete_vrrp_backup`: Complete BACKUP VRRP instance template
+- `basic_virtual_server`: Basic virtual server template with real server support
+
+## API Reference
+
+### Main Classes
+
+#### KeepAlivedConfig Class
+
+The main class for working with Keepalived configurations.
+
+##### Constructor
+
+```python
+config = KeepAlivedConfig()
+```
+
+##### Class Methods
+
+- `from_file(file_path: str) -> KeepAlivedConfig`: Load configuration from a file
+- `from_template(template_name: str, instance_name: str) -> KeepAlivedConfig`: Create configuration from a template
+- `register_template(template_name: str, template_definition: dict)`: Register a new template or override an existing one
+- `list_templates() -> list`: List all available templates
+
+##### Instance Methods
+
+###### Configuration Operations
+
+- `format_config(indent_level: int = 0, indent_size: int = None) -> str`: Format the configuration as a string with custom indentation
+- `to_json() -> str`: Export configuration as JSON
+- `to_dict() -> dict`: Export configuration as dictionary
+- `clone() -> KeepAlivedConfig`: Create a deep copy of the configuration
+- `merge(other: KeepAlivedConfig) -> KeepAlivedConfig`: Merge another configuration into this one
+- `validate() -> list`: Validate configuration according to keepalived syntax
+- `save(file=None)`: Save configuration to a file
+
+###### Context Manager
+
+- `__enter__()`: Context manager entry, supports with statement
+- `__exit__()`: Context manager exit, supports with statement
+
+###### Parameter Operations
+
+- `find_param(name_pattern: str) -> List[Union[KeepAlivedConfigParam, KeepAlivedConfigBlock]]`: Find parameters by name pattern
+- `filter_params(param_type: type = None, name_pattern: str = None) -> List[Union[KeepAlivedConfigParam, KeepAlivedConfigBlock]]`: Filter parameters by type and/or name pattern
+- `xpath(path: str) -> List[Union[KeepAlivedConfigParam, KeepAlivedConfigBlock]]`: Find parameters using XPath-like syntax
+- `traverse(visit_func, order="dfs")`: Traverse configuration items
+- `set_param(path: str, value: str) -> KeepAlivedConfig`: Set a parameter value by path with validation
+- `get_param(path: str) -> str`: Get a parameter value by path
+- `has_param(path: str) -> bool`: Check if a parameter exists
+- `remove_param(path: str) -> bool`: Remove a parameter by path
+- `get_param_description(param_name: str) -> str`: Get the description of a parameter
+- `validate_param_value(param_name: str, value) -> bool`: Validate a parameter value against its rules
+
+###### Template Operations
+
+- `apply_template_params(param_mapping: dict) -> KeepAlivedConfig`: Apply parameters to a template-based configuration
+
+###### VRRP Instance Operations
+
+- `add_vrrp_instance(instance_name: str, state: str, interface: str, virtual_router_id: int, priority: int, advert_int: int = 1) -> KeepAlivedConfig`: Add a VRRP instance
+- `remove_vrrp_instance(instance_name: str) -> bool`: Remove a VRRP instance
+- `add_virtual_ipaddress(instance_name: str, ip_address: str) -> KeepAlivedConfig`: Add a virtual IP address to a VRRP instance
+- `get_virtual_ipaddresses(instance_name: str) -> List[str]`: Get all virtual IP addresses of a VRRP instance
+
+###### Virtual Server Operations
+
+- `add_virtual_server(virtual_server_ip: str, virtual_server_port: int) -> KeepAlivedConfig`: Add a virtual server
+- `add_real_server(virtual_server_ip: str, virtual_server_port: int, real_server_ip: str, real_server_port: int, weight: int = 1, health_check: str = "TCP_CHECK") -> KeepAlivedConfig`: Add a real server to a virtual server
+
+###### Batch Operations
+
+- `add_multiple_vrrp_instances(instances: list) -> KeepAlivedConfig`: Add multiple VRRP instances
+- `set_multiple_params(param_updates: dict) -> KeepAlivedConfig`: Set multiple parameters at once
+- `add_param(param) -> KeepAlivedConfig`: Add a parameter to the configuration
+
+#### KeepAlivedConfigBlock Class
+
+Represents a configuration block in Keepalived configuration.
+
+##### Constructor
+
+```python
+block = KeepAlivedConfigBlock(type_name: str, name: str = "", comments=None)
+```
+
+##### Instance Methods
+
+- `add_param(param)`: Add a parameter to the block
+- `add_vrrp_instance(instance_name: str, state: str, interface: str, virtual_router_id: int, priority: int, advert_int: int = 1) -> KeepAlivedConfigBlock`: Add a VRRP instance to the block
+- `remove_vrrp_instance(instance_name: str) -> bool`: Remove a VRRP instance from the block
+- `to_str(indent_level=0, indent_size=None) -> str`: Convert block to string representation with custom indentation
+- `format_config(indent_level=0, indent_size=None) -> str`: Format configuration block with custom indentation
+
+#### KeepAlivedConfigParam Class
+
+Represents a configuration parameter in Keepalived configuration.
+
+##### Constructor
+
+```python
+param = KeepAlivedConfigParam(name: str, value: str = "", comments=None)
+```
+
+##### Instance Methods
+
+- `to_str(indent_level=0) -> str`: Convert parameter to string representation
+
+## Common Usage Examples
+
+### 1. Creating a Configuration from Scratch
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+# Create a new configuration
+config = KeepAlivedConfig()
+
+# Add global definitions
+global_block = config.add_block("global_defs")
+global_block.add_param("notification_email", "admin@example.com")
+global_block.add_param("notification_email_from", "keepalived@example.com")
+global_block.add_param("smtp_server", "127.0.0.1")
+global_block.add_param("router_id", "LVS_DEVEL")
+
+# Add a VRRP instance
+config.add_vrrp_instance(
+    instance_name="VI_1",
+    state="MASTER",
+    interface="eth0",
+    virtual_router_id=51,
+    priority=100
+)
+
+# Add virtual IP address
+config.add_virtual_ipaddress("VI_1", "192.168.200.17/24")
+
+print(config.format_config())
+```
+
+### 2. Loading and Modifying Existing Configuration
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+# Load existing configuration
+config = KeepAlivedConfig.from_file('keepalived.conf')
+
+# Find and modify a parameter
+config.set_param("vrrp_instance VI_1.priority", "150")
+
+# Add a new virtual IP address
+config.add_virtual_ipaddress("VI_1", "192.168.100.10/24")
+
+# Add a virtual server
+config.add_virtual_server("192.168.1.100", 80)
+config.add_real_server("192.168.1.100", 80, "10.0.0.10", 8080)
+
+# Save the modified configuration
+with open('keepalived_modified.conf', 'w') as f:
+    f.write(config.format_config())
+```
+
+### 3. Finding and Filtering Parameters
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+config = KeepAlivedConfig.from_file('keepalived.conf')
+
+# Find parameters by name pattern
+vrrp_instances = config.find_param("vrrp_instance")
+
+# Filter parameters by type
+blocks = config.filter_params(param_type=KeepAlivedConfigBlock)
+
+# Use XPath-like syntax to find specific parameters
+priority_params = config.xpath("vrrp_instance/*/priority")
+
+# Check if a parameter exists
+has_smtp = config.has_param("global_defs.smtp_server")
+
+# Get a parameter value
+router_id = config.get_param("global_defs.router_id")
+```
+
+### 4. Parameter Validation
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+from keepalived_config.keepalived_config_exceptions import KeepAlivedConfigValidationError
+
+config = KeepAlivedConfig()
+
+# Get parameter description
+description = config.get_param_description("virtual_router_id")
+print(f"virtual_router_id: {description}")
+
+# Validate parameter values
+try:
+    config.validate_param_value("virtual_router_id", 51)  # Valid
+    config.validate_param_value("state", "MASTER")        # Valid
+    config.validate_param_value("virtual_router_id", 300) # Invalid - too large
+except KeepAlivedConfigValidationError as e:
+    print(f"Validation error: {e}")
+```
+
+### 5. Working with Templates
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+# Create configuration from template
+config = KeepAlivedConfig.from_template("complete_vrrp_master", "VI_1")
+
+# Replace template placeholders
+config.apply_template_params({
+    "VRRP_STATE": "MASTER",
+    "INTERFACE_NAME": "eth0",
+    "VRRP_ROUTER_ID": "51",
+    "VRRP_PRIORITY": "100",
+    "VRRP_ADVERT_INT": "1",
+    "AUTH_PASS": "mypassword",
+    "VIRTUAL_IP_ADDRESS": "192.168.1.10",
+    "PREFIX": "24"
+})
+
+print(config.format_config())
+```
+
+### 6. Configuration Formatting
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+config = KeepAlivedConfig.from_template("basic_vrrp", "VI_1")
+config.apply_template_params({
+    "VRRP_STATE": "MASTER",
+    "INTERFACE_NAME": "eth0",
+    "VRRP_ROUTER_ID": "51",
+    "VRRP_PRIORITY": "100",
+    "VRRP_ADVERT_INT": "1"
+})
+
+# Default formatting (4 spaces indent)
+default_format = config.format_config()
+print("Default formatting:")
+print(default_format)
+
+# Custom formatting (2 spaces indent)
+custom_format = config.format_config(indent_size=2)
+print("Custom formatting (2 spaces):")
+print(custom_format)
+```
+
+### 7. Batch Operations
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+config = KeepAlivedConfig()
+
+# Add multiple VRRP instances at once
+config.add_multiple_vrrp_instances([
+    {
+        "instance_name": "VI_1",
+        "state": "MASTER",
+        "interface": "eth0",
+        "virtual_router_id": 51,
+        "priority": 100
+    },
+    {
+        "instance_name": "VI_2",
+        "state": "BACKUP",
+        "interface": "eth1",
+        "virtual_router_id": 52,
+        "priority": 90
+    }
+])
+
+# Set multiple parameters at once
+config.set_multiple_params({
+    "vrrp_instance VI_1.advert_int": "1",
+    "vrrp_instance VI_2.advert_int": "2",
+    "global_defs.router_id": "LVS_PROD"
+})
+```
+
+### 8. Chainable API
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+# Chain methods for fluent configuration building
+config = KeepAlivedConfig() \
+    .add_vrrp_instance(
+        instance_name="VI_1",
+        state="MASTER",
+        interface="eth0",
+        virtual_router_id=51,
+        priority=100
+    ) \
+    .add_virtual_ipaddress("VI_1", "192.168.1.10/24") \
+    .add_virtual_server("192.168.1.100", 80) \
+    .add_real_server("192.168.1.100", 80, "10.0.0.10", 8080) \
+    .set_param("global_defs.router_id", "LVS_DEVEL") \
+    .apply_template_params({"PARAM": "value"})
+
+print(config.format_config())
+```
+
+### 9. Context Manager Usage
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+# Use with statement for automatic configuration saving
+with KeepAlivedConfig.from_file('keepalived.conf') as config:
+    config.set_param("global_defs.router_id", "NEW_ROUTER_ID")
+    config.add_vrrp_instance(
+        instance_name="VI_2",
+        state="BACKUP",
+        interface="eth1",
+        virtual_router_id=52,
+        priority=90
+    )
+    # Configuration automatically saved when exiting the with block
+```
+
+### 10. Configuration Validation
+
+```python
+from keepalived_config.keepalived_config import KeepAlivedConfig
+
+config = KeepAlivedConfig.from_file('keepalived.conf')
+
+# Validate configuration
+errors = config.validate()
+if errors:
+    print("Configuration validation errors:")
+    for error in errors:
+        print(f"  - {error}")
+else:
+    print("Configuration is valid")
+```
+
+## Development
+
+### Setup
+
+To setup your dev environment, you have 2 options:
+
+1. local: execute the command `main.sh setup`. This will install a virtual python environment and install the required packages.
+2. container: Use the provided devcontainer, where everything is already installed (no need to run the setup command)
+
+### Tests
+
+Units tests are to be developed for all public modules and methods and placed inside the `tests` directory.
+They can be executed via the command `main.sh test`
+
+### Packaging
+
+The source build and wheel distributions can be generated via the command `main.sh build`.
+The package can then be uploaded to PyPi via the command `main.sh upload`.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+The original project [Slinred/keepalived-config](https://github.com/Slinred/keepalived-config) is also licensed under GPL-3.0.
+As a derivative work, this project must also be distributed under the same license terms.
