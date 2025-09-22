@@ -1,0 +1,431 @@
+# 🚗 CARAPIS Vehicles API Python Client
+
+[![PyPI version](https://badge.fury.io/py/carapis-api.svg)](https://badge.fury.io/py/carapis-api)
+[![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/carapis/python-client)
+
+**Universal Python client for the CARAPIS Vehicles API - Access automotive data from 25+ global marketplaces with enterprise-grade reliability.**
+
+> 🌐 **Developed by [CARAPIS](https://carapis.com)** - The leading automotive data extraction platform serving Fortune 500 companies and automotive professionals worldwide.
+
+## 🌟 Why Choose CARAPIS Vehicles API?
+
+- **🌍 Global Coverage**: Access 25+ automotive marketplaces across Asia, Europe, Americas, and Middle East
+- **⚡ Real-time Data**: Live vehicle listings, pricing, and market intelligence
+- **🛡️ Enterprise-Grade**: 99.9% uptime, advanced anti-detection, residential proxies
+- **🐍 Python-First**: Full async/await support, type hints, dataclasses
+- **📊 Market Intelligence**: Advanced analytics, price trends, and market insights
+- **🚀 Production Ready**: Used by automotive dealers, marketplaces, and data companies globally
+
+## 🌐 Supported Automotive Platforms
+
+### 🇰🇷 **Asia-Pacific**
+- **[Encar.com](https://docs.carapis.com/parsers/encar.com/quick-start)** - South Korea's largest automotive marketplace (2M+ listings)
+- **[Che168.com](https://docs.carapis.com/parsers/che168.com/quick-start)** - China's premier automotive platform
+- **[Guazi.com](https://docs.carapis.com/parsers/guazi.com/quick-start)** - Leading Chinese used car marketplace
+- **[Goo-net.com](https://docs.carapis.com/parsers/goo-net.com/quick-start)** - Japan's automotive marketplace
+- **[BeForward.jp](https://docs.carapis.com/parsers/beforward.jp/quick-start)** - Japanese automotive exporter
+- **[Carsome.com](https://docs.carapis.com/parsers/carsome.com/quick-start)** - Southeast Asian automotive platform
+- **[One2Car.com](https://docs.carapis.com/parsers/one2car.com/quick-start)** - Thailand's automotive marketplace
+- **[CarDekho.com](https://docs.carapis.com/parsers/cardekho.com/quick-start)** - India's automotive platform
+- **[Spinny.com](https://docs.carapis.com/parsers/spinny.com/quick-start)** - Indian automotive marketplace
+
+### 🇺🇸 **North America**
+- **[Cars.com](https://docs.carapis.com/parsers/cars.com/quick-start)** - Leading US automotive platform (2M+ listings)
+- **[CarGurus.com](https://docs.carapis.com/parsers/cargurus.com/quick-start)** - US automotive marketplace and analytics
+- **[Carvana.com](https://docs.carapis.com/parsers/carvana.com/quick-start)** - US online car retailer
+- **[Vroom.com](https://docs.carapis.com/parsers/vroom.com/quick-start)** - US online automotive marketplace
+- **[AutoTrader.com](https://docs.carapis.com/parsers/autotrader.com/quick-start)** - Premier automotive marketplace
+
+### 🇪🇺 **Europe**
+- **[AutoScout24.com](https://docs.carapis.com/parsers/autoscout24.com/quick-start)** - Europe's largest automotive marketplace
+- **[Mobile.de](https://docs.carapis.com/parsers/mobile.de/quick-start)** - Germany's leading automotive platform
+- **[Auto.ru](https://docs.carapis.com/parsers/auto.ru/quick-start)** - Russia's premier automotive marketplace (2M+ listings)
+- **[Avito.ru](https://docs.carapis.com/parsers/avito.ru/quick-start)** - Russian classifieds platform
+- **[Arabam.com](https://docs.carapis.com/parsers/arabam.com/quick-start)** - Turkey's automotive marketplace
+
+### 🌍 **Global & Regional**
+- **[OLX.com](https://docs.carapis.com/parsers/olx.com/quick-start)** - Global classifieds platform
+- **[Dubizzle.com](https://docs.carapis.com/parsers/dubizzle.com/quick-start)** - UAE automotive marketplace
+- **[Webmotors.com.br](https://docs.carapis.com/parsers/webmotors.com.br/quick-start)** - Brazilian automotive platform
+
+## 🚀 Quick Start
+
+### Installation
+
+```bash
+# pip
+pip install carapis-api
+
+# poetry
+poetry add carapis-api
+
+# pipenv
+pipenv install carapis-api
+```
+
+### Basic Usage
+
+```python
+import asyncio
+from carapis import VehiclesAPIClient, CatalogFilters
+
+# Initialize client
+client = VehiclesAPIClient(
+    base_url="https://api.carapis.com",
+    api_key="your-api-key"
+)
+
+async def main():
+    # Get vehicles with filters
+    filters = CatalogFilters(
+        brand_code="toyota",
+        price_min=10000,
+        price_max=50000,
+        page_size=20
+    )
+    
+    vehicles = await client.vehicles.list_async(**filters.to_api_params())
+    
+    print(f"Found {vehicles.count} vehicles")
+    for vehicle in vehicles.results:
+        print(f"{vehicle.year} {vehicle.brand_name} {vehicle.model_name} - ${vehicle.price}")
+
+# Run async function
+asyncio.run(main())
+```
+
+### Synchronous Usage
+
+```python
+from carapis import VehiclesAPIClient, CatalogFilters
+
+# Initialize client
+client = VehiclesAPIClient(
+    base_url="https://api.carapis.com", 
+    api_key="your-api-key"
+)
+
+# Synchronous calls
+filters = CatalogFilters(brand_code="bmw", year_min=2020)
+vehicles = client.vehicles.list(**filters.to_api_params())
+
+# Get vehicle details
+vehicle_detail = client.vehicles.get("vehicle-id")
+print(f"Vehicle: {vehicle_detail.display_name}")
+```
+
+### Advanced Filtering
+
+```python
+from carapis import CatalogFilters
+
+# Advanced search with multiple filters
+filters = CatalogFilters(
+    search="BMW X5",
+    year_min=2020,
+    body_type="suv",
+    fuel_type="gasoline",
+    transmission="automatic",
+    mileage_max=50000,
+    ordering="-price"  # Sort by price descending
+)
+
+vehicles = await client.vehicles.list_async(**filters.to_api_params())
+```
+
+### Server-Side Rendering (SSR)
+
+```python
+from carapis import VehiclesSSRService, CatalogFilters
+
+# Perfect for Django, FastAPI, Flask
+async def get_catalog_data(request):
+    filters = CatalogFilters(
+        brand_code="toyota",
+        page_size=20
+    )
+    
+    catalog_data = await VehiclesSSRService.get_vehicles_for_catalog(
+        filters=filters,
+        page=1,
+        client=client
+    )
+    
+    return {
+        'vehicles': catalog_data.vehicles,
+        'total_count': catalog_data.total_count,
+        'seo': VehiclesSSRService.generate_vehicle_seo(catalog_data.vehicles[0])
+    }
+```
+
+### Brand and Market Data
+
+```python
+# Get all brands
+brands = await client.brands.list_async()
+
+# Get brand-specific data
+brand_data = await VehiclesSSRService.get_brand_page_data("toyota", client=client)
+print(f"Toyota has {brand_data.total_count} vehicles available")
+print(f"Average price: ${brand_data.stats.average_price}")
+
+# Market statistics
+stats = await client.statistics.get_market_overview_async()
+print("Market overview:", stats)
+```
+
+## 🛠️ API Reference
+
+### Core Services
+
+- **`VehiclesService`** - Vehicle listings, search, and details
+- **`BrandsService`** - Brand information and brand-specific vehicles  
+- **`SourcesService`** - Data source management and statistics
+- **`StatisticsService`** - Market analytics and insights
+- **`VehiclesSSRService`** - Server-side rendering utilities
+
+### Type Safety with Dataclasses
+
+Full type safety with Python dataclasses and type hints:
+
+```python
+from carapis import (
+    CatalogVehicle, CatalogBrand, CatalogFilters,
+    VehiclePageData, SEOMetadata
+)
+
+# Type-safe filtering
+filters = CatalogFilters(
+    brand_code="toyota",
+    price_min=15000,
+    price_max=45000,
+    body_type="sedan",
+    fuel_type="hybrid"
+)
+
+# Type-safe responses
+vehicles: VehiclePageData = await VehiclesSSRService.get_vehicles_for_catalog(
+    filters=filters, client=client
+)
+
+# Access with full IDE support
+for vehicle in vehicles.vehicles:
+    print(f"{vehicle.display_name}: {vehicle.formatted_price}")
+    print(f"Condition Score: {vehicle.condition_score}/100")
+```
+
+## 🏗️ Framework Integration
+
+### Django
+
+```python
+# views.py
+from django.shortcuts import render
+from carapis import VehiclesSSRService, CatalogFilters
+
+async def vehicle_catalog(request):
+    filters = CatalogFilters(
+        search=request.GET.get('search', ''),
+        brand_code=request.GET.get('brand'),
+        page_size=20
+    )
+    
+    catalog_data = await VehiclesSSRService.get_vehicles_for_catalog(
+        filters=filters,
+        page=int(request.GET.get('page', 1)),
+        client=get_api_client()  # Your client instance
+    )
+    
+    context = {
+        'vehicles': catalog_data.vehicles,
+        'pagination': {
+            'current_page': catalog_data.current_page,
+            'total_pages': catalog_data.total_pages,
+            'has_next': catalog_data.has_next,
+            'has_previous': catalog_data.has_previous
+        },
+        'seo': VehiclesSSRService.generate_search_seo(
+            filters.search or "Vehicles", 
+            catalog_data.total_count
+        )
+    }
+    
+    return render(request, 'catalog.html', context)
+```
+
+### FastAPI
+
+```python
+from fastapi import FastAPI, Query
+from carapis import VehiclesAPIClient, VehiclesSSRService, CatalogFilters
+
+app = FastAPI()
+client = VehiclesAPIClient(base_url="https://api.carapis.com", api_key="your-key")
+
+@app.get("/vehicles/")
+async def get_vehicles(
+    search: str = Query(None),
+    brand: str = Query(None),
+    page: int = Query(1),
+    page_size: int = Query(20)
+):
+    filters = CatalogFilters(
+        search=search,
+        brand_code=brand,
+        page_size=page_size
+    )
+    
+    catalog_data = await VehiclesSSRService.get_vehicles_for_catalog(
+        filters=filters,
+        page=page,
+        client=client
+    )
+    
+    return {
+        "vehicles": [vehicle.__dict__ for vehicle in catalog_data.vehicles],
+        "total_count": catalog_data.total_count,
+        "current_page": catalog_data.current_page,
+        "total_pages": catalog_data.total_pages
+    }
+```
+
+### Flask
+
+```python
+from flask import Flask, request, jsonify
+from carapis import VehiclesAPIClient, CatalogFilters
+import asyncio
+
+app = Flask(__name__)
+client = VehiclesAPIClient(base_url="https://api.carapis.com", api_key="your-key")
+
+@app.route('/vehicles')
+def vehicles():
+    filters = CatalogFilters(
+        search=request.args.get('search'),
+        brand_code=request.args.get('brand'),
+        page_size=int(request.args.get('page_size', 20))
+    )
+    
+    # Run async function in sync context
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    try:
+        vehicles = loop.run_until_complete(
+            client.vehicles.list_async(**filters.to_api_params())
+        )
+        return jsonify({
+            'vehicles': [v.__dict__ for v in vehicles.results],
+            'count': vehicles.count
+        })
+    finally:
+        loop.close()
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# .env
+CARAPIS_API_URL=https://api.carapis.com
+CARAPIS_API_KEY=your-api-key-here
+```
+
+### Client Configuration
+
+```python
+from carapis import VehiclesAPIClient
+
+# Basic configuration
+client = VehiclesAPIClient(
+    base_url="https://api.carapis.com",
+    api_key="your-api-key",
+    timeout=30,
+    verify_ssl=True
+)
+
+# Check authentication
+if client.is_authenticated():
+    print("Client is authenticated")
+
+# Custom headers
+client.set_custom_headers({
+    'User-Agent': 'MyApp/1.0',
+    'Accept-Language': 'en-US,en;q=0.9'
+})
+```
+
+## 📊 Use Cases
+
+### 🏪 **Automotive Marketplaces**
+- Build comprehensive vehicle catalogs
+- Real-time inventory management  
+- Competitive pricing analysis
+- Market trend monitoring
+
+### 🏢 **Dealerships & Dealers**
+- Inventory optimization
+- Pricing strategies
+- Market research
+- Lead generation
+
+### 📈 **Data Analytics & Research**
+- Market intelligence reports
+- Price trend analysis
+- Consumer behavior insights
+- Regional market studies
+
+### 🔧 **Automotive Apps & Platforms**
+- Vehicle comparison tools
+- Price estimation services
+- Market analysis dashboards
+- Automotive data enrichment
+
+## 🌟 Enterprise Features
+
+- **🔒 Secure Authentication** - API key and token-based auth
+- **📊 Rate Limiting** - Intelligent request throttling
+- **🛡️ Anti-Detection** - Advanced proxy rotation and headers
+- **📈 Analytics** - Comprehensive usage statistics
+- **🔧 Custom Integration** - Tailored solutions for enterprise needs
+- **📞 24/7 Support** - Dedicated technical support team
+
+## 📚 Documentation & Resources
+
+- **[API Documentation](https://carapis.com/docs)** - Complete API reference
+- **[Platform Guides](https://docs.carapis.com/parsers)** - Platform-specific documentation
+- **[Market Analysis](https://carapis.com/market-analysis)** - Automotive market insights
+- **[Developer Portal](https://carapis.com/developers)** - Tools and resources
+- **[Status Page](https://status.carapis.com)** - Real-time API status
+
+## 🤝 Support & Community
+
+- **📧 Email**: [support@carapis.com](mailto:support@carapis.com)
+- **📖 Documentation**: [docs.carapis.com](https://docs.carapis.com)
+
+## 📄 License
+
+MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🏢 About CARAPIS
+
+**[CARAPIS](https://carapis.com)** is the world's leading automotive data extraction platform, trusted by Fortune 500 companies, automotive dealers, and data-driven businesses globally. We provide real-time access to automotive data from 25+ international marketplaces with enterprise-grade reliability and advanced anti-detection technology.
+
+### Why Choose CARAPIS?
+
+- **🌍 Global Leader** - Serving 1000+ clients worldwide
+- **🔒 Enterprise Security** - SOC 2 compliant, GDPR ready
+- **⚡ High Performance** - 99.9% uptime, sub-second response times
+- **🛡️ Anti-Detection** - Advanced proxy networks and rotation
+- **📊 Market Intelligence** - Deep automotive market insights
+- **🤝 Expert Support** - Dedicated technical and business support
+
+---
+
+**Ready to access global automotive data?** [Get your API key](https://carapis.com/auth) and start building with CARAPIS today!
+
+[![Get Started](https://img.shields.io/badge/Get%20Started-CARAPIS%20API-blue?style=for-the-badge&logo=car&logoColor=white)](https://carapis.com/auth)
