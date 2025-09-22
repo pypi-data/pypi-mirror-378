@@ -1,0 +1,56 @@
+parameters
+    num_units = {num_units};
+    termination_time = {termination_time};
+    analysis_time = {analysis_time};
+end
+
+species
+    U I     [C0]={I_c0}    FW={I_FW}
+    M A     [C0]={A_c0}    FW={A_FW}
+    M B     [C0]={B_c0}    FW={B_FW}
+
+    P P[I.A]
+    P P[I.B]
+
+    P P[A.A]
+    P P[A.B]
+    P P[B.A]
+    P P[B.B]
+
+    P P[-.A] P[I.A]|P[A.A]|P[B.A]
+    P P[-.B] P[I.B]|P[A.B]|P[B.B]
+
+    P D
+end
+
+rateconstants
+    kpAA = {kpAA}
+    kpAB = {kpAB}
+    kpBA = {kpBA}
+    kpBB = {kpBB}
+
+    kdAA = {kdAA}
+    kdAB = {kdAB}
+    kdBA = {kdBA}
+    kdBB = {kdBB}
+end
+
+reactions
+    
+	# ---- Initiation ----
+    IN I + A -kpAA-> P[I.A]
+    IN I + B -kpAB-> P[I.B]
+
+    # ---- Propagation ----
+    PR P[-.A] + A -kpAA-> P[A.A]
+    PR P[-.A] + B -kpAB-> P[A.B]
+    PR P[-.B] + A -kpBA-> P[B.A]
+    PR P[-.B] + B -kpBB-> P[B.B]
+
+    # ---- Depropagation ----
+    DP P[A.A] -kdAA-> P[-.A] + A
+    DP P[A.B] -kdAB-> P[-.A] + B
+    DP P[B.A] -kdBA-> P[-.B] + A
+    DP P[B.B] -kdBB-> P[-.B] + B
+
+end
