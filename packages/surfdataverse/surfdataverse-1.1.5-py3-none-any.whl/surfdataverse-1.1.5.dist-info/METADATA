@@ -1,0 +1,249 @@
+Metadata-Version: 2.3
+Name: surfdataverse
+Version: 1.1.5
+Summary: A Python package for ionysis Microsoft Dataverse integration
+Keywords: dataverse,microsoft,crm,api
+Author: ionysis
+Author-email: ionysis <friedemann.heinz@ionysis.com>
+License: MIT
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Dist: msal>=1.33.0
+Requires-Dist: pandas>=2.3.2
+Requires-Dist: requests>=2.32.5
+Requires-Python: >=3.11
+Project-URL: Bug Tracker, https://github.com/FriedemannHeinz/SurfDataverse/issues
+Project-URL: Documentation, https://github.com/FriedemannHeinz/SurfDataverse#readme
+Project-URL: Homepage, https://github.com/FriedemannHeinz/SurfDataverse
+Project-URL: Repository, https://github.com/FriedemannHeinz/SurfDataverse.git
+Description-Content-Type: text/markdown
+
+# SurfDataverse
+
+A Python package for Microsoft Dataverse integration, providing a clean, object-oriented interface for connecting to, reading from, and writing to Microsoft Dataverse environments.
+
+## Features
+
+- **Easy Authentication**: Simplified MSAL-based authentication with token caching
+- **Object-Oriented Interface**: Work with Dataverse entities as Python objects
+- **Type Safety**: Built-in validation and error handling
+- **Configurable**: Support for multiple environments and configurations
+- **Extensible**: Easy to add new entity types and customize behavior
+
+## Installation
+
+### From Source
+```bash
+git clone https://github.com/FriedemannHeinz/SurfDataverse.git
+cd SurfDataverse
+pip install -e .
+```
+
+### Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+## Quick Start
+
+### 1. Configuration
+
+Create a configuration JSON file with your Dataverse connection details:
+
+```json
+{
+    "authorityBase": "https://login.microsoftonline.com/",
+    "tenantID": "your-tenant-id",
+    "clientID": "your-client-id", 
+    "environmentURI": "https://yourorg.crm.dynamics.com/",
+    "scopeSuffix": "/.default"
+}
+```
+
+### 2. Basic Usage
+
+```python
+from surf_dataverse import DataverseSession, Article, Recipe
+from pathlib import Path
+
+# Initialize session
+config_path = Path("connection_configs/your_config.json")
+session = DataverseSession(config_path=config_path)
+
+# Authenticate
+session.get_authenticated_session()
+
+# Test connection
+session.test_connection()
+
+# Create and work with entities
+article = Article()
+article.name = "My Product"
+article.company = "My Company"
+article.external_article_nr = "EXT-001"
+
+# Write to Dataverse
+article.write_to_dataverse()
+print(f"Created article with GUID: {article.guid}")
+```
+
+## Available Entities
+
+The package includes pre-built entity classes for:
+
+- **Article**: Product/item management
+- **Recipe**: Production recipes and formulations
+- **Ingredient**: Recipe components and quantities  
+- **Process**: Manufacturing processes
+- **Batch**: Production batches and lots
+- **Fabrication**: Manufacturing operations
+- **Consumption**: Resource consumption tracking
+- **Property**: Entity properties and attributes
+
+## Entity Properties
+
+Each entity provides property-based access to Dataverse fields:
+
+```python
+# Data properties (simple text/numeric fields)
+article.name = "Product Name"
+article.company = "Company Name"
+
+# Lookup properties (relationships to other entities)
+ingredient.article = article_guid  # Links to Article entity
+ingredient.recipe = recipe_guid    # Links to Recipe entity
+
+# Choice properties (option sets)
+recipe.type = "Production"  # Maps to numeric choice value
+```
+
+## Error Handling
+
+The package provides comprehensive error handling:
+
+```python
+from surf_dataverse import (
+    AuthenticationError,
+    ConnectionError, 
+    DataverseAPIError,
+    EntityError,
+    ValidationError
+)
+
+try:
+    session.get_authenticated_session()
+    article.write_to_dataverse()
+except AuthenticationError as e:
+    print(f"Authentication failed: {e}")
+except DataverseAPIError as e:
+    print(f"API error (status {e.status_code}): {e}")
+except ValidationError as e:
+    print(f"Data validation error: {e}")
+```
+
+## Advanced Usage
+
+### Custom Entity Classes
+
+Extend `DataverseRow` to create custom entity classes:
+
+```python
+from surf_dataverse import DataverseRow
+
+class MyCustomEntity(DataverseRow):
+    def __init__(self):
+        super().__init__('my_custom_table')
+    
+    # Define properties
+    name = DataverseRow.data_property('my_name_field')
+    category = DataverseRow.choice_property('my_category_field')  
+    parent = DataverseRow.lookup_property('my_parent_field')
+```
+
+### Session Management
+
+The `DataverseSession` uses a singleton pattern, so you can access the same session from anywhere:
+
+```python
+# First initialization
+session1 = DataverseSession(config_path="config1.json")
+
+# Later access (returns same instance)  
+session2 = DataverseSession()  # Same as session1
+```
+
+### Data Retrieval
+
+Fetch data from Dataverse tables:
+
+```python
+# Get table data as pandas DataFrame
+df = session.get_table_data(logical_name="iony_article")
+
+# Get specific record
+record = session.get_record("articles", "guid-here")
+
+# Get table metadata
+metadata = session.get_table_metadata("iony_article")
+```
+
+## Development
+
+### Project Structure
+```
+surf_dataverse/
+├── __init__.py          # Package initialization
+├── core.py              # Core session and entity classes
+├── entities.py          # Pre-built entity definitions
+└── exceptions.py        # Custom exceptions
+
+examples/
+└── basic_usage.py       # Usage examples
+
+connection_configs/      # Configuration files (not tracked)
+├── dev.json
+└── production.json
+```
+
+### Dependencies
+
+- `msal`: Microsoft Authentication Library
+- `requests`: HTTP client  
+- `pandas`: Data manipulation and analysis
+
+### Testing
+
+```bash
+pytest tests/
+```
+
+### Code Style
+
+```bash
+black surf_dataverse/
+flake8 surf_dataverse/
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Support
+
+For issues and questions:
+- GitHub Issues: [https://github.com/FriedemannHeinz/SurfDataverse/issues](https://github.com/FriedemannHeinz/SurfDataverse/issues)
+- Documentation: This README and inline code documentation
