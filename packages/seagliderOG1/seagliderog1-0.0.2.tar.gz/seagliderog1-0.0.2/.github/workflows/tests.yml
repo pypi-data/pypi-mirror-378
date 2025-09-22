@@ -1,0 +1,59 @@
+name: Run tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.py'
+      - '**.ipynb'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.py'
+      - '**.ipynb'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.12"]
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          init-shell: bash
+          condarc: |
+            channels:
+              - conda-forge
+            channel_priority: strict
+          cache-environment: true
+          create-args: >-
+            python=${{ matrix.python-version }}
+
+      - name: Check Package Installation
+        shell: bash -l {0}
+        run: |
+          micromamba run -n TEST micromamba env list
+          micromamba run -n TEST micromamba list
+          micromamba run -n TEST python -m pip check
+
+      - name: Install package (editable)
+        shell: bash -l {0}
+        run: |
+          micromamba run -n TEST python -m pip install --upgrade pip
+          micromamba run -n TEST python -m pip install -e . --no-deps --force-reinstall
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: |
+          micromamba run -n TEST python -m pytest --cov=seagliderOG1 --cov-report term-missing tests/
