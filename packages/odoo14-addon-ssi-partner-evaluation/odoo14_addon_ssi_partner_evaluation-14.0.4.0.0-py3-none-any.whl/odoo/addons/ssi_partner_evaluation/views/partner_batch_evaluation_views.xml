@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--Copyright 2024 OpenSynergy Indonesia-->
+<!--Copyright 2024 PT. Simetri Sinergi Indonesia-->
+<!--License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).-->
+<odoo>
+<record id="partner_batch_evaluation_view_tree" model="ir.ui.view">
+    <field name="name">partner_batch_evaluation - Tree</field>
+    <field name="model">partner_batch_evaluation</field>
+    <field name="inherit_id" ref="ssi_transaction_mixin.mixin_transaction_view_tree" />
+    <field name="mode">primary</field>
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='company_id']" position="after">
+            <field name="type_id" />
+            <field name="date" />
+            <field name="date_start" />
+            <field name="date_end" />
+        </xpath>
+    </field>
+</record>
+
+<record id="partner_batch_evaluation_view_search" model="ir.ui.view">
+    <field name="name">partner_batch_evaluation - Search</field>
+    <field name="model">partner_batch_evaluation</field>
+    <field
+            name="inherit_id"
+            ref="ssi_transaction_mixin.mixin_transaction_view_search"
+        />
+    <field name="arch" type="xml">
+        <data>
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="type_id" />
+                <field name="date" />
+                <field name="date_start" />
+                <field name="date_end" />
+            </xpath>
+            <xpath expr="//filter[@name='grp_responsible']" position="after">
+                <filter
+                        name="grp_type_id"
+                        string="Type"
+                        context="{'group_by':'type_id'}"
+                    />
+                <filter name="grp_date" string="Date" context="{'group_by':'date'}" />
+                <filter
+                        name="grp_date_start"
+                        string="Date Start"
+                        context="{'group_by':'date_start'}"
+                    />
+                <filter
+                        name="grp_date_end"
+                        string="Date End"
+                        context="{'group_by':'date_end'}"
+                    />
+            </xpath>
+        </data>
+    </field>
+</record>
+
+<record id="partner_batch_evaluation_view_form" model="ir.ui.view">
+    <field name="name">partner_batch_evaluation - Form</field>
+    <field name="model">partner_batch_evaluation</field>
+    <field name="inherit_id" ref="ssi_transaction_mixin.mixin_transaction_view_form" />
+    <field name="mode">primary</field>
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='user_id']" position="after">
+            <field name="type_id" />
+        </xpath>
+        <xpath expr="//group[@name='header_right']" position="inside">
+            <field name="date" />
+            <field name="date_start" />
+            <field name="date_end" />
+        </xpath>
+        <xpath expr="//page[1]" position="before">
+            <page name="partner" string="Partners">
+                <button
+                        name="action_load_partner"
+                        string="Load"
+                        icon="fa-refresh"
+                        class="oe_highlight"
+                        type="object"
+                        attrs="{'invisible':[('state','!=','draft')]}"
+                    />
+                <field name="partner_ids" />
+            </page>
+            <page
+                    name="evaluation"
+                    string="Evaluations"
+                    groups="ssi_partner_evaluation.partner_batch_evaluation_viewer_group"
+                >
+                <group name="queue_1" colspan="4" col="2">
+                    <field name="queue_job_batch_id" string="Batch" />
+                    <field name="queue_job_batch_state" string="State" />
+                </group>
+                <button
+                        name="action_open_evaluation"
+                        string="Open"
+                        type="object"
+                        icon="fa-list"
+                        class="oe_highlight"
+                        style="margin-right:4px"
+                    />
+                <button
+                        name="action_start_evaluation"
+                        string="Start"
+                        type="object"
+                        class="oe_highlight"
+                        style="margin-right:4px"
+                        attrs="{'invisible':[('queue_job_batch_id','!=',False)]}"
+                    />
+                <button
+                        name="action_confirm_evaluation"
+                        string="Confirm"
+                        type="object"
+                        class="oe_highlight"
+                        style="margin-right:4px"
+                        attrs="{'invisible':[('queue_job_batch_id','!=',False)]}"
+                    />
+                <button
+                        name="action_approve_evaluation"
+                        string="Approve"
+                        type="object"
+                        class="oe_highlight"
+                        style="margin-right:4px"
+                        attrs="{'invisible':[('queue_job_batch_id','!=',False)]}"
+                    />
+                <button
+                        name="action_reject_evaluation"
+                        string="Reject"
+                        type="object"
+                        class="oe_highlight"
+                        style="margin-right:4px"
+                        attrs="{'invisible':[('queue_job_batch_id','!=',False)]}"
+                    />
+                <button
+                        name="action_cancel_evaluation"
+                        string="Cancel"
+                        type="object"
+                        class="oe_highlight"
+                        style="margin-right:4px"
+                        attrs="{'invisible':[('queue_job_batch_id','!=',False)]}"
+                    />
+                <button
+                        name="action_restart_evaluation"
+                        string="Restart"
+                        type="object"
+                        class="oe_highlight"
+                        style="margin-right:4px"
+                        attrs="{'invisible':[('queue_job_batch_id','!=',False)]}"
+                    />
+                <field name="evaluation_ids" />
+            </page>
+        </xpath>
+    </field>
+</record>
+
+<record id="partner_batch_evaluation_action" model="ir.actions.act_window">
+    <field name="name">Partner Batch Evaluations</field>
+    <field name="res_model">partner_batch_evaluation</field>
+    <field name="view_mode">tree,form</field>
+    <field name="search_view_id" ref="partner_batch_evaluation_view_search" />
+</record>
+
+<menuitem
+        id="partner_batch_evaluation_menu"
+        name="Batch Evaluations"
+        parent="menu_partner_evaluation_header"
+        action="partner_batch_evaluation_action"
+        groups="partner_batch_evaluation_viewer_group"
+        sequence="120"
+    />
+</odoo>
