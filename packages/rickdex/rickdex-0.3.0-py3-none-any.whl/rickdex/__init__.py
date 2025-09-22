@@ -1,0 +1,1 @@
+from .rickdex import Character, Location, Episode
