@@ -1,0 +1,129 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history and tags for setuptools-scm
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+    
+    - name: Test package can be imported and run
+      run: |
+        python -c "from ynab_amazon_categorizer.cli import main; print('Package imports successfully')"
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history and tags for setuptools-scm
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+    
+    - name: Build package
+      run: python -m build
+    
+    - name: Check package
+      run: twine check dist/*
+    
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+  create-release:
+    needs: [test, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          CHANGELOG=$(git log --pretty=format:"- %s" $LAST_TAG..HEAD)
+        else
+          CHANGELOG=$(git log --pretty=format:"- %s" --max-count=10)
+        fi
+        
+        # Create changelog file
+        cat > CHANGELOG.md << EOF
+        ## What's Changed
+        
+        $CHANGELOG
+        
+        ## Installation
+        
+        This package is now available on PyPI! Install it with:
+        
+        \`\`\`bash
+        # Install with pipx (recommended for CLI tools)
+        pipx install ynab-amazon-categorizer
+        
+        # Or install with pip
+        pip install ynab-amazon-categorizer
+        \`\`\`
+        
+        ## Usage
+        
+        After installation, run:
+        \`\`\`bash
+        ynab-amazon-categorizer
+        \`\`\`
+        
+        See README.md for detailed setup and configuration instructions.
+        EOF
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.VERSION }}
+        name: Release ${{ steps.version.outputs.VERSION }}
+        body_path: CHANGELOG.md
+        files: |
+          README.md
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
