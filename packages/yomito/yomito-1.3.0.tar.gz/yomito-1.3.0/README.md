@@ -1,0 +1,178 @@
+# 📝 Yomito OCR
+
+High-accuracy OCR library with **intelligent auto-optimization** for Python, powered by [Tesseract OCR](https://github.com/tesseract-ocr/tesseract).
+
+---
+
+## 🚀 Features
+
+- 🌍 **Intelligent Language Detection** — automatic with multiple precision levels
+- 🔤 **Multi-Language Support** — works with all Tesseract-compatible languages
+- 🎚 **Flexible Modes** — `all`, `auto`, `auto_fast`, or manual language selection
+- 🎯 **High Accuracy** — preprocessing & optimization for better recognition
+- ⚡ **Easy Integration** — simple Python API, ready to use
+
+---
+
+## 📦 Installation
+
+```bash
+pip install yomito
+```
+
+### ⚙️ System Requirements
+
+You need **Tesseract OCR** installed:
+
+#### 🐧 Ubuntu/Debian
+```bash
+sudo apt-get install tesseract-ocr
+sudo apt-get install tesseract-ocr-eng tesseract-ocr-rus tesseract-ocr-jpn
+```
+
+#### 🍎 macOS
+```bash
+brew install tesseract
+brew install tesseract-lang
+```
+
+#### 🪟 Windows  
+👉 Download installer: [UB Mannheim builds](https://github.com/UB-Mannheim/tesseract/wiki)
+
+---
+
+## 🧪 Quick Start
+
+```python
+import yomito
+
+# Auto language detection
+text = yomito.recognize_text('image.png')
+print(text)
+
+# Recommended: use specific language
+text = yomito.recognize_text('image.png', lang='eng')
+print(text)
+```
+
+---
+
+## 🔤 Language Modes
+
+Yomito supports **4 modes**:
+
+1. **`all`** – use all installed languages  
+   ```python
+   text = yomito.recognize_text('image.png', lang='all')
+   ```
+
+2. **`auto`** – precise auto-detection  
+   ```python
+   text = yomito.recognize_text('image.png', lang='auto')
+   ```
+
+3. **`auto_fast`** – quick but less precise  
+   ```python
+   text = yomito.recognize_text('image.png', lang='auto_fast')
+   ```
+
+4. **Specific** – one or more languages explicitly  
+   ```python
+   text = yomito.recognize_text('image.png', lang='eng+rus+jpn')
+   ```
+
+---
+
+## ⚡ Advanced Usage
+
+### Custom Language List for Auto-Detection
+```python
+from yomito import YomitoOCR
+
+ocr = YomitoOCR(auto_languages=['eng', 'rus', 'deu'])
+text = ocr.recognize('image.png', lang='auto')
+```
+
+### Detailed Recognition with Metadata
+```python
+result = ocr.recognize_detailed('image.png', lang='all')
+print(result.text, result.mean_conf, result.tess_args.lang)
+```
+
+### Custom Tesseract Config
+```python
+from yomito.ocr import PSM, OEM
+
+ocr = YomitoOCR(
+    tesseract_path='/usr/bin/tesseract',
+    tessdata_path='/usr/share/tessdata',
+    default_lang='eng'
+)
+
+text = ocr.recognize('image.png', lang='eng', psm=PSM.SINGLE_BLOCK)
+```
+
+---
+
+## 📖 API Reference
+
+### 🔹 `recognize_text(image, lang='auto', **kwargs)`
+Quick OCR function.
+
+- `image`: path, PIL Image, or numpy array  
+- `lang`: `'all'`, `'auto'`, `'auto_fast'`, or specific codes  
+- returns: `str`
+
+### 🔹 `YomitoOCR` class
+Full control API.
+
+- `recognize(image, lang=None, **kwargs)` → `str`  
+- `recognize_detailed(image, lang=None, **kwargs)` → result object  
+- `get_available_languages()` → list of languages  
+
+---
+
+## ⚙️ Performance Tips
+
+1. ✅ Use `all` if unsure about the language  
+2. ⚡ Use specific languages for speed  
+3. 🚀 Use `auto_fast` for real-time use cases  
+4. 🖼 Preprocess images (resize, contrast) for better OCR  
+5. 📥 Install the required language packs  
+
+---
+
+## 🌐 Language Support
+
+Yomito works with **all installed Tesseract languages**, e.g.:
+
+- `eng` – English  
+- `rus` – Russian  
+- `deu` – German  
+- `fra` – French  
+- `jpn` – Japanese  
+- `chi_sim` / `chi_tra` – Chinese  
+- `ara` – Arabic  
+
+Check available languages:
+```python
+from yomito import YomitoOCR
+
+ocr = YomitoOCR()
+print(ocr.get_available_languages()) # ['ces', 'eng', 'jpn', 'osd', 'rus']
+```
+
+---
+
+## ⚠️ Error Handling
+
+```python
+try:
+    text = yomito.recognize_text('image.png', lang='eng')
+except FileNotFoundError:
+    print('Tesseract not found. Install it first.')
+except ValueError as e:
+    print(f'Image error: {e}')
+except Exception as e:
+    print(f'OCR error: {e}')
+```
