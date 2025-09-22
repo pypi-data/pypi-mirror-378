@@ -1,0 +1,837 @@
+import sys
+from pathlib import Path
+from typing import Optional
+
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.prompt import Confirm
+
+from clipdrop import __version__
+from clipdrop import clipboard, detect, files, images, pdf
+from clipdrop.error_helpers import display_error, show_success_message
+from clipdrop.paranoid import (
+    ParanoidMode,
+    paranoid_gate,
+    print_binary_skip_notice,
+)
+from clipdrop.youtube import (
+    validate_youtube_url,
+    extract_video_id,
+    list_captions,
+    select_caption_track,
+    download_vtt,
+    get_video_info,
+    vtt_to_srt,
+    vtt_to_txt,
+    vtt_to_md
+)
+from clipdrop.exceptions import (
+    YTDLPNotFoundError,
+    NoCaptionsError,
+    YouTubeError
+)
+
+console = Console()
+
+
+def add_chapter_markers(content: str, chapters: Optional[list], format: str) -> str:
+    """
+    Add chapter markers to transcript content.
+
+    Args:
+        content: The transcript content
+        chapters: List of chapter dictionaries with 'title' and 'start_time' keys
+        format: The output format (.srt, .vtt, .txt, .md)
+
+    Returns:
+        Content with chapter markers added
+    """
+    if not chapters:
+        return content
+
+    # Build chapter header based on format
+    chapter_text = "\n=== CHAPTERS ===\n"
+    for chapter in chapters:
+        start_time = chapter.get('start_time', 0)
+        title = chapter.get('title', 'Chapter')
+        # Convert seconds to HH:MM:SS format
+        hours = int(start_time // 3600)
+        minutes = int((start_time % 3600) // 60)
+        seconds = int(start_time % 60)
+        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        chapter_text += f"{time_str} - {title}\n"
+    chapter_text += "================\n\n"
+
+    if format == '.md':
+        # For Markdown, use proper header formatting
+        chapter_text = "\n## Chapters\n\n"
+        for chapter in chapters:
+            start_time = chapter.get('start_time', 0)
+            title = chapter.get('title', 'Chapter')
+            hours = int(start_time // 3600)
+            minutes = int((start_time % 3600) // 60)
+            seconds = int(start_time % 60)
+            time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            chapter_text += f"- **{time_str}** - {title}\n"
+        chapter_text += "\n"
+    elif format == '.vtt':
+        # For VTT, add as a NOTE block at the beginning
+        chapter_text = "NOTE\nCHAPTERS:\n"
+        for chapter in chapters:
+            start_time = chapter.get('start_time', 0)
+            title = chapter.get('title', 'Chapter')
+            hours = int(start_time // 3600)
+            minutes = int((start_time % 3600) // 60)
+            seconds = int(start_time % 60)
+            time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            chapter_text += f"{time_str} - {title}\n"
+        chapter_text += "\n"
+        # Insert after WEBVTT header if present
+        if content.startswith('WEBVTT'):
+            lines = content.split('\n', 2)
+            if len(lines) >= 2:
+                content = lines[0] + '\n' + lines[1] + '\n\n' + chapter_text + (lines[2] if len(lines) > 2 else '')
+            else:
+                content = content + '\n\n' + chapter_text
+        else:
+            content = chapter_text + content
+        return content
+
+    # For all other formats, prepend the chapter list
+    return chapter_text + content
+
+
+def version_callback(value: bool):
+    """Handle --version flag."""
+    if value:
+        console.print(f"[cyan]clipdrop version {__version__}[/cyan]")
+        raise typer.Exit()
+
+
+def handle_youtube_transcript(
+    filename: Optional[str],
+    paranoid_flag: bool = False,
+    force: bool = False,
+    preview: bool = False,
+    paranoid_mode: Optional[ParanoidMode] = None,
+    lang: Optional[str] = None,
+    yes: bool = False,
+    chapters: bool = False
+) -> None:
+    """
+    Handle YouTube transcript download command.
+
+    Args:
+        filename: Target filename (optional - defaults to video title)
+        paranoid_flag: Whether paranoid mode is enabled via flag
+        force: Whether to force overwrite existing files
+        preview: Whether to preview content before saving
+        paranoid_mode: Paranoid mode setting
+        lang: Preferred subtitle language code
+        yes: Whether to auto-accept paranoid prompts
+        chapters: Whether to include chapter markers in transcript
+    """
+    # Get clipboard content
+    url = clipboard.get_text()
+    if not url or not url.strip():
+        display_error('empty_clipboard')
+        raise typer.Exit(1)
+
+    url = url.strip()
+
+    # Validate YouTube URL
+    if not validate_youtube_url(url):
+        console.print("[red]❌ No YouTube URL in clipboard[/red]")
+        if len(url) > 100:
+            console.print(f"[yellow]Found: {url[:100]}...[/yellow]")
+        else:
+            console.print(f"[yellow]Found: {url}[/yellow]")
+        console.print("\n[dim]Please copy a YouTube URL first, then try again.[/dim]")
+        console.print("[dim]Examples: youtube.com/watch?v=..., youtu.be/..., youtube.com/shorts/...[/dim]")
+        raise typer.Exit(1)
+
+    try:
+        # Extract video ID and get video info
+        video_id = extract_video_id(url)
+        console.print(f"[cyan]🎥 Found YouTube video: {video_id}[/cyan]")
+
+        # Get video information
+        video_info = get_video_info(url)
+        title = video_info.get('title', 'Unknown Title')
+        console.print(f"[cyan]📺 Title: {title}[/cyan]")
+
+        # List available captions
+        console.print("[cyan]🔍 Checking available captions...[/cyan]")
+        captions = list_captions(url)
+
+        if not captions:
+            raise NoCaptionsError(video_id)
+
+        # Select caption track
+        selected = select_caption_track(captions, lang)
+        if not selected:
+            # Show available languages to help user
+            if lang:
+                console.print(f"[yellow]⚠️ No captions found for language: '{lang}'[/yellow]")
+                console.print("\n[cyan]Available languages:[/cyan]")
+                for cap_lang, cap_name, is_auto in captions:
+                    auto_text = " (auto-generated)" if is_auto else ""
+                    console.print(f"  • {cap_lang}: {cap_name}{auto_text}")
+                console.print("\n[dim]Tip: Use --lang with one of the language codes above[/dim]")
+            raise NoCaptionsError(f"No captions available for language: {lang}")
+
+        lang_code, lang_name, is_auto = selected
+        caption_type = "(auto-generated)" if is_auto else "(manual)"
+        console.print(f"[green]✓ Selected: {lang_name} {caption_type}[/green]")
+
+        # Download VTT
+        console.print("[cyan]📥 Downloading captions...[/cyan]")
+        vtt_path = download_vtt(url, lang_code)
+
+        # Read VTT content
+        with open(vtt_path, 'r', encoding='utf-8') as f:
+            vtt_content = f.read()
+
+        # Determine output filename and format
+        if filename:
+            # Use provided filename
+            file_path = Path(filename)
+            if file_path.suffix:
+                ext = file_path.suffix.lower()
+                output_filename = filename
+            else:
+                # Default to .srt if no extension
+                ext = '.srt'
+                output_filename = f"{filename}.srt"
+        else:
+            # Use video title as filename
+            from .youtube import sanitize_filename
+            safe_title = sanitize_filename(title)
+            ext = '.srt'  # Default format
+            output_filename = f"{safe_title}.srt"
+
+        # Convert to requested format
+        if ext == '.srt':
+            content = vtt_to_srt(vtt_content)
+        elif ext == '.vtt':
+            content = vtt_content
+        elif ext == '.txt':
+            content = vtt_to_txt(vtt_content)
+        elif ext == '.md':
+            content = vtt_to_md(vtt_content)
+        else:
+            # Default to SRT for unknown extensions
+            content = vtt_to_srt(vtt_content)
+            console.print(f"[yellow]⚠️ Unknown format '{ext}', using SRT format[/yellow]")
+
+        # Add chapter markers if requested and available
+        if chapters:
+            video_chapters = video_info.get('chapters')
+            if video_chapters:
+                console.print(f"[cyan]📑 Adding {len(video_chapters)} chapter markers...[/cyan]")
+                content = add_chapter_markers(content, video_chapters, ext)
+            elif chapters:
+                console.print("[yellow]⚠️ No chapters available for this video[/yellow]")
+
+        # Apply paranoid mode if enabled (skip for VTT to preserve format)
+        active_paranoid = paranoid_mode or (ParanoidMode.PROMPT if paranoid_flag else None)
+        if active_paranoid and ext in ['.txt', '.md', '.srt']:
+            content, _ = paranoid_gate(
+                content,
+                active_paranoid,
+                is_tty=sys.stdin.isatty(),
+                auto_yes=yes
+            )
+            if content is None:
+                console.print("[yellow]⚠️ Content not saved (paranoid mode)[/yellow]")
+                raise typer.Exit(0)
+
+        # Preview if requested
+        if preview:
+            console.print("\n[bold cyan]Preview:[/bold cyan]")
+            preview_lines = content.split('\n')[:20]
+            for line in preview_lines:
+                console.print(f"  {line}")
+            if len(content.split('\n')) > 20:
+                total_lines = len(content.split('\n'))
+                console.print(f"  [dim]... ({total_lines} total lines)[/dim]")
+
+            if not Confirm.ask("\n[yellow]Save this content?[/yellow]"):
+                console.print("[yellow]Cancelled[/yellow]")
+                raise typer.Exit(0)
+
+        # Check if file exists and handle overwrite
+        output_path = Path(output_filename)
+        if output_path.exists() and not force:
+            if not Confirm.ask(f"[yellow]File '{output_filename}' already exists. Overwrite?[/yellow]"):
+                console.print("[yellow]Cancelled[/yellow]")
+                raise typer.Exit(0)
+
+        # Save the file
+        files.write_text(output_filename, content, force=True)
+
+        # Show success message
+        console.print(f"[green]✅ Transcript saved to '{output_filename}'[/green]")
+        file_size = len(content.encode('utf-8'))
+        size_str = f"{file_size:,} bytes" if file_size < 1024 else f"{file_size/1024:.1f} KB"
+        console.print(f"[dim]   Format: {ext[1:].upper()} | Size: {size_str} | Language: {lang_name}[/dim]")
+
+    except YTDLPNotFoundError:
+        console.print("[red]❌ yt-dlp is not installed[/red]")
+        console.print("[yellow]Install with: pip install 'clipdrop[youtube]'[/yellow]")
+        console.print("[dim]Or: pip install yt-dlp[/dim]")
+        raise typer.Exit(1)
+    except NoCaptionsError as e:
+        console.print(f"[red]❌ {str(e)}[/red]")
+        console.print("[dim]This video may not have captions available.[/dim]")
+        raise typer.Exit(1)
+    except YouTubeError as e:
+        console.print(f"[red]❌ YouTube error: {str(e)}[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]❌ Unexpected error: {str(e)}[/red]")
+        raise typer.Exit(1)
+
+
+def main(
+    filename: Optional[str] = typer.Argument(
+        None,
+        help="Target filename for clipboard content. Extension optional - ClipDrop auto-detects format (e.g., 'notes' → 'notes.txt', 'data' → 'data.json')"
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Skip confirmation and overwrite existing files. Useful for scripts and automation"
+    ),
+    preview: bool = typer.Option(
+        False,
+        "--preview",
+        "-P",
+        help="Preview content before saving. Shows syntax-highlighted text or image dimensions with save confirmation"
+    ),
+    paranoid_flag: bool = typer.Option(
+        False,
+        "-p",
+        help="Enable paranoid mode using the interactive prompt",
+    ),
+    paranoid_mode: Optional[ParanoidMode] = typer.Option(
+        None,
+        "--paranoid",
+        help="Run a pre-save secret scan in the given mode: prompt, redact, block, warn",
+        show_choices=True,
+    ),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        help="Auto-accept paranoid prompt when running non-interactively",
+    ),
+    text_mode: bool = typer.Option(
+        False,
+        "--text",
+        "-t",
+        help="Prioritize text over images when both exist in clipboard. Useful when you want the text instead of a screenshot"
+    ),
+    educational: bool = typer.Option(
+        True,
+        "--educational/--no-educational",
+        help="Enable educational content optimizations for better formatting in PDFs (justified text, callout boxes, enhanced spacing)"
+    ),
+    lang: Optional[str] = typer.Option(
+        None,
+        "--lang",
+        help="Preferred language for YouTube captions (e.g., 'en', 'es', 'fr'). Shows available languages if not found"
+    ),
+    chapters: bool = typer.Option(
+        False,
+        "--chapters",
+        help="Include chapter markers as comments in transcript (if available)"
+    ),
+    youtube: bool = typer.Option(
+        False,
+        "--youtube",
+        "-yt",
+        help="Download YouTube transcript from clipboard URL"
+    ),
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        callback=version_callback,
+        is_eager=True,
+        help="Show version and exit"
+    ),
+):
+    """
+    Save clipboard content to files with smart format detection.
+
+    ClipDrop automatically detects content types and suggests appropriate file extensions.
+    It handles both text and images, with intelligent format detection for JSON, Markdown,
+    CSV, and various image formats.
+
+    [bold cyan]Quick Examples:[/bold cyan]
+
+      [green]Text:[/green]
+        clipdrop notes              # Auto-detects format → notes.txt
+        clipdrop data               # JSON detected → data.json
+        clipdrop readme             # Markdown detected → readme.md
+
+      [green]Images:[/green]
+        clipdrop screenshot         # Saves clipboard image → screenshot.png
+        clipdrop photo.jpg          # Saves as JPEG with optimization
+
+      [green]Mixed Content:[/green]
+        clipdrop document           # Mixed text+image → document.pdf
+        clipdrop content --text     # Forces text mode
+        clipdrop report.pdf         # Explicitly create PDF
+
+    [bold cyan]Smart Features:[/bold cyan]
+
+      • Auto-detects JSON, Markdown, CSV formats
+      • Optimizes images (PNG/JPEG compression)
+      • Handles mixed clipboard content intelligently
+      • Protects against accidental overwrites
+      • Optional paranoid mode to detect secrets before saving
+      • Shows preview before saving
+
+    [bold cyan]Common Workflows:[/bold cyan]
+
+      1. Copy code/text → clipdrop script.py
+      2. Take screenshot → clipdrop screenshot.png
+      3. Copy JSON API response → clipdrop response.json
+      4. Copy markdown notes → clipdrop notes.md
+      5. Copy sensitive text → clipdrop secrets.txt -p (prompt before saving)
+
+    [dim]For more help, visit: https://github.com/prateekjain24/clipdrop[/dim]
+    """
+    # Check if this is YouTube mode
+    if youtube:
+        return handle_youtube_transcript(
+            filename=filename,  # Can be None for YouTube mode
+            paranoid_flag=paranoid_flag,
+            force=force,
+            preview=preview,
+            paranoid_mode=paranoid_mode,
+            lang=lang,
+            yes=yes,
+            chapters=chapters
+        )
+
+    # For non-YouTube mode, filename is required
+    if filename is None:
+        console.print("\n[red]📝 Please provide a filename[/red]")
+        console.print("[yellow]Usage: clipdrop [OPTIONS] FILENAME[/yellow]")
+        console.print("\n[dim]Examples:[/dim]")
+        console.print("  clipdrop notes.txt     # Save text")
+        console.print("  clipdrop image.png     # Save image")
+        console.print("  clipdrop data.json     # Save JSON")
+        console.print("  clipdrop --youtube     # Download YouTube transcript")
+        console.print("  clipdrop -yt output.srt # YouTube with custom name")
+        console.print("\n[dim]Try 'clipdrop --help' for more options[/dim]")
+        raise typer.Exit(1)
+
+    try:
+        # Determine content type in clipboard
+        content_type = clipboard.get_content_type()
+        active_paranoid = paranoid_mode or (ParanoidMode.PROMPT if paranoid_flag else None)
+
+        if content_type == 'none':
+            display_error('empty_clipboard')
+            raise typer.Exit(1)
+
+        # Handle HTML mixed content (from web pages)
+        if content_type == 'html_mixed':
+            from clipdrop import html_parser
+            # Try to get ordered chunks first
+            html_content = html_parser.get_html_from_clipboard()
+            if html_content:
+                # Try enhanced parsing first for better structure preservation
+                try:
+                    enhanced_chunks = html_parser.parse_html_content_enhanced(html_content)
+                    use_enhanced = len(enhanced_chunks) > 0
+                except Exception:
+                    # Fall back to standard parsing
+                    enhanced_chunks = None
+                    use_enhanced = False
+
+                if use_enhanced and enhanced_chunks:
+                    # Use enhanced PDF generation
+                    file_path = Path(filename)
+
+                    # Add .pdf extension if not present
+                    if not file_path.suffix:
+                        final_filename = f"{filename}.pdf"
+                        console.print(f"[cyan]📄 HTML with enhanced structure detected. Creating PDF: {final_filename}[/cyan]")
+                    elif file_path.suffix.lower() != '.pdf':
+                        final_filename = f"{file_path.stem}.pdf"
+                        console.print(f"[cyan]📄 HTML with enhanced structure detected. Creating PDF: {final_filename}[/cyan]")
+                    else:
+                        final_filename = filename
+                        console.print("[cyan]📄 Creating enhanced PDF from HTML content...[/cyan]")
+
+                    file_path = Path(final_filename)
+
+                    # Count different content types for preview
+                    content_counts = {}
+                    total_text_len = 0
+                    for chunk_type, content, metadata in enhanced_chunks:
+                        content_counts[chunk_type] = content_counts.get(chunk_type, 0) + 1
+                        if chunk_type in ['text', 'paragraph', 'heading']:
+                            total_text_len += len(str(content))
+
+                    # Show preview if requested
+                    if preview:
+                        preview_lines = ["[cyan]HTML Content (Enhanced):[/cyan]"]
+                        preview_lines.append(f"Text: {total_text_len} characters")
+                        for content_type, count in content_counts.items():
+                            preview_lines.append(f"{content_type.title()}: {count} element(s)")
+
+                        console.print(Panel(
+                            "\n".join(preview_lines),
+                            title=f"Preview: {final_filename}",
+                            expand=False
+                        ))
+                        if not Confirm.ask("[cyan]Create this enhanced PDF?[/cyan]", default=True):
+                            console.print("[yellow]Operation cancelled.[/yellow]")
+                            raise typer.Exit()
+
+                    # Create enhanced PDF
+                    pdf.create_pdf_from_enhanced_html(
+                        enhanced_chunks, file_path, educational_mode=educational
+                    )
+
+                    # Success message
+                    file_size = file_path.stat().st_size
+                    size_str = files.get_file_size_human(file_size)
+                    console.print(f"[green]✅ Created enhanced PDF ({total_text_len} chars, {len(content_counts)} content types, {size_str}) at {file_path}[/green]")
+                    raise typer.Exit()
+
+                else:
+                    # Fall back to standard ordered parsing
+                    ordered_chunks = html_parser.parse_html_content_ordered(html_content)
+
+                    if ordered_chunks:
+                        file_path = Path(filename)
+
+                        # Add .pdf extension if not present
+                        if not file_path.suffix:
+                            final_filename = f"{filename}.pdf"
+                            console.print(f"[cyan]📄 HTML with images detected. Creating PDF: {final_filename}[/cyan]")
+                        elif file_path.suffix.lower() != '.pdf':
+                            final_filename = f"{file_path.stem}.pdf"
+                            console.print(f"[cyan]📄 HTML with images detected. Creating PDF: {final_filename}[/cyan]")
+                        else:
+                            final_filename = filename
+                            console.print("[cyan]📄 Creating PDF from HTML content with images...[/cyan]")
+
+                        file_path = Path(final_filename)
+
+                        # Count text and image chunks for preview
+                        text_chunks = sum(1 for t, _ in ordered_chunks if t == 'text')
+                        image_chunks = sum(1 for t, _ in ordered_chunks if t == 'image')
+                        total_text_len = sum(len(c) for t, c in ordered_chunks if t == 'text' and isinstance(c, str))
+
+                        # Show preview if requested
+                        if preview:
+                            console.print(Panel(
+                                f"[cyan]HTML Content:[/cyan]\n"
+                                f"Text: {total_text_len} characters in {text_chunks} sections\n"
+                                f"Images: {image_chunks} embedded images",
+                                title=f"Preview: {final_filename}",
+                                expand=False
+                            ))
+                            if not Confirm.ask("[cyan]Create this PDF?[/cyan]", default=True):
+                                console.print("[yellow]Operation cancelled.[/yellow]")
+                                raise typer.Exit()
+
+                        # Create PDF from ordered HTML content
+                        pdf.create_pdf_from_html_ordered_content(
+                            ordered_chunks, file_path
+                        )
+
+                        # Success message
+                        file_size = file_path.stat().st_size
+                        size_str = files.get_file_size_human(file_size)
+                        console.print(f"[green]✅ Created PDF from HTML ({total_text_len} chars, {image_chunks} images, {size_str}) at {file_path}[/green]")
+                        raise typer.Exit()
+
+        # Get both text and image content (may be None)
+        content = clipboard.get_text()
+        image = clipboard.get_image()
+
+        # Check if user explicitly wants PDF
+        file_path = Path(filename)
+        wants_pdf = file_path.suffix.lower() == '.pdf'
+
+        # Determine what to save based on content and user preference
+        use_pdf = False
+        use_image = False
+
+        if wants_pdf:
+            # User explicitly requested PDF
+            use_pdf = True
+            console.print("[cyan]📄 Creating PDF from clipboard content...[/cyan]")
+        elif content_type == 'both':
+            # Both image and text exist
+            if text_mode:
+                console.print("[cyan]ℹ️  Both image and text found. Using text mode.[/cyan]")
+                image = None  # Ignore image in text mode
+            elif not file_path.suffix:
+                # No extension provided, mixed content -> suggest PDF
+                use_pdf = True
+                console.print("[cyan]📄 Mixed content detected (text + image). Creating PDF to preserve both.[/cyan]")
+            else:
+                # Has extension, follow user's choice
+                if file_path.suffix.lower() in ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp']:
+                    use_image = True
+                    content = None  # Use image only
+                    console.print("[cyan]ℹ️  Both found. Using image (use --text for text only).[/cyan]")
+                else:
+                    image = None  # Use text only
+                    console.print("[cyan]ℹ️  Both found. Using text (specify .pdf to include both).[/cyan]")
+        elif content_type == 'image':
+            use_image = True
+            if image is None:
+                console.print("[red]❌ Could not read image from clipboard.[/red]")
+                raise typer.Exit(1)
+        elif content_type == 'text':
+            if content is None:
+                console.print("[red]❌ Could not read clipboard content.[/red]")
+                raise typer.Exit(1)
+        
+        # Validate and sanitize filename
+        if not files.validate_filename(filename):
+            filename = files.sanitize_filename(filename)
+            console.print(f"[yellow]⚠️  Invalid characters in filename. Using: {filename}[/yellow]")
+
+        if use_pdf:
+            # Handle PDF creation
+            # Add .pdf extension if not present
+            if not file_path.suffix:
+                final_filename = f"{filename}.pdf"
+            else:
+                final_filename = filename
+
+            if final_filename != filename:
+                console.print(f"[cyan]📄 Saving as PDF: {final_filename}[/cyan]")
+
+            file_path = Path(final_filename)
+
+            # Show preview if requested
+            if preview:
+                preview_parts = []
+                if content:
+                    preview_parts.append(f"[cyan]Text:[/cyan] {len(content)} characters")
+                    preview_text = content[:100] + "..." if len(content) > 100 else content
+                    preview_parts.append(f"[dim]{preview_text}[/dim]")
+                if image:
+                    info = clipboard.get_image_info()
+                    if info:
+                        preview_parts.append(f"\n[cyan]Image:[/cyan] {info['width']}x{info['height']} pixels, {info['mode']} mode")
+
+                console.print(Panel(
+                    "\n".join(preview_parts),
+                    title=f"PDF Preview: {final_filename}",
+                    expand=False
+                ))
+
+                # Confirm save after preview
+                if not Confirm.ask("[cyan]Create this PDF?[/cyan]", default=True):
+                    console.print("[yellow]Operation cancelled.[/yellow]")
+                    raise typer.Exit()
+
+            # Create the PDF
+            success, message = pdf.create_pdf(file_path, text=content, image=image, force=force)
+
+            if success:
+                console.print(f"[green]✅ {message}[/green]")
+            else:
+                # Check if it's an overwrite issue
+                if "already exists" in message and not force:
+                    if Confirm.ask(f"[yellow]File exists. Overwrite {file_path}?[/yellow]"):
+                        success, message = pdf.create_pdf(file_path, text=content, image=image, force=True)
+                        if success:
+                            console.print(f"[green]✅ {message}[/green]")
+                        else:
+                            console.print(f"[red]❌ {message}[/red]")
+                            raise typer.Exit(1)
+                    else:
+                        console.print("[yellow]Operation cancelled.[/yellow]")
+                        raise typer.Exit()
+                else:
+                    console.print(f"[red]❌ {message}[/red]")
+                    raise typer.Exit(1)
+
+        elif use_image:
+            # Handle image save
+            if active_paranoid is not None:
+                print_binary_skip_notice(active_paranoid)
+
+            # Add extension if not present
+            final_filename = images.add_image_extension(filename, image)
+            if final_filename != filename:
+                console.print(f"[cyan]📷 Auto-detected image format. Saving as: {final_filename}[/cyan]")
+
+            # Create Path object
+            file_path = Path(final_filename)
+
+            # Show preview if requested
+            if preview:
+                info = clipboard.get_image_info()
+                if info:
+                    console.print(Panel(
+                        f"[cyan]Image Preview[/cyan]\n"
+                        f"Dimensions: {info['width']}x{info['height']} pixels\n"
+                        f"Mode: {info['mode']}\n"
+                        f"Has Transparency: {'Yes' if info['has_transparency'] else 'No'}",
+                        title=f"Preview of {final_filename}",
+                        expand=False
+                    ))
+
+                    # Confirm save after preview
+                    if not Confirm.ask("[cyan]Save this image?[/cyan]", default=True):
+                        console.print("[yellow]Operation cancelled.[/yellow]")
+                        raise typer.Exit()
+
+            # Save the image
+            save_info = images.write_image(file_path, image, optimize=True, force=force)
+
+            # Success message
+            show_success_message(
+                file_path,
+                'image',
+                save_info['file_size_human'],
+                {
+                    'dimensions': save_info['dimensions'],
+                    'optimized': True,
+                    'format_detected': save_info['format']
+                }
+            )
+
+        else:
+            # Handle text save (existing logic)
+            # Add extension if not present
+            has_image = image is not None
+            final_filename = detect.add_extension(filename, content, has_image)
+
+            # Check if the detected format is PDF (shouldn't happen here, but just in case)
+            if Path(final_filename).suffix.lower() == '.pdf':
+                use_pdf = True
+                file_path = Path(final_filename)
+                console.print(f"[cyan]📄 Auto-detected mixed content. Creating PDF: {final_filename}[/cyan]")
+
+                # Create the PDF
+                success, message = pdf.create_pdf(file_path, text=content, image=image, force=force)
+
+                if success:
+                    console.print(f"[green]✅ {message}[/green]")
+                else:
+                    console.print(f"[red]❌ {message}[/red]")
+                    raise typer.Exit(1)
+
+                raise typer.Exit(0)  # Success, exit
+
+            if final_filename != filename:
+                console.print(f"[cyan]📝 Auto-detected format. Saving as: {final_filename}[/cyan]")
+
+            # Create Path object
+            file_path = Path(final_filename)
+
+            if active_paranoid is not None:
+                content, _ = paranoid_gate(
+                    content,
+                    active_paranoid,
+                    is_tty=sys.stdin.isatty(),
+                    auto_yes=yes,
+                )
+
+            # Show preview if requested
+            if preview:
+                preview_content = content[:200] if content else None
+                if preview_content:
+                    # Determine syntax highlighting based on extension
+                    lexer_map = {
+                        '.json': 'json',
+                        '.md': 'markdown',
+                        '.py': 'python',
+                        '.js': 'javascript',
+                        '.html': 'html',
+                        '.css': 'css',
+                        '.yaml': 'yaml',
+                        '.yml': 'yaml',
+                    }
+                    lexer = lexer_map.get(file_path.suffix.lower(), 'text')
+
+                    # Show syntax-highlighted preview
+                    syntax = Syntax(
+                        preview_content,
+                        lexer,
+                        theme="monokai",
+                        line_numbers=True,
+                        word_wrap=True
+                    )
+                    console.print(Panel(syntax, title=f"Preview of {final_filename}", expand=False))
+
+                    # Confirm save after preview
+                    if not Confirm.ask("[cyan]Save this content?[/cyan]", default=True):
+                        console.print("[yellow]Operation cancelled.[/yellow]")
+                        raise typer.Exit()
+
+            # Check for large content warning
+            content_size = len(content.encode('utf-8'))
+            if content_size > 10 * 1024 * 1024:  # 10MB
+                size_str = files.get_file_size(content)
+                if not force:
+                    if not Confirm.ask(f"[yellow]⚠️  Large clipboard content ({size_str}). Continue?[/yellow]"):
+                        console.print("[yellow]Operation cancelled.[/yellow]")
+                        raise typer.Exit()
+
+            # Write the file
+            files.write_text(file_path, content, force=force)
+
+            # Success message
+            size_str = files.get_file_size(content)
+            content_format = detect.detect_format(content)
+            show_success_message(
+                file_path,
+                content_format if content_format != 'txt' else 'text',
+                size_str,
+                {'format_detected': content_format}
+            )
+
+    except typer.Abort:
+        # User cancelled operation
+        raise typer.Exit()
+    except typer.Exit:
+        # Clean exit - just re-raise it
+        raise
+    except PermissionError:
+        display_error('permission_denied', {'filename': filename})
+        raise typer.Exit(1)
+    except files.PathTraversalError:
+        display_error('invalid_path', {'filename': filename})
+        raise typer.Exit(1)
+    except Exception as e:
+        # Generic error with helpful message
+        console.print(f"\n[red]❌ Unexpected error:[/red] {e}")
+        console.print("\n[yellow]💡 Troubleshooting tips:[/yellow]")
+        console.print("  1. Check if the file path is valid")
+        console.print("  2. Ensure you have write permissions")
+        console.print("  3. Try with --preview to see content first")
+        console.print("\n[dim]Report issues: https://github.com/prateekjain24/clipdrop/issues[/dim]")
+        raise typer.Exit(1)
+
+
+# Create the Typer app
+app = typer.Typer(
+    name="clipdrop",
+    help="Save clipboard content to files with smart format detection",
+    add_completion=False,
+)
+
+# Register main function as the only command
+app.command()(main)
+
+if __name__ == "__main__":
+    app()
