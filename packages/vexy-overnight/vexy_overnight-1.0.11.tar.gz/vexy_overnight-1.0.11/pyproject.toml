@@ -1,0 +1,390 @@
+# this_file: pyproject.toml
+#==============================================================================
+# VEXY-OVERNIGHT PACKAGE CONFIGURATION
+# This pyproject.toml defines the package metadata, dependencies, build system,
+# and development environment for the vexy-overnight package.
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# PROJECT METADATA
+# Core package information used by PyPI and package managers.
+#------------------------------------------------------------------------------
+[project]
+name = 'vexy-overnight' # Package name on PyPI
+description = '' # Short description
+readme = 'README.md' # Path to README file
+requires-python = '>=3.10' # Minimum Python version
+keywords = [
+] # Keywords for PyPI search
+dynamic = ["version"] # Fields set dynamically at build time
+
+# PyPI classifiers for package categorization
+classifiers = [
+    'Development Status :: 4 - Beta', # Package maturity level
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Programming Language :: Python :: Implementation :: PyPy',
+    'Operating System :: OS Independent',
+    'License :: OSI Approved :: MIT License',
+    'Intended Audience :: Developers',
+]
+
+dependencies = [
+    'loguru>=0.7,<1.0',
+    "fire>=0.6.0",
+    'rich>=13.0.0',
+    'tomli>=2.0.0',
+    'tomli-w>=1.0.0',
+]
+
+# Author information
+[[project.authors]]
+name = 'Fontlab Ltd'
+email = 'opensource@vexy.art'
+
+# License information
+[project.license]
+text = 'MIT'
+
+# Project URLs
+[project.urls]
+Documentation = 'https://github.com/vexyart/vexy-overnight#readme'
+Issues = 'https://github.com/vexyart/vexy-overnight/issues'
+Source = 'https://github.com/vexyart/vexy-overnight'
+
+#------------------------------------------------------------------------------
+# OPTIONAL DEPENDENCIES
+# Additional dependencies for optional features, development, and testing.
+#------------------------------------------------------------------------------
+[project.optional-dependencies]
+
+# Development tools
+dev = [
+    'hatch>=1.12.0', # Project management and build tooling
+    'uv>=0.5.8', # Fast dependency resolver and installer
+    'ruff>=0.9.7', # Linting and formatting
+    'mypy>=1.15.0', # Type checking
+    'pre-commit>=4.1.0', # Git hook management
+]
+
+# Testing tools and frameworks
+test = [
+    'pytest>=8.3.4', # Testing framework - Keep pytest as is, update if newer pytest version is required
+    'pytest-cov>=6.0.0', # Coverage plugin for pytest - Keep pytest-cov as is, update if newer pytest-cov version is required
+    'pytest-xdist>=3.6.1', # Parallel test execution - Keep pytest-xdist as is, update if newer pytest-xdist version is required
+    'pytest-benchmark[histogram]>=5.1.0', # Benchmarking plugin - Keep pytest-benchmark as is, update if newer pytest-benchmark version is required
+    'pytest-asyncio>=0.25.3', # Async test support - Keep pytest-asyncio as is, update if newer pytest-asyncio version is required
+    'coverage[toml]>=7.6.12',
+]
+
+docs = [
+    "sphinx>=7.2.6",
+    "sphinx-rtd-theme>=2.0.0",
+    "sphinx-autodoc-typehints>=2.0.0",
+    "myst-parser>=3.0.0", # Markdown support in Sphinx
+]
+
+#------------------------------------------------------------------------------
+# COMMAND-LINE SCRIPTS
+# Entry points for command-line executables installed with the package.
+#------------------------------------------------------------------------------
+[project.scripts]
+vomgr = "vexy_overnight.cli:main"
+vocl = "vexy_overnight.launchers:vocl"
+voco = "vexy_overnight.launchers:voco"
+voge = "vexy_overnight.launchers:voge"
+version-bump = "vexy_overnight.tools.version_bump:main"
+
+#------------------------------------------------------------------------------
+# BUILD SYSTEM CONFIGURATION
+# Defines the tools required to build the package and the build backend.
+#------------------------------------------------------------------------------
+[build-system]
+# Hatchling is a modern build backend for Python packaging
+# hatch-vcs integrates with version control systems for versioning
+requires = [
+    'hatchling>=1.27.0', # Keep hatchling as is, update if newer hatchling version is required
+    'hatch-vcs>=0.4.0', # Keep hatch-vcs as is, update if newer hatch-vcs version is required
+]
+build-backend = 'hatchling.build' # Specifies Hatchling as the build backend
+
+
+#------------------------------------------------------------------------------
+# HATCH BUILD CONFIGURATION
+# Configures the build process, specifying which packages to include and
+# how to handle versioning.
+#------------------------------------------------------------------------------
+[tool.hatch.build]
+# Include package data files
+include = [
+    "src/vexy_overnight/py.typed", # For better type checking support
+    "src/vexy_overnight/data/**/*", # Include data files if any
+
+]
+exclude = ["**/__pycache__", "**/.pytest_cache", "**/.mypy_cache"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vexy_overnight"]
+reproducible = true
+
+
+# Version control system hook configuration
+# Automatically updates the version file from git tags
+[tool.hatch.build.hooks.vcs]
+version-file = "src/vexy_overnight/__version__.py"
+
+# Version source configuration
+[tool.hatch.version]
+source = 'vcs' # Get version from git tags or other VCS info
+
+[tool.hatch.version.vcs]
+tag-pattern = '^(?:v)?(?P<version>\d+\.\d+\.\d+)$' # Enforce semantic version tags like v1.2.3
+
+# Metadata handling configuration
+[tool.hatch.metadata]
+allow-direct-references = true # Allow direct references in metadata (useful for local dependencies)
+
+
+#------------------------------------------------------------------------------
+# UV CONFIGURATION
+# Settings for uv so the project is always treated as a package.
+#------------------------------------------------------------------------------
+[tool.uv]
+package = true
+
+
+#------------------------------------------------------------------------------
+# DEVELOPMENT ENVIRONMENTS
+
+[tool.hatch.envs.default]
+installer = 'uv'
+features = ['dev', 'test']
+dependencies = [
+]
+
+# Commands available in the default environment
+[tool.hatch.envs.default.scripts]
+# Run tests with optional arguments
+test = 'python -m pytest {args:tests}'
+# Run tests with coverage reporting
+test-cov = "python -m pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=src/vexy_overnight --cov=tests {args:tests}"
+# Run type checking
+type-check = "python -m mypy src/vexy_overnight tests"
+# Run linting and formatting
+lint = ["python -m ruff check src/vexy_overnight tests", "python -m ruff format --respect-gitignore src/vexy_overnight tests"]
+# Format and fix style issues
+fmt = ["python -m ruff format --respect-gitignore src/vexy_overnight tests", "python -m ruff check --fix src/vexy_overnight tests"]
+fix = ["python -m ruff check --fix --unsafe-fixes src/vexy_overnight tests", "python -m ruff format --respect-gitignore src/vexy_overnight tests"]
+
+#------------------------------------------------------------------------------
+# SPECIALIZED ENVIRONMENTS
+# Additional environments for specific development tasks.
+#------------------------------------------------------------------------------
+
+# Dedicated environment for linting and code quality checks
+[tool.hatch.envs.lint]
+detached = true # Create a separate, isolated environment
+features = ['dev'] # Use dev extras  dependencies 
+installer = 'uv'
+
+# Linting environment commands
+[tool.hatch.envs.lint.scripts]
+# Type checking with automatic type installation
+typing = "python -m mypy --install-types --non-interactive {args:src/vexy_overnight tests}"
+# Check style and format code
+style = ["python -m ruff check {args:.}", "python -m ruff format --respect-gitignore {args:.}"]
+# Format and fix style issues
+fmt = ["python -m ruff format --respect-gitignore {args:.}", "python -m ruff check --fix {args:.}"]
+fix = ["python -m ruff check --fix --unsafe-fixes {args:.}", "python -m ruff format --respect-gitignore {args:.}"]
+# Run all ops
+all = ["style", "typing", "fix"]
+
+# Dedicated environment for testing
+[tool.hatch.envs.test]
+features = ['test'] # Use test extras as dependencies
+installer = 'uv'
+
+# Testing environment commands
+[tool.hatch.envs.test.scripts]
+# Run tests in parallel
+test = "python -m pytest -n auto {args:tests}"
+# Run tests with coverage in parallel
+test-cov = "python -m pytest -n auto --cov-report=term-missing --cov-config=pyproject.toml --cov=src/vexy_overnight --cov=tests {args:tests}"
+# Run benchmarks
+bench = "python -m pytest -v -p no:briefcase tests/test_benchmark.py --benchmark-only"
+# Run benchmarks and save results
+bench-save = "python -m pytest -v -p no:briefcase tests/test_benchmark.py --benchmark-only --benchmark-json=benchmark/results.json"
+
+# Documentation environment
+[tool.hatch.envs.docs]
+features = ['docs']
+installer = 'uv'
+
+# Documentation environment commands
+[tool.hatch.envs.docs.scripts]
+build = "python -m sphinx -b html docs/source docs/build"
+
+# GitHub Actions workflow configuration
+[tool.hatch.envs.ci]
+features = ['test']
+installer = 'uv'
+
+
+[tool.hatch.envs.ci.scripts]
+test = "python -m pytest --cov=src/vexy_overnight --cov-report=xml"
+
+
+#------------------------------------------------------------------------------
+# CODE QUALITY TOOLS
+# Configuration for linting, formatting, and code quality enforcement.
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# COVERAGE CONFIGURATION
+# Settings for test coverage measurement and reporting.
+#------------------------------------------------------------------------------
+
+# Path mapping for coverage in different environments
+[tool.coverage.paths]
+vexy_overnight = ["src/vexy_overnight", "*/vexy-overnight/src/vexy_overnight"]
+tests = ["tests", "*/vexy-overnight/tests"]
+
+# Coverage report configuration
+[tool.coverage.report]
+# Lines to exclude from coverage reporting
+exclude_lines = [
+    'no cov', # Custom marker to skip coverage
+    'if __name__ == .__main__.:', # Script execution guard
+    'if TYPE_CHECKING:', # Type checking imports and code
+    'pass', # Empty pass statements
+    'raise NotImplementedError', # Unimplemented method placeholders
+    'raise ImportError', # Import error handling
+    'except ImportError', # Import error handling
+    'except KeyError', # Common error handling
+    'except AttributeError', # Common error handling
+    'except NotImplementedError', # Common error handling
+]
+
+[tool.coverage.run]
+source_pkgs = ["vexy_overnight", "tests"]
+branch = true # Measure branch coverage (if/else statements)
+parallel = true # Support parallel test execution
+omit = [
+    "src/vexy_overnight/__about__.py",
+]
+
+#------------------------------------------------------------------------------
+# MYPY CONFIGURATION
+# Configuration for type checking with mypy.
+#------------------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+exclude = ["^external/"]
+
+[[tool.mypy.overrides]]
+module = ["loguru", "pytest"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+allow_untyped_decorators = true
+
+#------------------------------------------------------------------------------
+# PYTEST CONFIGURATION
+# Configuration for pytest, including markers, options, and benchmark settings.
+#------------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+addopts = "-v --durations=10 -p no:briefcase"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+console_output_style = "progress"
+filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
+log_cli = true
+log_cli_level = "INFO"
+markers = [
+    "benchmark: marks tests as benchmarks (select with '-m benchmark')",
+    "unit: mark a test as a unit test",
+    "integration: mark a test as an integration test",
+    "permutation: tests for permutation functionality", 
+    "parameter: tests for parameter parsing",
+    "prompt: tests for prompt parsing",
+]
+norecursedirs = [
+    ".*",
+    "build",
+    "dist", 
+    "venv",
+    "__pycache__",
+    "*.egg-info",
+    "_private",
+]
+python_classes = ["Test*"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.pytest-benchmark]
+min_rounds = 100
+min_time = 0.1
+histogram = true
+storage = "file"
+save-data = true
+compare = [
+    "min",    # Minimum time
+    "max",    # Maximum time
+    "mean",   # Mean time
+    "stddev", # Standard deviation
+    "median", # Median time
+    "iqr",    # Inter-quartile range
+    "ops",    # Operations per second
+    "rounds", # Number of rounds
+]
+
+#------------------------------------------------------------------------------
+# RUFF CONFIGURATION
+# Streamlined Ruff setup with pragmatic defaults.
+#------------------------------------------------------------------------------ 
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "double"
+
+[tool.ruff.lint]
+select = [
+    'E',  # pycodestyle errors
+    'F',  # pyflakes errors
+    'B',  # flake8-bugbear
+    'I',  # import sorting
+    'N',  # pep8-naming
+    'UP', # modern Python upgrades
+]
+ignore = [
+    'E501', # rely on the formatter for line length
+]
+# extend-ignore = [".git", ".venv", "venv", "dist", "build"]
+
+[tool.ruff.lint.isort]
+known-first-party = ['vexy_overnight']
