@@ -1,0 +1,183 @@
+# ---- Project Info and Dependencies ----
+
+[project.urls]
+Repository = "https://github.com/rguillon/dicer"
+# Homepage = "https://..."
+# Documentation = "https://..."
+
+[project]
+name = "dice-checker"
+description = "Simple dice manipulation library allowing to compute probabilities of complex dice rolls"
+authors = [
+    { name="Renaud Guillon", email="renaud.guillon@gmail.com" },
+]
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10,<4.0"
+dynamic = ["version"]
+
+# https://pypi.org/classifiers/
+# Adjust as needed:
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+
+
+# ---- Main dependencies ----
+
+dependencies = [
+    "matplotlib>=3.10.6",
+]
+
+
+# ---- Dev dependencies ----
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-sugar>=1.0.0",
+    "ruff>=0.11.9",
+    "codespell>=2.4.1",
+    "rich>=14.0.0",
+    "basedpyright>=1.30.0",
+    "funlog>=0.2.1",
+    "pre-commit>=4.3.0",
+    "deptry>=0.23.1",
+    "mypy>=1.18.1",
+    "pytest-cov>=7.0.0",
+    "pytest-mpl>=0.17.0"
+]
+
+
+# ---- Build system ----
+
+# Dynamic versioning from:
+# https://github.com/ninoseki/uv-dynamic-versioning/
+
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+# Note JSON schemas don't seem to be right for tool.hatch.version.source so
+# this may cause false warnings in IDEs.
+# https://github.com/ninoseki/uv-dynamic-versioning/issues/21
+
+[tool.uv-dynamic-versioning]
+vcs = "git"
+style = "pep440"
+bump = true
+
+[tool.hatch.build.targets.wheel]
+# The source location for the package.
+packages = ["src/dice_checker"]
+
+
+# ---- Settings ----
+
+[tool.mypy]
+files = ["src"]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+disallow_any_unimported = true
+incremental = false
+follow_untyped_imports = true
+follow_imports = "normal"
+ignore_errors = false
+ignore_missing_imports = false
+pretty = true
+show_error_context = true
+show_traceback = true
+show_error_codes = true
+strict_equality = true
+strict_optional = true
+warn_incomplete_stub = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+strict = true
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+log_cli = true
+log_cli_level = "DEBUG"
+log_cli_format = "[%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+fix = true
+unsafe-fixes = true
+
+
+[tool.ruff.lint]
+preview = true
+fixable = ["ALL"]
+select = ["ALL", "RUF022"]
+ignore = [  "COM812",   # cause incompatibility with the formatter
+            "ISC001",   # cause incompatibility with the formatter
+            "D203",     # conflict with another rule
+            "D213",     # conflict with another rule
+            "CPY001",   # No copyright
+            ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [ "S101",     # Allow assert in tests
+              "D100",     # No docstring in tests
+              "D101",     # No docstring in tests
+              "D102",     # No docstring in tests
+              "D103",     # No docstring in tests
+              "D105",     # No docstring in tests
+              "D107",     # No docstring in tests
+              "FBT001",   # Boolean-typed positional argument in function
+              "PLR2004",  # Magic values ok in tests
+              ]
+
+
+[tool.ruff.format]
+preview = true
+
+[tool.coverage.report]
+skip_empty = true
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+
+[tool.basedpyright]
+# BasedPyright currently seems like the best type checker option, much faster
+# than mypy and with a good extension for VSCode/Cursor.
+# https://marketplace.visualstudio.com/items?itemName=detachhead.basedpyright
+# https://docs.basedpyright.com/latest/configuration/config-files/#sample-pyprojecttoml-file
+include = ["src/dice_checker"]
+exclude = ["tests"]
+extraPaths = ["src"]
+typeCheckingMode = "all"
+reportUnusedCallResult = false
+reportUnknownMemberType = false
+reportImplicitOverride = false
+
+
+[tool.codespell]
+# Add here as needed:
+# ignore-words-list = "foo,bar"
+# skip = "foo.py,bar.py"
