@@ -1,0 +1,1077 @@
+Metadata-Version: 2.4
+Name: kryon-ai
+Version: 1.2.0
+Summary: Kryon AI Multi-Backend Agent Framework
+Home-page: https://github.com/syedfarith/kryon-ai
+Author: Syed Farith C
+Author-email: Syed Farith <syedfarith1351@gmail.com>
+License: MIT
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: requests
+Provides-Extra: mongo
+Requires-Dist: pymongo; extra == "mongo"
+Provides-Extra: vector
+Requires-Dist: chromadb; extra == "vector"
+Requires-Dist: openai; extra == "vector"
+Provides-Extra: all
+Requires-Dist: pymongo; extra == "all"
+Requires-Dist: chromadb; extra == "all"
+Requires-Dist: openai; extra == "all"
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
+# Kryon AI Agent Framework
+
+[![PyPI version](https://badge.fury.io/py/kryon-ai.svg)](https://badge.fury.io/py/kryon-ai)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://pepy.tech/badge/kryon-ai)](https://pepy.tech/project/kryon-ai)
+[![GitHub stars](https://img.shields.io/github/stars/syedfarithc/kryon-ai.svg)](https://github.com/syedfarithc/kryon-ai/stargazers)
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Installation](#installation)
+3. [Quick Start](#quick-start)
+4. [Core Components](#core-components)
+5. [LLM Integrations](#llm-integrations)
+6. [Memory Backends](#memory-backends)
+7. [Tools System](#tools-system)
+8. [Advanced Usage](#advanced-usage)
+9. [API Reference](#api-reference)
+10. [Examples](#examples)
+11. [Best Practices](#best-practices)
+
+## Overview
+
+Kryon is a powerful AI Agent Framework that enables you to create intelligent agents with memory, tool usage, and multi-LLM support. It provides a unified interface for building sophisticated AI applications with minimal code.
+
+### Key Features
+
+- **🤖 Unified Agent Class**: Single interface for both simple and complex agents
+- **🧠 Memory Backends**: Local JSON, MongoDB, Vector databases (Pinecone, ChromaDB)
+- **🛠️ Tool System**: Built-in tools + custom tool creation
+- **🔗 Multi-LLM Support**: OpenAI, Claude, Gemini, Groq
+- **📊 Memory Analytics**: Built-in analytics and monitoring
+- **🔄 Backward Compatible**: Legacy mode for simple use cases
+
+### Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Agent Core    │────│  Memory System  │────│  Tool Execution │
+│                 │    │                 │    │                 │
+│ • Task Management│    │ • Local Storage │    │ • Web Search    │
+│ • LLM Integration│    │ • Vector DB     │    │ • Summarization │
+│ • Memory Routing│    │ • MongoDB       │    │ • Custom Tools  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+## Installation
+
+### Basic Installation
+
+```bash
+pip install kryon-ai
+```
+
+### With Optional Dependencies
+
+```bash
+# For Claude (Anthropic) support
+pip install kryon-ai[claude]
+
+# For Google Gemini support
+pip install kryon-ai[gemini]
+
+# For Groq support
+pip install kryon-ai[groq]
+
+# For MongoDB memory backend
+pip install kryon-ai[mongodb]
+
+# For Vector database support (ChromaDB, Pinecone)
+pip install kryon-ai[vector]
+
+# Install everything
+pip install kryon-ai[all]
+```
+
+### Development Installation
+
+```bash
+git clone https://github.com/syedfarithc/kryon-ai.git
+cd kryon-ai
+pip install -e .
+```
+
+## Quick Start
+
+### Simple Agent (Legacy Mode)
+
+```python
+from Kryon import Agent
+from Kryon.llms import OpenAILLM
+
+# Create LLM
+llm = OpenAILLM(api_key="your-openai-key", model="gpt-4")
+
+# Create simple agent (no memory backends = legacy mode)
+agent = Agent(name="SimpleAgent", llm=llm)
+
+# Run task
+result = agent.run_task("Explain artificial intelligence in simple terms")
+print(result)
+```
+
+### Agent with Memory Backends
+
+```python
+from Kryon import Agent
+from Kryon.llms import OpenAILLM
+from Kryon.Database import LocalMemory
+from Kryon.Database import LocalMemory
+from Kryon.core.predefined_tools import search_web, llm_summarize
+
+# Create agent with memory
+agent = Agent(
+    name="ResearchAgent",
+    llm=GroqLLM(api_key="your-api-key", model="openai/gpt-oss-120b"),
+    tools=[search_web, llm_summarize],
+    tasks=["Search for AI news", "Summarize findings"],
+    memory_backends={
+        "local": LocalMemory(file_path="agent_memory.json")
+    }
+)
+
+results = agent.run()
+analytics = agent.get_memory_analytics()
+```
+
+## Core Components
+
+### Agent Class
+
+The `Agent` class is the heart of Kryon, providing a unified interface for all agent operations.
+
+#### Constructor Parameters
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+| `name` | `str` | Agent identifier | Required |
+| `llm` | `BaseLLM` | Language model instance | Required |
+| `tools` | `List[Callable]` | Available tools | `[]` |
+| `tasks` | `List[str]` | Tasks to execute | `[]` |
+| `memory_config` | `Dict` | Legacy memory config | `None` |
+| `memory_backends` | `Dict[str, BaseMemory]` | Memory backends | `None` |
+
+#### Methods
+
+##### `run() -> List[str]`
+Executes all configured tasks and returns results.
+
+```python
+agent = Agent(name="MyAgent", llm=llm, tasks=["Task 1", "Task 2"])
+results = agent.run()  # Returns: ["Result 1", "Result 2"]
+```
+
+##### `run_task(task: str) -> str`
+Executes a single task.
+
+```python
+result = agent.run_task("Explain quantum computing")
+```
+
+##### `get_memory_analytics() -> Dict[str, Any]`
+Returns memory usage statistics.
+
+```python
+analytics = agent.get_memory_analytics()
+# Returns: {"local": {"total_entries": 10, "types": {...}, ...}}
+```
+
+##### `add_memory_backend(name: str, backend: BaseMemory)`
+Adds a memory backend to multi-memory mode agents.
+
+```python
+from Kryon.Database import MongoMemory
+agent.add_memory_backend("mongo", MongoMemory(uri="mongodb://localhost"))
+```
+
+##### `clear_all_memory() -> Union[Dict[str, bool], bool]`
+Clears all memory data.
+
+```python
+result = agent.clear_all_memory()
+# Multi-memory: {"local": True, "mongo": True}
+# Legacy: True
+```
+
+#### Agent Modes
+
+**Legacy Mode** (No `memory_backends` parameter):
+- Uses simple Memory class
+- Backward compatible with v1.x
+- Good for simple use cases
+
+**Multi-Memory Mode** (With `memory_backends` parameter):
+- Supports multiple backends simultaneously
+- Intelligent fallback retrieval
+- Advanced analytics
+
+## LLM Integrations
+
+Kryon supports multiple LLM providers with a unified interface.
+
+### OpenAI
+
+```python
+from Kryon.llms import OpenAILLM
+
+llm = OpenAILLM(
+    api_key="your-openai-key",
+    model="gpt-4o",  # or "gpt-3.5-turbo"
+    temperature=0.7,
+    max_tokens=1000
+)
+```
+
+### Claude (Anthropic)
+
+```python
+from Kryon.llms import ClaudeLLM
+
+llm = ClaudeLLM(
+    api_key="your-claude-key",
+    model="claude-3.5-sonnet-20241022",
+    max_tokens=1000
+)
+```
+
+### Gemini (Google)
+
+```python
+from Kryon.llms import GeminiLLM
+
+llm = GeminiLLM(
+    api_key="your-gemini-key",
+    model="gemini-1.5-flash",
+    temperature=0.7
+)
+```
+
+### Groq
+
+```python
+from Kryon.llms import GroqLLM
+
+llm = GroqLLM(
+    api_key="your-groq-key",
+    model="openai/gpt-oss-120b",
+    temperature=0.7,
+    max_tokens=1000
+)
+```
+
+### Custom LLM
+
+```python
+from Kryon.llms.base import BaseLLM
+
+class MyLLM(BaseLLM):
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+    
+    def generate(self, prompt: str) -> str:
+        # Your LLM implementation
+        return "Generated response"
+
+# Usage
+llm = MyLLM(api_key="your-key")
+agent = Agent(name="Agent", llm=llm)
+```
+
+## Memory Backends
+
+Memory backends store and retrieve agent interactions for context awareness.
+
+### Local Memory (JSON)
+
+```python
+from Kryon.Database import LocalMemory
+
+memory = LocalMemory(
+    file_path="agent_memory.json",  # Storage file
+    max_entries=1000               # Max entries before compaction
+)
+```
+
+#### Methods
+
+- `add(content, entry_type="general", priority="normal", metadata=None) -> bool`
+- `get_context_for_task(task, max_entries=5) -> List[Dict]`
+- `get_by_type(entry_type, limit=10) -> List[Dict]`
+- `search_content(query, limit=10) -> List[Dict]`
+- `get_analytics() -> Dict`
+- `clear() -> bool`
+
+### MongoDB Memory
+
+```python
+from Kryon.Database import MongoMemory
+
+memory = MongoMemory(
+    uri="mongodb://localhost:27017",
+    database="kryon_agents",
+    collection="agent_memory",
+    max_entries=10000
+)
+```
+
+#### Requirements
+```bash
+pip install pymongo
+```
+
+### Vector Memory (Embeddings)
+
+```python
+from Kryon.Database import VectorMemory
+
+# Pinecone
+memory = VectorMemory(
+    provider="pinecone",
+    index_name="agent-memory",
+    pinecone_api_key="your-pinecone-key",
+    openai_api_key="your-openai-key"
+)
+
+# ChromaDB
+memory = VectorMemory(
+    provider="chroma",
+    persist_directory="./vector_db",
+    collection_name="agent_memory",
+    openai_api_key="your-openai-key"
+)
+```
+
+#### Requirements
+```bash
+# For Pinecone
+pip install pinecone-client openai
+
+# For ChromaDB  
+pip install chromadb openai
+```
+
+### Multi-Backend Configuration
+
+```python
+memory_backends = {
+    "local": LocalMemory(file_path="local.json"),
+    "mongo": MongoMemory(uri="mongodb://localhost"),
+    "vector": VectorMemory(provider="chroma", persist_directory="./db")
+}
+
+agent = Agent(
+    name="MultiAgent",
+    llm=llm,
+    memory_backends=memory_backends
+)
+```
+
+#### Retrieval Strategy
+1. **Vector memory** (best semantic matching)
+2. **MongoDB** (good text search)  
+3. **Local memory** (basic but reliable)
+
+## Tools System
+
+Tools extend agent capabilities with external functions.
+
+### Built-in Tools
+
+#### `search_web(query: str) -> List[str]`
+Search the web using SerpAPI.
+
+```python
+from Kryon.core.predefined_tools import search_web
+
+# Usage in agent
+agent = Agent(name="SearchAgent", llm=llm, tools=[search_web])
+```
+
+#### `llm_summarize(text: str, llm: BaseLLM) -> str`
+Summarize text using the agent's LLM.
+
+```python
+from Kryon.core.predefined_tools import llm_summarize
+
+# Automatically uses agent's LLM
+agent = Agent(name="SummaryAgent", llm=llm, tools=[llm_summarize])
+```
+
+#### `explain(topic: str, llm: BaseLLM) -> str`
+Explain concepts in simple terms.
+
+```python
+from Kryon.core.predefined_tools import explain
+```
+
+#### `chat_agent(message: str, llm: BaseLLM) -> str`
+General purpose chat functionality.
+
+```python
+from Kryon.core.predefined_tools import chat_agent
+```
+
+### Custom Tools
+
+Create custom tools using the `@tool` decorator:
+
+```python
+from Kryon import tool
+import requests
+
+@tool
+def get_weather(city: str) -> str:
+    """Get weather information for a city."""
+    # Your implementation
+    response = requests.get(f"http://api.weather.com/{city}")
+    return response.json()["weather"]
+
+@tool
+def calculate(expression: str) -> str:
+    """Calculate mathematical expressions."""
+    try:
+        result = eval(expression)  # Note: Use safely in production
+        return f"Result: {result}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# Usage
+agent = Agent(
+    name="UtilityAgent",
+    llm=llm,
+    tools=[get_weather, calculate],
+    tasks=["Get weather for London", "Calculate 15 * 23"]
+)
+```
+
+### Tool Requirements
+
+1. **Function signature**: Tools must be callable functions
+2. **Documentation**: Use docstrings for better LLM understanding
+3. **Error handling**: Handle exceptions gracefully
+4. **Return strings**: Always return string responses
+
+## Advanced Usage
+
+### Memory Analytics
+
+```python
+analytics = agent.get_memory_analytics()
+
+# Multi-backend response
+{
+    "local": {
+        "backend": "LocalMemory",
+        "total_entries": 150,
+        "types": {"task": 50, "result": 75, "error": 25},
+        "priorities": {"high": 30, "normal": 120},
+        "oldest_entry": "2024-01-01T10:00:00",
+        "newest_entry": "2024-01-02T15:30:00"
+    },
+    "mongo": {
+        "backend": "MongoMemory", 
+        "total_entries": 200,
+        # ... similar structure
+    }
+}
+```
+
+### Error Handling
+
+```python
+try:
+    results = agent.run()
+except Exception as e:
+    print(f"Agent execution failed: {e}")
+    
+    # Check memory status
+    analytics = agent.get_memory_analytics()
+    for backend, stats in analytics.items():
+        if "error" in stats:
+            print(f"{backend} backend error: {stats['error']}")
+```
+
+### Performance Optimization
+
+#### Memory Compaction
+
+```python
+# Local memory auto-compacts at max_entries
+local_memory = LocalMemory(max_entries=1000)  # Compacts at 1000 entries
+
+# Manual compaction
+if analytics["local"]["total_entries"] > 500:
+    agent.clear_all_memory()
+```
+
+#### Batch Operations
+
+```python
+# Process multiple tasks efficiently
+tasks = ["Task 1", "Task 2", "Task 3"]
+agent = Agent(name="BatchAgent", llm=llm, tools=tools, tasks=tasks)
+
+# Single run() call processes all tasks
+results = agent.run()
+```
+
+### Configuration Management
+
+```python
+import os
+from dataclasses import dataclass
+
+@dataclass
+class AgentConfig:
+    name: str
+    llm_provider: str
+    api_key: str
+    model: str
+    memory_backends: dict
+    tools: list
+
+def create_agent_from_config(config: AgentConfig) -> Agent:
+    # Create LLM based on provider
+    llm_classes = {
+        "openai": OpenAILLM,
+        "groq": GroqLLM,
+        "claude": ClaudeLLM
+    }
+    
+    llm = llm_classes[config.llm_provider](
+        api_key=config.api_key,
+        model=config.model
+    )
+    
+    return Agent(
+        name=config.name,
+        llm=llm,
+        tools=config.tools,
+        memory_backends=config.memory_backends
+    )
+
+# Usage
+config = AgentConfig(
+    name="ProductionAgent",
+    llm_provider="openai",
+    api_key=os.getenv("OPENAI_API_KEY"),
+    model="gpt-4o",
+    memory_backends={"local": LocalMemory()},
+    tools=[search_web, llm_summarize]
+)
+
+agent = create_agent_from_config(config)
+```
+
+## API Reference
+
+### Core Classes
+
+#### `Agent`
+
+**Full Constructor:**
+```python
+Agent(
+    name: str,
+    llm: BaseLLM,
+    tools: Optional[List[Callable]] = None,
+    tasks: Optional[List[str]] = None,
+    memory_config: Optional[Dict[str, Any]] = None,
+    memory_backends: Optional[Dict[str, BaseMemory]] = None
+)
+```
+
+**Properties:**
+- `name: str` - Agent identifier
+- `llm: BaseLLM` - Language model instance  
+- `tools: Dict[str, Callable]` - Available tools mapping
+- `tasks: List[str]` - Tasks to execute
+- `use_multi_memory: bool` - Whether multi-memory mode is enabled
+- `memory_backends: Dict[str, BaseMemory]` - Memory backend instances
+
+#### `BaseMemory` (Abstract)
+
+**Abstract Methods:**
+```python
+def add(self, content: str, entry_type: str = "general", 
+        priority: str = "normal", metadata: Optional[Dict] = None) -> bool
+
+def get_context_for_task(self, task: str, max_entries: int = 5) -> List[Dict[str, Any]]
+
+def get_by_type(self, entry_type: str, limit: int = 10) -> List[Dict[str, Any]]
+
+def search_content(self, query: str, limit: int = 10) -> List[Dict[str, Any]]
+
+def get_analytics(self) -> Dict[str, Any]
+
+def clear(self) -> bool
+```
+
+#### `BaseLLM` (Abstract)
+
+**Abstract Methods:**
+```python
+def generate(self, prompt: str) -> str
+```
+
+### Memory Backend Classes
+
+#### `LocalMemory`
+
+```python
+LocalMemory(
+    file_path: str = "agent_memory.json",
+    max_entries: int = 1000
+)
+```
+
+#### `MongoMemory`
+
+```python  
+MongoMemory(
+    uri: str = "mongodb://localhost:27017",
+    database: str = "kryon_agents", 
+    collection: str = "agent_memory",
+    max_entries: int = 10000
+)
+```
+
+#### `VectorMemory`
+
+```python
+VectorMemory(
+    provider: str,  # "pinecone" or "chroma"
+    openai_api_key: str,
+    # Pinecone specific
+    index_name: Optional[str] = None,
+    pinecone_api_key: Optional[str] = None,
+    # ChromaDB specific  
+    persist_directory: Optional[str] = None,
+    collection_name: Optional[str] = None
+)
+```
+
+### Tool Decorator
+
+```python
+@tool
+def my_function(param1: str, param2: int) -> str:
+    """Function description for LLM."""
+    return "result"
+```
+
+## Examples
+
+### Example 1: Simple Q&A Agent
+
+```python
+from Kryon import Agent, OpenAILLM
+from Kryon.core.predefined_tools import explain
+
+def create_qa_agent():
+    llm = OpenAILLM(api_key="your-key", model="gpt-4o")
+    
+    agent = Agent(
+        name="QAAgent",
+        llm=llm,
+        tools=[explain],
+        tasks=[
+            "Explain blockchain technology",
+            "Explain artificial intelligence"
+        ]
+    )
+    
+    return agent
+
+# Usage
+agent = create_qa_agent()
+results = agent.run()
+for i, result in enumerate(results):
+    print(f"Answer {i+1}: {result}")
+```
+
+### Example 2: Research Agent with Memory
+
+```python
+from Kryon import Agent, GroqLLM
+from Kryon.Database import LocalMemory
+from Kryon.core.predefined_tools import search_web, llm_summarize
+from Kryon import tool
+
+@tool
+def save_research(topic: str, findings: str) -> str:
+    """Save research findings to a file."""
+    with open(f"research_{topic.lower()}.md", "w") as f:
+        f.write(f"# Research: {topic}\n\n{findings}")
+    return f"Research saved to research_{topic.lower()}.md"
+
+def create_research_agent():
+    llm = GroqLLM(api_key="your-key", model="openai/gpt-oss-120b")
+    
+    memory = LocalMemory(
+        file_path="research_memory.json",
+        max_entries=2000
+    )
+    
+    agent = Agent(
+        name="ResearchAgent",
+        llm=llm,
+        tools=[search_web, llm_summarize, save_research],
+        tasks=[
+            "Search for latest developments in quantum computing",
+            "Summarize the key findings",
+            "Save research quantum computing findings"
+        ],
+        memory_backends={"local": memory}
+    )
+    
+    return agent
+
+# Usage
+agent = create_research_agent()
+results = agent.run()
+
+# Check what was learned
+analytics = agent.get_memory_analytics()
+print(f"Agent processed {analytics['local']['total_entries']} pieces of information")
+```
+
+### Example 3: Multi-Backend Production Agent
+
+```python
+import os
+from Kryon import Agent, ClaudeLLM
+from Kryon.Database import LocalMemory, MongoMemory, VectorMemory
+from Kryon.core.predefined_tools import search_web, llm_summarize, explain
+
+def create_production_agent():
+    # LLM setup
+    llm = ClaudeLLM(
+        api_key=os.getenv("CLAUDE_API_KEY"),
+        model="claude-3.5-sonnet-20241022"
+    )
+    
+    # Multi-backend memory
+    memory_backends = {
+        "local": LocalMemory(
+            file_path="production_memory.json",
+            max_entries=1000
+        ),
+        "mongo": MongoMemory(
+            uri=os.getenv("MONGODB_URI", "mongodb://localhost:27017"),
+            database="production_agents",
+            collection="agent_memory"
+        ),
+        "vector": VectorMemory(
+            provider="chroma",
+            persist_directory="./production_vector_db",
+            openai_api_key=os.getenv("OPENAI_API_KEY")
+        )
+    }
+    
+    agent = Agent(
+        name="ProductionAgent",
+        llm=llm,
+        tools=[search_web, llm_summarize, explain],
+        memory_backends=memory_backends
+    )
+    
+    return agent
+
+def run_production_workflow():
+    agent = create_production_agent()
+    
+    # Dynamic task execution
+    tasks = [
+        "Search for AI industry trends",
+        "Explain machine learning applications in healthcare", 
+        "Summarize recent findings"
+    ]
+    
+    for task in tasks:
+        print(f"Executing: {task}")
+        result = agent.run_task(task)
+        print(f"Result: {result[:100]}...\n")
+    
+    # Analytics
+    analytics = agent.get_memory_analytics()
+    for backend, stats in analytics.items():
+        print(f"{backend}: {stats.get('total_entries', 0)} entries")
+
+if __name__ == "__main__":
+    run_production_workflow()
+```
+
+### Example 4: Custom Tool Integration
+
+```python
+from Kryon import Agent, tool, GeminiLLM
+import requests
+import json
+
+@tool
+def get_stock_price(symbol: str) -> str:
+    """Get current stock price for a symbol."""
+    # Replace with actual stock API
+    api_key = "your-stock-api-key"
+    url = f"https://api.stockapi.com/v1/quote?symbol={symbol}&apikey={api_key}"
+    
+    try:
+        response = requests.get(url)
+        data = response.json()
+        price = data["price"]
+        change = data["change"]
+        return f"{symbol}: ${price} ({change:+.2f})"
+    except Exception as e:
+        return f"Error getting price for {symbol}: {str(e)}"
+
+@tool  
+def portfolio_analysis(stocks: str) -> str:
+    """Analyze a portfolio of stocks."""
+    stock_list = [s.strip() for s in stocks.split(",")]
+    total_value = 0
+    analysis = []
+    
+    for stock in stock_list:
+        # Mock analysis - replace with real calculation
+        price_info = get_stock_price(stock)
+        analysis.append(price_info)
+    
+    return "Portfolio Analysis:\n" + "\n".join(analysis)
+
+def create_financial_agent():
+    llm = GeminiLLM(api_key="your-key", model="gemini-1.5-flash")
+    
+    agent = Agent(
+        name="FinancialAgent",
+        llm=llm,
+        tools=[get_stock_price, portfolio_analysis],
+        tasks=[
+            "Get stock price for AAPL",
+            "Analyze portfolio AAPL,GOOGL,MSFT"
+        ]
+    )
+    
+    return agent
+
+# Usage
+agent = create_financial_agent()
+results = agent.run()
+```
+
+## Best Practices
+
+### 1. Memory Management
+
+```python
+# ✅ Good: Set appropriate limits
+memory = LocalMemory(max_entries=1000)  # Prevents unlimited growth
+
+# ❌ Bad: No limits
+memory = LocalMemory(max_entries=999999)  # Can cause performance issues
+```
+
+### 2. Tool Design
+
+```python
+# ✅ Good: Descriptive docstrings and error handling
+@tool
+def search_database(query: str) -> str:
+    """Search the company database for information."""
+    try:
+        result = database.search(query)
+        return f"Found: {result}"
+    except Exception as e:
+        return f"Search failed: {str(e)}"
+
+# ❌ Bad: No documentation or error handling  
+@tool
+def search(q):
+    return database.search(q)
+```
+
+### 3. Configuration Management
+
+```python
+# ✅ Good: Environment-based configuration
+import os
+
+API_KEY = os.getenv("GROQ_API_KEY")
+if not API_KEY:
+    raise ValueError("GROQ_API_KEY environment variable required")
+
+# ❌ Bad: Hardcoded credentials
+API_KEY = "gsk_abc123..."  # Security risk
+```
+
+### 4. Error Handling
+
+```python
+# ✅ Good: Comprehensive error handling
+try:
+    agent = Agent(name="MyAgent", llm=llm)
+    results = agent.run()
+except Exception as e:
+    logger.error(f"Agent execution failed: {e}")
+    # Handle gracefully
+
+# ❌ Bad: No error handling
+results = agent.run()  # Can crash application
+```
+
+### 5. Performance Optimization
+
+```python
+# ✅ Good: Batch processing
+tasks = ["Task 1", "Task 2", "Task 3"] 
+agent = Agent(name="Agent", llm=llm, tasks=tasks)
+results = agent.run()  # Process all at once
+
+# ❌ Bad: Individual processing
+results = []
+for task in tasks:
+    agent = Agent(name="Agent", llm=llm, tasks=[task])
+    results.extend(agent.run())  # Creates new agent each time
+```
+
+### 6. Testing
+
+```python
+import pytest
+from unittest.mock import Mock
+
+def test_agent_creation():
+    mock_llm = Mock()
+    mock_llm.generate.return_value = "test response"
+    
+    agent = Agent(name="TestAgent", llm=mock_llm)
+    assert agent.name == "TestAgent"
+    assert agent.llm == mock_llm
+
+def test_agent_task_execution():
+    mock_llm = Mock()
+    mock_llm.generate.return_value = "explain"
+    
+    agent = Agent(
+        name="TestAgent", 
+        llm=mock_llm,
+        tools=[explain],
+        tasks=["Test task"]
+    )
+    
+    results = agent.run()
+    assert len(results) == 1
+    mock_llm.generate.assert_called()
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Import Errors
+```bash
+# Error: ModuleNotFoundError: No module named 'Kryon'
+pip install kryon-ai
+
+# Error: No module named 'pymongo' 
+pip install pymongo
+
+# Error: No module named 'openai'
+pip install openai
+```
+
+#### 2. API Key Issues
+```python
+# Check environment variables
+import os
+print("GROQ_API_KEY:", os.getenv("GROQ_API_KEY"))
+
+# Verify key format
+api_key = "gsk_..."  # Groq keys start with 'gsk_'
+api_key = "sk-..."   # OpenAI keys start with 'sk-'
+```
+
+#### 3. Memory Backend Issues
+```python
+# MongoDB connection
+try:
+    memory = MongoMemory(uri="mongodb://localhost:27017")
+except Exception as e:
+    print(f"MongoDB connection failed: {e}")
+    # Fall back to local memory
+    memory = LocalMemory()
+```
+
+#### 4. Tool Execution Issues
+```python
+# Debug tool selection
+agent = Agent(name="Debug", llm=llm, tools=[my_tool])
+print("Available tools:", list(agent.tools.keys()))
+
+# Check tool signatures
+import inspect
+print("Tool signature:", inspect.signature(my_tool))
+```
+
+### Debug Mode
+
+```python
+import logging
+
+# Enable debug logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Create agent with debug info
+agent = Agent(name="DebugAgent", llm=llm)
+print(f"Agent mode: {'Multi-memory' if agent.use_multi_memory else 'Legacy'}")
+print(f"Memory backends: {list(agent.memory_backends.keys())}")
+```
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+```bash
+git clone https://github.com/your-repo/kryon
+cd kryon
+pip install -e ".[dev]"
+pytest tests/
+```
+
+## License
+
+Kryon is released under the MIT License. See [LICENSE](LICENSE) for details.
+
+## Support
+
+- **Documentation**: [https://kryon-ai.readthedocs.io](https://kryon-ai.readthedocs.io)
+- **Issues**: [GitHub Issues](https://github.com/your-repo/kryon/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-repo/kryon/discussions)
+- **Email**: support@kryon-ai.com
+
+---
+
+*Built with ❤️ by the Kryon Team*
