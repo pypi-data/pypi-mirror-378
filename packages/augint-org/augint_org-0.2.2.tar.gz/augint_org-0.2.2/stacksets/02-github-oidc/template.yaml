@@ -1,0 +1,309 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: GitHub OIDC provider and deployment role for GitHub Actions
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Default: svange
+    Description: GitHub organization or username
+
+  RepoPattern:
+    Type: String
+    Default: '*'
+    Description: Repository name pattern (* for all repos)
+
+  BranchPattern:
+    Type: String
+    Default: '*'
+    Description: Branch name pattern (* for all branches)
+
+Resources:
+  GitHubOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        # GitHub's OIDC thumbprints (updated as of 2024)
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+        - 1c58a3a8518e8759bf075b76b750d4f2df264fcd
+      Tags:
+        - Key: Purpose
+          Value: GitHubActions
+        - Key: ManagedBy
+          Value: StackSet
+
+  SAMDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SAMDeployRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !GetAtt GitHubOIDCProvider.Arn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                'token.actions.githubusercontent.com:aud': sts.amazonaws.com
+              StringLike:
+                'token.actions.githubusercontent.com:sub':
+                  - !Sub 'repo:${GitHubOrg}/${RepoPattern}:ref:refs/heads/${BranchPattern}'
+                  - !Sub 'repo:${GitHubOrg}/${RepoPattern}:environment:*'
+                  - !Sub 'repo:${GitHubOrg}/${RepoPattern}:pull_request'
+                  - !Sub 'repo:${GitHubOrg}/${RepoPattern}:ref:refs/tags/*'
+      Policies:
+        - PolicyName: SAMDeploymentPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Allow passing the CloudFormation execution role
+              - Sid: CloudFormationRolePass
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-sam-cli-cfn-exec-role'
+
+              # CloudFormation stack operations
+              - Sid: CloudFormationStackOperations
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:DescribeStackResource
+                  - cloudformation:DescribeStackResources
+                  - cloudformation:GetTemplate
+                  - cloudformation:ValidateTemplate
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:ListStacks
+                  - cloudformation:ListStackResources
+                Resource: '*'
+
+              # S3 operations for SAM artifacts
+              - Sid: S3ArtifactOperations
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                  - s3:GetBucketVersioning
+                  - s3:GetObjectVersion
+                  - s3:DeleteObjectVersion
+                Resource:
+                  - !Sub 'arn:aws:s3:::aws-sam-cli-managed-${AWS::AccountId}-*'
+                  - !Sub 'arn:aws:s3:::aws-sam-cli-managed-${AWS::AccountId}-*/*'
+
+              # ECR operations for container images
+              - Sid: ECROperations
+                Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:PutImage
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                  - ecr:CreateRepository
+                  - ecr:DescribeRepositories
+                  - ecr:SetRepositoryPolicy
+                Resource: '*'
+
+              # Lambda operations
+              - Sid: LambdaOperations
+                Effect: Allow
+                Action:
+                  - lambda:GetFunction
+                  - lambda:CreateFunction
+                  - lambda:UpdateFunctionCode
+                  - lambda:UpdateFunctionConfiguration
+                  - lambda:DeleteFunction
+                  - lambda:ListFunctions
+                  - lambda:GetFunctionConfiguration
+                  - lambda:AddPermission
+                  - lambda:RemovePermission
+                  - lambda:InvokeFunction
+                  - lambda:PublishVersion
+                  - lambda:CreateAlias
+                  - lambda:UpdateAlias
+                  - lambda:DeleteAlias
+                  - lambda:ListVersionsByFunction
+                  - lambda:GetLayerVersion
+                  - lambda:PublishLayerVersion
+                  - lambda:DeleteLayerVersion
+                  - lambda:ListLayers
+                Resource: '*'
+
+              # API Gateway operations
+              - Sid: APIGatewayOperations
+                Effect: Allow
+                Action:
+                  - apigateway:*
+                Resource: '*'
+
+              # DynamoDB operations
+              - Sid: DynamoDBOperations
+                Effect: Allow
+                Action:
+                  - dynamodb:CreateTable
+                  - dynamodb:UpdateTable
+                  - dynamodb:DeleteTable
+                  - dynamodb:DescribeTable
+                  - dynamodb:ListTables
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: '*'
+
+              # IAM operations for creating service roles
+              - Sid: IAMServiceRoles
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:ListRolePolicies
+                  - iam:UpdateRole
+                  - iam:UpdateAssumeRolePolicy
+                  - iam:ListAttachedRolePolicies
+                  - iam:TagRole
+                  - iam:UntagRole
+                Resource:
+                  - !Sub 'arn:aws:iam::${AWS::AccountId}:role/*'
+
+              # EventBridge operations
+              - Sid: EventBridgeOperations
+                Effect: Allow
+                Action:
+                  - events:PutRule
+                  - events:DeleteRule
+                  - events:DescribeRule
+                  - events:PutTargets
+                  - events:RemoveTargets
+                  - events:ListRules
+                  - events:ListTargetsByRule
+                Resource: '*'
+
+              # CloudWatch Logs operations
+              - Sid: CloudWatchLogsOperations
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DeleteLogGroup
+                  - logs:PutRetentionPolicy
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: '*'
+
+              # SSM Parameter Store operations
+              - Sid: SSMParameterOperations
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                  - ssm:DescribeParameters
+                Resource: '*'
+
+              # SQS operations
+              - Sid: SQSOperations
+                Effect: Allow
+                Action:
+                  - sqs:CreateQueue
+                  - sqs:DeleteQueue
+                  - sqs:GetQueueAttributes
+                  - sqs:SetQueueAttributes
+                  - sqs:ListQueues
+                Resource: '*'
+
+              # SNS operations
+              - Sid: SNSOperations
+                Effect: Allow
+                Action:
+                  - sns:CreateTopic
+                  - sns:DeleteTopic
+                  - sns:Subscribe
+                  - sns:Unsubscribe
+                  - sns:SetTopicAttributes
+                  - sns:GetTopicAttributes
+                  - sns:ListTopics
+                Resource: '*'
+
+              # Route53 operations for DNS
+              - Sid: Route53Operations
+                Effect: Allow
+                Action:
+                  - route53:CreateHostedZone
+                  - route53:DeleteHostedZone
+                  - route53:GetHostedZone
+                  - route53:ListHostedZones
+                  - route53:ChangeResourceRecordSets
+                  - route53:ListResourceRecordSets
+                  - route53:GetChange
+                Resource: '*'
+
+              # CloudFront operations
+              - Sid: CloudFrontOperations
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateDistribution
+                  - cloudfront:UpdateDistribution
+                  - cloudfront:DeleteDistribution
+                  - cloudfront:GetDistribution
+                  - cloudfront:ListDistributions
+                  - cloudfront:CreateInvalidation
+                Resource: '*'
+
+              # Certificate Manager operations
+              - Sid: ACMOperations
+                Effect: Allow
+                Action:
+                  - acm:RequestCertificate
+                  - acm:DeleteCertificate
+                  - acm:DescribeCertificate
+                  - acm:ListCertificates
+                  - acm:AddTagsToCertificate
+                Resource: '*'
+
+      Tags:
+        - Key: Purpose
+          Value: GitHubActions
+        - Key: ManagedBy
+          Value: StackSet
+
+Outputs:
+  RoleArn:
+    Description: ARN of the deployment role for GitHub Actions
+    Value: !GetAtt SAMDeployRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-RoleArn'
+
+  OIDCProviderArn:
+    Description: ARN of the GitHub OIDC provider
+    Value: !GetAtt GitHubOIDCProvider.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-OIDCProviderArn'
+
+  TrustPolicy:
+    Description: Example trust relationship for the role
+    Value: !Sub |
+      repo:${GitHubOrg}/${RepoPattern}:ref:refs/heads/${BranchPattern}

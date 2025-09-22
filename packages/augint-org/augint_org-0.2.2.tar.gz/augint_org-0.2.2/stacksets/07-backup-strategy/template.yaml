@@ -1,0 +1,358 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Automated backup strategy for Production accounts using AWS Backup
+
+Parameters:
+  BackupRetentionDays:
+    Type: Number
+    Default: 30
+    Description: Number of days to retain backups
+    MinValue: 1
+    MaxValue: 35000
+
+  BackupScheduleExpression:
+    Type: String
+    Default: 'cron(0 5 ? * * *)'
+    Description: Backup schedule in cron format (default is 5 AM UTC daily)
+
+  CrossRegionBackup:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Enable cross-region backup copy
+
+  CrossRegionBackupDestination:
+    Type: String
+    Default: 'us-west-2'
+    Description: Destination region for cross-region backup copies
+
+Resources:
+  # KMS key for backup vault encryption
+  BackupVaultKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS key for AWS Backup vault encryption
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM policies
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow AWS Backup
+            Effect: Allow
+            Principal:
+              Service: backup.amazonaws.com
+            Action:
+              - kms:CreateGrant
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Resource: '*'
+      Tags:
+        - Key: Purpose
+          Value: BackupVaultEncryption
+        - Key: ManagedBy
+          Value: StackSet
+
+  BackupVaultKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub 'alias/backup-vault-${AWS::AccountId}'
+      TargetKeyId: !Ref BackupVaultKey
+
+  # Primary backup vault
+  BackupVault:
+    Type: AWS::Backup::BackupVault
+    Properties:
+      BackupVaultName: !Sub '${AWS::AccountId}-backup-vault'
+      EncryptionKeyArn: !GetAtt BackupVaultKey.Arn
+      BackupVaultTags:
+        Purpose: ProductionBackups
+        ManagedBy: StackSet
+      Notifications:
+        BackupVaultEvents:
+          - BACKUP_JOB_STARTED
+          - BACKUP_JOB_COMPLETED
+          - BACKUP_JOB_FAILED
+          - RESTORE_JOB_STARTED
+          - RESTORE_JOB_COMPLETED
+          - RESTORE_JOB_FAILED
+        SNSTopicArn: !Ref BackupNotificationTopic
+
+  # SNS topic for backup notifications
+  BackupNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${AWS::AccountId}-backup-notifications'
+      DisplayName: AWS Backup Notifications
+      Tags:
+        - Key: Purpose
+          Value: BackupNotifications
+        - Key: ManagedBy
+          Value: StackSet
+
+  # IAM role for AWS Backup service
+  BackupServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'AWSBackupServiceRole-${AWS::AccountId}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: backup.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup
+        - arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores
+      Tags:
+        - Key: Purpose
+          Value: BackupService
+        - Key: ManagedBy
+          Value: StackSet
+
+  # Backup plan for daily backups
+  DailyBackupPlan:
+    Type: AWS::Backup::BackupPlan
+    Properties:
+      BackupPlan:
+        BackupPlanName: !Sub '${AWS::AccountId}-daily-backups'
+        BackupPlanRule:
+          - RuleName: DailyBackupRule
+            TargetBackupVault: !Ref BackupVault
+            ScheduleExpression: !Ref BackupScheduleExpression
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: !Ref BackupRetentionDays
+              MoveToColdStorageAfterDays: !If
+                - EnableColdStorage
+                - 7
+                - !Ref AWS::NoValue
+            RecoveryPointTags:
+              Type: Daily
+              ManagedBy: StackSet
+            CopyActions: !If
+              - EnableCrossRegionBackup
+              - - TargetBackupVaultArn: !Sub 'arn:aws:backup:${CrossRegionBackupDestination}:${AWS::AccountId}:backup-vault:${AWS::AccountId}-backup-vault'
+                  Lifecycle:
+                    DeleteAfterDays: !Ref BackupRetentionDays
+              - !Ref AWS::NoValue
+      BackupPlanTags:
+        Purpose: DailyBackups
+        ManagedBy: StackSet
+
+  # Backup selection for all supported resources with tag
+  TagBasedBackupSelection:
+    Type: AWS::Backup::BackupSelection
+    Properties:
+      BackupPlanId: !Ref DailyBackupPlan
+      BackupSelection:
+        SelectionName: TagBasedSelection
+        IamRoleArn: !GetAtt BackupServiceRole.Arn
+        ListOfTags:
+          - ConditionType: STRINGEQUALS
+            ConditionKey: Backup
+            ConditionValue: 'true'
+        Resources:
+          - '*'
+        Conditions:
+          ListOfTags:
+            - ConditionType: STRINGEQUALS
+              ConditionKey: Backup
+              ConditionValue: 'true'
+
+  # Backup selection for critical resources without tags
+  CriticalResourcesBackupSelection:
+    Type: AWS::Backup::BackupSelection
+    Properties:
+      BackupPlanId: !Ref DailyBackupPlan
+      BackupSelection:
+        SelectionName: CriticalResources
+        IamRoleArn: !GetAtt BackupServiceRole.Arn
+        Resources:
+          # All RDS instances and clusters
+          - 'arn:aws:rds:*:*:db:*'
+          - 'arn:aws:rds:*:*:cluster:*'
+          # All DynamoDB tables
+          - 'arn:aws:dynamodb:*:*:table/*'
+          # All EFS file systems
+          - 'arn:aws:elasticfilesystem:*:*:file-system/*'
+          # All Aurora clusters
+          - 'arn:aws:rds:*:*:cluster:*'
+          # All DocumentDB clusters
+          - 'arn:aws:rds:*:*:cluster:*'
+          # All Neptune clusters
+          - 'arn:aws:neptune-db:*:*:cluster:*'
+          # All S3 buckets (if S3 backup is enabled in the region)
+          - 'arn:aws:s3:::*'
+
+  # CloudWatch Dashboard for backup monitoring
+  BackupDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub '${AWS::AccountId}-backup-monitoring'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/Backup", "NumberOfBackupJobsCreated", { "stat": "Sum" } ],
+                  [ ".", "NumberOfBackupJobsCompleted", { "stat": "Sum" } ],
+                  [ ".", "NumberOfBackupJobsFailed", { "stat": "Sum" } ]
+                ],
+                "period": 86400,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Backup Job Status (24h)",
+                "yAxis": {
+                  "left": {
+                    "min": 0
+                  }
+                }
+              }
+            },
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/Backup", "NumberOfRestoreJobsCreated", { "stat": "Sum" } ],
+                  [ ".", "NumberOfRestoreJobsCompleted", { "stat": "Sum" } ],
+                  [ ".", "NumberOfRestoreJobsFailed", { "stat": "Sum" } ]
+                ],
+                "period": 86400,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Restore Job Status (24h)",
+                "yAxis": {
+                  "left": {
+                    "min": 0
+                  }
+                }
+              }
+            }
+          ]
+        }
+
+  # CloudWatch Alarms for backup failures
+  BackupJobFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::AccountId}-backup-job-failures'
+      AlarmDescription: Alert when backup jobs fail
+      MetricName: NumberOfBackupJobsFailed
+      Namespace: AWS/Backup
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref BackupNotificationTopic
+
+  RestoreJobFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::AccountId}-restore-job-failures'
+      AlarmDescription: Alert when restore jobs fail
+      MetricName: NumberOfRestoreJobsFailed
+      Namespace: AWS/Backup
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref BackupNotificationTopic
+
+  # Backup compliance report configuration
+  BackupReportPlan:
+    Type: AWS::Backup::ReportPlan
+    Properties:
+      ReportPlanName: !Sub '${AWS::AccountId}-backup-compliance'
+      ReportPlanDescription: Daily backup compliance report
+      ReportDeliveryChannel:
+        S3BucketName: !Ref BackupReportBucket
+        S3KeyPrefix: backup-reports/
+      ReportSetting:
+        ReportTemplate: BACKUP_JOB_REPORT
+      ReportPlanTags:
+        Purpose: BackupCompliance
+        ManagedBy: StackSet
+
+  # S3 bucket for backup reports
+  BackupReportBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::AccountId}-backup-reports-${AWS::Region}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldReports
+            Status: Enabled
+            ExpirationInDays: 90
+      Tags:
+        - Key: Purpose
+          Value: BackupReports
+        - Key: ManagedBy
+          Value: StackSet
+
+Conditions:
+  EnableCrossRegionBackup: !Equals [!Ref CrossRegionBackup, 'true']
+  EnableColdStorage: !Not [!Equals [!Ref BackupRetentionDays, 1]]
+
+Outputs:
+  BackupVaultName:
+    Description: Name of the backup vault
+    Value: !Ref BackupVault
+    Export:
+      Name: !Sub '${AWS::StackName}-BackupVaultName'
+
+  BackupVaultArn:
+    Description: ARN of the backup vault
+    Value: !GetAtt BackupVault.BackupVaultArn
+    Export:
+      Name: !Sub '${AWS::StackName}-BackupVaultArn'
+
+  BackupPlanId:
+    Description: ID of the backup plan
+    Value: !GetAtt DailyBackupPlan.BackupPlanId
+    Export:
+      Name: !Sub '${AWS::StackName}-BackupPlanId'
+
+  BackupServiceRoleArn:
+    Description: ARN of the backup service role
+    Value: !GetAtt BackupServiceRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-BackupServiceRoleArn'
+
+  BackupNotificationTopicArn:
+    Description: SNS topic for backup notifications
+    Value: !Ref BackupNotificationTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-BackupNotificationTopicArn'
+
+  BackupReportBucketName:
+    Description: S3 bucket for backup reports
+    Value: !Ref BackupReportBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BackupReportBucketName'

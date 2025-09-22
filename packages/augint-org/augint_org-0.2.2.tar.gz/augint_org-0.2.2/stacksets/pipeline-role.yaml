@@ -1,0 +1,206 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: GitHub OIDC provider and deployment role for organization pipeline
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Default: augmenting-integrations
+    Description: GitHub organization or username
+
+  GitHubRepo:
+    Type: String
+    Description: Repository name containing the organization infrastructure code
+
+Resources:
+  GitHubOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        # GitHub's OIDC thumbprints (updated as of 2024)
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+        - 1c58a3a8518e8759bf075b76b750d4f2df264fcd
+
+  OrgPipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: OrgPipelineRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !GetAtt GitHubOIDCProvider.Arn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                'token.actions.githubusercontent.com:aud': sts.amazonaws.com
+              StringLike:
+                'token.actions.githubusercontent.com:sub':
+                  # Allow main branch
+                  - !Sub 'repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/main'
+                  # Allow any environment
+                  - !Sub 'repo:${GitHubOrg}/${GitHubRepo}:environment:*'
+                  # Allow pull requests (for validation)
+                  - !Sub 'repo:${GitHubOrg}/${GitHubRepo}:pull_request'
+      ManagedPolicyArns:
+        # CloudFormation full access for managing stacks and StackSets
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+      Policies:
+        - PolicyName: OrgPipelinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # StackSet operations
+              - Sid: StackSetManagement
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateStackSet
+                  - cloudformation:UpdateStackSet
+                  - cloudformation:DeleteStackSet
+                  - cloudformation:DescribeStackSet
+                  - cloudformation:ListStackSets
+                  - cloudformation:CreateStackInstances
+                  - cloudformation:UpdateStackInstances
+                  - cloudformation:DeleteStackInstances
+                  - cloudformation:DescribeStackInstance
+                  - cloudformation:ListStackInstances
+                  - cloudformation:DescribeStackSetOperation
+                  - cloudformation:ListStackSetOperations
+                  - cloudformation:ListStackSetOperationResults
+                  - cloudformation:StopStackSetOperation
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:GetTemplate
+                Resource: '*'
+
+              # Organizations management for SCPs and OUs
+              - Sid: OrganizationsManagement
+                Effect: Allow
+                Action:
+                  - organizations:CreatePolicy
+                  - organizations:UpdatePolicy
+                  - organizations:DeletePolicy
+                  - organizations:AttachPolicy
+                  - organizations:DetachPolicy
+                  - organizations:ListPolicies
+                  - organizations:ListPoliciesForTarget
+                  - organizations:DescribePolicy
+                  - organizations:CreateOrganizationalUnit
+                  - organizations:DeleteOrganizationalUnit
+                  - organizations:UpdateOrganizationalUnit
+                  - organizations:ListOrganizationalUnitsForParent
+                  - organizations:ListRoots
+                  - organizations:ListAccounts
+                  - organizations:ListAccountsForParent
+                  - organizations:DescribeOrganization
+                  - organizations:DescribeOrganizationalUnit
+                  - organizations:DescribeAccount
+                  - organizations:MoveAccount
+                Resource: '*'
+
+              # IAM operations for StackSet service roles
+              - Sid: IAMStackSetRoles
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:PassRole
+                  - iam:ListRolePolicies
+                  - iam:UpdateRole
+                  - iam:UpdateAssumeRolePolicy
+                  - iam:TagRole
+                Resource:
+                  - !Sub 'arn:aws:iam::${AWS::AccountId}:role/AWSCloudFormationStackSet*'
+                  - !Sub 'arn:aws:iam::${AWS::AccountId}:role/OrgPipelineRole'
+
+              # Read-only for verification
+              - Sid: ReadOnlyAccess
+                Effect: Allow
+                Action:
+                  - iam:ListOpenIDConnectProviders
+                  - iam:GetOpenIDConnectProvider
+                  - sts:GetCallerIdentity
+                  - account:GetAccount
+                  - account:ListRegions
+                Resource: '*'
+
+              # S3 for template storage (if needed)
+              - Sid: S3TemplateAccess
+                Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:DeleteBucket
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                  - s3:GetBucketVersioning
+                  - s3:PutBucketVersioning
+                Resource:
+                  - !Sub 'arn:aws:s3:::cf-templates-${AWS::AccountId}-*'
+                  - !Sub 'arn:aws:s3:::cf-templates-${AWS::AccountId}-*/*'
+
+              # CloudWatch Logs for debugging
+              - Sid: CloudWatchLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+
+              # Service-linked roles for StackSets
+              - Sid: ServiceLinkedRoles
+                Effect: Allow
+                Action:
+                  - iam:CreateServiceLinkedRole
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    'iam:AWSServiceName':
+                      - stacksets.cloudformation.amazonaws.com
+                      - organizations.amazonaws.com
+
+      Tags:
+        - Key: Purpose
+          Value: OrganizationPipeline
+        - Key: ManagedBy
+          Value: CloudFormation
+        - Key: GitHubOrg
+          Value: !Ref GitHubOrg
+        - Key: GitHubRepo
+          Value: !Ref GitHubRepo
+
+Outputs:
+  RoleArn:
+    Description: ARN of the pipeline deployment role
+    Value: !GetAtt OrgPipelineRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-RoleArn'
+
+  OIDCProviderArn:
+    Description: ARN of the GitHub OIDC provider
+    Value: !GetAtt GitHubOIDCProvider.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-OIDCProviderArn'
+
+  TrustRelationship:
+    Description: Trust relationship pattern for GitHub Actions
+    Value: !Sub 'repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/main'
+
+  GitHubSecretsConfig:
+    Description: Configuration to add to GitHub repository secrets
+    Value: !Sub |
+      AWS_ROLE_ARN: ${OrgPipelineRole.Arn}
+      AWS_REGION: ${AWS::Region}

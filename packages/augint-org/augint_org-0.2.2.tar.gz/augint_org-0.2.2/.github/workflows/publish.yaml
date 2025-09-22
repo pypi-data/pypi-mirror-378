@@ -1,0 +1,812 @@
+name: 🐍 Library Publishing
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/publish.yaml'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.12"
+  UV_SYSTEM_PYTHON: 1
+
+permissions:
+  contents: read
+
+jobs:
+  # ============================================
+  # Pre-commit Checks
+  # ============================================
+  pre-commit:
+    name: Pre-commit Checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run pre-commit checks
+        run: make pre-commit
+
+  # ============================================
+  # Run Tests Before Release
+  # ============================================
+  test-before-release:
+    name: Pre-release Testing
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run quality checks
+        run: make pre-commit
+
+      - name: Run tests with coverage
+        run: |
+          # Install pytest-html for test reports
+          uv pip install pytest-html
+          # Run tests with coverage and HTML reports
+          uv run pytest -m "unit or (not slow and not ci_only and not integration)" \
+            --cov=src --cov-report=html --cov-report=xml --cov-report=json \
+            --cov-fail-under=35
+
+      - name: Upload test HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: test-report.html
+          if-no-files-found: error
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            htmlcov/
+            coverage.xml
+            coverage.json
+          if-no-files-found: error
+
+      - name: Check package build
+        run: |
+          uv build
+          ls -la dist/
+
+  # ============================================
+  # Security Scan
+  # ============================================
+  security-scan:
+    name: Security scanning
+    runs-on: ubuntu-latest
+    needs: [pre-commit]
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: |
+          make install
+          uv pip install bandit[toml] safety pip-audit
+
+      - name: Run security scans
+        run: |
+          # Run bandit for Python security issues
+          uv run bandit -r src -f json -o bandit-report.json || true
+
+          # Run safety for dependency vulnerabilities
+          uv run safety check --json --output safety-report.json || true
+
+          # Run pip-audit for package vulnerabilities
+          uv run pip-audit --format json --output pip-audit-report.json || true
+
+      - name: Generate HTML security report
+        run: |
+          cat > security-reports.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Security Scan Results</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      padding: 2rem;
+                      background: #0d1117;
+                      color: #c9d1d9;
+                  }
+                  h1 { color: #58a6ff; }
+                  h2 { color: #79c0ff; margin-top: 2rem; }
+                  .scan-section {
+                      background: #161b22;
+                      padding: 1.5rem;
+                      border-radius: 8px;
+                      margin: 1rem 0;
+                      border: 1px solid #30363d;
+                  }
+                  .pass { color: #7ee787; }
+                  .fail { color: #ff7b72; }
+                  .warning { color: #ffa657; }
+                  pre {
+                      background: #0d1117;
+                      padding: 1rem;
+                      border-radius: 4px;
+                      overflow-x: auto;
+                  }
+                  code { color: #79c0ff; }
+              </style>
+          </head>
+          <body>
+              <h1>🔒 Security Scan Results</h1>
+              <div class="scan-section">
+                  <h2>Bandit Security Scan</h2>
+                  <p>Static security analysis for Python code</p>
+                  <pre><code id="bandit-results">Loading...</code></pre>
+              </div>
+              <div class="scan-section">
+                  <h2>Safety Dependency Check</h2>
+                  <p>Known security vulnerabilities in dependencies</p>
+                  <pre><code id="safety-results">Loading...</code></pre>
+              </div>
+              <div class="scan-section">
+                  <h2>Pip Audit</h2>
+                  <p>Package vulnerability scanning</p>
+                  <pre><code id="audit-results">Loading...</code></pre>
+              </div>
+              <script>
+                  // Load and display JSON reports
+                  fetch('bandit-report.json').then(r => r.json()).then(data => {
+                      document.getElementById('bandit-results').textContent = JSON.stringify(data, null, 2);
+                  }).catch(() => {
+                      document.getElementById('bandit-results').textContent = 'No Bandit report available';
+                  });
+
+                  fetch('safety-report.json').then(r => r.json()).then(data => {
+                      document.getElementById('safety-results').textContent = JSON.stringify(data, null, 2);
+                  }).catch(() => {
+                      document.getElementById('safety-results').textContent = 'No Safety report available';
+                  });
+
+                  fetch('pip-audit-report.json').then(r => r.json()).then(data => {
+                      document.getElementById('audit-results').textContent = JSON.stringify(data, null, 2);
+                  }).catch(() => {
+                      document.getElementById('audit-results').textContent = 'No Pip Audit report available';
+                  });
+              </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload security scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results
+          path: |
+            bandit-report.json
+            safety-report.json
+            pip-audit-report.json
+            security-reports.html
+          if-no-files-found: warn
+
+  # ============================================
+  # Compliance Reports
+  # ============================================
+  compliance-reports:
+    name: Generate compliance reports
+    runs-on: ubuntu-latest
+    needs: [pre-commit]
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: |
+          make install
+          uv pip install pip-licenses
+
+      - name: Generate license reports
+        run: |
+          # Generate license reports for runtime dependencies
+          uv run pip-licenses --format=json --output-file=license-report.json
+          uv run pip-licenses --format=html --output-file=license-report.html
+          uv run pip-licenses --format=markdown --output-file=license-report.md
+          uv run pip-licenses --summary
+
+      - name: Check license compatibility
+        run: |
+          # Create a Python script to analyze license compatibility
+          cat > license_check.py << 'EOF'
+          import json
+          import sys
+          from pathlib import Path
+
+          # Load dependency licenses
+          with open('license-report.json', 'r') as f:
+              deps = json.load(f)
+
+          # Define compatible licenses for MIT projects
+          MIT_COMPATIBLE = [
+              'MIT', 'MIT License', 'Apache-2.0', 'Apache Software License',
+              'BSD', 'BSD License', 'BSD-2-Clause', 'BSD-3-Clause',
+              'ISC', 'ISC License', 'Python Software Foundation License',
+              'Public Domain', 'Unlicense', 'WTFPL', 'CC0', 'CC-BY',
+              'PostgreSQL License'
+          ]
+
+          # Check for incompatible licenses
+          incompatible = []
+          unknown = []
+          compatible = []
+
+          for dep in deps:
+              name = dep.get('Name', 'Unknown')
+              license = dep.get('License', 'Unknown')
+
+              if license == 'Unknown' or license == '':
+                  unknown.append(f"{name}: No license found")
+              elif any(lic in license for lic in ['GPL', 'LGPL', 'AGPL', 'Copyleft']):
+                  if not any(exc in license for exc in ['LGPL-2.1+', 'LGPL-3.0+']):
+                      incompatible.append(f"{name}: {license}")
+              elif not any(compat in license for compat in MIT_COMPATIBLE):
+                  unknown.append(f"{name}: {license} (needs review)")
+              else:
+                  compatible.append(f"{name}: {license}")
+
+          # Generate compatibility report
+          report = {
+              'summary': {
+                  'total': len(deps),
+                  'compatible': len(compatible),
+                  'incompatible': len(incompatible),
+                  'unknown': len(unknown)
+              },
+              'incompatible': incompatible,
+              'unknown': unknown,
+              'status': 'PASS' if not incompatible else 'FAIL'
+          }
+
+          # Write JSON report
+          with open('license-compatibility.json', 'w') as f:
+              json.dump(report, f, indent=2)
+
+          # Generate HTML report
+          html_content = f"""<!DOCTYPE html>
+          <html>
+          <head>
+              <title>License Compatibility Report</title>
+              <style>
+                  body {{
+                      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      padding: 2rem;
+                      background: #0d1117;
+                      color: #c9d1d9;
+                  }}
+                  h1 {{ color: #58a6ff; }}
+                  h2 {{ color: #79c0ff; margin-top: 2rem; }}
+                  .summary {{
+                      background: #161b22;
+                      padding: 1.5rem;
+                      border-radius: 8px;
+                      margin: 1rem 0;
+                      border: 1px solid #30363d;
+                  }}
+                  .pass {{ color: #7ee787; font-weight: bold; }}
+                  .fail {{ color: #ff7b72; font-weight: bold; }}
+                  .warning {{ color: #ffa657; }}
+                  .package-list {{
+                      background: #0d1117;
+                      padding: 1rem;
+                      border-radius: 4px;
+                      margin: 1rem 0;
+                  }}
+                  .package-list li {{
+                      margin: 0.5rem 0;
+                  }}
+              </style>
+          </head>
+          <body>
+              <h1>⚖️ License Compatibility Report</h1>
+              <div class="summary">
+                  <h2>Summary</h2>
+                  <p>Status: <span class="{'pass' if report['status'] == 'PASS' else 'fail'}">{report['status']}</span></p>
+                  <ul>
+                      <li>Total packages: {report['summary']['total']}</li>
+                      <li>Compatible: {report['summary']['compatible']}</li>
+                      <li>Incompatible: {report['summary']['incompatible']}</li>
+                      <li>Need review: {report['summary']['unknown']}</li>
+                  </ul>
+              </div>
+          """
+
+          if incompatible:
+              html_content += f"""
+              <div class="summary">
+                  <h2 class="fail">⚠️ Incompatible Licenses</h2>
+                  <div class="package-list">
+                      <ul>{"".join(f'<li>{pkg}</li>' for pkg in incompatible)}</ul>
+                  </div>
+              </div>
+              """
+
+          if unknown:
+              html_content += f"""
+              <div class="summary">
+                  <h2 class="warning">🔍 Need Review</h2>
+                  <div class="package-list">
+                      <ul>{"".join(f'<li>{pkg}</li>' for pkg in unknown)}</ul>
+                  </div>
+              </div>
+              """
+
+          html_content += "</body></html>"
+
+          with open('license-compatibility.html', 'w') as f:
+              f.write(html_content)
+
+          # Exit with error if incompatible licenses found
+          if incompatible:
+              print(f"❌ Found {len(incompatible)} incompatible licenses")
+              sys.exit(1)
+          else:
+              print(f"✅ All licenses are compatible")
+          EOF
+
+          python license_check.py || echo "License check completed with warnings"
+
+      - name: Upload compliance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-reports
+          path: |
+            license-report.html
+            license-report.md
+            license-compatibility.json
+            license-compatibility.html
+          if-no-files-found: warn
+
+  # ============================================
+  # Semantic Release
+  # ============================================
+  semantic-release:
+    name: Semantic Version Release
+    needs: [test-before-release, pre-commit, security-scan, compliance-reports]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-release-${{ github.ref_name }}
+      cancel-in-progress: false
+    outputs:
+      released: ${{ steps.release.outputs.released }}
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Force branch to workflow sha
+        run: |
+          git reset --hard ${{ github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: |
+          make install
+          uv pip install python-semantic-release
+
+      - name: Verify upstream unchanged
+        shell: bash
+        run: |
+          set +o pipefail
+          UPSTREAM_BRANCH_NAME="$(git status -sb | head -n 1 | cut -d' ' -f2 | grep -E '\.{3}' | cut -d'.' -f4)"
+          printf '%s\n' "Upstream branch name: $UPSTREAM_BRANCH_NAME"
+          set -o pipefail
+
+          if [ -z "$UPSTREAM_BRANCH_NAME" ]; then
+              printf >&2 '%s\n' "::error::Unable to determine upstream branch name!"
+              exit 1
+          fi
+
+          git fetch "${UPSTREAM_BRANCH_NAME%%/*}"
+
+          if ! UPSTREAM_SHA="$(git rev-parse "$UPSTREAM_BRANCH_NAME")"; then
+              printf >&2 '%s\n' "::error::Unable to determine upstream branch sha!"
+              exit 1
+          fi
+
+          HEAD_SHA="$(git rev-parse HEAD)"
+
+          if [ "$HEAD_SHA" != "$UPSTREAM_SHA" ]; then
+              printf >&2 '%s\n' "[HEAD SHA] $HEAD_SHA != $UPSTREAM_SHA [UPSTREAM SHA]"
+              printf >&2 '%s\n' "::error::Upstream has changed, aborting release..."
+              exit 1
+          fi
+
+          printf '%s\n' "Verified upstream branch has not changed"
+
+      - name: Run Semantic Release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          # Configure git for semantic-release
+          git config user.name "semantic-release"
+          git config user.email "semantic-release@users.noreply.github.com"
+
+          # Let semantic-release handle everything: version, commit, tag, push
+          uv run semantic-release version
+
+          # Check if a release was made by examining the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No release created"
+            echo "released=false" >> $GITHUB_OUTPUT
+          else
+            echo "Released version: $LATEST_TAG"
+            echo "released=true" >> $GITHUB_OUTPUT
+            echo "version=${LATEST_TAG#v}" >> $GITHUB_OUTPUT
+            echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload artifacts
+        if: steps.release.outputs.released == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: distribution-artifacts
+          path: dist/
+          if-no-files-found: error
+
+  # ============================================
+  # Generate Documentation
+  # ============================================
+  generate-docs:
+    name: Generate Documentation
+    needs: [semantic-release]
+    if: needs.semantic-release.outputs.released == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.semantic-release.outputs.tag }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: |
+          make install
+          uv pip install pdoc
+
+      - name: Generate API documentation
+        run: |
+          uv run pdoc --output-dir pdoc --template-directory resources/pdoc-templates ai_org
+
+      - name: Create index page
+        run: |
+          cat > pdoc/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>augint-org Documentation</title>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      padding: 2rem;
+                      background: #0d1117;
+                      color: #c9d1d9;
+                  }
+                  h1 { color: #58a6ff; }
+                  h2 { color: #79c0ff; margin-top: 2rem; }
+                  a { color: #58a6ff; text-decoration: none; }
+                  a:hover { text-decoration: underline; }
+                  .section {
+                      background: #161b22;
+                      padding: 1.5rem;
+                      border-radius: 8px;
+                      margin: 1rem 0;
+                      border: 1px solid #30363d;
+                  }
+                  .grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      gap: 1rem;
+                  }
+                  .badge {
+                      display: inline-block;
+                      padding: 0.25rem 0.5rem;
+                      background: #1f6feb;
+                      color: white;
+                      border-radius: 4px;
+                      font-size: 0.875rem;
+                      margin-right: 0.5rem;
+                  }
+              </style>
+          </head>
+          <body>
+              <h1>📚 augint-org Documentation</h1>
+              <div class="section">
+                  <h2>Overview</h2>
+                  <p>CLI tool for managing AWS Organization accounts with Control Tower integration.</p>
+                  <p>
+                      <span class="badge">Version: ${{ needs.semantic-release.outputs.version }}</span>
+                      <span class="badge">Python: 3.9+</span>
+                      <span class="badge">License: MIT</span>
+                  </p>
+              </div>
+
+              <div class="section">
+                  <h2>📖 Documentation</h2>
+                  <div class="grid">
+                      <div>
+                          <h3>API Reference</h3>
+                          <ul>
+                              <li><a href="cli.html">CLI Module</a></li>
+                              <li><a href="commands.html">Commands</a></li>
+                              <li><a href="core.html">Core Managers</a></li>
+                              <li><a href="utils.html">Utilities</a></li>
+                          </ul>
+                      </div>
+                      <div>
+                          <h3>Resources</h3>
+                          <ul>
+                              <li><a href="https://github.com/${{ github.repository }}">GitHub Repository</a></li>
+                              <li><a href="https://github.com/${{ github.repository }}/blob/main/README.md">README</a></li>
+                              <li><a href="https://github.com/${{ github.repository }}/blob/main/MIGRATION_PLAN.md">Migration Plan</a></li>
+                              <li><a href="https://pypi.org/project/augint-org/">PyPI Package</a></li>
+                          </ul>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="section">
+                  <h2>🚀 Quick Start</h2>
+                  <pre><code># Install the package
+                  pip install augint-org
+
+                  # Or with uv (recommended)
+                  uv pip install augint-org
+
+                  # Configure AWS credentials
+                  export AWS_PROFILE=your-profile
+
+                  # List accounts
+                  ai-org account list
+
+                  # Create a new account
+                  ai-org account create --name "MyApp-Staging" --email "myapp-staging@example.com" --ou "Staging"</code></pre>
+              </div>
+
+              <div class="section">
+                  <h2>📊 Test Reports</h2>
+                  <p>Latest test results and coverage reports:</p>
+                  <ul>
+                      <li><a href="unit-test-report.html">Unit Test Report</a></li>
+                      <li><a href="htmlcov/index.html">Coverage Report</a></li>
+                      <li><a href="security-reports.html">Security Scan Results</a></li>
+                  </ul>
+              </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Download test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-results
+          path: pdoc/
+        continue-on-error: false
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports
+          path: pdoc/
+        continue-on-error: false
+
+      - name: Download security artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: security-scan-results
+          path: pdoc/
+        continue-on-error: false
+
+      - name: Download compliance artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: compliance-reports
+          path: pdoc/
+        continue-on-error: false
+
+      - name: Organize test report files
+        run: |
+          # Rename test-report.html to unit-test-report.html
+          if [ -f "pdoc/test-report.html" ]; then
+            mv "pdoc/test-report.html" "pdoc/unit-test-report.html"
+            echo "✅ Unit test report renamed"
+          fi
+
+          # Create a placeholder integration test report (since we don't have integration tests yet)
+          cat > pdoc/integration-test-report.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Integration Test Report</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      padding: 2rem;
+                      background: #0d1117;
+                      color: #c9d1d9;
+                  }
+                  h1 { color: #58a6ff; }
+                  .message {
+                      background: #161b22;
+                      padding: 2rem;
+                      border-radius: 8px;
+                      margin: 2rem 0;
+                      border: 1px solid #30363d;
+                      text-align: center;
+                  }
+                  .pending { color: #ffa657; }
+                  a { color: #58a6ff; text-decoration: none; }
+                  a:hover { text-decoration: underline; }
+              </style>
+          </head>
+          <body>
+              <h1>🔬 Integration Test Report</h1>
+              <div class="message">
+                  <h2 class="pending">Integration Tests Pending</h2>
+                  <p>Integration tests are not yet implemented for this project.</p>
+                  <p>They will be added when AWS infrastructure testing is required.</p>
+                  <p><a href="index.html">← Back to Documentation</a></p>
+              </div>
+          </body>
+          </html>
+          EOF
+          echo "✅ Integration test placeholder created"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          publish_dir: ./pdoc
+          publish_branch: gh-pages
+
+  # ============================================
+  # Publish to PyPI
+  # ============================================
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [semantic-release]
+    if: needs.semantic-release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'pypi' || 'pypi-test' }}
+      url: ${{ github.ref == 'refs/heads/main' && 'https://pypi.org/project/augint-org' || 'https://test.pypi.org/project/augint-org' }}
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: distribution-artifacts
+          path: dist/
+
+      - name: Publish to Test PyPI
+        if: github.ref == 'refs/heads/dev'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+      - name: Publish to PyPI
+        if: github.ref == 'refs/heads/main'
+        uses: pypa/gh-action-pypi-publish@release/v1

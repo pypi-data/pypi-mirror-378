@@ -1,0 +1,321 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Account creation notifications for new AWS accounts
+
+Parameters:
+  NotificationEmail:
+    Type: String
+    Description: Email address to receive account creation notifications
+    ConstraintDescription: Must be a valid email address
+
+Resources:
+  # SNS Topic for notifications
+  AccountNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: account-creation-notifications
+      DisplayName: New Account Creation Notifications
+      Subscription:
+        - Endpoint: !Ref NotificationEmail
+          Protocol: email
+      Tags:
+        - Key: Purpose
+          Value: AccountNotifications
+        - Key: ManagedBy
+          Value: StackSet
+
+  # EventBridge Rule for Control Tower account creation
+  AccountCreationRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: ControlTower-AccountCreation
+      Description: Capture Control Tower account creation events
+      EventPattern:
+        source:
+          - aws.controltower
+        detail-type:
+          - AWS Control Tower Account Factory Lifecycle Event
+        detail:
+          eventName:
+            - CreateManagedAccount
+            - UpdateManagedAccount
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt NotificationFunction.Arn
+          Id: AccountNotificationFunction
+
+  # Lambda permission for EventBridge
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref NotificationFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt AccountCreationRule.Arn
+
+  # Lambda execution role
+  NotificationFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AccountNotificationFunctionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: NotificationPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # SNS publish permissions
+              - Sid: SNSPublish
+                Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref AccountNotificationTopic
+
+              # CloudFormation StackSet read permissions
+              - Sid: StackSetRead
+                Effect: Allow
+                Action:
+                  - cloudformation:ListStackSets
+                  - cloudformation:DescribeStackSet
+                  - cloudformation:ListStackInstances
+                  - cloudformation:DescribeStackInstance
+                Resource: '*'
+
+              # Organizations read permissions
+              - Sid: OrganizationsRead
+                Effect: Allow
+                Action:
+                  - organizations:DescribeAccount
+                  - organizations:DescribeOrganizationalUnit
+                  - organizations:ListParents
+                Resource: '*'
+      Tags:
+        - Key: Purpose
+          Value: AccountNotifications
+        - Key: ManagedBy
+          Value: StackSet
+
+  # Lambda function for processing events
+  NotificationFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: AccountCreationNotifier
+      Description: Process account creation events and send notifications
+      Handler: index.handler
+      Runtime: python3.11
+      Timeout: 60
+      MemorySize: 256
+      Role: !GetAtt NotificationFunctionRole.Arn
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref AccountNotificationTopic
+          GITHUB_ORG: svange
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          from datetime import datetime
+
+          sns = boto3.client('sns')
+          cf = boto3.client('cloudformation')
+          org = boto3.client('organizations')
+
+          def handler(event, context):
+              """Process Control Tower account creation events"""
+              print(f"Event: {json.dumps(event)}")
+
+              # Extract account details from event
+              detail = event.get('detail', {})
+              service_event = detail.get('serviceEventDetails', {})
+
+              account_id = service_event.get('createAccountStatus', {}).get('accountId')
+              if not account_id:
+                  account_id = detail.get('accountId')
+
+              if not account_id:
+                  print("No account ID found in event")
+                  return
+
+              # Get account details
+              try:
+                  account_resp = org.describe_account(AccountId=account_id)
+                  account = account_resp['Account']
+                  account_name = account['Name']
+                  account_email = account['Email']
+
+                  # Get OU information
+                  parents_resp = org.list_parents(ChildId=account_id)
+                  ou_id = parents_resp['Parents'][0]['Id'] if parents_resp['Parents'] else 'Unknown'
+
+                  if ou_id != 'Unknown' and ou_id.startswith('ou-'):
+                      ou_resp = org.describe_organizational_unit(OrganizationalUnitId=ou_id)
+                      ou_name = ou_resp['OrganizationalUnit']['Name']
+                  else:
+                      ou_name = 'Root' if ou_id.startswith('r-') else 'Unknown'
+              except Exception as e:
+                  print(f"Error getting account details: {e}")
+                  account_name = 'Unknown'
+                  account_email = 'Unknown'
+                  ou_name = 'Unknown'
+
+              # Collect StackSet outputs
+              stackset_info = []
+              try:
+                  # List all StackSets
+                  stacksets_resp = cf.list_stack_sets(Status='ACTIVE')
+
+                  for stackset in stacksets_resp['Summaries']:
+                      stackset_name = stackset['StackSetName']
+
+                      # Check if this account has an instance of this StackSet
+                      try:
+                          instances_resp = cf.list_stack_instances(
+                              StackSetName=stackset_name,
+                              StackInstanceAccount=account_id
+                          )
+
+                          if instances_resp['Summaries']:
+                              stackset_info.append(f"✅ {stackset_name}")
+
+                              # Get specific outputs based on StackSet
+                              if 'pipeline-bootstrap' in stackset_name:
+                                  stackset_info.append(f"  → S3 Bucket: aws-sam-cli-managed-{account_id}-us-east-1")
+                                  stackset_info.append(f"  → CFN Role: aws-sam-cli-cfn-exec-role")
+                              elif 'github-oidc' in stackset_name:
+                                  stackset_info.append(f"  → Deploy Role ARN: arn:aws:iam::{account_id}:role/SAMDeployRole")
+                              elif 'monitoring' in stackset_name:
+                                  stackset_info.append(f"  → Alarms configured")
+                              elif 'cost-management' in stackset_name:
+                                  stackset_info.append(f"  → Budget alerts configured")
+                              elif 'log-aggregation' in stackset_name:
+                                  stackset_info.append(f"  → Centralized logging enabled")
+                              elif 'backup' in stackset_name:
+                                  stackset_info.append(f"  → Automated backups configured")
+                      except:
+                          pass  # StackSet not deployed to this account
+              except Exception as e:
+                  print(f"Error collecting StackSet info: {e}")
+                  stackset_info.append("Unable to retrieve StackSet information")
+
+              # Format .env configuration
+              github_org = os.environ.get('GITHUB_ORG', 'svange')
+              profile_name = account_name.lower().replace(' ', '-')
+              env_lines = [
+                  f"# AWS Configuration for {account_name}",
+                  f"AWS_ACCOUNT_ID={account_id}",
+                  "AWS_REGION=us-east-1",
+                  f"AWS_PROFILE={profile_name}",
+                  "",
+                  "# GitHub Actions Configuration",
+                  f"AWS_ROLE_ARN=arn:aws:iam::{account_id}:role/SAMDeployRole",
+                  "AWS_REGION=us-east-1",
+                  "",
+                  "# SAM CLI Configuration",
+                  "SAM_CLI_TELEMETRY=false",
+                  f"ARTIFACTS_BUCKET=aws-sam-cli-managed-{account_id}-us-east-1",
+                  f"STACK_NAME=my-app-{ou_name.lower()}"
+              ]
+              env_config = chr(10).join(env_lines)
+
+              # Create notification message
+              divider = '━' * 43
+              msg_lines = [
+                  "🎉 New AWS Account Created Successfully!",
+                  "",
+                  divider,
+                  "",
+                  "📋 ACCOUNT DETAILS",
+                  f"• Account Name: {account_name}",
+                  f"• Account ID: {account_id}",
+                  f"• Account Email: {account_email}",
+                  f"• Organization Unit: {ou_name} ({ou_id})",
+                  f"• Created: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+                  "",
+                  divider,
+                  "",
+                  "📦 DEPLOYED STACKSETS",
+                  chr(10).join(stackset_info) if stackset_info else 'No StackSets deployed yet',
+                  "",
+                  divider,
+                  "",
+                  "⚙️ READY-TO-USE .ENV CONFIGURATION",
+                  env_config,
+                  "",
+                  divider,
+                  "",
+                  "🚀 NEXT STEPS",
+                  "1. Add the .env configuration to your project",
+                  "2. Configure AWS CLI profile:",
+                  f"   aws configure set profile.{profile_name}.role_arn arn:aws:iam::{account_id}:role/OrganizationAccountAccessRole",
+                  f"   aws configure set profile.{profile_name}.source_profile org",
+                  "3. Test deployment:",
+                  f"   sam deploy --guided --profile {profile_name}",
+                  "",
+                  divider,
+                  "",
+                  "📌 IMPORTANT RESOURCES",
+                  f"• S3 Artifacts: s3://aws-sam-cli-managed-{account_id}-us-east-1/",
+                  "• CloudFormation Console: https://console.aws.amazon.com/cloudformation/home?region=us-east-1",
+                  f"• GitHub Actions Role: arn:aws:iam::{account_id}:role/SAMDeployRole",
+                  "",
+                  divider,
+                  "",
+                  "This account is ready for deployment via GitHub Actions! 🎊"
+              ]
+              message = chr(10).join(msg_lines)
+
+              # Send notification
+              try:
+                  sns.publish(
+                      TopicArn=os.environ['SNS_TOPIC_ARN'],
+                      Subject=f'✅ AWS Account Created: {account_name} ({account_id})',
+                      Message=message
+                  )
+                  print(f"Notification sent for account {account_id}")
+              except Exception as e:
+                  print(f"Error sending notification: {e}")
+                  raise
+
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps(f'Notification sent for account {account_id}')
+              }
+      Tags:
+        - Key: Purpose
+          Value: AccountNotifications
+        - Key: ManagedBy
+          Value: StackSet
+
+  # CloudWatch Log Group
+  NotificationLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${NotificationFunction}'
+      RetentionInDays: 30
+
+Outputs:
+  SNSTopicArn:
+    Description: SNS Topic ARN for account notifications
+    Value: !Ref AccountNotificationTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-SNSTopicArn'
+
+  LambdaFunctionName:
+    Description: Lambda function name for notifications
+    Value: !Ref NotificationFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionName'
+
+  EventRuleName:
+    Description: EventBridge rule name
+    Value: !Ref AccountCreationRule
+    Export:
+      Name: !Sub '${AWS::StackName}-EventRuleName'
