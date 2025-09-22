@@ -1,0 +1,13 @@
+from ..schemas.query_request import Condition as Condition, QueryLogicOperation as QueryLogicOperation, QueryRequest as QueryRequest, QuerySimpleCondition as QuerySimpleCondition
+from sqlmodel import SQLModel as SQLModel
+from typing import Any
+
+class QueryBuilder:
+    @classmethod
+    def build_result(cls, selected_fields, results): ...
+    @staticmethod
+    def build_order_by(query: QueryRequest, model_class: type[SQLModel]) -> Any: ...
+    @staticmethod
+    def build_fields(query: QueryRequest, model_class: type[SQLModel]) -> Any: ...
+    @staticmethod
+    def build_where(condition: Condition, model_class: type[SQLModel]) -> Any: ...
