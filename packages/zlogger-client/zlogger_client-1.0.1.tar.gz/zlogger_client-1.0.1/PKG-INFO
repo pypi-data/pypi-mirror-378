@@ -1,0 +1,238 @@
+Metadata-Version: 2.4
+Name: zlogger-client
+Version: 1.0.1
+Summary: Python client for Zlogger logging service
+Home-page: https://github.com/your-username/zlogger-python
+Author: Zlogger Team
+Author-email: Zlogger Team <info@zlogger.ch>
+License-Expression: MIT
+Project-URL: Homepage, https://zlogger.ch
+Project-URL: Repository, https://github.com/zurd46/ZLogger
+Project-URL: Documentation, https://docs.zlogger.ch
+Project-URL: Bug Tracker, https://github.com/zurd46/ZLogger/issues
+Project-URL: Source Code, https://github.com/zurd46/ZLogger
+Keywords: logging,zlogger,api,client,telemetry
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: System :: Logging
+Classifier: Topic :: Internet :: WWW/HTTP :: HTTP Servers
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+Requires-Dist: requests>=2.31.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: black>=22.0.0; extra == "dev"
+Requires-Dist: flake8>=4.0.0; extra == "dev"
+Dynamic: author
+Dynamic: home-page
+Dynamic: requires-python
+
+# Zlogger Python Client
+
+[![PyPI version](https://badge.fury.io/py/zlogger-client.svg)](https://badge.fury.io/py/zlogger-client)
+[![Python Support](https://img.shields.io/pypi/pyversions/zlogger-client.svg)](https://pypi.org/project/zlogger-client/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A simple and efficient Python client for the Zlogger logging service. Send structured logs to your Zlogger instance with ease.
+
+## Features
+
+- 🚀 Simple and intuitive API
+- 📊 Structured logging with context data
+- 🔒 Secure API key authentication
+- 🌐 HTTP/HTTPS support
+- ⚡ Lightweight with minimal dependencies
+- 🐍 Python 3.7+ support
+
+## Installation
+
+```bash
+pip install zlogger-client
+```
+
+## Quick Start
+
+```python
+from zlogger import ZloggerClient
+
+# Initialize the client
+logger = ZloggerClient(
+    endpoint="https://your-zlogger-instance.com/api/logs",
+    api_key="your-api-key",
+    app_name="my-application"
+)
+
+# Send logs with different levels
+logger.info("Application started", {"version": "1.0.0", "env": "production"})
+logger.warn("High memory usage detected", {"memory_usage": "90%", "threshold": "80%"})
+logger.error("Database connection failed", {"database": "primary", "timeout": 30})
+logger.debug("Processing user request", {"user_id": 123, "endpoint": "/api/users"})
+```
+
+## API Reference
+
+### ZloggerClient(endpoint, api_key, app_name)
+
+Creates a new Zlogger client instance.
+
+**Parameters:**
+- `endpoint` (str): Your Zlogger API endpoint URL
+- `api_key` (str): Your Zlogger API key for authentication
+- `app_name` (str): Name of your application (used for log categorization)
+
+**Example:**
+```python
+client = ZloggerClient(
+    endpoint="https://logs.yourcompany.com/api/logs",
+    api_key="zlogger_abc123def456",
+    app_name="ecommerce-backend"
+)
+```
+
+### Logging Methods
+
+All logging methods accept the same parameters:
+- `message` (str): The log message
+- `context` (dict, optional): Additional structured data
+
+**Available log levels:**
+- `logger.debug(message, context=None)` - Debug information
+- `logger.info(message, context=None)` - General information
+- `logger.warn(message, context=None)` - Warning messages
+- `logger.error(message, context=None)` - Error messages
+
+## Advanced Usage
+
+### Error Handling
+
+```python
+try:
+    # Your application code
+    result = process_payment(amount, card)
+    logger.info("Payment processed successfully", {
+        "transaction_id": result.id,
+        "amount": amount,
+        "processing_time": result.duration
+    })
+except PaymentError as e:
+    logger.error("Payment processing failed", {
+        "error": str(e),
+        "error_code": e.code,
+        "amount": amount,
+        "retry_count": 3
+    })
+```
+
+### Structured Context Data
+
+```python
+# E-commerce example
+logger.info("Order placed", {
+    "order_id": "ORD-123456",
+    "customer_id": "CUST-789",
+    "items": [
+        {"sku": "WIDGET-001", "quantity": 2, "price": 29.99},
+        {"sku": "GADGET-002", "quantity": 1, "price": 49.99}
+    ],
+    "total_amount": 109.97,
+    "payment_method": "credit_card",
+    "shipping_address": {
+        "country": "US",
+        "state": "CA",
+        "zip": "90210"
+    }
+})
+
+# API monitoring example
+logger.debug("API request processed", {
+    "method": "POST",
+    "endpoint": "/api/users",
+    "status_code": 201,
+    "response_time_ms": 145,
+    "user_agent": "MyApp/1.0",
+    "ip_address": "192.168.1.100"
+})
+```
+
+### Performance Monitoring
+
+```python
+import time
+
+start_time = time.time()
+# Your processing code here
+process_data()
+processing_time = time.time() - start_time
+
+logger.info("Data processing completed", {
+    "records_processed": 1000,
+    "processing_time_seconds": round(processing_time, 2),
+    "records_per_second": round(1000 / processing_time, 2)
+})
+```
+
+## Configuration Examples
+
+### Environment-based Configuration
+
+```python
+import os
+from zlogger import ZloggerClient
+
+# Load configuration from environment variables
+logger = ZloggerClient(
+    endpoint=os.getenv("ZLOGGER_ENDPOINT", "https://localhost:3000/api/logs"),
+    api_key=os.getenv("ZLOGGER_API_KEY"),
+    app_name=os.getenv("APP_NAME", "my-app")
+)
+```
+
+### Development vs Production
+
+```python
+import os
+from zlogger import ZloggerClient
+
+# Different endpoints for different environments
+is_production = os.getenv("ENV") == "production"
+
+logger = ZloggerClient(
+    endpoint="https://prod-logs.company.com/api/logs" if is_production
+             else "https://dev-logs.company.com/api/logs",
+    api_key=os.getenv("ZLOGGER_API_KEY"),
+    app_name=f"my-app-{'prod' if is_production else 'dev'}"
+)
+```
+
+## Requirements
+
+- Python 3.7+
+- requests >= 2.31.0
+
+## License
+
+MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Support
+
+- 📧 Email: info@zlogger.ch
+- 🌐 Website: [https://zlogger.ch](https://zlogger.ch)
+- 📖 Documentation: [https://docs.zlogger.ch](https://docs.zlogger.ch)
+- 🐛 Bug Reports: [GitHub Issues](https://github.com/zurd46/ZLogger/issues)
