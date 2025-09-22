@@ -1,0 +1,66 @@
+"""
+Guest asks about decaf vs dark roast options; orders decaf for pickup.
+
+ROLES: user (guest sensitive to caffeine), assistant (boutique services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_coffee_inventory","description":"List available coffee bags","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["decaf","dark","all"]}},"required":[]},"strict":true},
+  {"name":"get_coffee_details","description":"Get details for SKU","parameters":{"type":"object","additionalProperties":false,"properties":{"product_sku":{"type":"string"}},"required":["product_sku"]},"strict":true},
+  {"name":"place_boutique_order","description":"Place pickup order","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"qty":{"type":"integer"}},"required":["sku","qty"],"additionalProperties":false}},"delivery_option":{"type":"string","enum":["front_desk_pickup","room_delivery"]}},"required":["room_number","items","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Blue Cormorant Bay (hotel_id: bcb_charleston)
+Address: 28 Tidewater Row, Charleston, SC 29401
+Timezone: America/New_York
+
+Boutique Hours: 8:00–19:00; front desk pickup anytime while staffed
+Delivery: free over $25; pickup always free
+
+SKUs:
+- COF_DECAF_SWISS_10: Swiss Water Decaf 10oz $20
+- COF_DARK_PNW_12: Pacific Dark Roast 12oz $24
+
+user:
+Do you have a decaf and a dark roast? I may pick one up on my way out.
+
+assistant channel=analysis:
+List inventory for decaf and dark; provide prices; offer pickup.
+
+assistant channel=commentary to=tool.get_coffee_inventory:
+{"category":"all"}
+
+tool.get_coffee_inventory channel=commentary to=assistant:
+{"products":[{"sku":"COF_DECAF_SWISS_10","name":"Swiss Water Decaf 10oz","price":20},{"sku":"COF_DARK_PNW_12","name":"Pacific Dark Roast 12oz","price":24}]}
+
+assistant channel=final:
+Yes—Swiss Water Decaf 10oz ($20) and Pacific Dark Roast 12oz ($24) are both in stock. I can stage either for front desk pickup under your room.
+
+user:
+Let’s do the decaf under room 514. Also, that pier out back is beautiful.
+
+assistant channel=final:
+It’s our boardwalk—sunsets paint the marsh behind it.
+
+assistant channel=commentary to=tool.place_boutique_order:
+{"room_number":"514","items":[{"sku":"COF_DECAF_SWISS_10","qty":1}],"delivery_option":"front_desk_pickup"}
+
+tool.place_boutique_order channel=commentary to=assistant:
+{"order_id":"BCB-COF-118","total_amount":20,"ready_in_minutes":10}
+
+assistant channel=final:
+Order BCB-COF-118 will be ready at the front desk in about 10 minutes.
+
+user:
+Is there live music tonight on the boardwalk?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll see what’s scheduled.
+

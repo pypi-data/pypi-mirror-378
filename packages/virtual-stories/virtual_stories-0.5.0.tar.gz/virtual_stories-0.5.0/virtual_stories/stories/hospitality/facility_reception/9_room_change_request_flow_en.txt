@@ -1,0 +1,62 @@
+"""
+Guest asks reception about changing rooms due to noise and wants to know the process.
+
+ROLES: user (guest requesting a quieter room), assistant (receptionist submitting a room-change request and explaining next steps)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_room_change",
+    "description": "Submit a room change request at reception and return status.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_id": {"type": "string"},
+        "preference": {"type": "string", "description": "e.g., quieter, higher floor"}
+      },
+      "required": ["guest_id", "preference"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Reception Context
+- Desk: Lobby front desk (Zone A)
+- Hours: 24/7
+- What we can do: Submit room‑change requests and place guests on waitlist; provide billing printouts; re‑encode keys
+- What we cannot guarantee: Immediate room availability
+- On approval: New keys issued at reception; old keys deactivated
+- Extras: City maps EN/ES, luggage labels, sanitizer pump, queue screen
+
+user:
+My room faces the street—can you move me to a quieter one?
+
+assistant channel=analysis:
+Use the tool to submit a request with preference "quieter"; report status exactly.
+
+assistant channel=commentary to=tool.request_room_change:
+{"guest_id":"HY-55231","preference":"quieter"}
+
+tool.request_room_change channel=commentary to=assistant:
+{"status":"waitlisted","waitlist_id":"WL-9034","position":2}
+
+assistant channel=analysis:
+Share the waitlist details and next step per system.
+
+assistant channel=final:
+I’ve added a request for a quieter room—status is waitlisted (WL-9034), position 2. Once approved, we’ll issue new keys here and deactivate the old ones.
+
+user:
+Okay, I’ll keep an eye on the queue screen.
+
+assistant channel=analysis:
+Close with a brief acknowledgment.
+
+assistant channel=final:
+Noted.
+

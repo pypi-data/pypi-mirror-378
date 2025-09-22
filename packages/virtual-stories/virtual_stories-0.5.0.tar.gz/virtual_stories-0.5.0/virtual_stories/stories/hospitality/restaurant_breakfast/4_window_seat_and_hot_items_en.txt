@@ -1,0 +1,86 @@
+"""
+Guest requests a breakfast booking and asks about hot items; include chitchat and ATTENTION follow‑up.
+
+ROLES: user (solo traveler), assistant (breakfast host handling booking and menu preview)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List breakfast venues","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string"}},"required":["hotel_id","meal_period"]},"strict":true},
+  {"name":"check_table_availability","description":"Check availability","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Get hot items","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"section":{"type":"string"}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborline Suites Boston (hotel_id: harborline_bos)
+Breakfast: Sailor’s Table (restaurant_id: rest_sailors_table) 06:30–10:30
+
+Seating & Access:
+- Window bar and two‑tops
+- Step‑free from Lobby A
+
+Ambience & View:
+- Morning light along the harbor windows
+- Quiet zone before 08:00
+
+Menu Notes:
+- Hot line rotates daily
+- Vegetarian skillet offered daily
+
+Dietary & Drinks:
+- Dairy‑free milk available
+- Fresh juices made to order
+
+user:
+Can you book Sailor’s Table for 1 tomorrow at 7:15 under Morgan, and what hot items are on offer?
+
+assistant channel=analysis:
+Verify venue, check 07:15 for 1, book, fetch hot items.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"harborline_bos","meal_period":"breakfast"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_sailors_table","name":"Sailor’s Table","hours":"06:30-10:30"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_sailors_table","party_size":1,"datetime":"2025-09-02T07:15:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"WB01"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_sailors_table","guest_name":"Morgan","contact":"","party_size":1,"datetime":"2025-09-02T07:15:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"ST-BRK-1022"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_sailors_table","section":"hot_items"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"hot_items","items":[{"name":"Vegetarian skillet"},{"name":"Scrambled eggs"},{"name":"Steel-cut oats"}]}
+
+assistant channel=final:
+Your 7:15 table for 1 at Sailor’s Table is confirmed (ST-BRK-1022). Hot items preview: Vegetarian skillet, Scrambled eggs, Steel‑cut oats.
+
+user:
+The dining room looks bright in the morning.
+
+assistant channel=final:
+The window bar catches the first light.
+
+user:
+Do you offer dairy‑free milk for coffee?
+
+assistant channel=final:
+Dairy‑free milk is available at the coffee bar.
+
+user:
+Can you reserve a window seat specifically?
+
+assistant channel=final:
+[ATTENTION] Specific seat assignments aren’t handled here. Checking available options.

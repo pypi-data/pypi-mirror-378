@@ -1,0 +1,93 @@
+"""
+Guest asks for happy hour timing and specials; then orders based on the menu tool.
+
+ROLES: user (guest seeking bar promotions), assistant (concierge/bar liaison with menu access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_happy_hour_menu",
+    "description": "Retrieve today's happy hour window and specials at Skyline Lounge.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "date": {"type": "string", "format": "date"}
+      },
+      "required": ["date"]
+    },
+    "strict": true
+  },
+  {
+    "name": "place_bar_hold",
+    "description": "Place a hold for seats and note a preferred special.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_name": {"type": "string"},
+        "party_size": {"type": "integer", "minimum": 1},
+        "preferred_special": {"type": "string"}
+      },
+      "required": ["guest_name", "party_size"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Skyline Tower Hotel
+Venue: Skyline Lounge (Level 38) — Panoramic harbor views
+Happy Hour Policy:
+1) Window: Daily 17:00–19:00 (walk-in only; seating holds allowed for 10 minutes)
+2) Specials refresh daily via menu tool; sample categories: classic cocktails, draft beer, small plates
+3) Age policy: 21+ with valid ID; charges to room permitted with matching ID
+4) Dress code: Smart casual; no pool attire
+
+user:
+What time is your happy hour today, and what’s on special?
+
+assistant channel=analysis:
+Fetch menu for today and present window and items.
+
+assistant channel=commentary to=tool.get_happy_hour_menu:
+{"date":"2025-08-29"}
+
+tool.get_happy_hour_menu channel=commentary to=assistant:
+{"window":"17:00-19:00","specials":["$8 Old Fashioned","$6 Draft Lager","$9 Truffle Fries","$8 Aperol Spritz"],"notes":"Walk-in only; 10-minute seat holds"}
+
+assistant channel=analysis:
+Provide timing, and a concise list of specials and policy.
+
+assistant channel=final:
+Today’s happy hour runs 17:00–19:00 at Skyline Lounge (Level 38). Specials include: $8 Old Fashioned, $6 Draft Lager, $9 Truffle Fries, and $8 Aperol Spritz; walk-in only with 10-minute seat holds and smart-casual dress.
+
+user:
+Great—can you hold two seats and note Old Fashioned for me? Name’s Alex.
+
+assistant channel=analysis:
+Place a 2-person hold under Alex with preference.
+
+assistant channel=commentary to=tool.place_bar_hold:
+{"guest_name":"Alex","party_size":2,"preferred_special":"Old Fashioned"}
+
+tool.place_bar_hold channel=commentary to=assistant:
+{"hold_id":"barhold_5831","expires_in_minutes":10}
+
+assistant channel=final:
+Done—your 2-seat hold (barhold_5831) is set for 10 minutes under Alex with Old Fashioned noted. You can charge to your room with matching ID.
+
+user:
+Your lounge looks beautiful! Is the sunset view real orange like the photos?
+
+assistant channel=final:
+Skyline Lounge is on Level 38 with panoramic harbor views during happy hour.
+
+user:
+Do you have a partnership with the jazz club two blocks away for discounts?
+
+assistant channel=final:
+[ATTENTION] This isn’t listed in the available venue details. Checking available options.

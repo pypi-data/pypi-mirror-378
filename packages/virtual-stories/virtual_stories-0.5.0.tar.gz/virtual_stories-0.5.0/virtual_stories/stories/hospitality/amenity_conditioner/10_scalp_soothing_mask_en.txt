@@ -1,0 +1,62 @@
+"""
+Guest requests soothing scalp mask for occasional itch.
+
+ROLES: user (scalp care), assistant (amenities concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_hair_care_products","description":"Retrieve available premium hair care products including conditioners.","parameters":{"type":"object","additionalProperties":false,"properties":{"hair_type":{"type":"string","enum":["dry","oily","normal","curly","colored","damaged","all"]},"product_type":{"type":"string","enum":["conditioner","deep_treatment","leave_in","all_conditioning"]}},"required":[]},"strict":true},
+  {"name":"check_ingredient_allergies","description":"Check if products contain specific ingredients for allergy-sensitive guests.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_sku":{"type":"string"},"allergens_to_avoid":{"type":"array","items":{"type":"string","enum":["sulfates","parabens","fragrance","coconut","tree_nuts","gluten"]}}},"required":["product_sku","allergens_to_avoid"]},"strict":true},
+  {"name":"deliver_hair_care_amenities","description":"Arrange delivery of hair care products to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"size":{"type":"string","enum":["travel_50ml","standard_200ml","luxury_400ml"]}},"required":["sku","size"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["immediate","evening_turndown","morning_service"]}},"required":["room_number","products","delivery_preference"]},"strict":true}
+]
+```
+"""
+
+system:
+Highland Springs Retreat (hotel_id: hsr_edinburgh)
+Address: 12 Calton Hill, Edinburgh, UK
+Timezone: Europe/London
+
+Scalp Comfort Line:
+- Soothing mask with colloidal oatmeal
+
+SKUs:
+- COND_SCALP_SOOTHE: Scalp Soothing Mask
+
+user:
+Do you have something to calm an itchy scalp?
+
+assistant channel=analysis:
+Offer soothing mask and verify allergens.
+
+assistant channel=commentary to=tool.get_hair_care_products:
+{"hair_type":"normal","product_type":"deep_treatment"}
+
+tool.get_hair_care_products channel=commentary to=assistant:
+{"products":[{"sku":"COND_SCALP_SOOTHE","name":"Scalp Soothing Mask"}]}
+
+assistant channel=commentary to=tool.check_ingredient_allergies:
+{"product_sku":"COND_SCALP_SOOTHE","allergens_to_avoid":["fragrance","parabens"]}
+
+tool.check_ingredient_allergies channel=commentary to=assistant:
+{"product_sku":"COND_SCALP_SOOTHE","safe_for_allergies":true,"ingredient_check":{"fragrance":false,"parabens":false}}
+
+assistant channel=final:
+Yes—Scalp Soothing Mask is fragrance‑ and paraben‑free. Size and room number?
+
+user:
+Room 606; 50ml. Also, do you have umbrella rentals?
+
+assistant channel=analysis:
+Arrange delivery; umbrella rental beyond scope -> [ATTENTION].
+
+assistant channel=commentary to=tool.deliver_hair_care_amenities:
+{"room_number":"606","products":[{"sku":"COND_SCALP_SOOTHE","size":"travel_50ml"}],"delivery_preference":"immediate"}
+
+tool.deliver_hair_care_amenities channel=commentary to=assistant:
+{"delivery_id":"HSR-606-SS-05","eta_minutes":10}
+
+assistant channel=final:
+[ATTENTION] Delivery HSR-606-SS-05 in ~10 minutes. I’ll check umbrella options separately.
+

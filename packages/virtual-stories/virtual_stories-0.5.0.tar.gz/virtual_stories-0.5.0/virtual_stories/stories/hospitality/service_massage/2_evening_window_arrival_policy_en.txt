@@ -1,0 +1,55 @@
+"""
+In-room massage booking; confirm arrival policy and service window; small talk and an [ATTENTION] request.
+
+ROLES: user (guest planning a massage after meetings), assistant (spa desk scheduling in-room therapist and reiterating policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"book_in_room_massage","description":"Book an in-room massage.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"duration_minutes":{"type":"integer","enum":[60,90]},"start_time":{"type":"string"}},"required":["room_number","duration_minutes","start_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakecrest Tower & Spa
+In‑Room Massage Menu:
+- Durations: 60 or 90 minutes
+- Service Window: 10:00–22:00 (last start 20:30 for 60‑min)
+- Rates: $125 (60‑min), $175 (90‑min); includes table, linens, calming music device on request
+- Arrival: Therapist arrives ~10 minutes early for setup; quiet hours 22:00–07:00
+Access & Facilities:
+- Address: 18 Lakeshore Drive; Wi‑Fi: Lakecrest-Guest; Elevators A/B to guest floors
+- Spa linen room Level 2; Business Corner printers L1
+- Sustainability: Laundry optimized cycles; e‑receipts available by email
+
+user:
+Can I book 90 minutes in room 1712 at 19:00?
+
+assistant channel=analysis:
+Book 90 minutes at 19:00, room 1712; confirm arrival and window.
+
+assistant channel=commentary to=tool.book_in_room_massage:
+{"room_number":"1712","duration_minutes":90,"start_time":"19:00"}
+
+tool.book_in_room_massage channel=commentary to=assistant:
+{"booking_id":"spa_5172","rate":175,"currency":"USD","arrival_note":"Therapist arrives ~10 minutes early"}
+
+assistant channel=final:
+Your 90‑minute in‑room massage is booked (spa_5172) for 19:00 in room 1712 at $175 USD. The therapist will arrive about 10 minutes early for setup.
+
+user:
+The calming music sounds nice.
+
+assistant channel=final:
+We can provide a small music device on request as part of setup.
+
+user:
+Do you offer hot‑stone upgrades?
+
+assistant channel=analysis:
+Hot‑stone not in system; mark with [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Checking available options regarding hot‑stone service.
+

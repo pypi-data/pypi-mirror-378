@@ -1,0 +1,93 @@
+"""
+Guest needs compact briefing cards and hotel letter sheets for a board meeting.
+Provide curated small-format note cards and standard letterhead with fast delivery.
+
+ROLES: user (board member preparing meeting notes), assistant (meetings concierge managing stationery sets)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check available stationery supplies in hotel inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_type":{"type":"string","enum":["note_paper","letterhead","envelopes","memo_pads","writing_pads","sticky_notes"]},"quality_level":{"type":"string","enum":["standard","premium","luxury"]}},"required":["item_type"]},"strict":true},
+  {"name":"deliver_stationery_supplies","description":"Arrange delivery of stationery items to guest room or business center.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center","meeting_room"]},"quantity_per_item":{"type":"number"},"special_requests":{"type":"string"}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: The Meridian Financial District (hotel_id: mfd_sfo_09)
+Address: 545 Market St, San Francisco, CA 94105
+Timezone: America/Los_Angeles
+Meeting Level: Level 4 Boardrooms, Printer queue: MFD-MTG-01
+
+Stationery Catalogue Snapshot:
+- Letterhead: standard 80gsm with logo
+- Briefing cards: 3x5 and A6 white cards, unlined
+- Premium: 120gsm bright white cards for formal notes
+- Envelopes: DL and C6 stock on hand
+- Add-ons: binder clips, mini-clipboards (loan)
+
+Delivery SLA:
+• Meeting rooms: 5–10 minutes
+• Guest rooms: 10–15 minutes
+• Complimentary for in-house meetings
+
+user:
+Room 1622 here. Do you have small briefing cards I can jot bullet points on? A few sheets of letterhead too.
+
+assistant channel=analysis:
+User needs briefing cards and letterhead. Check note_paper (cards) standard, and letterhead standard.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"note_paper","quality_level":"standard"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"note_paper","quality_level":"standard","options":["3x5_cards_white","A6_cards_white","lined_memo_pad"],"stock_count":120}
+
+assistant channel=analysis:
+We also need letterhead; confirm availability of letterhead standard.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"letterhead","quality_level":"standard"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"letterhead","quality_level":"standard","options":["80gsm_logo_letterhead"],"stock_count":300}
+
+assistant channel=analysis:
+Offer 3x5 or A6 plus letterhead; arrange delivery to guest room.
+
+assistant channel=final:
+We have white 3x5 and A6 briefing cards, plus 80gsm logo letterhead. Which size cards do you prefer, and I’ll send them up with a few letter sheets?
+
+user:
+3x5 please. Ten cards and five sheets is perfect.
+
+assistant channel=analysis:
+Deliver to room 1622 with specified quantities.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"1622","items":["3x5_cards_white","80gsm_logo_letterhead"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"bundle: 10 cards, 5 letter sheets"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":12,"items_included":["3x5_cards_10","letterhead_5"],"delivery_team":"meetings_concierge"}
+
+assistant channel=final:
+Done. Ten 3x5 cards and five sheets of logo letterhead will be at room 1622 in about 12 minutes.
+
+user:
+Thanks—also, how’s the fog today?
+
+assistant channel=analysis:
+Chitchat about weather; system contains no weather data. Respond without introducing facts.
+
+assistant channel=final:
+It does set a focused mood around here.
+
+user:
+Can you pre-print tomorrow’s agendas with attendee names right now?
+
+assistant channel=analysis:
+No print specs or tool output for pre-print with names. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

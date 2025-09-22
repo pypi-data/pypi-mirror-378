@@ -1,0 +1,77 @@
+"""
+Guest checks current sauna temperature, books a slot, and asks follow-ups.
+
+ROLES: user (guest seeking a quick evening heat session), assistant (spa front desk coordinating sauna usage)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_sauna_status","description":"Read current sauna temperature and humidity.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"reserve_sauna_slot","description":"Reserve a 20-minute sauna slot for up to 2 guests.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"start_time":{"type":"string","format":"date-time"},"guests":{"type":"integer","minimum":1,"maximum":2}},"required":["hotel_id","start_time","guests"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverside Quay Hotel (hotel_id: rq_tokyo_11)
+Address: 3-2-15 Kiyosumi, Koto City, Tokyo 135-0024, Japan
+Timezone: Asia/Tokyo
+Facility: Dry Sauna (Finnish-style), cedar interior
+Hours Today: 17:00–23:00; last entry 22:20
+Slots: 20 minutes, max 2 guests per slot; max 3 slots/day/room
+Target Temperature: 80–90°C; Humidity: 10–20%
+Cooldown: 12°C plunge pool + hydration station
+Cleaning: 19:40–20:00 and 21:40–22:00 (no bookings during cleaning)
+Ventilation Cycle: 8 minutes on / 12 minutes off
+Rules: No essential oils on stones; towel seat cover required; quiet zone
+Accessories: Small towels at desk; large towels by request (limited)
+Emergency: Pull cord inside; staff phone 9; AED at spa reception
+
+user:
+What’s the current sauna temperature? And can I book 18:20 for two?
+
+assistant channel=analysis:
+Use status tool for live readings; if hours allow, book 18:20 for 2 guests.
+
+assistant channel=commentary to=tool.get_sauna_status:
+{"hotel_id":"rq_tokyo_11"}
+
+tool.get_sauna_status channel=commentary to=assistant:
+{"temperature_c":86,"humidity_pct":14}
+
+assistant channel=commentary to=tool.reserve_sauna_slot:
+{"hotel_id":"rq_tokyo_11","start_time":"2025-08-29T18:20:00","guests":2}
+
+tool.reserve_sauna_slot channel=commentary to=assistant:
+{"status":"reserved","slot_id":"RQ-1820-1840"}
+
+assistant channel=final:
+It’s currently 86°C at 14% humidity. I’ve reserved 18:20–18:40 for two (RQ-1820-1840).
+
+user:
+By the way, the lounge playlist sounds great today.
+
+assistant channel=analysis:
+Offer a light, tool-free acknowledgment.
+
+assistant channel=final:
+Thanks for noticing—glad the ambiance is working for you.
+
+user:
+Do you have a plunge pool—how cold is it?
+
+assistant channel=analysis:
+Answer directly from system context about cooldown pool temperature.
+
+assistant channel=final:
+Yes—the plunge pool is 12°C next to the hydration station.
+
+user:
+Are the sauna stones imported from a specific Finnish quarry?
+
+assistant channel=analysis:
+That provenance detail isn’t in system; respond with the attention flag.
+
+assistant channel=final:
+[ATTENTION] Noted. Checking available options.
+

@@ -1,0 +1,65 @@
+"""
+Exhibitor requests assorted clips for trade show kits; asks about same-corridor delivery.
+
+ROLES: user (exhibitor), assistant (expo support desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supplies","description":"Assorted fasteners availability","parameters":{"type":"object","properties":{"category":{"type":"string","enum":["clips_fasteners","all"]}},"required":["category"],"additionalProperties":false},"strict":true},
+  {"name":"request_supply_delivery","description":"Create supply ticket","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_preference":{"type":"string","enum":["room_delivery","business_center_pickup"]}},"required":["room_number","items","delivery_preference"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+North Loop Expo Hotel (hotel_id: nleh_msp_01)
+Address: 700 N 1st Ave, Minneapolis, MN 55403
+Timezone: America/Chicago
+
+Expo Support Details:
+- Executive floors: 17–24, same-corridor runs
+- SLA: standard 20–30 minutes
+- Assortment: small/medium/large clips + rubber bands
+- Night staging: pre-pack kits available on request
+- Contact: Expo Desk ext. 75
+
+user:
+Hi—can you send a mixed set of clips to 1804? Also, is 1804 on the same-corridor delivery?
+
+assistant channel=analysis:
+Answer executive corridor policy; check inventory; schedule delivery.
+
+assistant channel=final:
+Yes—floors 17–24 receive same-corridor delivery, so 1804 qualifies. I’ll check what’s in stock for a mixed set.
+
+assistant channel=commentary to=tool.check_office_supplies:
+{"category":"clips_fasteners"}
+
+tool.check_office_supplies channel=commentary to=assistant:
+{"available_items":[{"code":"BINDER_SMALL","name":"Small 19mm","quantity_available":80},{"code":"BINDER_MEDIUM","name":"Medium 32mm","quantity_available":58},{"code":"BINDER_LARGE","name":"Large 51mm","quantity_available":25},{"code":"RUBBER_BANDS","name":"Rubber Bands","quantity_available":150}]}
+
+assistant channel=commentary to=tool.request_supply_delivery:
+{"room_number":"1804","items":[{"item_code":"BINDER_SMALL","quantity":6},{"item_code":"BINDER_MEDIUM","quantity":6},{"item_code":"BINDER_LARGE","quantity":3}],"delivery_preference":"room_delivery"}
+
+tool.request_supply_delivery channel=commentary to=assistant:
+{"delivery_id":"NLEH-1804-336","estimated_delivery_minutes":21,"items_confirmed":["6x Small","6x Medium","3x Large"],"charge":"complimentary_mix"}
+
+assistant channel=final:
+Confirmed—mixed set is en route under NLEH-1804-336, ETA ~21 minutes.
+
+user:
+Thanks! The pre-pack kit idea is clever.
+
+assistant channel=final:
+We can stage kits nightly if you need more tomorrow.
+
+user:
+Any brewery tours you’d suggest?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with the concierge for tour options.
+

@@ -1,0 +1,80 @@
+"""
+Guest asks whether stout should be chilled or cellar temp; verify age, give options, and deliver with proper glassware.
+
+ROLES: user (stout enthusiast), assistant (in-room beverage expert)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_drinking_age","description":"Verify legal drinking age.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"get_beer_selection","description":"Get beer options.","parameters":{"type":"object","additionalProperties":false,"properties":{"beer_type":{"type":"string","enum":["stout","all"]},"region_preference":{"type":"string","enum":["local","domestic","imported","no_preference"]},"alcohol_content":{"type":"string","enum":["light","standard","strong","no_preference"]}},"required":["beer_type"]},"strict":true},
+  {"name":"place_beer_order","description":"Place in-room beer order.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"beer_items":{"type":"array","items":{"type":"object","properties":{"beer_sku":{"type":"string"},"quantity":{"type":"integer"},"temperature":{"type":"string","enum":["ice_cold","chilled","cellar_temp"]}},"required":["beer_sku","quantity"],"additionalProperties":false}},"delivery_instructions":{"type":"string"}},"required":["room_number","beer_items"]},"strict":true}
+]
+```
+"""
+
+system:
+Ironworks Warehouse Hotel (hotel_id: iwh_milwaukee)
+Address: 240 Foundry St, Milwaukee, WI 53202
+Timezone: America/Chicago
+
+Stout Service:
+1) Nitro stouts best at cellar temp (50–55°F) for aroma.
+2) Milk stouts can be served chilled (38–42°F) for a crisper finish.
+3) Glassware: Nonic pint for nitro; snifter for barrel‑aged.
+4) Local options rotate weekly from Wisconsin breweries.
+5) Delivery includes proper glassware and a short tasting note card.
+
+user:
+I’m in 512—should I have the milk stout chilled or at cellar temp?
+
+assistant channel=analysis:
+Verify age; fetch stout options; explain temps, then offer delivery.
+
+assistant channel=commentary to=tool.verify_drinking_age:
+{"room_number":"512"}
+
+tool.verify_drinking_age channel=commentary to=assistant:
+{"room_number":"512","guest_age_verified":true,"legal_drinking_age_met":true}
+
+assistant channel=commentary to=tool.get_beer_selection:
+{"beer_type":"stout","region_preference":"local","alcohol_content":"no_preference"}
+
+tool.get_beer_selection channel=commentary to=assistant:
+{"selections":[{"sku":"WI_LEFT_HAND_MILK","name":"Left Hand Milk Stout Nitro","style":"Milk Stout","notes":"Creamy, chocolate"},{"sku":"WI_LAKEFRONT_IMP","name":"Lakefront Imperial Stout","style":"Imperial","notes":"Roasty, bold"}]}
+
+assistant channel=final:
+For milk stouts, chilled brings a crisper finish, while cellar temp opens up aroma. Would you like the Left Hand Milk Stout Nitro delivered chilled with a Nonic pint?
+
+user:
+Yes, one Milk Stout chilled, please.
+
+assistant channel=analysis:
+Place chilled order with glassware note.
+
+assistant channel=commentary to=tool.place_beer_order:
+{"room_number":"512","beer_items":[{"beer_sku":"WI_LEFT_HAND_MILK","quantity":1,"temperature":"chilled"}],"delivery_instructions":"Provide Nonic pint and tasting note"}
+
+tool.place_beer_order channel=commentary to=assistant:
+{"order_id":"BEER-IWH-5520","estimated_delivery_minutes":12}
+
+assistant channel=final:
+Great choice—your chilled Milk Stout is on its way with a Nonic pint, about 12 minutes.
+
+user:
+Also, the exposed brick in the halls is cool.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+That brick-and-steel look has a lot of character.
+
+user:
+Can you send up whiskey as well?
+
+assistant channel=analysis:
+Spirits aren’t specified here; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability for a whiskey order.

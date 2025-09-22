@@ -1,0 +1,83 @@
+"""
+Guest needs medium binder clips and presentation printing; confirm stock and arrange pickup.
+
+ROLES: user (startup founder), assistant (business center attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supplies","description":"Check clips availability","parameters":{"type":"object","properties":{"category":{"type":"string","enum":["clips_fasteners"]}},"required":["category"],"additionalProperties":false},"strict":true},
+  {"name":"request_supply_delivery","description":"Place supply delivery","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["item_code","quantity"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["room_delivery","business_center_pickup"]}},"required":["room_number","items","delivery_preference"],"additionalProperties":false},"strict":true},
+  {"name":"schedule_presentation_setup","description":"Book printing slot","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["presentation_printing"]},"scheduled_time":{"type":"string"}},"required":["room_number","service_type","scheduled_time"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Capital Gate Executive Suites (hotel_id: cges_dc_03)
+Address: 1100 New York Ave NW, Washington, DC 20005
+Timezone: America/New_York
+
+Services Matrix:
+- Executive floors: 20–27 (same-floor courier)
+- Delivery windows: standard 20–35 min; urgent 10–15 min
+- Clips: 19/32/51mm; matte black
+- Printers: high-speed duplex color; USB-C adapters on loan
+- Quiet pods: L2 for focus printing checks
+
+Notes (JSON):
+{
+  "contact_ext": 66,
+  "complimentary_quota": {"clips": 12},
+  "pickup_desk": "Business Center L2",
+  "binding": false
+}
+
+user:
+Hi! Can I get 8 medium binder clips? I can pick them up if that’s faster.
+
+assistant channel=analysis:
+Check clips availability, then suggest pickup per system.
+
+assistant channel=commentary to=tool.check_office_supplies:
+{"category":"clips_fasteners"}
+
+tool.check_office_supplies channel=commentary to=assistant:
+{"available_items":[{"code":"BINDER_MEDIUM","name":"Medium 32mm","quantity_available":55},{"code":"BINDER_SMALL","name":"Small 19mm","quantity_available":90}]}
+
+assistant channel=final:
+We have medium 32mm clips—55 available. Pickup at Business Center L2 is immediate; shall I set 8 aside under your room number?
+
+user:
+Yes, room 2019. Also, how quickly does urgent delivery run here?
+
+assistant channel=analysis:
+Answer from system, then place a pickup order.
+
+assistant channel=final:
+Urgent delivery runs 10–15 minutes. I’ll stage your pickup now.
+
+assistant channel=commentary to=tool.request_supply_delivery:
+{"room_number":"2019","items":[{"item_code":"BINDER_MEDIUM","quantity":8}],"delivery_preference":"business_center_pickup"}
+
+tool.request_supply_delivery channel=commentary to=assistant:
+{"delivery_id":"CGES-PU-2019-441","pickup_location":"Business Center L2","ready_in_minutes":3,"items":["8x Medium 32mm"]}
+
+assistant channel=final:
+Ready for pickup in ~3 minutes at Business Center L2 under order CGES-PU-2019-441.
+
+user:
+Appreciate it. By the way, the quiet pods sound handy.
+
+assistant channel=final:
+They’re on Level 2—great for quick proof checks.
+
+user:
+Any recommendation for a late-night coffee around here?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] Noted—checking nearby late-night options.
+

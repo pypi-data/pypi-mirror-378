@@ -1,0 +1,63 @@
+"""
+Family requests full kid pack (stool, mat, cup) and safe temp; confirm playdate lounge time.
+
+ROLES: user (parent), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_anti_scald_limit","description":"Set anti-scald limit (°F).","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"max_temp_f":{"type":"integer","minimum":95,"maximum":110}},"required":["room_number","max_temp_f"]},"strict":true},
+  {"name":"deliver_child_bath_kit","description":"Deliver full kid pack.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string","enum":["step_stool","non_slip_mat","rinse_cup"]}}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverwalk Family Plaza (hotel_id: rfp_san_03)
+Address: 400 Market St, San Antonio, TX 78205
+Timezone: America/Chicago
+
+Kid Amenities:
+- Full pack: step_stool, non_slip_mat, rinse_cup
+- Anti-scald 95–110°F; default 104°F
+- Family lounge playdate: 17:00–18:00
+
+user:
+Hi—can you cap our shower at 100°F and send the full kid pack to 1222?
+
+assistant channel=analysis:
+Apply 100°F and deliver pack.
+
+assistant channel=commentary to=tool.set_anti_scald_limit:
+{"room_number":"1222","max_temp_f":100}
+
+tool.set_anti_scald_limit channel=commentary to=assistant:
+{"room_number":"1222","max_temp_f":100,"applied":true}
+
+assistant channel=commentary to=tool.deliver_child_bath_kit:
+{"room_number":"1222","items":["step_stool","non_slip_mat","rinse_cup"]}
+
+tool.deliver_child_bath_kit channel=commentary to=assistant:
+{"delivery_id":"CBK-1222-9002","eta_minutes":12,"items":["step_stool","non_slip_mat","rinse_cup"]}
+
+assistant channel=final:
+All set: the shower is capped at 100°F, and the step stool, non-slip mat, and rinse cup are en route (CBK-1222-9002) with a 12-minute ETA.
+
+user:
+Thanks! When is the playdate in the lounge?
+
+assistant channel=analysis:
+Use Kid Amenities.
+
+assistant channel=final:
+Playdate runs from 17:00 to 18:00 in the family lounge.
+
+user:
+Any tips for the best Tex-Mex spot nearby?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about Tex-Mex recommendations and will review options.
+

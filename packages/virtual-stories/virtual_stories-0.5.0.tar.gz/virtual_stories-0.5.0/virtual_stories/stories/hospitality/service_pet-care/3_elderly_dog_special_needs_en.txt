@@ -1,0 +1,130 @@
+"""
+Elderly guest with senior dog needing gentle care and medication assistance.
+
+ROLES: user (elderly guest with senior dog requiring special care), assistant (pet care specialist accommodating special needs)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_pet_care",
+    "description": "Arrange on‑property pet walking with duration and start time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "start_time": {"type": "string"},
+        "duration_minutes": {"type": "integer", "enum": [15, 30, 45, 60]}
+      },
+      "required": ["room_number", "start_time", "duration_minutes"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_special_care",
+    "description": "Check special care options for pets with medical needs.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "care_type": {"type": "string", "enum": ["senior_pet", "medication", "mobility_assistance", "gentle_handling"]}
+      },
+      "required": ["care_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Seaside Serenity Resort — Tranquil oceanfront retreat specializing in accessible hospitality
+LOCATION: Protected coastline with accessible beach paths and therapy gardens
+STAR RATING: 4-star senior-friendly resort with universal design and wellness focus
+ARCHITECTURE: Single-level buildings with wide corridors, ramps, and grab bars throughout
+GUEST CAPACITY: 180 accessible rooms, 24 assisted-living style suites with caregiver accommodations
+Pet Care Services:
+- Specialized care for senior pets and those with medical needs
+- Trained staff familiar with medication administration and mobility assistance
+- On‑property walks with gentle pacing; designated relief areas with non-slip surfaces
+- Therapy garden paths perfect for slow, therapeutic walks
+- Durations: 15/30/45/60 minutes with flexible pacing based on pet's abilities
+- Rates: $20/15 min, $30/30 min, $40/45 min, $50/60 min (senior pet care premium)
+- Meet point: Room door with wheelchair-accessible routes to walking areas
+WELLNESS FACILITIES:
+- Accessible therapy pools with gentle entry systems and warm water (85-88°F)
+- Meditation garden with sensory plants and comfortable seating areas
+- Physical therapy room with professional equipment and certified therapists
+- Wheelchair and mobility aid rentals available 24/7 at no charge
+- On-site registered nurse available during day hours (8:00-20:00)
+- Accessible shuttle service to local medical facilities (advance booking required)
+
+user:
+My 14-year-old golden retriever has arthritis and takes medication twice daily. Can your staff help with walks and his pills?
+
+assistant channel=analysis:
+Elderly dog needs special care for arthritis and medication help - should check what special care options are available.
+
+assistant channel=commentary to=tool.check_special_care:
+{"care_type": "senior_pet"}
+
+tool.check_special_care channel=commentary to=assistant:
+{"care_type": "senior_pet", "available": true, "specialized_staff": "trained for medical needs", "services": "gentle pacing, non-slip surfaces, therapy garden paths"}
+
+assistant channel=commentary to=tool.check_special_care:
+{"care_type": "medication"}
+
+tool.check_special_care channel=commentary to=assistant:
+{"care_type": "medication", "available": true, "administration": "trained staff familiar with pet medications", "scheduling": "coordinated with walk times"}
+
+assistant channel=final:
+Absolutely! Our staff are trained in senior pet care and medication administration. We use gentle pacing on non-slip surfaces with therapy garden paths perfect for arthritic pets.
+
+user:
+He can only walk for about 15 minutes at a slow pace. Is that okay?
+
+assistant channel=analysis:
+Guest specifying 15-minute duration which fits our options, and gentle pacing is mentioned in system as available.
+
+assistant channel=final:
+Perfect - 15 minutes with gentle pacing is ideal. Our therapy garden paths are designed for comfortable, therapeutic walks for senior pets.
+
+user:
+The accessible therapy pools sound wonderful for humans too.
+
+assistant channel=analysis:
+Chitchat about therapy pools - can share system info about gentle entry and warm temperature.
+
+assistant channel=final:
+Yes! The accessible therapy pools have gentle entry systems and are kept at a comfortable 85-88°F for therapeutic benefits.
+
+user:
+Can I schedule a walk from room 127 at 10 AM tomorrow?
+
+assistant channel=analysis:
+Guest requesting specific walk booking - can use the standard pet care tool for 15 minutes.
+
+assistant channel=commentary to=tool.request_pet_care:
+{"room_number": "127", "start_time": "10:00", "duration_minutes": 15}
+
+tool.request_pet_care channel=commentary to=assistant:
+{"order_id": "senior_pet_3429", "rate": 20, "currency": "USD", "meet": "Room door", "special_notes": "Senior pet care with medication assistance"}
+
+assistant channel=final:
+Scheduled! 15-minute senior pet walk at 10:00 from room 127 (order senior_pet_3429). Rate is $20, and staff will meet you at your door with medication assistance.
+
+user:
+What if he needs help getting up the ramp after his walk?
+
+assistant channel=analysis:
+Guest asking about mobility assistance after walks - should check mobility assistance options.
+
+assistant channel=commentary to=tool.check_special_care:
+{"care_type": "mobility_assistance"}
+
+tool.check_special_care channel=commentary to=assistant:
+{"care_type": "mobility_assistance", "available": true, "wheelchair_accessible_routes": "throughout property", "assistance": "staff trained in gentle handling and support"}
+
+assistant channel=final:
+Our staff are trained in gentle handling and mobility assistance, with wheelchair-accessible routes throughout the property for easy navigation.

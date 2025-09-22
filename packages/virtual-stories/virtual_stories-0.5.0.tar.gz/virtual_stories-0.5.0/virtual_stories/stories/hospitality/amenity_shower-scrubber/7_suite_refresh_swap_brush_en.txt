@@ -1,0 +1,63 @@
+"""
+Guest wants to swap from long-handle to soft-brush for glass cleaning; check stock and deliver soft-brush.
+
+ROLES: user (guest adjusting tools), assistant (housekeeping supply coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_supply_stock","description":"Check stock for soft brush.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_code":{"type":"string","enum":["shower_scrubber_soft_brush"]}},"required":["supply_code"]},"strict":true},
+  {"name":"deliver_supply","description":"Deliver item to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"supply_code":{"type":"string"},"quantity":{"type":"integer","minimum":1,"maximum":1}},"required":["room_number","supply_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Aurora Lakes Hotel (hotel_id: alh_msp_09)
+Address: 2100 Nicollet Ave, Minneapolis, MN 55404
+Timezone: America/Chicago
+
+Glass Care Policy:
+- Soft-brush only for glass panels
+- Exchanges allowed at no charge
+- Delivery 8–12 minutes typical
+
+user:
+Hi—I’ve got a long-handle, but need a soft-brush for the glass in 1811.
+
+assistant channel=analysis:
+Check soft-brush stock and deliver one to 1811.
+
+assistant channel=commentary to=tool.check_supply_stock:
+{"supply_code":"shower_scrubber_soft_brush"}
+
+tool.check_supply_stock channel=commentary to=assistant:
+{"supply_code":"shower_scrubber_soft_brush","on_hand":9,"estimated_delivery_minutes":10}
+
+assistant channel=commentary to=tool.deliver_supply:
+{"room_number":"1811","supply_code":"shower_scrubber_soft_brush","quantity":1}
+
+tool.deliver_supply channel=commentary to=assistant:
+{"delivery_id":"SUP-DEL-6190","room_number":"1811","supply_code":"shower_scrubber_soft_brush","quantity":1,"eta_minutes":10}
+
+assistant channel=final:
+One soft-brush is on its way to 1811 (SUP-DEL-6190) with an ETA of about 10 minutes. Exchanges are free.
+
+user:
+Great—do you charge for swaps?
+
+assistant channel=analysis:
+Answer from Glass Care Policy.
+
+assistant channel=final:
+No—exchanges are allowed at no charge.
+
+user:
+Is the skyway open late tonight?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about the skyway hours and will review external info.
+

@@ -1,0 +1,114 @@
+"""
+Guest’s wall control panel shows LOCKED; needs verification and unlock assistance.
+Provide safe, verified unlock or escalate to engineering if needed.
+
+ROLES: user (guest with locked HVAC control panel), assistant (concierge with panel tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_panel_status",
+    "description": "Get wall control panel lock status.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "room_number": { "type": "string" } },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "unlock_panel",
+    "description": "Unlock the HVAC control panel using guest verification code.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "verification_code": { "type": "string", "description": "Last four digits of phone on file" }
+      },
+      "required": ["room_number", "verification_code"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_engineering_ticket",
+    "description": "Create engineering ticket for control panel faults or failed unlocks.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "note": { "type": "string" }
+      },
+      "required": ["room_number", "category", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Desert Dunes Resort (hotel_id: ddr_scottsdale)
+Location: 7350 E Camelback Rd, Scottsdale, AZ 85251
+Time zone: America/Phoenix
+
+Control Panel Policy:
+1) Child Lock may engage after prolonged button holds.
+2) Unlock requires the last four digits of the registered phone number.
+3) Three failed attempts cause a 10-minute lockout.
+4) Engineering hours 07:00–22:00; overnight security can assist with access logging.
+
+user:
+Hi, my wall panel in room 512 says “LOCKED” and none of the buttons respond. Can you unlock it?
+
+assistant channel=analysis:
+Check current panel status, then request verification code and perform unlock.
+
+assistant channel=commentary to=tool.get_panel_status:
+{"room_number":"512"}
+
+tool.get_panel_status channel=commentary to=assistant:
+{"room_number":"512","locked":true,"lock_reason":"child_lock","failed_attempts":0}
+
+assistant channel=final:
+I can unlock that for you. For verification, what are the last four digits of the phone number on your reservation?
+
+user:
+It should be 7712.
+
+assistant channel=analysis:
+Attempt panel unlock with code 7712.
+
+assistant channel=commentary to=tool.unlock_panel:
+{"room_number":"512","verification_code":"7712"}
+
+tool.unlock_panel channel=commentary to=assistant:
+{"unlocked":true,"attempts_used":1}
+
+assistant channel=final:
+All set—the panel in 512 is now unlocked. You can adjust temperature and fan normally. If it relocks or shows an error, I can open an engineering ticket.
+
+user:
+Thanks! Also, those desert sunsets look incredible from the pool.
+
+assistant channel=analysis:
+Small talk about resort setting—no tool needed.
+
+assistant channel=final:
+The pool deck here is known for wide, colorful sunsets.
+
+user:
+While I have you, could you extend my checkout to 4 PM?
+
+assistant channel=analysis:
+Not covered by tools or system scope; use special flag.
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available resources.
+
+

@@ -1,0 +1,62 @@
+"""
+Guest requests a quote for a half-day conference bundle with projector and screen.
+
+ROLES: user (event organizer), assistant (sales coordinator providing bundled quote and inclusions)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "quote_conference_bundle",
+    "description": "Quote a projector + screen bundle with specified hours and return totals.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hours": {"type": "integer", "minimum": 1, "maximum": 8},
+        "attendees": {"type": "integer", "minimum": 1}
+      },
+      "required": ["hours", "attendees"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Pacific Horizon Grand (PHG-SFO-03)
+Address: 55 Market Walk, San Francisco, CA 94105
+Bundle Inclusions: LCD projector (4500 lm), 84" screen, HDMI, setup/strike
+Pricing Rules: $39 first hour + $29 per addl hour for projector; screen $12/hour; service fee 5%; city tax 8.625%
+Room Notes: Ceiling height 3.2 m; blackout drapes available; Wi‑Fi 5 GHz onsite
+Logistics: Load-in via Bay 2; carts available
+Policy: Max 8 hours/day; holds expire after 4 hours if unpaid
+
+user:
+Can you quote 4 hours for about 30 people?
+
+assistant channel=analysis:
+Use the quoting tool for 4 hours, 30 attendees; report only tool totals.
+
+assistant channel=commentary to=tool.quote_conference_bundle:
+{"hours":4,"attendees":30}
+
+tool.quote_conference_bundle channel=commentary to=assistant:
+{"subtotal":176,"service_fee":8.8,"tax":15.98,"currency":"USD","total":200.78}
+
+assistant channel=final:
+For 4 hours, the bundle totals USD 200.78 (subtotal 176.00, service 8.80, tax 15.98).
+
+user:
+Thanks! Also, love the fern wall in the lobby.
+
+assistant channel=final:
+It’s a favorite photo spot—appreciate the kind words.
+
+user:
+Can we hang our own banner from the ceiling?
+
+assistant channel=final:
+[ATTENTION] Analyzing the situation.
+

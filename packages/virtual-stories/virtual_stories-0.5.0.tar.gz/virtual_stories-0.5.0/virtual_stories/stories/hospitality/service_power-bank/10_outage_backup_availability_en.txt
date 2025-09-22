@@ -1,0 +1,50 @@
+"""
+Guest asks about power banks during an outage; we confirm emergency stock via tool, include small talk, and flag an out‑of‑scope long‑term checkout.
+
+ROLES: user (guest concerned about outages), assistant (front desk verifying emergency stock)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_emergency_stock","description":"Report whether emergency backup units are set aside.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"required":[]}
+]
+```
+"""
+
+system:
+Hotel: Hillcrest Hotel
+Notes:
+- Standard lending: 1 per room; 24‑hour courtesy; $20 hold after 24h
+- Pickup/return: Front Desk
+- Emergency: A portion of stock may be reserved for outages
+
+user:
+If there’s a power outage, can I still borrow one?
+
+assistant channel=analysis:
+Check emergency stock status via tool and answer per output.
+
+assistant channel=commentary to=tool.check_emergency_stock:
+{}
+
+tool.check_emergency_stock channel=commentary to=assistant:
+{"reserved":true}
+
+assistant channel=final:
+Yes—emergency backup units are reserved for outages. Standard lending still applies: one per room for a 24‑hour courtesy period; after 24 hours a $20 hold may apply. Front Desk pickup and return.
+
+user:
+That’s reassuring.
+
+assistant channel=final:
+Glad to help.
+
+user:
+Could I keep it for a month just in case?
+
+assistant channel=analysis:
+Month‑long checkout isn’t described; use special flag.
+
+assistant channel=final:
+[ATTENTION] Month‑long checkout isn’t covered in these resources. Reviewing available resources.
+

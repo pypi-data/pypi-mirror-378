@@ -1,0 +1,59 @@
+"""
+Guest requests child-safe detangling comb set; deliver with turndown.
+
+ROLES: user (parent), assistant (amenities coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_grooming_amenities","description":"List grooming items","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["all_grooming"]}},"required":[]},"strict":true},
+  {"name":"deliver_amenities","description":"Deliver at turndown","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}},"required":["sku","quantity"],"additionalProperties":false}},"delivery_time":{"type":"string","enum":["immediate","with_turndown","next_housekeeping"]}},"required":["room_number","items","delivery_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Willow Court (hotel_id: wc_minneapolis)
+Address: 90 Stone Arch Ln, Minneapolis, MN 55401
+Timezone: America/Chicago
+
+Family Amenities: rounded‑tip detangler designed for kids.
+
+SKUs: COMB_KIDS_DETANGLER, COMB_WIDE_BAMBOO, TIES_ORGANIC_SET
+
+user:
+Could you bring a child-safe detangling comb at turndown to 618?
+
+assistant channel=analysis:
+Offer COMB_KIDS_DETANGLER with turndown.
+
+assistant channel=commentary to=tool.get_grooming_amenities:
+{"category":"all_grooming"}
+
+tool.get_grooming_amenities channel=commentary to=assistant:
+{"available_items":[{"sku":"COMB_KIDS_DETANGLER","name":"Child-safe Detangler"},{"sku":"COMB_WIDE_BAMBOO","name":"Wide-tooth Bamboo"},{"sku":"TIES_ORGANIC_SET","name":"Organic Hair Ties"}]}
+
+assistant channel=commentary to=tool.deliver_amenities:
+{"room_number":"618","items":[{"sku":"COMB_KIDS_DETANGLER","quantity":1}],"delivery_time":"with_turndown"}
+
+tool.deliver_amenities channel=commentary to=assistant:
+{"delivery_id":"WC-618-27","scheduled":"turndown","window":"19:00-21:00"}
+
+assistant channel=final:
+Scheduled—delivery WC-618-27 will place the child‑safe detangler during turndown (19:00–21:00).
+
+user:
+Love the stone arch photos in the hallway.
+
+assistant channel=final:
+They’re prints from the historic bridge by the river.
+
+user:
+Do you provide bedtime storybooks?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll see what’s available for children’s books.
+

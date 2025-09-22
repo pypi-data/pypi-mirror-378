@@ -1,0 +1,58 @@
+"""
+Guest confirms the main phone and asks if fax is available; include out-of-scope request for inbound caller ID list.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Opal Strand Hotel (hotel_id: opal_strand)
+Contacts: Phone +61 2 5550 8801 | Fax +61 2 5550 8802 | Email stay@opalstrand.au
+Hours: Operator 24/7; Business center 08:00–20:00
+Extras: Boardroom 3F; Ocean terrace 17:00–22:00.
+
+user:
+What’s the main phone again? Do you have a fax number?
+
+assistant channel=analysis:
+Provide both via contact tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"opal_strand","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+61 2 5550 8801"}
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"opal_strand","channel":"fax"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"fax":"+61 2 5550 8802"}
+
+assistant channel=final:
+Main phone: +61 2 5550 8801. Fax: +61 2 5550 8802.
+
+user:
+Love the ocean terrace.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s best at sunset—open 17:00–22:00.
+
+user:
+Can you share the last 10 caller IDs to the main line?
+
+assistant channel=analysis:
+Out of scope—no caller ID logs.
+
+assistant channel=final:
+[ATTENTION] Caller ID logs aren’t available within the provided resources.
+

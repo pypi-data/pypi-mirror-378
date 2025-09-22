@@ -1,0 +1,68 @@
+"""
+Guest requests two additional keys; assistant verifies identity and issues one spare due to limits; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 1215 requesting two more keys), assistant (front desk enforcing limit and issuing within policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_guest_identity","description":"Verify guest identity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"last_name":{"type":"string"},"id_last4":{"type":"string"}},"required":["room_number","last_name","id_last4"]}},
+  {"name":"issue_spare_key","description":"Issue spare key for pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pickup_location":{"type":"string","enum":["front_desk"]}},"required":["room_number","pickup_location"]}},
+  {"name":"log_lost_key","description":"Log key event","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"note":{"type":"string"}},"required":["room_number","note"]}}
+]
+```
+"""
+
+system:
+Hotel: Cityline Hotel — Theater Wing
+Front desk: 24/7
+Room 1215: Executive Twin
+Policy: Verify last name + ID last four; pickup front_desk only; max 2 active spares; auto-deactivate at 00:00
+Notes: Theater Wing elevator T3 to 12th floor; lounge open 17:00–23:00
+Contacts: Front Desk 0
+
+user:
+Hi, Patel in 1215, ID ends 1188. Could I get two extra keys?
+
+assistant channel=analysis:
+Verify identity; if already at limit, issue only within max active spares (issue 1 spare here) and log event.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"1215","last_name":"Patel","id_last4":"1188"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"1215"}
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"1215","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-1215-6610","pickup_location":"front_desk"}
+
+assistant channel=commentary to=tool.log_lost_key:
+{"room_number":"1215","note":"issued 1 spare SP-1215-6610; advised max 2 active spares"}
+
+tool.log_lost_key channel=commentary to=assistant:
+{"logged":true}
+
+assistant channel=final:
+Verified—one spare (SP-1215-6610) is ready at the front desk. Our limit is two active spares per room.
+
+user:
+The lounge hours again?
+
+assistant channel=final:
+The lounge is open from 17:00 to 23:00.
+
+user:
+How are you this evening?
+
+assistant channel=final:
+Doing well—thanks for asking!
+
+user:
+Can you leave the key with the lounge attendant?
+
+assistant channel=final:
+[ATTENTION] Pickup is front desk only per the provided policy.
+

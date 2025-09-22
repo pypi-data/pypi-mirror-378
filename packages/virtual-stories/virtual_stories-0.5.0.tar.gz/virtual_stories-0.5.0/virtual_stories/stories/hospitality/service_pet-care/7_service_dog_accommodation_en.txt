@@ -1,0 +1,134 @@
+"""
+Guest with service dog needing specialized care understanding work vs. play time.
+
+ROLES: user (person with disability accompanied by trained service dog), assistant (accessibility coordinator understanding service animal protocols)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_pet_care",
+    "description": "Arrange on‑property pet walking with duration and start time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "start_time": {"type": "string"},
+        "duration_minutes": {"type": "integer", "enum": [15, 30, 45, 60]}
+      },
+      "required": ["room_number", "start_time", "duration_minutes"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_service_animal_support",
+    "description": "Check specialized services for working service animals.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": {"type": "string", "enum": ["work_break", "off_duty_care", "accessibility_routes", "handler_training"]}
+      },
+      "required": ["service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Universal Access Resort — Fully accessible luxury destination designed for guests with disabilities
+LOCATION: Coastal location with accessible beach paths and barrier-free nature trails
+STAR RATING: 5-star resort with ADA Platinum certification and universal design excellence awards
+ARCHITECTURE: Comprehensive accessibility features with wide pathways, accessible elevators, and audio/visual aids
+GUEST CAPACITY: 200 fully accessible rooms, 30 companion care suites, 15 service animal accommodation units
+Pet Care Services:
+- Specialized service animal support understanding the distinction between working and off-duty time
+- Trained staff who understand service animal etiquette and never interfere with working dogs
+- Off-duty exercise and play opportunities when service animals are released from work duties
+- Accessible walking routes with proper surfaces for guide dogs and mobility assistance animals
+- Relief areas strategically located with easy access from all accommodation areas
+- Durations: 15/30/45/60 minutes specifically for off-duty service animal exercise and socialization
+- Rates: Complimentary for registered service animals during their off-duty periods
+- Meet point: Service animal-friendly areas with proper space for handler mobility needs
+ACCESSIBILITY FACILITIES:
+- Fully accessible walking trails with tactile guidance systems and audio descriptions
+- Service animal relief areas with waste disposal stations and fresh water fountains
+- Quiet spaces for service animals to decompress when off-duty from their working responsibilities
+- Emergency protocols specifically designed for guests with service animals
+- Staff trained in service animal etiquette and legal requirements under ADA compliance
+- Veterinary support coordination with experience in working dog health maintenance
+
+user:
+My guide dog Max works hard all day helping me navigate. Can someone give him some off-duty play time while I rest?
+
+assistant channel=analysis:
+Guest has guide dog who needs off-duty time - should check off-duty care services for working service animals.
+
+assistant channel=commentary to=tool.check_service_animal_support:
+{"service_type": "off_duty_care"}
+
+tool.check_service_animal_support channel=commentary to=assistant:
+{"service_type": "off_duty_care", "available": true, "understanding": "distinction between working and off-duty time", "rates": "complimentary for registered service animals", "activities": "exercise and socialization during off-duty periods"}
+
+assistant channel=final:
+Absolutely! We provide complimentary off-duty exercise and socialization for registered service animals, understanding Max deserves play time when he's not working.
+
+user:
+It's important that staff don't pet him or distract him when he's working.
+
+assistant channel=analysis:
+Guest emphasizing service animal etiquette - system mentions staff training in this area.
+
+assistant channel=final:
+Our staff are trained in service animal etiquette and understand never to interfere with working dogs. They know the difference between work time and play time.
+
+user:
+The accessible beach paths sound wonderful for both of us.
+
+assistant channel=analysis:
+Chitchat about accessible features - can share system info about barrier-free trails and accessible walking routes.
+
+assistant channel=final:
+Yes! Our barrier-free nature trails and accessible beach paths have proper surfaces perfect for guide dogs and comfortable navigation.
+
+user:
+Can Max have 30 minutes of play time tomorrow at 2 PM while I have my massage therapy appointment?
+
+assistant channel=analysis:
+Guest requesting specific off-duty time which is complimentary for service animals.
+
+assistant channel=commentary to=tool.request_pet_care:
+{"room_number": "service_animal_suite", "start_time": "14:00", "duration_minutes": 30}
+
+tool.request_pet_care channel=commentary to=assistant:
+{"order_id": "service_animal_care_9182", "rate": 0, "currency": "USD", "meet": "Service animal-friendly area", "special_notes": "Off-duty play time for registered guide dog"}
+
+assistant channel=final:
+Scheduled! Max's 30-minute off-duty play time at 14:00 (order service_animal_care_9182). Complimentary service - staff will meet you at the service animal-friendly area.
+
+user:
+Do you have quiet spaces where Max can decompress when he's not working?
+
+assistant channel=analysis:
+Guest asking about decompression spaces which system mentions for off-duty service animals.
+
+assistant channel=commentary to=tool.check_service_animal_support:
+{"service_type": "work_break"}
+
+tool.check_service_animal_support channel=commentary to=assistant:
+{"service_type": "work_break", "available": true, "quiet_spaces": "for service animals to decompress when off-duty", "locations": "throughout property for easy access"}
+
+assistant channel=final:
+Yes! We have quiet spaces throughout the property specifically for service animals to decompress and relax when they're off-duty from their responsibilities.
+
+user:
+What if Max needs specialized veterinary care for his working dog health needs?
+
+assistant channel=analysis:
+Guest asking about specialized vet care which requires specific working dog health expertise beyond standard system knowledge.
+
+assistant channel=final:
+[ATTENTION] Let me connect you with our veterinary support coordination team who have specific experience with working dog health maintenance.

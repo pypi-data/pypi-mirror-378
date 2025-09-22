@@ -1,0 +1,136 @@
+"""
+Guest preparing for evening event asks for brightening mask and quick prep.
+Provide targeted analysis, mask selection, and delivery.
+
+ROLES: user (guest attending event), assistant (spa attendant with beauty kits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "analyze_skin_type",
+    "description": "Evaluate dullness and tone-evening needs before event.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_id": { "type": "string" },
+        "skin_concerns": { "type": "array", "items": { "type": "string", "enum": ["dullness", "uneven_tone", "pores", "oiliness"] } },
+        "skin_type": { "type": "string", "enum": ["normal", "combination", "oily", "sensitive"] }
+      },
+      "required": ["guest_id", "skin_concerns", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "select_facial_mask",
+    "description": "Pick vitamin C or niacinamide brightening mask.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "mask_type": { "type": "string", "enum": ["brightening"] },
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "application_time": { "type": "number" }
+      },
+      "required": ["room_number", "mask_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_spa_package",
+    "description": "Deliver event-prep set with primer and roller.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "package_contents": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string" },
+        "setup_assistance": { "type": "boolean" }
+      },
+      "required": ["room_number", "package_contents"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Sakura Gate Business Hotel (hotel_id: sgb_tokyo_03)
+Address: 1-5-3 Yaesu, Chuo City, Tokyo 103-0028, Japan
+Timezone: Asia/Tokyo
+
+Beauty & Spa Services:
+- Brightening masks: Vitamin C flash sheet; Niacinamide gel
+- Prep time: 12–15 minutes; cooling roller included
+- Availability: 07:00–22:00; in-room delivery 15 minutes
+- Add-ons: pore-refining primer; blotting papers
+- Sensitive options: alcohol-free base
+
+Property & Access:
+- 320 rooms; direct access to Tokyo Station underground
+- Quiet floors after 22:00; vending corner with skincare minis
+- Coin laundry 24/7; steamers available
+- Breakfast 6:30–10:00; late checkout on request
+
+Green Practices:
+- Paperless spa menus; refill stations on floors 7/15/22
+
+user:
+Hi, room 2214. I’ve got an event in an hour—anything to brighten quickly?
+
+assistant channel=analysis:
+Time-sensitive brightening; analyze and select vitamin C or niacinamide; deliver with primer.
+
+assistant channel=commentary to=tool.analyze_skin_type:
+{"guest_id":"r2214","skin_concerns":["dullness","uneven_tone"],"skin_type":"combination"}
+
+tool.analyze_skin_type channel=commentary to=assistant:
+{"profile":"combo_dull","recommended_masks":["brightening"],"key_ingredients":["vitamin_c","niacinamide"],"application_time":12}
+
+assistant channel=commentary to=tool.select_facial_mask:
+{"room_number":"2214","mask_type":"brightening","ingredients":["vitamin_c"],"application_time":12}
+
+tool.select_facial_mask channel=commentary to=assistant:
+{"mask_selected":"C-Flash Sheet","application_time":12,"compatibility":"excellent"}
+
+assistant channel=commentary to=tool.deliver_spa_package:
+{"room_number":"2214","package_contents":["C-Flash Sheet","cooling roller","pore-refining primer","blotting papers","how-to card"],"delivery_window":"10 minutes","setup_assistance":false}
+
+tool.deliver_spa_package channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta":"10 minutes","package_id":"SG2214_BRT"}
+
+assistant channel=final:
+Yes—we’ll send a 12‑minute C‑Flash brightening sheet with a cooling roller and primer to 2214 in about 10 minutes.
+
+user:
+Thanks! Is breakfast until 10?
+
+assistant channel=analysis:
+System says 6:30–10:00.
+
+assistant channel=final:
+Yes—6:30 to 10:00.
+
+user:
+The underground access saved me time earlier.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s very convenient—direct corridors from the lobby.
+
+user:
+Could you also secure same-day tailoring for a suit?
+
+assistant channel=analysis:
+Beyond current spa scope; flag attention.
+
+assistant channel=final:
+[ATTENTION] Checking with guest services for tailoring options.
+"""
+

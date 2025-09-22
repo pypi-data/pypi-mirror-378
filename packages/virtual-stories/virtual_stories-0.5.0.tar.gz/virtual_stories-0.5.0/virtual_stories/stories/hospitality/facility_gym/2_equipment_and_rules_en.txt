@@ -1,0 +1,92 @@
+"""
+Guest asks about gym equipment specifics and rules; include light small talk and one out-of-scope follow-up flagged.
+
+ROLES: user (guest planning a morning workout), assistant (fitness-facilities concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_gym_details",
+    "description": "Return location, hours, access rules, and equipment list for the fitness center.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{}},
+    "strict": true
+  },
+  {
+    "name": "get_gym_rules",
+    "description": "Return attire requirements and sanitization policy.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{}},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Skyline Wharf Hotel — North Tower
+Address: 77 Pierfront Blvd, Marina City
+Gym Name: Skyline Fit Studio (access via elevator B)
+Hours: 24/7 with keycard access; attendant 06:00–22:00
+
+Equipment Inventory:
+- 6 treadmills (incline 0–15%)
+- 4 ellipticals; 4 spin bikes
+- Dumbbells 2–30 kg; adjustable benches (x4)
+- Cable crossover; lat pulldown; leg press
+- Mats, foam rollers, resistance bands
+
+Access & Towels:
+• Room keycard required; max occupancy 18
+• Fresh towels at entry rack; return bin near exit
+
+Water & Amenities:
+- Filtered water dispenser; paper cups
+- Sanitizing wipes at each station
+- Bluetooth speakers not permitted (quiet zone)
+
+Safety & Assistance:
+• CCTV monitored; emergency phone to Security at the mirror wall
+• Attendant offers orientation 07:00–10:00, 17:00–20:00
+
+Nearby Facilities:
+- Locker rooms with showers on the same floor
+- Sauna (dry) next to locker rooms 07:00–22:00
+
+user:
+Is the gym open right now, and do you have free weights and spin bikes?
+
+assistant channel=analysis:
+Use tools to confirm hours and equipment; answer directly from outputs and system sections.
+
+assistant channel=commentary to=tool.get_gym_details:
+{}
+
+tool.get_gym_details channel=commentary to=assistant:
+{"location":"North Tower, elevator B","hours":"24/7 with keycard; attendant 06:00–22:00","equipment":["treadmills","ellipticals","spin bikes","dumbbells 2–30 kg","benches","cable machine","leg press","mats","bands"]}
+
+assistant channel=commentary to=tool.get_gym_rules:
+{}
+
+tool.get_gym_rules channel=commentary to=assistant:
+{"attire":"Athletic footwear and tops required; no open-toe shoes.","sanitization":"Wipe down equipment before and after use; wipes at every station."}
+
+assistant channel=final:
+Yes—the Skyline Fit Studio is open 24/7 with your room key. We have free weights (dumbbells 2–30 kg with benches) and spin bikes, along with treadmills and cable machines. Athletic footwear and tops are required, and please wipe equipment before and after use.
+
+user:
+Nice. The mats look brand new—did you just refresh the space?
+
+assistant channel=final:
+Enjoy the refreshed setup and have a great session.
+
+user:
+Do I need my room keycard to enter?
+
+assistant channel=final:
+Yes—a room keycard is required for access.
+
+user:
+Can you stream my own playlist over speakers in the gym?
+
+assistant channel=final:
+[ATTENTION] External speakers aren’t permitted here. Checking available options.

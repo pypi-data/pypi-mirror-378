@@ -1,0 +1,80 @@
+"""
+Guest wants multiple openers with sleeves for a small in-room gathering and asks about maximum per room; arrange delivery.
+
+ROLES: user (host guest), assistant (guest services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"room_opener_limit","description":"Return max loan quantity for openers per room.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"deliver_multiple","description":"Deliver multiple openers and sleeves to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","qty":{"type":"integer","minimum":1}},"required":["room","qty"]}}
+]
+```
+"""
+
+system:
+Emerald City Boutique (hotel_id: ecb_sea_12)
+Address: 120 Pine St, Seattle, WA 98101
+Timezone: America/Los_Angeles
+Setting: Boutique hotel near Pike Place Market
+
+Loan Limits:
+- Openers per standard room: up to 2
+- Suites: up to 4
+
+Accessories:
+- Neoprene sleeves included on request
+
+Delivery:
+- Typical ETA: 10–16 minutes
+
+Policy:
+- No deposit; return at checkout
+
+Contact:
+- Guest Services ext. 0
+
+user:
+Could we have three bottle openers with sleeves to room 1620 for a small gathering? Is three allowed?
+
+assistant channel=analysis:
+Check room limit, then deliver if within limit.
+
+assistant channel=commentary to=tool.room_opener_limit:
+{}
+
+tool.room_opener_limit channel=commentary to=assistant:
+{"standard":2,"suite":4}
+
+assistant channel=final:
+Our policy allows up to 4 for suites and 2 for standard rooms. If 1620 is a suite, three is fine—shall I proceed?
+
+user:
+Yes, 1620 is a suite—please go ahead.
+
+assistant channel=commentary to=tool.deliver_multiple:
+{"room":"1620","qty":3}
+
+tool.deliver_multiple channel=commentary to=assistant:
+{"ticket":"ECB-1620-318","eta_minutes":13,"accessory":"neoprene_sleeves"}
+
+assistant channel=final:
+Confirmed—ticket ECB-1620-318. Three openers with neoprene sleeves will arrive in about 13 minutes.
+
+user:
+The market nearby is fantastic!
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s a favorite—fresh finds and lively stalls year-round.
+
+user:
+Can you provide a list of local breweries to tour?
+
+assistant channel=analysis:
+Outside system scope; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll look into brewery tour lists beyond our current amenity details.

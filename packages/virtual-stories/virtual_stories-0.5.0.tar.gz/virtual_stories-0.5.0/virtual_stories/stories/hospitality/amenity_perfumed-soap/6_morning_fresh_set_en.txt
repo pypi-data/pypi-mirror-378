@@ -1,0 +1,62 @@
+"""
+Provide a fresh citrus soap for a morning wake-up, with delivery timing.
+
+ROLES: user (guest asking for citrus wake-up soap), assistant (guest services coordinating a quick drop)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"fresh_check","description":"Check citrus soap availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"citrus":{"type":"boolean"}},"required":[]},"strict":true},
+  {"name":"drop_off","description":"Drop citrus soap to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"}},"required":["room","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbor Light House (hotel_id: hlh_bos_13)
+Address: 99 Atlantic Ave, Boston, MA 02110
+Timezone: America/New_York
+Guest Services: 07:00–22:00; amenity delivery 10–16 min
+Scents: citrus, lavender, green_tea
+Note: paraben-free; citrus uses cold-pressed oils
+Ext: x3200
+
+user:
+Can I get a citrus soap to 714?
+
+assistant channel=analysis:
+Confirm citrus availability; arrange drop.
+
+assistant channel=commentary to=tool.fresh_check:
+{"citrus":true}
+
+tool.fresh_check channel=commentary to=assistant:
+{"ok":true,"item":"soap_citrus"}
+
+assistant channel=commentary to=tool.drop_off:
+{"room":"714","item":"soap_citrus"}
+
+tool.drop_off channel=commentary to=assistant:
+{"queued":true,"eta":12}
+
+assistant channel=final:
+On it—citrus soap is queued for room 714, ETA around 12 minutes.
+
+user:
+Is Guest Services open now?
+
+assistant channel=analysis:
+Use system hours.
+
+assistant channel=final:
+Yes, 07:00–22:00.
+
+user:
+Could you get me a last-minute harbor cruise reservation?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

@@ -1,0 +1,135 @@
+"""
+Guest requests additional note paper and stationery supplies for business or personal writing needs.
+Provide comprehensive stationery service with tool-based inventory management and delivery options.
+
+ROLES: user (business guest needing quality note paper), assistant (business center coordinator with stationery access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_stationery_inventory",
+    "description": "Check available stationery supplies in hotel inventory.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_type": { "type": "string", "enum": ["note_paper", "letterhead", "envelopes", "memo_pads", "writing_pads", "sticky_notes"] },
+        "quality_level": { "type": "string", "enum": ["standard", "premium", "luxury"] }
+      },
+      "required": ["item_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_stationery_supplies",
+    "description": "Arrange delivery of stationery items to guest room or business center.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "string" } },
+        "delivery_location": { "type": "string", "enum": ["guest_room", "business_center", "meeting_room"] },
+        "quantity_per_item": { "type": "number" },
+        "special_requests": { "type": "string" }
+      },
+      "required": ["room_number", "items", "delivery_location"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_printing_services",
+    "description": "Coordinate printing and document services for guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": { "type": "string", "enum": ["letterhead_printing", "custom_notepad", "business_cards", "document_binding"] },
+        "guest_room": { "type": "string" },
+        "specifications": { "type": "string" },
+        "rush_order": { "type": "boolean" }
+      },
+      "required": ["service_type", "guest_room"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Executive Plaza Metropolitan (hotel_id: ep_atl_02)
+Address: 3300 Peachtree Road NE, Atlanta, GA 30305
+Timezone: America/New_York
+
+Business Services:
+- 24/7 business center with premium Crane & Co. stationery and watermark paper
+- Executive floor guests receive complimentary luxury note sets in Egyptian cotton paper
+- Standard stationery: ruled note pads, memo books, sticky notes, hotel letterhead
+- Premium options: embossed personal note cards, leather portfolio sets, fountain pen paper
+
+Stationery Collection:
+- Standard: 80gsm white ruled note paper, recycled memo pads, standard sticky notes
+- Premium: 120gsm cream note paper with hotel watermark, linen-textured writing pads
+- Luxury: 160gsm Egyptian cotton paper, gold-edged note cards, leather-bound journals
+
+user:
+Hello! I'm in room 1247 and I need some good quality note paper for handwritten thank-you notes. Do you have anything nicer than the basic hotel notepad?
+
+assistant channel=analysis:
+Guest wants premium note paper for thank-you notes. Check inventory for higher quality options beyond basic notepad.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"note_paper","quality_level":"premium"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"note_paper","quality_level":"premium","options":["cream_watermark_120gsm","linen_texture_writing_pad","personal_note_cards"],"stock_count":25,"complementary_items":["matching_envelopes","hotel_seal_stickers"]}
+
+assistant channel=analysis:
+Premium note paper available including cream watermark paper and linen-textured options. Offer choices and arrange delivery.
+
+assistant channel=final:
+Absolutely! We have beautiful premium note paper options—cream paper with our hotel watermark, linen-textured writing pads, and elegant personal note cards. All come with matching envelopes. Which style appeals to you for your thank-you notes?
+
+user:
+The linen-textured writing pads sound perfect! Could you send a set up to my room?
+
+assistant channel=analysis:
+Guest selected linen-textured writing pads. Arrange delivery to room 1247 with standard quantity and matching accessories.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"1247","items":["linen_texture_writing_pad","matching_envelopes"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"include hotel seal stickers"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":8,"items_included":["linen_writing_pad_25_sheets","cream_envelopes_25_count","gold_hotel_seals_10_count"],"delivery_team":"concierge_staff"}
+
+assistant channel=final:
+Perfect choice! I'll send up a linen-textured writing pad with 25 sheets, matching cream envelopes, and some elegant gold hotel seals. Our concierge staff will deliver them to room 1247 in about 8 minutes.
+
+user:
+That sounds lovely! This hotel really knows how to treat business travelers. The attention to detail is impressive.
+
+assistant channel=analysis:
+Guest praising hotel's business traveler services and attention to detail. Acknowledge Executive Plaza's business-focused amenities.
+
+assistant channel=final:
+Thank you so much! Executive Plaza Metropolitan really focuses on those thoughtful touches that make business stays more comfortable and productive.
+
+user:
+Could you also have someone design and print custom letterhead with my company logo for tomorrow's meeting?
+
+assistant channel=analysis:
+Guest requesting custom letterhead design and printing. This involves graphic design services beyond basic stationery inventory.
+
+assistant channel=final:
+[ATTENTION] I'd be happy to explore custom printing options for you. Checking available options.
+
+user:
+That's okay, the linen paper will work beautifully for my thank-you notes. Thanks for your help!
+
+assistant channel=analysis:
+Guest satisfied with original stationery solution and expressing gratitude. Simple acknowledgment response.
+
+assistant channel=final:
+You're very welcome! I'm sure your thank-you notes will look beautiful on that linen paper. Enjoy your stay!

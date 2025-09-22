@@ -1,0 +1,85 @@
+"""
+Poolside guest reports a minor cut; requests bandages and antiseptic; confirm pool station inventory and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (pool guest), assistant (pool operations/amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"pool_first_aid_check","description":"Check poolside first aid stock for bandages and antiseptic.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"item_type":{"type":"string","enum":["bandages","antiseptic"]}},
+     "required":["item_type"]},"strict":true},
+  {"name":"pool_first_aid_deliver","description":"Deliver requested items to a cabana or room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"location":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},
+     "required":["location","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Suncrest Pool & Villas (hotel_id: SPV_ps_15)
+Address: 25 Palm Shore, Palm Springs, CA 92262 | TZ: America/Los_Angeles
+
+Pool Station:
+- Bandages, antiseptic wipes, gauze
+- Lifeguard on duty 09:00–18:00
+- Item delivery: poolside cabanas or rooms
+- Cold towels upon request
+- Citrus water dispensers
+
+user:
+I nicked my finger—can I get bandages and antiseptic to cabana 3?
+
+assistant channel=analysis:
+Check pool station stock and deliver to cabana 3.
+
+assistant channel=commentary to=tool.pool_first_aid_check:
+{"item_type":"bandages"}
+
+tool.pool_first_aid_check channel=commentary to=assistant:
+{"available":true,"item":"bandages"}
+
+assistant channel=commentary to=tool.pool_first_aid_check:
+{"item_type":"antiseptic"}
+
+tool.pool_first_aid_check channel=commentary to=assistant:
+{"available":true,"item":"antiseptic"}
+
+assistant channel=commentary to=tool.pool_first_aid_deliver:
+{"location":"cabana 3","items":["bandages","antiseptic"]}
+
+tool.pool_first_aid_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":5,"runner":"pool-ops","ticket":"SPV-C3-AID"}
+
+assistant channel=final:
+On the way—bandages and antiseptic to cabana 3 in about 5 minutes (pool-ops, ticket SPV-C3-AID). Cold towels are available too if you’d like one.
+
+user:
+Is there citrus water by the pool?
+
+assistant channel=analysis:
+Answer from Pool Station.
+
+assistant channel=final:
+Yes—dispensers are set near the cabana entrances.
+
+user:
+The palms look gorgeous today.
+
+assistant channel=analysis:
+Chitchat referencing address.
+
+assistant channel=final:
+It’s a perfect Palm Springs afternoon.
+
+user:
+Can you reserve cabana 1 for tomorrow?
+
+assistant channel=analysis:
+Reservations aren’t defined—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check cabana reservation options for tomorrow.
+

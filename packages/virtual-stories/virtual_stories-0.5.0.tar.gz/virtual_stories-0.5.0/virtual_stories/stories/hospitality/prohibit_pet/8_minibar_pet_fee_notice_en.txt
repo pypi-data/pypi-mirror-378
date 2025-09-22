@@ -1,0 +1,53 @@
+"""
+Staff proactively informs guest of pet policy and fee notice at check‑in; guest inquires about the reason for the fee.
+
+ROLES: user (curious guest), assistant (front desk explaining rationale)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_fee_rationale","description":"Explain what the cleaning fee covers.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Granite Square (hotel_id: gs_bos)
+Address: 101 Merrimac St, Boston, MA 02114
+Timezone: America/New_York
+
+No‑Pet Policy with Fee Rationale:
+- Deep cleaning includes: HEPA filtration run, upholstery shampoo, hypoallergenic treatment, linen replacement
+- Purpose: Allergens control and next‑guest readiness
+- Service Animals: Welcome under control
+
+user:
+Why is the pet cleaning fee so high?
+
+assistant channel=analysis:
+Explain fee components as listed in system; use tool to echo.
+
+assistant channel=commentary to=tool.get_fee_rationale:
+{"hotel_id":"gs_bos"}
+
+tool.get_fee_rationale channel=commentary to=assistant:
+{"covers":["HEPA run","upholstery shampoo","hypoallergenic treatment","linen replacement"]}
+
+assistant channel=final:
+The fee covers a deep clean: HEPA filtration run, upholstery shampoo, hypoallergenic treatment, and linen replacement so the room is ready for the next guest.
+
+user:
+The stone lobby looks nice.
+
+assistant channel=final:
+Thank you—welcome to Granite Square.
+
+user:
+Do you allow cats if they stay in carriers the whole time?
+
+assistant channel=analysis:
+Policy is no pets regardless; reiterate rule.
+
+assistant channel=final:
+Our policy doesn’t permit pets, even if they remain in carriers. Trained service animals are welcome while under control.
+

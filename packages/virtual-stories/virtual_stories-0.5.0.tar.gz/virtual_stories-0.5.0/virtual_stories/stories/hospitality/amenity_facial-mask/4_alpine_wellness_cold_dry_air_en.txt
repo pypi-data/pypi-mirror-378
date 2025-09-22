@@ -1,0 +1,138 @@
+"""
+Guest requests deeply hydrating mask in cold, dry alpine climate; wants nightly routine tip.
+Provide analysis, mask selection, and delivery with concise guidance.
+
+ROLES: user (guest in dry alpine air), assistant (wellness host with mask inventory)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "analyze_skin_type",
+    "description": "Assess dehydration level and barrier support needs.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_id": { "type": "string" },
+        "skin_concerns": { "type": "array", "items": { "type": "string", "enum": ["dryness", "tightness", "flaking", "dullness"] } },
+        "skin_type": { "type": "string", "enum": ["dry", "combination", "sensitive"] }
+      },
+      "required": ["guest_id", "skin_concerns", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "select_facial_mask",
+    "description": "Choose occlusive hydration or ceramide barrier mask.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "mask_type": { "type": "string", "enum": ["hydrating", "barrier_support"] },
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "application_time": { "type": "number" }
+      },
+      "required": ["room_number", "mask_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_spa_package",
+    "description": "Deliver mask with humidifier card and microfiber wrap.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "package_contents": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string" },
+        "setup_assistance": { "type": "boolean" }
+      },
+      "required": ["room_number", "package_contents"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Glacier Crest Wellness Lodge (hotel_id: gcwl_bzn_01)
+Address: 12 Summit Loop, Big Sky, MT 59716
+Timezone: America/Denver
+
+Climate & Care:
+- Elevation dryness: nightly hydration encouraged
+- Room humidifiers on request; distilled water provided
+- Mask menu: ceramide barrier cream mask; hyaluronic sleep gel
+- Usage: 20 min or overnight as sleeping pack
+- Delivery: 15–25 minutes; turndown pairing available
+
+Property Details:
+- 95 suites; gas fireplaces; wool throws
+- Nordic spa circuit: sauna, cold plunge, relaxation room
+- Breakfast: 6:30–10:30; fireside tea 16:00–18:00
+- Ski valet and shuttle to base area
+- Quiet wing floors 3–4; blackout drapes
+
+Sustainability:
+- Local apothecary partnerships; aluminum tubes recyclable
+- Linen refresh opt-out with snack credit
+
+user:
+Hello! The air here is so dry. I’m in 240. Could I get a very hydrating mask for tonight?
+
+assistant channel=analysis:
+Dehydration in alpine climate; analyze then choose ceramide barrier mask and deliver.
+
+assistant channel=commentary to=tool.analyze_skin_type:
+{"guest_id":"r240","skin_concerns":["dryness","tightness","flaking"],"skin_type":"dry"}
+
+tool.analyze_skin_type channel=commentary to=assistant:
+{"profile":"very_dry","recommended_masks":["barrier_support","hydrating"],"key_ingredients":["ceramides","squalane","hyaluronic_acid"],"application_time":25}
+
+assistant channel=commentary to=tool.select_facial_mask:
+{"room_number":"240","mask_type":"barrier_support","ingredients":["ceramides","squalane"],"application_time":25}
+
+tool.select_facial_mask channel=commentary to=assistant:
+{"mask_selected":"Alpine Barrier Cream Mask","compatibility":"excellent","application_time":25}
+
+assistant channel=commentary to=tool.deliver_spa_package:
+{"room_number":"240","package_contents":["Alpine Barrier Cream Mask","microfiber head wrap","humidifier tip card"],"delivery_window":"20 minutes","setup_assistance":true}
+
+tool.deliver_spa_package channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta":"20 minutes","package_id":"GC240_BAR"}
+
+assistant channel=final:
+I’ll send our Alpine Barrier Cream Mask to 240 with a head wrap and a humidifier tip card—about 20 minutes. It can be used for 25 minutes or as an overnight pack.
+
+user:
+Do you have fireside tea in the lobby now?
+
+assistant channel=analysis:
+From system: 16:00–18:00.
+
+assistant channel=final:
+Yes—served 16:00 to 18:00 by the fireplace.
+
+user:
+The fireplace looks cozy.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s perfect after the spa circuit—wool throws and all.
+
+user:
+Can you arrange snowmobile tours for tomorrow?
+
+assistant channel=analysis:
+Out of scope; flag attention.
+
+assistant channel=final:
+[ATTENTION] Looping in our activities desk for tour arrangements.
+"""
+

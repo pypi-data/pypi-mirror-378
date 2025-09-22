@@ -1,0 +1,64 @@
+"""
+Guest asks about fluoride content and requests a bottle; assistant provides details and dispatches; includes chit-chat and an out-of-scope query.
+
+ROLES: user (guest in room 504 asking for fluoride info and one mouthwash), assistant (housekeeping providing amenity info and delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_amenity_details","description":"Get amenity brand and composition details","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"}},"required":["amenity_name"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Old City Manor — Heritage Wing
+Room 504: Classic Double
+Mouthwash: Brand "Heritage Fresh"; 0.02% sodium fluoride; alcohol-free only
+Size: 25 ml single-use bottles
+Policy: 2 complimentary per night; extras available
+Delivery hours: 08:00–22:00
+Contacts: Housekeeping 330; Operator 0
+Labeling: Ingredients printed on each bottle; tamper-evident cap
+Safety: Do not swallow; keep away from children
+
+user:
+Does your mouthwash have fluoride? And could you send one bottle to 504?
+
+assistant channel=analysis:
+Provide fluoride content from system and arrange delivery of 1 bottle to 504.
+
+assistant channel=commentary to=tool.get_amenity_details:
+{"amenity_name":"mouthwash"}
+
+tool.get_amenity_details channel=commentary to=assistant:
+{"amenity_name":"mouthwash","brand":"Heritage Fresh","sodium_fluoride_percent":0.02,"alcohol_free":true}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"504","amenity_name":"mouthwash","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MW-504-9012","eta_minutes":9}
+
+assistant channel=final:
+Yes—our Heritage Fresh mouthwash contains 0.02% sodium fluoride and is alcohol-free. One bottle is on its way to 504 with an ETA of about 9 minutes.
+
+user:
+Thanks! What time can you deliver tonight?
+
+assistant channel=final:
+Delivery runs until 22:00.
+
+user:
+Hope your shift’s okay.
+
+assistant channel=final:
+Thank you—it’s going well!
+
+user:
+Do you have a dentist you recommend in the area?
+
+assistant channel=final:
+[ATTENTION] Offsite dentist recommendations are beyond the provided system context.
+

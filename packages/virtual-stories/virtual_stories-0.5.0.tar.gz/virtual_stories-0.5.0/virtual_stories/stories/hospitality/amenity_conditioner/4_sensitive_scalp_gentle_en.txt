@@ -1,0 +1,64 @@
+"""
+Guest has sensitive scalp; requests fragrance-free gentle conditioner.
+
+ROLES: user (sensitive scalp guest), assistant (amenities concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_hair_care_products","description":"Retrieve available premium hair care products including conditioners.","parameters":{"type":"object","additionalProperties":false,"properties":{"hair_type":{"type":"string","enum":["dry","oily","normal","curly","colored","damaged","all"]},"product_type":{"type":"string","enum":["conditioner","deep_treatment","leave_in","all_conditioning"]}},"required":[]},"strict":true},
+  {"name":"check_ingredient_allergies","description":"Check if products contain specific ingredients for allergy-sensitive guests.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_sku":{"type":"string"},"allergens_to_avoid":{"type":"array","items":{"type":"string","enum":["sulfates","parabens","fragrance","coconut","tree_nuts","gluten"]}}},"required":["product_sku","allergens_to_avoid"]},"strict":true},
+  {"name":"deliver_hair_care_amenities","description":"Arrange delivery of hair care products to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"size":{"type":"string","enum":["travel_50ml","standard_200ml","luxury_400ml"]}},"required":["sku","size"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["immediate","evening_turndown","morning_service"]}},"required":["room_number","products","delivery_preference"]},"strict":true}
+]
+```
+"""
+
+system:
+Harborlight Bay Resort (hotel_id: hbr_seattle)
+Address: 100 Pier Way, Seattle, WA 98101
+Timezone: America/Los_Angeles
+
+Fragrance-Free Line:
+- Hypoallergenic, dermatologist-tested base
+- Minimal ingredient list for sensitive scalp
+- Sizes: 50ml, 200ml
+
+SKUs:
+- COND_SENSITIVE_GENTLE: Sensitive Scalp Gentle Conditioner
+
+user:
+Hi, my scalp is really sensitive. Do you have a fragrance-free conditioner?
+
+assistant channel=analysis:
+Offer fragrance-free option and confirm allergen profile.
+
+assistant channel=commentary to=tool.get_hair_care_products:
+{"hair_type":"normal","product_type":"conditioner"}
+
+tool.get_hair_care_products channel=commentary to=assistant:
+{"products":[{"sku":"COND_SENSITIVE_GENTLE","name":"Sensitive Scalp Gentle Conditioner","treatment_type":"daily_conditioner"}]}
+
+assistant channel=commentary to=tool.check_ingredient_allergies:
+{"product_sku":"COND_SENSITIVE_GENTLE","allergens_to_avoid":["fragrance","parabens","sulfates"]}
+
+tool.check_ingredient_allergies channel=commentary to=assistant:
+{"product_sku":"COND_SENSITIVE_GENTLE","safe_for_allergies":true,"ingredient_check":{"fragrance":false,"parabens":false,"sulfates":false}}
+
+assistant channel=final:
+Yes—Sensitive Scalp Gentle Conditioner is free of fragrance, parabens, and sulfates. What size do you prefer and what’s your room number?
+
+user:
+Room 432—50ml is fine. Also curious: is there a ferry schedule posted anywhere?
+
+assistant channel=analysis:
+Arrange delivery; ferry schedule is beyond scope -> [ATTENTION].
+
+assistant channel=commentary to=tool.deliver_hair_care_amenities:
+{"room_number":"432","products":[{"sku":"COND_SENSITIVE_GENTLE","size":"travel_50ml"}],"delivery_preference":"immediate"}
+
+tool.deliver_hair_care_amenities channel=commentary to=assistant:
+{"delivery_id":"HBR-432-FF-09","eta_minutes":12}
+
+assistant channel=final:
+[ATTENTION] Delivery HBR-432-FF-09 is on its way in about 12 minutes. I’ll look into ferry schedules separately.
+

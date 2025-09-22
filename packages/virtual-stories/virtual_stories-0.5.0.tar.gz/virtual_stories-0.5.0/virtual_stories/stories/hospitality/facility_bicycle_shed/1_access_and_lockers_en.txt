@@ -1,0 +1,97 @@
+"""
+Guest asks about bicycle shed access and hours, then requests access enabling for their keycard.
+
+ROLES: user (cyclist guest seeking secure bike storage), assistant (front desk enabling shed access and explaining policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_facility_hours",
+    "description": "Return operating hours for a facility by ID.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"facility_id": {"type": "string"}},
+      "required": ["facility_id"]
+    },
+    "strict": true
+  },
+  {
+    "name": "enable_bicycle_shed_access",
+    "description": "Enable bicycle shed access on a guest keycard for the stay.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_id": {"type": "string"},
+        "room_number": {"type": "string"}
+      },
+      "required": ["guest_id", "room_number"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Facility: Secure Bicycle Shed (facility_id: bike_shed_riverside_amst)
+Property: Riverside Canals Hotel (hotel_id: riverside_amsterdam)
+Address: Keizersgracht 310, 1016 EX Amsterdam
+Timezone: Europe/Amsterdam
+Access: Keycard-controlled door; CCTV; floor pump and basic hex tools on wall mount
+Hours: 24/7 with valid keycard
+Lockers: 18 vertical lockers; bring your own lock
+
+user:
+Hi—do you have a bike shed, and when is it open?
+
+assistant channel=analysis:
+Use tool to return hours; confirm keycard access.
+
+assistant channel=commentary to=tool.check_facility_hours:
+{"facility_id":"bike_shed_riverside_amst"}
+
+tool.check_facility_hours channel=commentary to=assistant:
+{"hours":"24/7 with valid keycard"}
+
+assistant channel=final:
+Yes—we have a secure bicycle shed with keycard entry, CCTV, a floor pump, and basic hex tools. It’s open 24/7 with a valid keycard.
+
+user:
+Great. Can you enable access on my card? I’m in room 417; guest ID G-4417.
+
+assistant channel=analysis:
+Enable access with provided details.
+
+assistant channel=commentary to=tool.enable_bicycle_shed_access:
+{"guest_id":"G-4417","room_number":"417"}
+
+tool.enable_bicycle_shed_access channel=commentary to=assistant:
+{"status":"enabled","access_profile":"bike_shed","valid":"through checkout"}
+
+assistant channel=analysis:
+Confirm access and mention lockers policy.
+
+assistant channel=final:
+Access is enabled under profile “bike_shed” through checkout. Lockers are first‑come with 18 vertical units; please bring your own lock.
+
+user:
+By the way, the canals looked beautiful at dusk.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+It’s a lovely time for a ride.
+
+user:
+Do you rent road bikes on-site?
+
+assistant channel=analysis:
+No rental details are listed and there’s no tool—use the special flag.
+
+assistant channel=final:
+[ATTENTION] Noted on rental interest. Checking available options.
+

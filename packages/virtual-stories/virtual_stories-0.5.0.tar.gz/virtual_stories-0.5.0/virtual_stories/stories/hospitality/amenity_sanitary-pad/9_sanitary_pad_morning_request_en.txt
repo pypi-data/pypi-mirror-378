@@ -1,0 +1,80 @@
+"""
+Guest places a morning request for pads; confirm availability and deliver; include small talk and acknowledgment; answer a system-context question.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check sanitary pads by absorbency and wings.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_pad"]},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"}},"required":["item_code","absorbency","with_wings"]},"strict":true},
+  {"name":"deliver_personal_care","description":"Deliver personal care items discreetly in a paper bag.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"},"quantity":{"type":"integer","minimum":1},"bag_type":{"type":"string","enum":["discreet_paper"]}},"required":["room_number","item_code","absorbency","with_wings","quantity","bag_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Palmetto Walk (hotel_id: pw_chs_05)
+Address: 200 Meeting St, Charleston, SC 29401
+Personal care: 06:30–23:00; ETA 7–12 minutes
+Wi‑Fi: 300/150 Mbps; courtyard mesh
+Breakfast: 06:30–10:00; grits bar
+Scent: palmetto leaf note in lobby
+Check-in/out: 15:00 / 12:00
+Tea: 16:00–17:00 on veranda
+
+Pads:
+- regular/with_wings(24), super/with_wings(20)
+- light/no_wings(15)
+- Bag: discreet_paper
+
+user:
+Could I have one pack of regular with wings to 410?
+
+assistant channel=analysis:
+Check regular/with_wings; deliver 1 to 410.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"item_code":"sanitary_pad","absorbency":"regular","with_wings":true}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_pad","absorbency":"regular","with_wings":true,"on_hand_packs":24}
+
+assistant channel=analysis:
+Proceed with delivery order.
+
+assistant channel=commentary to=tool.deliver_personal_care:
+{"room_number":"410","item_code":"sanitary_pad","absorbency":"regular","with_wings":true,"quantity":1,"bag_type":"discreet_paper"}
+
+tool.deliver_personal_care channel=commentary to=assistant:
+{"ticket_id":"PC-410-2304","eta_minutes":8}
+
+assistant channel=final:
+Certainly—one pack of regular pads with wings will arrive at 410 in a discreet paper bag. Ticket PC-410-2304, in about 8 minutes.
+
+user:
+Is tea service every afternoon?
+
+assistant channel=analysis:
+Answer from system tea detail.
+
+assistant channel=final:
+Yes—tea is served 16:00–17:00 on the veranda.
+
+user:
+The palmetto scent in the lobby was pleasant.
+
+assistant channel=analysis:
+Reference scent detail.
+
+assistant channel=final:
+We keep a subtle palmetto leaf note in the lobby—glad it suited you.
+
+user:
+Do you carry disposable underwear as well?
+
+assistant channel=analysis:
+Not listed; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on that item. Reviewing personal care stock.
+

@@ -1,0 +1,61 @@
+"""
+Provide HB pencils and a kid-friendly sharpener for a coloring activity.
+
+ROLES: user (parent requesting simple pencils), assistant (family concierge arranging safe supplies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"family_supplies","description":"Check HB pencils and safe sharpener.","parameters":{"type":"object","additionalProperties":false,"properties":{"hb":{"type":"boolean"},"safe_sharpener":{"type":"boolean"}},"required":[]},"strict":true},
+  {"name":"deliver_family_set","description":"Deliver family coloring set.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"set":{"type":"string"}},"required":["room","set"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverside Family Suites (hotel_id: rfs_sac_03)
+Address: 200 Capitol Mall, Sacramento, CA 95814
+Timezone: America/Los_Angeles
+Family Concierge: 08:00–21:00; delivery 10–15 min
+Complimentary: HB pencils, safe twist sharpener, small coloring booklet
+Ext: x1190
+
+user:
+Do you have HB pencils and a safe sharpener for 1008?
+
+assistant channel=analysis:
+Confirm HB and safe sharpener; deliver family set.
+
+assistant channel=commentary to=tool.family_supplies:
+{"hb":true,"safe_sharpener":true}
+
+tool.family_supplies channel=commentary to=assistant:
+{"ok":true,"hb":60,"safe_sharpener":18}
+
+assistant channel=commentary to=tool.deliver_family_set:
+{"room":"1008","set":"family_coloring"}
+
+tool.deliver_family_set channel=commentary to=assistant:
+{"ok":true,"eta":12}
+
+assistant channel=final:
+Yes—HB pencils and a safe twist sharpener with a small coloring booklet are on their way to 1008, arriving in about 12 minutes.
+
+user:
+The river walkway is pleasant.
+
+assistant channel=analysis:
+Keep chitchat grounded in name/location.
+
+assistant channel=final:
+Riverside Family Suites is well-placed for a gentle stroll.
+
+user:
+Can you book a riverboat parade viewing platform?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

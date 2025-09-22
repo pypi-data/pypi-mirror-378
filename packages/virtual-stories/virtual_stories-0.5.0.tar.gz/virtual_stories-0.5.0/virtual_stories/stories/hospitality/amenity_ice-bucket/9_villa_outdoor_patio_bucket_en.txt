@@ -1,0 +1,52 @@
+"""
+Villa guest requests an ice bucket for outdoor patio use; include chat and [ATTENTION].
+
+ROLES: user (guest V3), assistant (villa services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"request_amenity_delivery","description":"Deliver amenity item.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Palm Cove Villas (hotel_id: pcv_phx)
+Address: 700 Desert Palm Dr, Phoenix, AZ 85018
+Timezone: America/Phoenix
+Villa Amenities:
+- Ice buckets available via villa services
+- Outdoor use: provide drip tray on request
+- Delivery window: 10:00–22:00; ETA 12–20 min
+- Ice machine: clubhouse near pool
+- Contact: Villa Services x23
+JSON: {"drip_tray":true}
+
+user:
+Could I get an ice bucket to Villa V3 for the patio?
+
+assistant channel=analysis:
+Deliver bucket with note for outdoor drip tray.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"V3","amenity_name":"ice bucket","quantity":1,"priority":"normal","note":"include drip tray for outdoor use"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ok":true,"eta_minutes":17,"ref":"PCV-ICE-V3-1"}
+
+assistant channel=final:
+Absolutely—one ice bucket is headed to Villa V3 with a drip tray for patio use. ETA about 17 minutes. Ref PCV-ICE-V3-1.
+
+user:
+The sunset over the palms looked amazing.
+
+assistant channel=final:
+It’s a beautiful view as the sky changes.
+
+user:
+Is glass allowed by the pool area?
+
+assistant channel=final:
+[ATTENTION] I’ll check the pool glass policy.
+

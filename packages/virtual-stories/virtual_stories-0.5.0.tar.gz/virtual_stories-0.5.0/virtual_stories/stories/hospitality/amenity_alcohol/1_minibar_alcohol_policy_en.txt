@@ -1,0 +1,109 @@
+"""
+Guest asks for minibar alcohol details and order; provide only system-defined actions.
+Include policy checks, availability, and age verification via tools.
+
+ROLES: user (guest inquiring about alcohol and ordering), assistant (minibar services agent)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_minibar_inventory",
+    "description": "Retrieve available alcohol items for the room minibar.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "room_number": { "type": "string" } },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "verify_guest_age",
+    "description": "Verify legal drinking age for the guest on the reservation.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "room_number": { "type": "string" } },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "place_minibar_order",
+    "description": "Place a minibar alcohol order for delivery to the room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": { "type": "object", "properties": { "sku": { "type": "string" }, "qty": { "type": "integer" } }, "required": ["sku","qty"], "additionalProperties": false }
+        }
+      },
+      "required": ["room_number", "items"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Riverside City Hotel (hotel_id: rch_chicago)
+Address: 455 W Wacker Dr, Chicago, IL 60601
+Timezone: America/Chicago
+
+Alcohol Service Policies:
+- Legal service hours: 11:00–23:00 local time.
+- Age verification required before placing any alcohol order.
+- Available via minibar delivery only; no cocktail mixing service.
+- Sample SKUs: WINE_RED_375, WINE_WHITE_375, BEER_LAGER_355, GIN_MINI_50, WHISKY_MINI_50.
+
+user:
+Hi, can I get a mini bottle of whisky to room 1910? Also, what else is available?
+
+assistant channel=analysis:
+First verify age and inventory, then confirm items and offer to place order within service hours.
+
+assistant channel=commentary to=tool.verify_guest_age:
+{"room_number":"1910"}
+
+tool.verify_guest_age channel=commentary to=assistant:
+{"room_number":"1910","is_of_age":true}
+
+assistant channel=commentary to=tool.get_minibar_inventory:
+{"room_number":"1910"}
+
+tool.get_minibar_inventory channel=commentary to=assistant:
+{"items":[{"sku":"WHISKY_MINI_50","name":"Whisky Mini 50ml"},{"sku":"GIN_MINI_50","name":"Gin Mini 50ml"},{"sku":"BEER_LAGER_355","name":"Lager Beer 355ml"},{"sku":"WINE_RED_375","name":"Red Wine 375ml"},{"sku":"WINE_WHITE_375","name":"White Wine 375ml"}]}
+
+assistant channel=final:
+You’re eligible to order. Available options include: Whisky Mini 50ml, Gin Mini 50ml, Lager Beer 355ml, Red Wine 375ml, and White Wine 375ml. Would you like me to place an order for a whisky mini to room 1910 now?
+
+user:
+Yes, please send two whisky minis.
+
+assistant channel=analysis:
+Place an order for 2 × WHISKY_MINI_50.
+
+assistant channel=commentary to=tool.place_minibar_order:
+{"room_number":"1910","items":[{"sku":"WHISKY_MINI_50","qty":2}]}
+
+tool.place_minibar_order channel=commentary to=assistant:
+{"order_id":"MB-ORD-7742","eta_minutes":18}
+
+assistant channel=final:
+Done—order MB-ORD-7742 is placed for two whisky minis, arriving in about 18 minutes.
+
+user:
+Could you also recommend a bar nearby with live jazz?
+
+assistant channel=analysis:
+Out of scope for defined tools and system capabilities; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking. Looking up the latest information.
+
+

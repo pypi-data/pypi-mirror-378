@@ -1,0 +1,48 @@
+"""
+Guest asks about confidential handling; create job and confirm shredding option from system; include chitchat and ATTENTION for secure certificate of destruction.
+
+ROLES: user (guest with sensitive documents), assistant (copy desk clarifying confidentiality and creating job)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"create_copy_job","description":"Create a copy job and return id and price.","parameters":{"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"},"color":{"type":"boolean"},"paper_size":{"type":"string","enum":["A4","Letter"]}},"required":["pages","color","paper_size"]},"strict":true}
+]
+```
+"""
+
+system:
+Aurora City Hotel — Copy Services (Concierge Annex)
+Confidential handling: Staff can process at counter only; originals returned immediately; waste pages shredded daily
+Hours: 08:00–22:00
+Rates: B/W USD 0.15; Color USD 0.50
+Payments: Room charge or card
+Typical pickup: 10–15 minutes for small jobs
+
+user:
+I need 6 black‑and‑white A4 copies, but these are confidential—can you help?
+
+assistant channel=analysis:
+Confirm confidential handling per system, create job, then state shredding policy and pickup timing.
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":6,"color":false,"paper_size":"A4"}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-5631","price":"USD 0.90"}
+
+assistant channel=final:
+We can process copies at the counter and return originals immediately. Your job CPY-5631 is queued for 6 A4 B/W pages at USD 0.90; typical pickup is 10–15 minutes. Waste pages are shredded daily.
+
+user:
+Thanks—love the jazz in the lobby.
+
+assistant channel=final:
+Glad to assist; your job is in the queue.
+
+user:
+Can you provide a formal certificate of destruction?
+
+assistant channel=final:
+[ATTENTION] That certification isn’t available here. Assessing available options.
+

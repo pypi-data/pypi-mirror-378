@@ -1,0 +1,52 @@
+"""
+Guest asks about after-hours phone availability and the main number; include small talk and an out-of-scope recording request.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Celadon Harbor Hotel (hotel_id: celadon_harbor)
+Main phone: +44 20 3999 7100 | Email stay@celadonharbor.uk | Web https://celadonharbor.uk
+Phone service: 24/7 operator on the main line; quiet hours 23:00–06:00 with essential support only
+Extras: Night bar 22:00–01:00 Fri–Sat; Harbor view deck 7F.
+
+user:
+Are phones staffed after midnight? What’s the number?
+
+assistant channel=analysis:
+Answer from system and provide number via tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"celadon_harbor","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+44 20 3999 7100"}
+
+assistant channel=final:
+Yes—our main line +44 20 3999 7100 is staffed 24/7, with essential support during quiet hours.
+
+user:
+The harbor deck was breezy tonight.
+
+assistant channel=analysis:
+Chit‑chat acknowledgment.
+
+assistant channel=final:
+It’s a lovely spot—7F has the best views.
+
+user:
+Can you send me the last call recording for my room?
+
+assistant channel=analysis:
+Out of scope—no call recordings access.
+
+assistant channel=final:
+[ATTENTION] Call recordings aren’t available within the provided resources.
+

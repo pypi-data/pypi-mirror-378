@@ -1,0 +1,105 @@
+"""
+Guest requests a clothes brush for suit maintenance; confirm available brush types and arrange delivery.
+
+ROLES: user (guest preparing formalwear), assistant (guest services for garment care)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "list_garment_care_items",
+    "description": "List available garment care items and details.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["clothes_brush"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_garment_care_item",
+    "description": "Deliver garment care items to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "string" } },
+        "priority": { "type": "string", "enum": ["normal", "express"] }
+      },
+      "required": ["room_number", "items"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_lobby_info",
+    "description": "Provide design note for small talk reference.",
+    "parameters": { "type": "object", "additionalProperties": false },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Granite & Glass Executive Hotel (hotel_id: ggeh_nyc_05)
+Address: 455 Lexington Ave, New York, NY 10017
+Timezone: America/New_York
+
+Garment Care Suite:
+- Clothes brushes: boar-bristle with bamboo handle, soft nylon anti-static, travel lint brush
+- Complimentary loan; return at checkout or turndown
+- Typical delivery: 8–12 minutes
+
+Etiquette Notes:
+- For wool suits, boar-bristle recommended; use gentle downward strokes
+- Anti-static nylon for delicate blends
+
+Design Notes:
+- Lobby has a glass mezzanine over a granite feature wall
+
+user:
+Hi—could I borrow a clothes brush for a navy wool suit in room 2310?
+
+assistant channel=analysis:
+List available clothes brush types, then suggest boar-bristle for wool per system guidance.
+
+assistant channel=commentary to=tool.list_garment_care_items:
+{"category":"clothes_brush"}
+
+tool.list_garment_care_items channel=commentary to=assistant:
+{"items":[{"code":"boar_bristle_bamboo","desc":"best_for_wool"},{"code":"nylon_anti_static","desc":"delicate_blends"},{"code":"travel_lint_brush","desc":"compact"}],"eta_range_minutes":"8-12"}
+
+assistant channel=final:
+We have a boar-bristle brush with a bamboo handle (best for wool), a soft nylon anti-static brush for blends, and a compact travel lint brush. Would you like the boar-bristle option for room 2310?
+
+user:
+Yes, the boar-bristle sounds right. Also, the lobby design is striking.
+
+assistant channel=analysis:
+Respond to design remark, then arrange delivery with normal priority.
+
+assistant channel=final:
+It does stand out—the glass mezzanine over the granite wall is distinctive.
+
+assistant channel=commentary to=tool.deliver_garment_care_item:
+{"room_number":"2310","items":["boar_bristle_bamboo"],"priority":"normal"}
+
+tool.deliver_garment_care_item channel=commentary to=assistant:
+{"ticket_id":"GARM-2310-7741","eta_minutes":9,"items_confirmed":["boar_bristle_bamboo"]}
+
+assistant channel=final:
+Confirmed—ticket GARM-2310-7741 is on the way. The boar-bristle clothes brush will arrive in about 9 minutes.
+
+user:
+Do you offer on-site tailoring if my sleeves need a quick hem later tonight?
+
+assistant channel=analysis:
+Tailoring is outside the scope of defined tools here; use special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking about tailoring. Assessing the available options.
+

@@ -1,0 +1,58 @@
+"""
+Guest’s companion tries to check in; clarify ID matching policy and proceed with the main guest; include chitchat and an ATTENTION ask.
+
+ROLES: user (lead guest at desk), assistant (front desk verifying identity and issuing keys)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_in_guest","description":"Check in lead guest by code and last name","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_code":{"type":"string"},"last_name":{"type":"string"}},"required":["reservation_code","last_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Canopy Garden Hotel — Front Desk
+Check‑in from 14:00; Check‑out by 12:00
+ID Policy: Government ID must match reservation name
+Deposit: Credit card preauth on arrival
+
+Amenities & Times:
+- Breakfast Market 06:30–10:30
+- Gym 24/7; pool 08:00–20:00
+
+Transport & Parking:
+- Valet $28/night; bicycles on L1 racks
+
+user:
+Code CG-44120 under Kim. My partner Lee is picking up the keys—okay?
+
+assistant channel=analysis:
+Check in Kim; reiterate ID match policy from system.
+
+assistant channel=commentary to=tool.check_in_guest:
+{"reservation_code":"CG-44120","last_name":"Kim"}
+
+tool.check_in_guest channel=commentary to=assistant:
+{"room":"514","key_id":"K-220871"}
+
+assistant channel=final:
+Welcome—room 514 is assigned and the key is K-220871. For key pickup, we need a government ID that matches the reservation name; the lead guest Kim should present ID at the desk.
+
+user:
+Got it. The garden wall is beautiful.
+
+assistant channel=final:
+It’s a calming backdrop after travel.
+
+user:
+What time is the pool open?
+
+assistant channel=final:
+The pool is open 08:00–20:00.
+
+user:
+Can you add Lee as an authorized pickup right now?
+
+assistant channel=final:
+[ATTENTION] Authorization changes aren’t available here. Checking available options.

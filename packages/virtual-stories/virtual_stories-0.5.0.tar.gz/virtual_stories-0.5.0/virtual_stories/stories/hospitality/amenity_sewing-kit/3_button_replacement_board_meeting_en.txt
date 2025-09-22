@@ -1,0 +1,114 @@
+"""
+Guest needs matching button and thread for suit before board meeting; verify kit contents and offer quick fix.
+
+ROLES: user (executive with missing button), assistant (floor housekeeping lead with sewing access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Skyline Executive Tower London (hotel_id: set_lhr_03)
+Address: 88 Bishopsgate, London EC2N 4AY, UK
+Timezone: Europe/London
+
+Sewing Amenity Summary:
+- Kits: basic (black/white thread, safety pins), executive (charcoal/navy thread, spare blazer buttons, hem tape), emergency (pre-threaded needles)
+- On-site fixes: 07:00–22:00, blazer buttons and minor hems
+- Valet: collected by 18:30 for next-day 10:00 return
+- Delivery targets: executive floors within 10 minutes, others within 20 minutes
+- Color coverage: black, white, navy, charcoal, mid-grey
+
+Floor Access Map:
+- Floors 5–15: standard amenities
+- Floors 16–25: executive suites; dedicated pantry on 18 and 24
+- Meeting concourse on 3 with emergency stash
+
+Safety & Policy:
+- 1 executive kit complimentary per day; extras billed
+- Avoid hem tape on delicate wool blends for >8 hrs
+- Contact housekeeping: ext 311
+
+user:
+Morning—lost a front button on my blazer. I’m in 2019. Can I get a matching button and charcoal thread?
+
+assistant channel=analysis:
+Floor 20 is executive level; check executive kit for floor 20; then deliver kit; offer on-site assistance within hours.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type":"executive","floor_level":"20"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available":true,"kit_contents":["charcoal_thread","navy_thread","spare_blazer_buttons","hem_tape","fine_needles"],"pantry":"floor_18_exec_pantry","eta":"9_minutes"}
+
+assistant channel=analysis:
+Kit contains charcoal thread and spare buttons; proceed with delivery to 2019 and offer assistance.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number":"2019","service_type":"kit_delivery","urgency":"urgent","garment_type":"blazer"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged":true,"delivery_time":"9_minutes","staff_assigned":"exec_floor_attendant","assistance_offered":true}
+
+assistant channel=final:
+Yes—we have charcoal thread and spare blazer buttons. I’ll deliver an executive kit to room 2019 in about 9 minutes, and I can assist with the stitch if you’d like.
+
+user:
+What time do you stop doing on-site repairs?
+
+assistant channel=analysis:
+Answer from system: on-site fixes 07:00–22:00.
+
+assistant channel=final:
+We offer on-site fixes from 07:00 to 22:00 daily.
+
+user:
+Thanks for the help. Big meeting nerves!
+
+assistant channel=analysis:
+Small talk reassurance.
+
+assistant channel=final:
+You’ve got this—good luck! I’ll make sure the kit reaches you on time.
+
+user:
+Could you also recommend a tailor in the city for later this week?
+
+assistant channel=analysis:
+External tailor recommendations are beyond system scope; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up local tailors and share options shortly.

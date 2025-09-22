@@ -1,0 +1,63 @@
+"""
+Midweek extension; assistant confirms via tool, quotes tool rate and room, and reminds policy; then answers a system info question; includes small talk and an [ATTENTION] request.
+
+ROLES: user (guest), assistant (Lakeshore Spa Resort front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_extension_availability",
+    "description": "Check if the current room category can be extended with the new checkout date.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"new_checkout":{"type":"string","format":"date"}},"required":["reservation_id","new_checkout"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Lakeshore Spa Resort — Lake Geneva
+Address: Quai du Mont‑Blanc 9, 1201 Genève, Switzerland
+Check‑in/out: 15:00 / 11:00
+Extension: Subject to availability; nightly rate may change
+Spa: 10:00–20:00
+Breakfast: 06:30–10:30
+Wi‑Fi: 400 Mbps
+Parking: Valet CHF 45/night; EV 4 ports
+Quiet Hours: 22:00–07:00
+Rooms: Lake View King (30 m²), Alpine Twin (28 m²), Junior Suite (42 m²)
+
+user:
+Could I extend LS-77109 to check out on 2025-04-02?
+
+assistant channel=analysis:
+Call tool; echo only availability, room, and rate from tool; mention policy from system.
+
+assistant channel=commentary to=tool.check_extension_availability:
+{"reservation_id":"LS-77109","new_checkout":"2025-04-02"}
+
+tool.check_extension_availability channel=commentary to=assistant:
+{"available":true,"room_id":"Lake View King 1408","rate":"CHF 310/night"}
+
+assistant channel=final:
+We can extend to 2025-04-02 in Lake View King 1408 at CHF 310/night. Extensions are subject to availability, and rates can change nightly.
+
+user:
+Merci. How are things?
+
+assistant channel=final:
+Glad to assist at Lakeshore Spa.
+
+user:
+When is breakfast?
+
+assistant channel=final:
+Breakfast is 06:30–10:30.
+
+user:
+Can you include spa access in my rate?
+
+assistant channel=final:
+[ATTENTION] Including spa access in rate isn’t covered by the provided details. Processing your request.
+

@@ -1,0 +1,59 @@
+"""
+Guest specifically requests a disposal bag with the razor; asks about delivery ETA and max quantity.
+
+ROLES: user (Detail-oriented guest.), assistant (Clear front desk.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "send_complimentary_item",
+    "description": "Sends a complimentary item to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"}
+      },
+      "required": ["room_number", "item_name"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Orchard Vista
+Complimentary Kits: Razor, Dental, Sewing
+Includes: Disposal pouch per kit
+ETA: 10–15 minutes
+Limit: Two per room per day
+Phone: 0
+
+user:
+Hi—712 here. Can I get a razor with a disposal bag?
+
+assistant channel=analysis:
+Kits already include a disposal pouch. I’ll dispatch and confirm ETA and limits.
+
+assistant channel=commentary to=tool.send_complimentary_item:
+{"room_number": "712", "item_name": "razor"}
+
+tool.send_complimentary_item channel=commentary to=assistant:
+{"status": "success", "message": "Razor with disposal pouch sent to 712."}
+
+assistant channel=final:
+All set—the kit includes a disposal pouch. It’s on the way; arrival in about 10–15 minutes.
+
+user:
+How many can I get today?
+
+assistant channel=final:
+Up to two per room per day.
+
+user:
+[ATTENTION] Also, can you bring nail scissors?
+
+assistant channel=final:
+I don’t have nail scissors in my system—only the listed complimentary kits.
+

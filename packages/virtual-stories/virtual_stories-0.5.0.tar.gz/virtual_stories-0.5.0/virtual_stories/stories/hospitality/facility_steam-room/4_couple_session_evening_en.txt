@@ -1,0 +1,81 @@
+"""
+Couple inquires about evening availability and attire, then books.
+
+ROLES: user (couple seeking a shared steam window), assistant (spa front desk confirming capacity and attire policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hours","description":"Return today’s open hours and last entry.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"check_capacity","description":"Return remaining spots for a start time.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"start_time":{"type":"string","format":"date-time"}},"required":["hotel_id","start_time"]},"strict":true},
+  {"name":"reserve_window","description":"Reserve a 20-minute window for up to 2 guests.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"start_time":{"type":"string","format":"date-time"},"guests":{"type":"integer","minimum":1,"maximum":2}},"required":["hotel_id","start_time","guests"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Arroyo Urban Hotel (hotel_id: arroyo_urban_aus)
+Where: 77 Redbud Ln, Austin, TX 78701 | TZ: America/Chicago
+Steam Suite “Canyon Drift”
+  Floor: B1 Spa; follow slate tiles to glass entry
+  Hours: 10:00–22:00 daily; last entry 21:40
+  Capacity: 2 max; Window length: 20 min
+  Amenities: Mint-eucalyptus steam pulses at :10/:30/:50; lemon ice water; woven towels
+  Policies: Co-ed with swimwear; footwear left outside; quiet voices only
+  Health: No oils; remove metal items; hydrate before/after
+  Payment: Room charge and credit/debit cards
+
+user:
+Are you open tonight? We’d like a 9:10 PM slot for two. What should we wear?
+
+assistant channel=analysis:
+Confirm hours, check capacity at 21:10 for two, remind attire, then reserve if available.
+
+assistant channel=commentary to=tool.check_hours:
+{"hotel_id":"arroyo_urban_aus"}
+
+tool.check_hours channel=commentary to=assistant:
+{"hours":"10:00-22:00","last_entry":"21:40"}
+
+assistant channel=commentary to=tool.check_capacity:
+{"hotel_id":"arroyo_urban_aus","start_time":"2025-09-01T21:10:00"}
+
+tool.check_capacity channel=commentary to=assistant:
+{"remaining":2}
+
+assistant channel=commentary to=tool.reserve_window:
+{"hotel_id":"arroyo_urban_aus","start_time":"2025-09-01T21:10:00","guests":2}
+
+tool.reserve_window channel=commentary to=assistant:
+{"status":"reserved","code":"CD-2110-2130"}
+
+assistant channel=final:
+We’re open until 10:00 PM; last entry is 9:40 PM. I’ve reserved 9:10–9:30 PM for two (CD-2110-2130). Swimwear is required; please leave footwear outside.
+
+user:
+The slate tiles look sleek.
+
+assistant channel=analysis:
+Simple thanks.
+
+assistant channel=final:
+Thank you—those details make the space feel calm.
+
+user:
+Can we put the charge on our room?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes, you can use room charge or a card.
+
+user:
+Do you infuse rosemary along with mint?
+
+assistant channel=analysis:
+Only mint-eucalyptus listed; use attention flag.
+
+assistant channel=final:
+[ATTENTION] You asked about rosemary infusion. Looking up the latest information.
+

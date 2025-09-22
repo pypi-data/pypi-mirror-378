@@ -1,0 +1,54 @@
+"""
+Guest requests a prayer mat and asks about Qibla support and prayer room hours; include tool call and beyond-scope query.
+
+ROLES: user (observant guest), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "provide_religious_item",
+    "description": "Provide a religious item to a guest's room.",
+    "parameters": {"type":"object","properties":{"room_number":{"type":"string"},"item_name":{"type":"string"}},"required":["room_number","item_name"]}
+  }
+]
+```
+"""
+
+system:
+Crescent Bay Hotel — Faith & Reflection
+Availability: prayer mats on request (standard size)
+Delivery: 10–15 minutes; sanitized; sealed pouch
+Qibla: in-room direction card available upon request
+Prayer room: level 2, open 05:30–22:00; quiet zone
+Ablution: washroom adjacent to prayer room
+Loan: keep during stay; return at checkout
+Dispatch via provide_religious_item
+
+user:
+Hello, I’m in room 621. Could I please have a prayer mat? Also, where’s the prayer room and when is it open?
+
+assistant channel=analysis:
+Send prayer_mat to 621; then answer location and hours from system.
+
+assistant channel=commentary to=tool.provide_religious_item:
+{"room_number": "621", "item_name": "prayer_mat"}
+
+tool.provide_religious_item channel=commentary to=assistant:
+{"status":"success","message":"Prayer mat delivered to room 621."}
+
+assistant channel=final:
+Certainly—a prayer mat is on its way and should arrive within 10–15 minutes, sealed and sanitized. Our prayer room is on level 2 and open 05:30–22:00.
+
+user:
+Thank you. And Qibla direction?
+
+assistant channel=final:
+We can provide an in‑room Qibla direction card upon request.
+
+user:
+What are exact sunrise and sunset times tomorrow?
+
+assistant channel=final:
+[ATTENTION] Specific sunrise/sunset times aren’t included in these resources.
+

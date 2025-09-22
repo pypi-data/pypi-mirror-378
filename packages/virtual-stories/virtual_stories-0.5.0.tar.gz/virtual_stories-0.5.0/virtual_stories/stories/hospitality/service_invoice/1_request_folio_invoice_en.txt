@@ -1,0 +1,61 @@
+"""
+Guest requests a detailed folio invoice to be emailed after confirming room and email.
+
+ROLES: user (guest asking for invoice/folio), assistant (front desk agent issuing folio copies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_invoice",
+    "description": "Issue a folio invoice to an email or as a printed copy.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "delivery": {"type": "string", "enum": ["email", "print"]},
+        "email": {"type": "string"}
+      },
+      "required": ["room_number", "delivery"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Riverside Executive Hotel
+Invoices (folios) policy:
+• Availability: Current-night interim or final folio after checkout
+• Delivery: Email (PDF) or printed at Front Desk
+• Data included: room charges, taxes, incidentals by date, payment method
+• Privacy: Sent to verified guest email on file or provided at desk
+
+user:
+Can you email me my invoice for room 2409?
+
+assistant channel=analysis:
+Issue folio via email after confirming delivery method.
+
+assistant channel=commentary to=tool.request_invoice:
+{"room_number":"2409","delivery":"email","email":"guest@example.com"}
+
+tool.request_invoice channel=commentary to=assistant:
+{"request_id":"inv_9902","status":"sent","delivery":"email","to":"guest@example.com"}
+
+assistant channel=final:
+Your folio has been emailed (request inv_9902) to guest@example.com as a PDF. It lists room, taxes, and any incidentals by date.
+
+user:
+Perfect. Also, that river walk outside is lovely!
+
+assistant channel=final:
+If you prefer a printed copy as well, the Front Desk can provide one.
+
+user:
+Can you itemize minibar UPC codes on the invoice?
+
+assistant channel=final:
+[ATTENTION] UPC-level detail isn’t included in our folio format. Checking available options.

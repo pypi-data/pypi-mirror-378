@@ -1,0 +1,90 @@
+"""
+Guest books breakfast and asks about gluten‑free options; include chitchat and ATTENTION follow‑up.
+
+ROLES: user (guest with dietary needs), assistant (host confirming booking and dietary notes preview)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List breakfast venues","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string"}},"required":["hotel_id","meal_period"]},"strict":true},
+  {"name":"check_table_availability","description":"Check table availability","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Get healthy/gluten‑free preview","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"section":{"type":"string"}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Parkstone Plaza (hotel_id: parkstone_plaza)
+Breakfast: Greenwalk Eatery (restaurant_id: rest_greenwalk) 07:00–11:00
+
+Seating & Access:
+- Step‑free via Lobby C
+- High chairs available
+
+Service Style:
+- À la carte plus bakery counter
+- Coffee made at barista station
+
+Dietary Notes:
+- Gluten‑free toast on request
+- Plant‑based milks: oat, almond
+
+Allergen Handling:
+- Ingredient lists available upon request
+- Cross‑contact may occur in shared kitchens
+
+Billing:
+- Room charge available; show keycard
+- Paperless receipts on request
+
+user:
+Book breakfast for 2 at 10:00 under Chen, and do you have gluten‑free options?
+
+assistant channel=analysis:
+List breakfast venue, verify slot for 2 at 10:00, book, then fetch healthy section preview.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"parkstone_plaza","meal_period":"breakfast"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_greenwalk","name":"Greenwalk Eatery","hours":"07:00-11:00"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_greenwalk","party_size":2,"datetime":"2025-09-02T10:00:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_greenwalk","guest_name":"Chen","contact":"","party_size":2,"datetime":"2025-09-02T10:00:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"GW-BRK-8820"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_greenwalk","section":"healthy"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"healthy","items":[{"name":"Seasonal fruit bowl"},{"name":"Avocado toast (GF bread on request)"}]} 
+
+assistant channel=final:
+Your 10:00 table for 2 at Greenwalk Eatery is confirmed (GW-BRK-8820). Healthy preview: Seasonal fruit bowl; Avocado toast with gluten‑free bread on request.
+
+user:
+Sounds good—the lobby plants look fresh today.
+
+assistant channel=final:
+They bring a nice bit of calm to the morning.
+
+user:
+Can I see ingredient lists if needed?
+
+assistant channel=final:
+Yes—ingredient lists are available on request.
+
+user:
+Can you guarantee gluten‑free prep in a separate area?
+
+assistant channel=final:
+[ATTENTION] Prep‑area guarantees aren’t handled here. Reviewing available options.

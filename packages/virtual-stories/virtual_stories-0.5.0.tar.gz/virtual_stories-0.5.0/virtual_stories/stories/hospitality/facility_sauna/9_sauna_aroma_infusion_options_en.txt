@@ -1,0 +1,65 @@
+"""
+Guest asks about aroma options and requests a specific infusion schedule.
+
+ROLES: user (guest preferring mild aromas), assistant (attendant coordinating pre-session aroma prep)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_aroma_pack","description":"Queue an aroma pack for pre-session setup.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"profile":{"type":"string","enum":["citrus_mild","pine_light","unscented"]}},"required":["hotel_id","profile"]},"strict":true},
+  {"name":"schedule_infusion","description":"Schedule a light aroma infusion ahead of a slot.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"slot_time":{"type":"string","format":"date-time"},"profile":{"type":"string"}},"required":["hotel_id","slot_time","profile"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Silver Birch Springs (hotel_id: sbs_yyc_03)
+Address: 88 Glenmore Trail, Calgary, AB T2V 4Y8, Canada
+Timezone: America/Edmonton
+Sauna: Dry, birch backrests; warm white LEDs
+Default Aroma: Unscented; optional light packs on request
+Profiles: citrus_mild | pine_light | unscented
+Hours: 09:00–21:00; sanitization 12:30–12:50
+Capacity: 2; 20-minute sessions
+Cooldown: Snow room (brief exposure) and tepid shower
+Safety: Emergency toggle by door; team radio code 42
+
+user:
+Do you offer a light citrus option? I’m booked at 19:20—could you prep it?
+
+assistant channel=analysis:
+Queue citrus_mild aroma pack and schedule a light infusion before 19:20.
+
+assistant channel=commentary to=tool.request_aroma_pack:
+{"hotel_id":"sbs_yyc_03","profile":"citrus_mild"}
+
+tool.request_aroma_pack channel=commentary to=assistant:
+{"status":"queued"}
+
+assistant channel=commentary to=tool.schedule_infusion:
+{"hotel_id":"sbs_yyc_03","slot_time":"2025-08-29T19:20:00","profile":"citrus_mild"}
+
+tool.schedule_infusion channel=commentary to=assistant:
+{"scheduled":true,"prep_window":"19:10-19:15"}
+
+assistant channel=final:
+Yes—citrus_mild is queued, and we’ll prep a light infusion between 19:10 and 19:15.
+
+user:
+The birch backrests look sleek.
+
+assistant channel=analysis:
+Short, friendly acknowledgment.
+
+assistant channel=final:
+They’re designed for comfort while keeping to the dry-heat feel.
+
+user:
+Is the citrus oil certified organic by a specific body?
+
+assistant channel=analysis:
+Certification isn’t provided in the system; flag with attention.
+
+assistant channel=final:
+[ATTENTION] Good question about certification. Checking available options.
+

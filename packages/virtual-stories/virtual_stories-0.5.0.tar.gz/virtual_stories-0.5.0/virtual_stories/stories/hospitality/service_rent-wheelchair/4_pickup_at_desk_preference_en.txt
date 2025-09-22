@@ -1,0 +1,41 @@
+"""
+Guest prefers to pick up a wheelchair at the desk; confirm hold and pickup instructions.
+
+ROLES: user (guest opting for desk pickup), assistant (front desk accessibility coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"hold_unit","description":"Hold a wheelchair for pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverside Executive Hotel (RSEH-22)
+Wheelchairs: 2 standard
+Policy: Complimentary for on‑property use up to 24 hours
+Pickup: Front Desk with room verification
+Delivery: Runner available 07:00–23:00
+Time Zone: Pacific Time (PT)
+
+user:
+I can swing by the desk—can you hold one for room 1012?
+
+assistant channel=analysis:
+Place a hold and advise pickup at Front Desk.
+
+assistant channel=commentary to=tool.hold_unit:
+{"hotel_id":"RSEH-22","room":"1012"}
+
+tool.hold_unit channel=commentary to=assistant:
+{"held":true,"hold_id":"RSEH-1012-H1","pickup":"Front Desk"}
+
+assistant channel=final:
+Held—ID RSEH-1012-H1. Please pick up at the Front Desk with your room details.
+
+user:
+Do you have a pediatric-size chair?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

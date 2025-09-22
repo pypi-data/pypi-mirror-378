@@ -1,0 +1,65 @@
+"""
+Guest asks for a few medium binder clips for printed resumes; confirms complimentary threshold.
+
+ROLES: user (job seeker), assistant (business center associate)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supplies","description":"Show fasteners","parameters":{"type":"object","properties":{"category":{"type":"string","enum":["clips_fasteners"]}},"required":["category"],"additionalProperties":false},"strict":true},
+  {"name":"request_supply_delivery","description":"Deliver supplies","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_preference":{"type":"string","enum":["room_delivery","business_center_pickup"]}},"required":["room_number","items","delivery_preference"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Old Town Heritage Business Hotel (hotel_id: othb_phl_01)
+Address: 400 Chestnut St, Philadelphia, PA 19106
+Timezone: America/New_York
+
+Business Basics:
+- Delivery SLA: 20–30 minutes
+- Complimentary: up to 10 clips per request
+- Sizes: 19/32/51mm; antique-brass finish on request (limited)
+- Pickup Corner: Mezzanine Work Lounge
+- Quiet hours: 22:00–06:00 (deliveries paused except urgent)
+
+user:
+Hey there—could I get 6 medium clips to room 1112? Is that within the complimentary limit?
+
+assistant channel=analysis:
+Answer from system; check stock; place delivery.
+
+assistant channel=final:
+Yes—up to 10 clips per request are complimentary. I’ll check medium stock now.
+
+assistant channel=commentary to=tool.check_office_supplies:
+{"category":"clips_fasteners"}
+
+tool.check_office_supplies channel=commentary to=assistant:
+{"available_items":[{"code":"BINDER_MEDIUM","name":"Medium 32mm","quantity_available":52}]}
+
+assistant channel=commentary to=tool.request_supply_delivery:
+{"room_number":"1112","items":[{"item_code":"BINDER_MEDIUM","quantity":6}],"delivery_preference":"room_delivery"}
+
+tool.request_supply_delivery channel=commentary to=assistant:
+{"delivery_id":"OTHB-1112-621","estimated_delivery_minutes":24,"items_confirmed":["6x Medium 32mm"],"charge":"complimentary"}
+
+assistant channel=final:
+All set—order OTHB-1112-621 is on its way (about 24 minutes), complimentary.
+
+user:
+Thanks! By the way, your mezzanine lounge has a nice vibe.
+
+assistant channel=final:
+Appreciate that—it's a favorite workspace for many guests.
+
+user:
+Any must-see historic sites nearby tonight?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check current hours and recommendations for you.
+

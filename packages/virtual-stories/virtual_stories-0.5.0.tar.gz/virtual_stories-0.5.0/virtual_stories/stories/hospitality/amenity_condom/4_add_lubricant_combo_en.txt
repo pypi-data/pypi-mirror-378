@@ -1,0 +1,50 @@
+"""
+Guest adds water-based lubricant to protection order; wants combined delivery.
+
+ROLES: user (guest), assistant (wellness concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_wellness_amenities","description":"Retrieve available personal wellness and health products.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["protection","personal_care","health_wellness","all_wellness"]}},"required":[]},"strict":true},
+  {"name":"arrange_wellness_delivery","description":"Arrange discreet delivery of personal wellness amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_method":{"type":"string","enum":["room_service_tray","housekeeping_supplies","front_desk_envelope"]},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown","next_housekeeping","specific_time"]}},"required":["room_number","items","delivery_method","delivery_timing"]},"strict":true}
+]
+```
+"""
+
+system:
+Harbor Quay Suites (hotel_id: hqs_sydney)
+Address: 88 Macquarie St, Sydney NSW
+Timezone: Australia/Sydney
+
+Inventory:
+- WELLNESS_PROTECTION_STANDARD
+- WELLNESS_LUBRICANT_WATER
+
+user:
+Can I add a water‑based lubricant to my wellness order?
+
+assistant channel=analysis:
+Confirm availability and arrange combined evening delivery.
+
+assistant channel=commentary to=tool.get_wellness_amenities:
+{"category":"all_wellness"}
+
+tool.get_wellness_amenities channel=commentary to=assistant:
+{"available_products":[{"sku":"WELLNESS_PROTECTION_STANDARD"},{"sku":"WELLNESS_LUBRICANT_WATER"}]}
+
+assistant channel=commentary to=tool.arrange_wellness_delivery:
+{"room_number":"1508","items":[{"sku":"WELLNESS_LUBRICANT_WATER","quantity":1}],"delivery_method":"room_service_tray","delivery_timing":"evening_turndown"}
+
+tool.arrange_wellness_delivery channel=commentary to=assistant:
+{"delivery_id":"HQS-1508-WL-03","combined_with_previous_order":true}
+
+assistant channel=final:
+Done—your lubricant has been added and will arrive with evening turndown (HQS-1508-WL-03).
+
+user:
+Appreciate it! Random—are fireworks allowed on the harbor?
+
+assistant channel=final:
+[ATTENTION] Verifying local regulations.
+

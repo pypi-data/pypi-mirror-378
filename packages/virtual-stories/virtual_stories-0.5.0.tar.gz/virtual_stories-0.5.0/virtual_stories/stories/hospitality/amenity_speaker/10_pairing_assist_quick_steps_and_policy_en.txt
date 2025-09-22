@@ -1,0 +1,65 @@
+"""
+Guest asks for quick pairing steps; pair the device and mention quiet hours.
+
+ROLES: user (guest), assistant (tech concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_room_audio_status","description":"Check the speaker status and name.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"pair_bluetooth","description":"Pair device to speaker.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"device_name":{"type":"string"}},"required":["room_number","device_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeview Towers (hotel_id: lvt_msp_20)
+Address: 1200 Nicollet Mall, Minneapolis, MN 55403
+Timezone: America/Chicago
+
+Audio:
+- Speaker: LakeSound Mini; name pattern "LVT-ROOM-<room>"
+- Pairing: hold power 3s; blue LED; timeout 120s
+- Quiet hours: 22:00–07:00
+- AUX on request via x0
+- Lobby evening playlist: “Nicollet Nights”
+
+user:
+Quick steps to pair in 2115?
+
+assistant channel=analysis:
+Check status to confirm name; instruct pairing; pair to device upon request.
+
+assistant channel=commentary to=tool.check_room_audio_status:
+{"room_number":"2115"}
+
+tool.check_room_audio_status channel=commentary to=assistant:
+{"room_number":"2115","speaker_online":true,"pairing_mode":true,"display_name":"LVT-ROOM-2115"}
+
+assistant channel=final:
+Hold the power button for ~3 seconds until the blue LED blinks, then select “LVT-ROOM-2115” in Bluetooth.
+
+user:
+Pair to “Alex iPhone”. Also, what’s the lobby playlist tonight?
+
+assistant channel=analysis:
+Pair to device; answer playlist from system.
+
+assistant channel=commentary to=tool.pair_bluetooth:
+{"room_number":"2115","device_name":"Alex iPhone"}
+
+tool.pair_bluetooth channel=commentary to=assistant:
+{"paired":true,"room_number":"2115","device_name":"Alex iPhone"}
+
+assistant channel=final:
+Paired—“Alex iPhone” is connected to LVT-ROOM-2115. Tonight’s lobby playlist is “Nicollet Nights.” During quiet hours (22:00–07:00), please keep volume low.
+
+user:
+Can you cast my Zoom call audio to the speaker?
+
+assistant channel=analysis:
+Not in system/tools.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your Zoom audio casting request. Considering options.
+

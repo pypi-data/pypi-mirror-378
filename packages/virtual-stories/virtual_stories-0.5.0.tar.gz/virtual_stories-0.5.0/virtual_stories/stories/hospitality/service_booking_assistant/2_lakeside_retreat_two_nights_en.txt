@@ -1,0 +1,80 @@
+"""
+Guest requests availability; assistant searches via tool and quotes what tool returns, then answers a policy question strictly from system details. Include small talk and an [ATTENTION] request beyond system scope.
+
+ROLES: user (traveler comparing options), assistant (reservations agent for Lakeside Retreat)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+[Hotel]
+Name: Lakeside Retreat & Spa (Boutique)
+Address: 88 Willow Bend Road, North Harbor, MI 49684, USA
+Check-in/Check-out: 15:00 / 11:00
+Wi‑Fi: Dedicated fiber 500/500 Mbps, SSID "Lakeside_Guest"
+Parking: Onsite self-parking $18/night; 6 EV chargers (11kW)
+Breakfast: 07:00–10:30 at Maple Hall; grab‑and‑go corner 06:30–12:00
+Quiet Hours: 22:00–07:00 (strict lakeside noise control)
+Payment: Visa/Mastercard/AmEx/Apple Pay; $150 incidental hold
+Cancellation: Flexible 48h prior (by 16:00), otherwise 1 night + tax
+Accessibility: 4 ADA rooms, step-free lobby, pool lift; service animals welcome
+Transportation: 14 min to TVC airport; 9 min to downtown marina; shuttle not provided
+Sustainability: Green Key 4/5; onsite glass/plastic sorting; low-flow fixtures
+Facilities: Indoor pool (06:00–22:00), cedar sauna (17:00–22:00 Fri–Sun), two firepits
+Room Types: 
+  - Birch King (30 m², partial lake view)
+  - Maple Double (34 m², courtyard view)
+  - Cedar Suite (48 m², balcony, fireplace)
+
+user:
+Do you have anything for two adults from 2025-10-10 to 2025-10-12?
+
+assistant channel=analysis:
+Use search_rooms for the specified dates and guests; offer only what the tool returns and map names to system room types.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-10-10","check_out":"2025-10-12","adults":2,"children":0}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"BIR_K","name":"Birch King","rate":"USD 179/night"},{"code":"CED_S","name":"Cedar Suite","rate":"USD 279/night"}]}
+
+assistant channel=final:
+Available: Birch King at USD 179/night or Cedar Suite at USD 279/night. Check‑in is 15:00 and checkout is 11:00; quiet hours run 22:00–07:00.
+
+user:
+Sounds peaceful. Busy day over there?
+
+assistant channel=final:
+Happy to help at Lakeside Retreat.
+
+user:
+Is breakfast served and when?
+
+assistant channel=final:
+Breakfast runs 07:00–10:30 at Maple Hall; grab‑and‑go 06:30–12:00.
+
+user:
+Could you arrange a private boat transfer to the marina?
+
+assistant channel=final:
+[ATTENTION] Private boat transfers aren’t available in the provided resources. Processing your request.

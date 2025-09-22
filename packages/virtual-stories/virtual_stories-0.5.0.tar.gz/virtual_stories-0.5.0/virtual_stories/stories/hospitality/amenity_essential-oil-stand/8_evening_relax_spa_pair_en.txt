@@ -1,0 +1,63 @@
+"""
+Guest wants an evening relaxation blend paired with a bath soak time.
+
+ROLES: user (spa-oriented guest), assistant (aroma concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"relax_list","description":"List relaxation oils.","parameters":{"type":"object","additionalProperties":false,"properties":{"window":{"type":"string","enum":["evening"]}},"required":["window"]},"strict":true},
+  {"name":"schedule_diffuser","description":"Schedule diffuser vs soak time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"start":{"type":"string"},"duration_min":{"type":"integer"}},"required":["room","start","duration_min"]},"strict":true}
+]
+```
+"""
+
+system:
+Retreat: Blue Grotto Springs (hotel_id: bgs_it_08)
+Address: Via delle Terme 9, Ischia, Italy
+Hours: 08:30–22:00
+Evening relaxation oils:
+- Lavender, Geranium, Frankincense
+Delivery: 15–25 minutes
+Pairing note: Start diffuser 10–15 minutes before bath
+Safety: Avoid direct skin contact; ensure ventilation
+
+user:
+Hi, 332 here. I’ll start a bath at 9:15 PM—can you time a relaxation blend to start then?
+
+assistant channel=analysis:
+List evening relax oils; schedule diffuser at 21:15 for 332 with a 60-minute duration.
+
+assistant channel=commentary to=tool.relax_list:
+{"window":"evening"}
+
+tool.relax_list channel=commentary to=assistant:
+{"options":["Lavender","Geranium","Frankincense"]}
+
+assistant channel=commentary to=tool.schedule_diffuser:
+{"room":"332","start":"21:15","duration_min":60}
+
+tool.schedule_diffuser channel=commentary to=assistant:
+{"ticket":"BGS-332-REL-215","eta_minutes":20}
+
+assistant channel=final:
+We’ll use a relaxation blend such as Lavender, Geranium, or Frankincense and start your diffuser at 21:15 for about 60 minutes. Ticket BGS-332-REL-215 is set, ETA about 20 minutes; please keep the room ventilated.
+
+user:
+Thanks—the spring pools look serene tonight.
+
+assistant channel=analysis:
+Chitchat only.
+
+assistant channel=final:
+They’re especially calm in the evening.
+
+user:
+Could you extend spa access after 10 PM?
+
+assistant channel=analysis:
+After-hours spa access isn’t defined here.
+
+assistant channel=final:
+[ATTENTION] I’ll check on extending spa access.
+

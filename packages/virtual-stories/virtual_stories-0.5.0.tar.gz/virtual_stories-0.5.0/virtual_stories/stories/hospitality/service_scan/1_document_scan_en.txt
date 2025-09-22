@@ -1,0 +1,46 @@
+"""
+Guest asks to scan a document and receive a PDF by email; confirm availability and process request.
+
+ROLES: user (guest needing scan), assistant (business center support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"scan_document","description":"Scan pages to PDF and send via email","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"pages":{"type":"integer"},"destination_email":{"type":"string"}},"required":["hotel_id","room","pages","destination_email"]},"strict":true}
+]
+```
+"""
+
+system:
+Tech Square Inn San Jose (TSJS-17), 300 Market St, San Jose, CA.
+Business Center 7:00–22:00; Front Desk can assist overnight.
+Scanning service: up to 30 pages per job; output PDF; fee USD 0.20/page billed to room.
+
+user:
+Can you scan 12 pages and email me the PDF at sam@example.com? I’m in 1511.
+
+assistant channel=analysis:
+Proceed to scan 12 pages and email to the provided address; note fee.
+
+assistant channel=commentary to=tool.scan_document:
+{"hotel_id":"TSJS-17","room":"1511","pages":12,"destination_email":"sam@example.com"}
+
+tool.scan_document channel=commentary to=assistant:
+{"job_id":"SCN-1511-992","status":"completed","pages":12,"billed_usd":2.4}
+
+assistant channel=final:
+Scan job SCN-1511-992 completed: 12 pages sent to sam@example.com. USD 2.40 will be billed to your room.
+
+user:
+Perfect, thanks.
+
+assistant channel=final:
+Glad to help—have a productive evening.
+
+user:
+Can you share your scanner’s maintenance contract?
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

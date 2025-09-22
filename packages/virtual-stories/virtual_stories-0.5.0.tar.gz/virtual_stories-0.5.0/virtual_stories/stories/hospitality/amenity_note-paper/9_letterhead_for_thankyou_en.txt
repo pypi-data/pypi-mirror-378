@@ -1,0 +1,84 @@
+"""
+Guest requests hotel letterhead to write formal thank-you notes, with envelopes.
+Provide standard letterhead and matching DL envelopes.
+
+ROLES: user (guest writing formal notes), assistant (front office stationery contact)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check available stationery supplies in hotel inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_type":{"type":"string","enum":["note_paper","letterhead","envelopes","memo_pads","writing_pads","sticky_notes"]},"quality_level":{"type":"string","enum":["standard","premium","luxury"]}},"required":["item_type"]},"strict":true},
+  {"name":"deliver_stationery_supplies","description":"Arrange delivery of stationery items to guest room or business center.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center","meeting_room"]},"quantity_per_item":{"type":"number"},"special_requests":{"type":"string"}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel ID: ml_atx_10
+Hotel Name: Magnolia Lane Austin
+Street: 220 East 2nd St, Austin, TX 78701
+Time: America/Chicago
+
+Print & Paper:
+- Letterhead: 80gsm with Magnolia crest
+- Envelopes: DL, windowless, crest flap
+- Note pads: A5 lined, 80gsm
+- Cards: ivory flat, 120gsm
+- Extras: crest stickers (complimentary with letterhead)
+
+Service Windows: rooms 9–14 min; lobby pickup available
+
+user:
+Room 1511—do you have hotel letterhead and envelopes I can use for formal thank‑yous?
+
+assistant channel=analysis:
+Confirm letterhead and envelopes standard; deliver to 1511.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"letterhead","quality_level":"standard"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"letterhead","quality_level":"standard","options":["80gsm_magnolia_crest"],"stock_count":180}
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"envelopes","quality_level":"standard"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"envelopes","quality_level":"standard","options":["DL_crest_flap"],"stock_count":140}
+
+assistant channel=final:
+Yes—our 80gsm Magnolia crest letterhead and DL envelopes are available. How many sheets would you like for room 1511?
+
+user:
+Ten sheets is enough.
+
+assistant channel=analysis:
+Deliver ten sheets with matching envelopes and crest stickers.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"1511","items":["80gsm_magnolia_crest","DL_crest_flap"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"include 10 sheets and 10 envelopes with crest stickers"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":12,"items_included":["letterhead_10","DL_envelopes_10","crest_stickers_10"],"delivery_team":"front_office"}
+
+assistant channel=final:
+We’ll send 10 sheets of Magnolia crest letterhead with 10 DL envelopes and crest stickers to room 1511 in about 12 minutes.
+
+user:
+Appreciate it—music from the street is lively tonight.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+Austin does add rhythm to writing.
+
+user:
+Could you courier them across town for me now?
+
+assistant channel=analysis:
+Courier service not in system; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Investigating potential answers.
+

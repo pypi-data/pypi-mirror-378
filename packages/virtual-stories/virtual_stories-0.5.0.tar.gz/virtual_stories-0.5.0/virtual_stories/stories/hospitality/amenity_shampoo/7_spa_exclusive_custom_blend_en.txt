@@ -1,0 +1,72 @@
+"""
+Guest asks about a spa-exclusive custom-blend shampoo; confirm availability and arrange consultation flag plus starter bottle. Include chit-chat and [ATTENTION].
+
+ROLES: user (guest interested in custom-blend shampoo), assistant (spa concierge handling amenity and consultation marker)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hair_care_inventory","description":"Check if custom-blend is available","parameters":{"type":"object","properties":{"product_preference":{"type":"string","enum":["luxury_brand"]},"spa_exclusive":{"type":"boolean"}},"required":["spa_exclusive"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_hair_care_amenity","description":"Deliver a starter bottle and flag consultation","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"product_selection":{"type":"string"},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown"]}},"required":["room_number","product_selection","delivery_timing"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Golden Terrace Spa Hotel (hotel_id: gts_prague_05)
+Address: 22 Nerudova, 118 00 Malá Strana, Prague, Czechia
+Timezone: Europe/Prague
+
+Program Details:
+- Spa-exclusive custom-blend shampoo via consultation
+- Interim: complimentary starter blend bottle on request
+- Delivery: 12–18 minutes during spa hours
+
+YAML Facility:
+---
+castle_view: true
+sprinklers: true
+---
+
+JSON Custom:
+{"custom_blend_available": true, "starter_bottle": "Custom_Blend_Starter_200ml"}
+
+user:
+I heard you offer a custom-blend shampoo—can I try it? I’m in 327 and happy to start with a sample.
+
+assistant channel=analysis:
+Confirm spa-exclusive availability; deliver starter bottle to 327.
+
+assistant channel=commentary to=tool.check_hair_care_inventory:
+{"spa_exclusive":true,"product_preference":"luxury_brand"}
+
+tool.check_hair_care_inventory channel=commentary to=assistant:
+{"custom_blend":true,"starter":"Custom_Blend_Starter_200ml"}
+
+assistant channel=commentary to=tool.deliver_hair_care_amenity:
+{"room_number":"327","product_selection":"Custom_Blend_Starter_200ml","delivery_timing":"immediate"}
+
+tool.deliver_hair_care_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"16_minutes","products_included":["Custom_Blend_Starter_200ml"],"note":"spa_consultation_flagged"}
+
+assistant channel=final:
+Yes—our spa-exclusive custom blend is available. I’ve arranged a 200ml starter bottle to room 327 (about 16 minutes), and your interest is flagged for a consultation.
+
+user:
+The castle view from here is lovely.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+That castle view is one of our favorite features.
+
+user:
+Could you also arrange a private castle tour?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Exploring different approaches.
+

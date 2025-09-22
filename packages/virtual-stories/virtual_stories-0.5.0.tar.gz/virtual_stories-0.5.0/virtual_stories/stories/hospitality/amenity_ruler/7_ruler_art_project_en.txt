@@ -1,0 +1,70 @@
+"""
+Guest requests a flexible plastic ruler for art; confirm availability and deliver; include small talk and a property acknowledgment.
+
+ROLES: user (guest doing a sketchbook project), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check rulers by length and material.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["ruler"]},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["item_code","length","material"]},"strict":true},
+  {"name":"deliver_stationery","description":"Deliver a ruler to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["room_number","item_code","length","material"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Marigold House (hotel_id: mh_atx_11)
+Address: 310 E 5th St, Austin, TX 78701
+Desk hours: 24h; stationery delivery 07:30–22:30 (ETA 8–13 minutes)
+Music: live acoustic set in lobby Fridays 18:00–20:00
+Coffee: local roaster drip available 06:00–10:00
+Wi‑Fi: 350/150 Mbps; media streaming allowed
+Pet policy: dogs under 35 lb welcome (fee)
+
+Ruler drawer:
+- Plastic: 15cm(14), 30cm(10) — flexible clear
+- Metal: 15cm(5), 30cm(7) — cork backing
+- Hygiene: wiped between uses; sleeves labeled by length
+
+user:
+Could I have a 30 cm plastic ruler to 936?
+
+assistant channel=analysis:
+Check 30cm/plastic then deliver to 936.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_code":"ruler","length":"30cm","material":"plastic"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":10,"item_code":"ruler","length":"30cm","material":"plastic"}
+
+assistant channel=analysis:
+Place delivery to room 936.
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"936","item_code":"ruler","length":"30cm","material":"plastic"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-936-8820","eta_minutes":9}
+
+assistant channel=final:
+You got it—30 cm plastic ruler en route to 936. Ticket ST-936-8820, ~9 minutes.
+
+user:
+The acoustic set last night was fun.
+
+assistant channel=analysis:
+Reference lobby music detail.
+
+assistant channel=final:
+Glad you caught it—we host an acoustic set Fridays 18:00–20:00.
+
+user:
+Do you stock watercolor paper blocks?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on watercolor paper. Reviewing supply notes.
+

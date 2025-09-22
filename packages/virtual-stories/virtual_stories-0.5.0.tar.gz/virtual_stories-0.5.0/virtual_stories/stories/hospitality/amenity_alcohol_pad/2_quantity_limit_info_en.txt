@@ -1,0 +1,99 @@
+"""
+Guest requests alcohol pads and asks about per-request limits; confirm availability and arrange delivery. Include small talk and an [ATTENTION] medical-advice style query.
+
+ROLES: user (guest), assistant (guest services with first-aid amenity tool access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"fa_inventory","description":"Check first-aid item availability and limit.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"fa_deliver","description":"Arrange first-aid amenity delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","item","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Copper Arcade (hotel_id: tca_nv_07)
+Address: 210 Fremont St, Las Vegas, NV 89101
+Timezone: America/Los_Angeles
+Check-in/Out: 16:00 / 11:00
+Amenity Delivery: 08:00–23:00
+
+First-Aid Stock:
+- alcohol pads (max per request: 12)
+- bandages (small/medium)
+- sterile gauze 4x4
+- cotton swabs
+
+Public Spaces:
+1) Neon Atrium lounge seating
+2) Rooftop plunge pool 09:00–21:00
+3) Gaming-free quiet floor on Level 9
+4) Coffee stand 06:30–12:30
+5) Quiet hours 22:00–07:00
+
+Policy:
+- Provide stocked items only; no medical advice
+
+Dining:
+- Breakfast café 06:30–11:30
+- Lobby bar (non-gaming) 17:00–23:00
+
+Accessibility:
+- Step-free routes throughout; accessible rooms available
+- Visual alert kits on request
+
+Sustainability:
+- Water refill stations; recycling program
+- Bulk amenities where possible
+
+user:
+Hi—can I get 10 alcohol pads to room 1906? Also, is there a limit per request?
+
+assistant channel=analysis:
+Check first-aid inventory (including limit), then arrange delivery for 10.
+
+assistant channel=commentary to=tool.fa_inventory:
+{"item":"alcohol pads"}
+
+tool.fa_inventory channel=commentary to=assistant:
+{"item":"alcohol pads","available":true,"max_per_request":12}
+
+assistant channel=commentary to=tool.fa_deliver:
+{"room":"1906","item":"alcohol pads","qty":10}
+
+tool.fa_deliver channel=commentary to=assistant:
+{"delivery_id":"TCA-FA-6612","eta_minutes":14}
+
+assistant channel=final:
+Yes—alcohol pads are available with a limit of 12 per request. I’ve arranged 10 to room 1906 under delivery TCA-FA-6612, ETA about 14 minutes.
+
+user:
+The neon atrium is such a cool space.
+
+assistant channel=analysis:
+Chit-chat from system.
+
+assistant channel=final:
+That Neon Atrium lounge seating is a favorite spot to unwind.
+
+user:
+How late do you deliver amenities tonight?
+
+assistant channel=analysis:
+Answer from system Amenity Delivery.
+
+assistant channel=final:
+We deliver amenities until 23:00.
+
+user:
+Can you tell me how to treat a cut on my finger?
+
+assistant channel=analysis:
+Medical advice is out of scope.
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+
+user:
+Thanks.

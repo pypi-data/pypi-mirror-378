@@ -1,0 +1,93 @@
+"""
+Guest reports toilet flush issue; run remote status check, dispatch maintenance if needed, include small talk, and one background acknowledgment.
+
+ROLES: user (guest with a bathroom fixture issue), assistant (maintenance coordinator for guest rooms)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_toilet_status",
+    "description": "Check the smart toilet status for water supply and flush diagnostics.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "dispatch_plumbing_support",
+    "description": "Dispatch a maintenance technician to service the toilet.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "issue": { "type": "string" }
+      },
+      "required": ["room_number", "issue"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Pacific Tranquil Tower (hotel_id: ptt_la_09)
+Address: 901 Ocean Ave, Santa Monica, CA 90401
+Timezone: America/Los_Angeles
+
+Bathroom Fixtures:
+- Smart Toilet: TOTO with dual-flush, heated seat, and bidet functions
+- Water pressure: Stabilized regulators per floor; diagnostics accessible to maintenance
+
+Design Details:
+- Sea-glass mosaic tiles in guest bathrooms
+
+user:
+Hi, the toilet in room 1110 won’t flush properly.
+
+assistant channel=analysis:
+Run a status check; dispatch plumbing support if needed.
+
+assistant channel=commentary to=tool.check_toilet_status:
+{"room_number":"1110"}
+
+tool.check_toilet_status channel=commentary to=assistant:
+{"online":true,"water_supply":"normal","flush_valve":"stuck_partial","recommendation":"technician_service_required"}
+
+assistant channel=analysis:
+Dispatch a maintenance technician with the issue noted.
+
+assistant channel=commentary to=tool.dispatch_plumbing_support:
+{"room_number":"1110","issue":"flush_valve_stuck_partial"}
+
+tool.dispatch_plumbing_support channel=commentary to=assistant:
+{"scheduled":true,"assigned":"tech_lina","eta_minutes":14}
+
+assistant channel=final:
+Thanks for letting us know—technician Lina is on the way in about 14 minutes to service the flush valve in room 1110.
+
+user:
+Love the sea-glass tiles in the bathroom here.
+
+assistant channel=analysis:
+Short friendly acknowledgment tied to the design detail.
+
+assistant channel=final:
+They’re a signature touch—our bathrooms feature sea-glass mosaic tiles.
+
+user:
+Could you replace the whole toilet with a different model this afternoon?
+
+assistant channel=analysis:
+Full replacement scheduling isn’t supported by tools; use the background acknowledgment flag.
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available resources.
+

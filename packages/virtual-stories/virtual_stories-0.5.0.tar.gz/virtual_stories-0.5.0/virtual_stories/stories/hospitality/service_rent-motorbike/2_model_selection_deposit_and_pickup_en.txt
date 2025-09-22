@@ -1,0 +1,64 @@
+"""
+Guest selects a scooter model; confirm deposit, license, pickup spot, and ETA.
+
+ROLES: user (guest choosing a specific scooter and time), assistant (concierge coordinating partner rental and outlining policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_partner_availability","description":"Check IslandMoto partner availability for a model and window","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"model":{"type":"string"},"start_time":{"type":"string","format":"date-time"},"duration_hours":{"type":"integer","minimum":2,"maximum":12}},"required":["partner_id","model","start_time","duration_hours"]},"strict":true},
+  {"name":"create_rental_reservation","description":"Create a rental with deposit note and pickup point","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"room":{"type":"string"},"model":{"type":"string"},"duration_hours":{"type":"integer"},"deposit":{"type":"number"},"currency":{"type":"string"}},"required":["partner_id","guest_name","room","model","duration_hours","deposit","currency"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Volcano View Resort (VVR-03)
+Address: 12 Crater Rd, Hilo, HI 96720, USA
+Concierge: 07:00–22:00 daily; after-hours voicemail triage
+Partner: IslandMoto (partner_id IM-07)
+Models: Honda PCX 160, Yamaha Aerox 155, Vespa Primavera 150
+Requirements: Passport + valid motorcycle license; minimum age 21
+Deposit: USD 150 (card hold) refundable on return inspection
+Helmets: S, M, L, XL sizes; two included; hair nets available
+Fuel: Provided with full tank; return full or refueling at $10 flat
+Add-ons: Phone mount included on request; rain poncho available at concierge
+Pickup/Return: Hotel porte-cochère bay B; parking stall P3 reserved
+Assistance: Roadside number ext. 55; late return grace 15 minutes
+Boundaries: Paved roads only; no off-road trails
+Inspection: Photo checklist at pickup and return
+
+user:
+I’d like a Yamaha Aerox for 3 hours starting 2:30 pm. Room 712.
+
+assistant channel=analysis:
+Verify IM-07 availability for Aerox at 14:30 for 3 hours, then place the reservation with the USD 150 deposit note and pickup bay B.
+
+assistant channel=commentary to=tool.check_partner_availability:
+{"partner_id":"IM-07","model":"Yamaha Aerox 155","start_time":"2025-09-08T14:30:00","duration_hours":3}
+
+tool.check_partner_availability channel=commentary to=assistant:
+{"available":true,"hold_id":"IMH-4472","helmet_sizes":["M","L"],"pickup_bay":"B"}
+
+assistant channel=commentary to=tool.create_rental_reservation:
+{"partner_id":"IM-07","guest_name":"Guest 712","room":"712","model":"Yamaha Aerox 155","duration_hours":3,"deposit":150,"currency":"USD"}
+
+tool.create_rental_reservation channel=commentary to=assistant:
+{"reservation_id":"IM-RES-1209","status":"confirmed","pickup":"Porte-cochère bay B"}
+
+assistant channel=final:
+All set—IslandMoto confirmed reservation IM-RES-1209 for a Yamaha Aerox 155 for 3 hours starting 2:30 pm. Pickup at the porte-cochère bay B; two helmets are included. A USD 150 card hold and a valid motorcycle license are required at pickup.
+
+user:
+The volcano view is stunning!
+
+assistant channel=final:
+It’s one of our favorite vistas—enjoy the ride.
+
+user:
+Could you send me the full rental contract PDF by email?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

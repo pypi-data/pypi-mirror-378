@@ -1,0 +1,58 @@
+"""
+Guest (suite) asks for multiple adapters and VIP waiver; confirm policy and arrange delivery.
+
+ROLES: user (suite guest requesting fee waiver), assistant (concierge applying policy and coordinating drop)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check adapter stock and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create order with optional waiver code","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","quantity","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Skyward River Seoul (SRSL-21)
+Address: 45 Yeouido-dong, Yeongdeungpo-gu, Seoul, South Korea
+Type: Business tower; 36 floors; Timezone KST
+Electrical: 220V • 60Hz; House adapters cover Type C/F/G
+Inventory: 27 adapters on hand; standard fee KRW 4,000/night; Suite benefit: fee waived (code RENT-ADPT-WAIVE) for registered suite rooms only; no deposit
+Delivery: 10–20 minutes typical; desk pickup 24/7
+Facilities: Executive Lounge 06:30–22:00; Pool 06:00–22:00
+Only services listed are available.
+
+user:
+Hi, I'm in a suite (room 3402). Could I get 3 adapters, and is the fee waived?
+
+assistant channel=analysis:
+Confirm inventory for 3 units, and create a 24-hour order with waiver code for a suite room.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"SRSL-21","item":"universal_power_adapter","quantity":3,"room":"3402"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":3,"notes":"Suite waiver applies"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"SRSL-21","room":"3402","item":"universal_power_adapter","quantity":3,"duration_hours":24,"charge_code":"RENT-ADPT-WAIVE","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"ORD-SRSL-55290","status":"created","waived":true}
+
+assistant channel=final:
+Yes—the suite waiver applies. I’ve created order ORD-SRSL-55290 for 3 adapters with fees waived; delivery to 3402 will follow shortly.
+
+user:
+What time does the executive lounge open?
+
+assistant channel=final:
+It runs 06:30 to 22:00.
+
+user:
+Could you provide internal revenue audit rules for fee waivers?
+
+assistant channel=final:
+[ATTENTION] Analyzing the available data.
+

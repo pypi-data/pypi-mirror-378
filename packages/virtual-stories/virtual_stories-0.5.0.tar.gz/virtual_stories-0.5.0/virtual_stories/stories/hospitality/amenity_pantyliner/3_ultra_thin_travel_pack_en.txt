@@ -1,0 +1,75 @@
+"""
+Guest needs an ultra-thin travel pack of pantyliners with discreet packaging.
+Provide brand options and arrange private delivery.
+
+ROLES: user (traveler seeking ultra-thin liners), assistant (personal care liaison)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check availability of personal care and hygiene supplies.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_category":{"type":"string","enum":["feminine_hygiene","personal_care","wellness_supplies","comfort_items"]},"specific_item":{"type":"string","enum":["pantyliners","sanitary_pads","tampons","intimate_wipes","pain_relief"]}},"required":["product_category"]},"strict":true},
+  {"name":"arrange_discreet_delivery","description":"Arrange private delivery of personal care items to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items_requested":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["housekeeping_discrete","wellness_staff","room_service_bag"]},"timing_preference":{"type":"string"}},"required":["room_number","items_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Northshore Spa & Suites (hotel_id: nss_mke_28)
+Address: 500 E Wisconsin Ave, Milwaukee, WI 53202
+Timezone: America/Chicago
+
+Shelf Details:
+- Pantyliners: ultra‑thin travel packs (Always, Seventh Generation)
+- Wipes: pH‑balanced travel sachets
+- Delivery: housekeeping_discrete or room_service_bag
+- Availability: 24/7 wellness line
+- Extras: herbal tea single‑serve
+
+user:
+Hi—room 1212. Do you have ultra‑thin travel packs and can you keep it discreet?
+
+assistant channel=analysis:
+Check feminine_hygiene pantyliners; then deliver via room service bag.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"product_category":"feminine_hygiene","specific_item":"pantyliners"}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"brands":["Always","Seventh_Generation"],"types":["ultra_thin","regular"],"stock_sufficient":true,"delivery_options":["housekeeping_discrete","room_service_bag"]}
+
+assistant channel=final:
+Yes—ultra‑thin travel packs are available from Always and Seventh Generation. Which brand do you prefer for room 1212?
+
+user:
+Seventh Generation.
+
+assistant channel=analysis:
+Arrange delivery with room_service_bag method.
+
+assistant channel=commentary to=tool.arrange_discreet_delivery:
+{"room_number":"1212","items_requested":["seventh_generation_ultra_thin_travel_pack"],"delivery_method":"room_service_bag","timing_preference":"within_20_minutes"}
+
+tool.arrange_discreet_delivery channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":12,"package_contents":["seventh_generation_ultra_thin_18ct","herbal_tea_single"],"discreet_packaging":true}
+
+assistant channel=final:
+Confirmed—Seventh Generation ultra‑thin travel pack will arrive discreetly to room 1212 in about 12 minutes, with a single‑serve herbal tea.
+
+user:
+Appreciate the subtlety.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+Your privacy is always respected here.
+
+user:
+Could you also swap my flight for tonight?
+
+assistant channel=analysis:
+Flight changes are beyond system/tools; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

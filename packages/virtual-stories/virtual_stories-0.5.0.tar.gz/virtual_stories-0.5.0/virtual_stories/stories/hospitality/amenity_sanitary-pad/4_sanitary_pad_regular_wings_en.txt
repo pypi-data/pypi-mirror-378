@@ -1,0 +1,80 @@
+"""
+Guest requests regular pads with wings; confirm availability and deliver; include small talk and acknowledgment; answer a system-context question.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check sanitary pads by absorbency and wings.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_pad"]},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"}},"required":["item_code","absorbency","with_wings"]},"strict":true},
+  {"name":"deliver_personal_care","description":"Deliver personal care items discreetly in a paper bag.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"},"quantity":{"type":"integer","minimum":1},"bag_type":{"type":"string","enum":["discreet_paper"]}},"required":["room_number","item_code","absorbency","with_wings","quantity","bag_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Garden Court Hotel (hotel_id: gc_pao_01)
+Address: 520 Cowper St, Palo Alto, CA 94301
+Personal care: 24 hours; ETA 10–18 minutes
+Wi‑Fi: 500/500 Mbps; workspaces in lobby
+Breakfast: 06:30–10:30; courtyard seating
+Scent: jasmine in courtyard evenings
+Check-in/out: 15:00 / 12:00
+Parking: garage; EV chargers (4)
+
+Pads inventory:
+- regular/with_wings(30), regular/no_wings(18)
+- super/with_wings(22), light/no_wings(12)
+- Delivery bag: discreet_paper
+
+user:
+Could I have two packs of regular pads with wings to 303?
+
+assistant channel=analysis:
+Check regular/with_wings; deliver 2 to 303.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"item_code":"sanitary_pad","absorbency":"regular","with_wings":true}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_pad","absorbency":"regular","with_wings":true,"on_hand_packs":30}
+
+assistant channel=analysis:
+Proceed with delivery order.
+
+assistant channel=commentary to=tool.deliver_personal_care:
+{"room_number":"303","item_code":"sanitary_pad","absorbency":"regular","with_wings":true,"quantity":2,"bag_type":"discreet_paper"}
+
+tool.deliver_personal_care channel=commentary to=assistant:
+{"ticket_id":"PC-303-8829","eta_minutes":12}
+
+assistant channel=final:
+Certainly—two packs of regular pads with wings will arrive at 303 in a discreet paper bag. Ticket PC-303-8829, about 12 minutes.
+
+user:
+Do you deliver overnight?
+
+assistant channel=analysis:
+Answer using system personal care coverage 24 hours.
+
+assistant channel=final:
+Yes—personal care deliveries run 24 hours here.
+
+user:
+The jasmine in the courtyard was lovely.
+
+assistant channel=analysis:
+Acknowledge scent detail.
+
+assistant channel=final:
+We scent the courtyard with a light jasmine in the evenings—glad you enjoyed it.
+
+user:
+Do you have pain relief medication?
+
+assistant channel=analysis:
+Not specified; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on pain relief options. Reviewing available items.
+

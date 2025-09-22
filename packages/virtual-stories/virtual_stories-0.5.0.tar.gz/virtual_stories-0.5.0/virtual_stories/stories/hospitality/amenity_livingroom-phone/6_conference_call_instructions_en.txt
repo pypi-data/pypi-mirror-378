@@ -1,0 +1,70 @@
+"""
+Guest asks how to start a quick conference call from the living room phone and reconfirms dial codes.
+
+ROLES: user (guest in 731 requesting quick conf-call), assistant (concierge explaining steps and codes)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_conference_steps","description":"Provide the conference call sequence for the phone.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]},"strict":true},
+  {"name":"get_codes","description":"Return speed dials for the room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborlight Residences — Marina Tower
+Room: 731 (City View King)
+Phone Basics:
+- Location: on the walnut media console, left of the cable box
+- Speed dials: 9 Front Desk; 7711 Housekeeping; 7700 Concierge; 55 Dining
+- Conference: dial first party, press CONF, dial second, press CONF
+- Voicemail: Envelope key → room + # → PIN
+- Volume: 0–5 slider on right
+
+General:
+- Wi‑Fi SSID Harborlight-Guest / Pass SailNow2025!
+- Quiet hours 22:00–07:00
+- Emergency 11 (on‑site), 0 + 911 external
+- Model: MarinaTel MT‑330
+- Check-out 12:00
+
+user:
+How do I start a quick conference call from the living room phone in 731? And what are the speed dials?
+
+assistant channel=analysis:
+Provide conference steps and codes using tools; keep it concise.
+
+assistant channel=commentary to=tool.get_conference_steps:
+{"room":"731"}
+
+tool.get_conference_steps channel=commentary to=assistant:
+{"room":"731","steps":["Dial first party","Press CONF","Dial second party","Press CONF again to join"]}
+
+assistant channel=commentary to=tool.get_codes:
+{"room":"731"}
+
+tool.get_codes channel=commentary to=assistant:
+{"room":"731","codes":{"front_desk":"9","housekeeping":"7711","concierge":"7700","dining":"55"}}
+
+assistant channel=final:
+Conference call: Dial the first party, press CONF, dial the second party, then press CONF again to join. Speed dials in 731 are Front Desk 9, Housekeeping 7711, Concierge 7700, and In‑Room Dining 55.
+
+user:
+Nice, thanks! This tower has a great view.
+
+assistant channel=analysis:
+Offer light small talk.
+
+assistant channel=final:
+Agreed—the marina at sunset looks fantastic from this side of the building.
+
+user:
+Do you know the CEO of the property group?
+
+assistant channel=analysis:
+Not in scope.
+
+assistant channel=final:
+[ATTENTION] Thanks for the question. Reviewing available information.
+

@@ -1,0 +1,78 @@
+"""
+Guest notes small salt marks by entry in winter; asks about white residue removal; schedule appropriate treatment.
+
+ROLES: user (winter guest), assistant (housekeeping dispatcher)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"assess_salt_residue","description":"Assess salt residue and method.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","area_cm":{"type":"integer","minimum":1}},"required":["room","area_cm"]}},
+  {"name":"dispatch_salt_treat","description":"Dispatch neutralizing rinse and blot.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string"},"required":["room"]}}
+]
+```
+"""
+
+system:
+Lakeside Grand (hotel_id: lg_chi_27)
+Address: 700 E Grand Ave, Chicago, IL 60611
+Timezone: America/Chicago
+
+Winter Treatment:
+- Salt marks: neutralizing rinse + blot
+
+Coverage:
+- Daily 07:00–22:00; lobby mats rotated hourly
+
+Response:
+- Standard 30–60 min; Expedite 10–20 min
+
+Noise:
+- Minimal; hand tools preferred
+
+Contact:
+- Housekeeping ext. 17
+
+user:
+Hi—there are little white salt marks by the door in room 1011. Can that be removed?
+
+assistant channel=analysis:
+Assess and confirm neutralizing rinse; dispatch.
+
+assistant channel=commentary to=tool.assess_salt_residue:
+{"room":"1011","area_cm":25}
+
+tool.assess_salt_residue channel=commentary to=assistant:
+{"recommended":"neutralizing_rinse_blot","eligible":true}
+
+assistant channel=final:
+Yes—salt residue is treated with a neutralizing rinse and blot. I can send the team shortly to room 1011. Shall I proceed?
+
+user:
+Please do—thank you.
+
+assistant channel=commentary to=tool.dispatch_salt_treat:
+{"room":"1011"}
+
+tool.dispatch_salt_treat channel=commentary to=assistant:
+{"ticket":"LG-1011-742","eta_minutes":17}
+
+assistant channel=final:
+Confirmed—ticket LG-1011-742. Arrival in about 17 minutes.
+
+user:
+Great. The view of the lake is stunning.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s beautiful in winter—crisp horizon and bright reflections.
+
+user:
+Could you suggest a nearby skating rink schedule?
+
+assistant channel=analysis:
+Outside scope; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll look into local rink schedules beyond housekeeping.

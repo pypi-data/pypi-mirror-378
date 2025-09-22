@@ -1,0 +1,70 @@
+"""
+Guest prints a black-and-white thesis chapter; includes small talk and an unsupported request.
+
+ROLES: user (graduate student guest), assistant (print services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "issue_print_order",
+    "description": "Issue a print order and return job details and estimate.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "color": {"type": "boolean"},
+        "pickup": {"type": "string", "enum": ["front_desk", "business_center"]}
+      },
+      "required": ["room", "pages", "color", "pickup"],
+      "additionalProperties": false
+    }
+  }
+]
+```
+"""
+
+system:
+Inn: Willowbrook Garden Inn
+Address: 88 Willow Lane, Portland, OR 97205
+Printing Details:
+- File Type: PDF only; max 40 pages per job
+- Rates: B/W $0.15; Color $0.48 per page
+- Pickup: Front Desk or Business Center
+- Billing: Posted to room folio at pickup
+- Typical ETA: 5–7 minutes
+
+user:
+Please print 12 pages in black and white for room 604. I’ll pick them up at the front desk.
+
+assistant channel=analysis:
+Issue a B/W print order for 12 pages, front desk pickup; reply with tool details only.
+
+assistant channel=commentary to=tool.issue_print_order:
+{"room":"604","pages":12,"color":false,"pickup":"front_desk"}
+
+tool.issue_print_order channel=commentary to=assistant:
+{"order_id":"wgi_604bw12","estimated_cost":1.80,"currency":"USD"}
+
+assistant channel=final:
+Order placed—12 B/W pages for room 604 (wgi_604bw12). Estimated cost $1.80 USD. Pick up at the Front Desk; charges post to your folio.
+
+user:
+The courtyard fountain sounds relaxing.
+
+assistant channel=analysis:
+Provide brief small talk.
+
+assistant channel=final:
+It adds a calm rhythm to the lobby.
+
+user:
+Do you offer page numbering on prints?
+
+assistant channel=analysis:
+Numbering isn’t specified; flag [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Thanks—checking whether page numbering is available.
+

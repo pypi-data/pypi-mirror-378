@@ -1,0 +1,74 @@
+"""
+Guest requests a potted orchid for balcony decor with maintenance.
+Provide check and creation.
+
+ROLES: user (guest enhancing balcony), assistant (florist coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_floral_inventory", "description": "Check orchid availability for potted decor.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "arrangement_type": { "type": "string", "enum": ["room_decor"] }, "flower_preference": { "type": "string", "enum": ["orchids"] }, "budget_range": { "type": "string", "enum": ["premium_100_200"] } }, "required": ["arrangement_type"] }, "strict": true },
+  { "name": "create_floral_arrangement", "description": "Prepare potted orchid decor.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "arrangement_style": { "type": "string", "enum": ["classic_luxury"] }, "delivery_time": { "type": "string" }, "special_message": { "type": "string" }, "occasion": { "type": "string", "enum": ["welcome"] } }, "required": ["room_number", "arrangement_style", "occasion"] }, "strict": true },
+  { "name": "schedule_floral_maintenance", "description": "Schedule orchid care for water and pruning.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "service_type": { "type": "string", "enum": ["flower_refresh", "daily_water_change"] }, "schedule_frequency": { "type": "string", "enum": ["every_other_day", "weekly"] } }, "required": ["room_number", "service_type"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Marina View Tower Hotel (hotel_id: mvth_dxb_01)
+Address: Al Marsa St, Dubai Marina, UAE
+Timezone: Asia/Dubai
+
+Floral & Balcony:
+- Potted orchid decor for balconies
+- Delivery 30–50 minutes; heat-aware placement
+- Maintenance every other day on request
+- Premium: AED 520 classic luxury
+- Card optional
+
+user:
+Room 3804—could I have a potted orchid for the balcony?
+
+assistant channel=analysis:
+Check orchids; prepare classic luxury potted decor; schedule maintenance every other day.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type":"room_decor","flower_preference":"orchids","budget_range":"premium_100_200"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available":true,"arrangements":["classic_orchid_pot"],"pricing":{"classic_orchid_pot":520}}
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number":"3804","arrangement_style":"classic_luxury","delivery_time":"today 5:30 PM","special_message":"Welcome to Marina View Tower","occasion":"welcome"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed":true,"arrangement_id":"DXB3804_ORCHID","delivery_scheduled":"5:30 PM","includes":["white_orchid","weighted_pot","balcony_safe_setup"],"total_cost":520}
+
+assistant channel=commentary to=tool.schedule_floral_maintenance:
+{"room_number":"3804","service_type":"flower_refresh","schedule_frequency":"every_other_day"}
+
+tool.schedule_floral_maintenance channel=commentary to=assistant:
+{"scheduled":true,"next_visit":"in 2 days","note":"check shade placement; refresh water reservoir"}
+
+assistant channel=final:
+Absolutely—a classic potted orchid will be set on your balcony at 5:30 PM, with refresh visits every other day.
+
+user:
+The marina lights are beautiful.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+They make an elegant backdrop for the orchid in the evenings.
+
+user:
+Can you book a desert safari?
+
+assistant channel=analysis:
+Outside floral scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll route your request to our concierge for safari options.
+"""
+

@@ -1,0 +1,93 @@
+"""
+Guest asks for an extra tooth mug; confirm available material and deliver, include one small-talk turn and one background acknowledgment.
+
+ROLES: user (guest requesting an extra bathroom mug), assistant (amenities coordinator for bathroom items)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_tooth_mug_options",
+    "description": "Check available tooth mug materials and stock.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "material": { "type": "string", "enum": ["ceramic", "glass"] }
+      },
+      "required": ["material"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_tooth_mug",
+    "description": "Deliver a tooth mug to the specified room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "material": { "type": "string" }
+      },
+      "required": ["room_number", "material"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Ember House Boutique (hotel_id: eh_atx_05)
+Address: 230 South Congress Ave, Austin, TX 78704
+Timezone: America/Chicago
+
+Bathroom Amenity Notes:
+- Tooth mugs: ceramic (matte white) and glass (smoked)
+- Replacement and extras delivered on request
+
+Design Details:
+- Hand-painted tile accents in guest bathrooms
+
+user:
+Hello! Could I get an extra tooth mug to room 304? Glass would be great.
+
+assistant channel=analysis:
+Check glass availability; deliver to room 304.
+
+assistant channel=commentary to=tool.check_tooth_mug_options:
+{"material":"glass"}
+
+tool.check_tooth_mug_options channel=commentary to=assistant:
+{"available":true,"finish":"smoked","stock":7}
+
+assistant channel=analysis:
+Proceed with delivery of glass tooth mug to 304.
+
+assistant channel=commentary to=tool.deliver_tooth_mug:
+{"room_number":"304","material":"glass"}
+
+tool.deliver_tooth_mug channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":9,"runner":"nate"}
+
+assistant channel=final:
+Absolutely—a smoked glass tooth mug is on the way to room 304 with Nate; ETA about 9 minutes.
+
+user:
+The bathroom tiles are lovely—are those hand-painted?
+
+assistant channel=analysis:
+Acknowledge based on system design detail.
+
+assistant channel=final:
+Yes—our guest bathrooms feature hand-painted tile accents.
+
+user:
+Could you add a custom monogram to the mug before delivery?
+
+assistant channel=analysis:
+Customization isn’t provided by tools; respond with background acknowledgment.
+
+assistant channel=final:
+[ATTENTION] Noted. Reviewing available resources.
+

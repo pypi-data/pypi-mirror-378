@@ -1,0 +1,56 @@
+"""
+Guest reports a wobbly board; arrange replacement; include small talk and out-of-scope ask.
+
+ROLES: user (guest with faulty board), assistant (service agent swapping the board)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check board availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver replacement board.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Sunport Gateway (hotel_id: sg_abq)
+Address: 1901 University Blvd SE, Albuquerque, NM
+Loaner Standards:
+- 1 set per room; replacements provided if faulty
+- Hours: 07:00–23:00; SLA 10–15 minutes floors 3–12
+Safety: Use ironing mat
+Lobby Note: Southwest art exhibit in the corridor
+
+user:
+The ironing board in 512 is wobbly—can you swap it?
+
+assistant channel=analysis:
+Check availability and deliver replacement board.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing_board","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing_board","available":true,"in_stock":4}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"512","amenity_name":"ironing_board","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"SG-512-BRD","eta_minutes":12}
+
+assistant channel=final:
+Absolutely—we’re bringing a replacement board to 512 with an ETA of about 12 minutes.
+
+user:
+I like the art in the lobby.
+
+assistant channel=final:
+The corridor features a Southwest exhibit—glad you noticed.
+
+user:
+Is there a local balloon festival this week?
+
+assistant channel=final:
+[ATTENTION] Reviewing this beyond our current resources.
+

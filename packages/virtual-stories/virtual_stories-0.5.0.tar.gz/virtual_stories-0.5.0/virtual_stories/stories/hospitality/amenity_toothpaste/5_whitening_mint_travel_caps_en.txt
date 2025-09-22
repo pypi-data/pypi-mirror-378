@@ -1,0 +1,76 @@
+"""
+Guest requests whitening-capable mint toothpaste with travel cap; confirm mint and include cap in delivery. Include chitchat and ATTENTION.
+
+ROLES: user (guest), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"mint_check","description":"Confirm mint variant availability and travel cap add-on.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"variant":{"type":"string","enum":["mint"]}},
+     "required":["variant"]},"strict":true},
+  {"name":"mint_deliver","description":"Deliver mint toothpaste with travel cap.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"with_cap":{"type":"boolean"}},
+     "required":["room_number","with_cap"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeside Conference Resort (hotel_id: LCR_msp_10)
+Address: 300 Harbor Dr, Minneapolis, MN 55401 | TZ: America/Chicago
+
+Toothpaste Service:
+- Mint: fluoride, 30 mL; travel caps available
+- Herbal: low-foam
+- Kids strawberry: SLS-free
+- Hours: 06:00–23:00 | Fee: complimentary
+- Pickup point for large events: Ballroom Service Desk
+
+Amenities:
+Lake path | Canoe rentals | Fireplace lounge
+
+user:
+Do you have mint toothpaste with a travel cap for room 811?
+
+assistant channel=analysis:
+Confirm mint and cap, then deliver to 811.
+
+assistant channel=commentary to=tool.mint_check:
+{"variant":"mint"}
+
+tool.mint_check channel=commentary to=assistant:
+{"available":true,"caps":true,"size_ml":30}
+
+assistant channel=analysis:
+Deliver with cap to 811.
+
+assistant channel=commentary to=tool.mint_deliver:
+{"room_number":"811","with_cap":true}
+
+tool.mint_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":12,"runner":"alex","ticket":"LCR-811-MC"}
+
+assistant channel=final:
+Mint toothpaste (30 mL) with a travel cap is on its way to room 811—about 12 minutes (runner Alex, ticket LCR-811-MC). Complimentary.
+
+user:
+Is the lake path open in the evening?
+
+assistant channel=analysis:
+System mentions lake path but not hours; beyond scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check the evening access hours for the lake path.
+
+user:
+The fireplace lounge feels cozy.
+
+assistant channel=analysis:
+Chitchat from Amenities list.
+
+assistant channel=final:
+It’s a favorite spot for wind-down after conferences.
+

@@ -1,0 +1,104 @@
+"""
+Guest has a minor kitchen accident and needs immediate first aid assistance.
+
+ROLES: user (guest with a minor cut needing first aid), assistant (medical room attendant providing emergency care)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_medical_supplies",
+    "description": "Check availability of medical supplies for treating specific injuries.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"injury_type":{"type":"string","description":"Type of injury requiring treatment"}},"required":["injury_type"]},
+    "strict": true
+  },
+  {
+    "name": "log_incident",
+    "description": "Record incident details in the medical room log book.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"guest_name":{"type":"string"},"injury_type":{"type":"string"},"treatment_provided":{"type":"string"}},"required":["guest_name","injury_type","treatment_provided"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Facility: Medical/First-Aid Room - Emergency Care Station
+Location: Lobby level, behind Reception corridor B - Room B-12
+Hours: 08:00–22:00; on-call duty manager outside these hours
+Equipment: Complete first aid kit with sterile bandages, antiseptic wipes, medical tape, gauze pads
+Emergency supplies: Instant cold packs, burn gel, emergency scissors, disposable gloves
+Pain relief: Non-prescription medications (ibuprofen, acetaminophen, aspirin)
+Wound care: Butterfly closures, wound cleaning solutions, antibiotic ointment
+Documentation: Incident report forms, medical log book, emergency contact list
+Staff training: All medical room attendants certified in basic first aid and CPR
+Safety protocols: Hand sanitization required, proper waste disposal, incident documentation mandatory
+
+user:
+Help! I just cut my finger pretty badly in my room's kitchenette. It's bleeding quite a bit and I need first aid right away!
+
+assistant channel=analysis:
+This is an emergency first aid request. I need to check medical supplies for wound treatment and provide immediate assistance. The guest seems distressed and needs reassurance along with practical help.
+
+assistant channel=commentary to=tool.check_medical_supplies:
+{"injury_type": "minor laceration"}
+
+tool.check_medical_supplies channel=commentary to=assistant:
+{"available": true, "supplies": ["sterile gauze pads", "antiseptic wipes", "medical tape", "butterfly closures", "antibiotic ointment"]}
+
+assistant channel=analysis:
+Good, we have all necessary supplies. I should guide them to the medical room immediately and provide clear instructions for immediate care.
+
+assistant channel=final:
+Please come to the Medical Room immediately - it's on lobby level, corridor B, room B-12. Apply pressure with a clean towel to control bleeding. I have sterile gauze, antiseptic, and everything needed to properly clean and dress your wound. Are you able to walk here on your own?
+
+user:
+Yes, I'm on my way down. The bleeding has slowed down but it still looks pretty deep. Should I be worried?
+
+assistant channel=analysis:
+The guest is mobile and bleeding has slowed, which are good signs. I should assess the wound when they arrive and provide professional care while being reassuring.
+
+assistant channel=final:
+Good that the bleeding has slowed - that's a positive sign. Once you're here, I'll assess the wound depth and clean it properly. Most kitchen cuts look worse than they are. I'm certified in first aid and have everything needed to treat it safely.
+
+user:
+Okay, I'm here at the medical room now. The cut is on my index finger, about an inch long.
+
+assistant channel=analysis:
+The guest has arrived and provided details about the wound. I need to examine it, clean it properly, and apply appropriate treatment. This sounds like a manageable laceration.
+
+assistant channel=final:
+Perfect, please have a seat and let me examine your finger. First, I'll put on gloves and clean the wound with antiseptic. The inch-long cut sounds manageable - I'll use butterfly closures if it needs extra support, then apply antibiotic ointment and a protective bandage. This should heal nicely in about a week.
+
+user:
+Thank you so much. I was really panicked when I saw all that blood. How often do you deal with kitchen accidents here?
+
+assistant channel=analysis:
+This is a good moment for some reassuring chitchat while I work on their wound. I can share some general information about common incidents to help them feel better.
+
+assistant channel=final:
+You're very welcome - panic is totally normal with kitchen cuts! We actually see a few minor cooking accidents each month, especially from guests using our kitchenette knives. Most are just like yours - they look dramatic but heal perfectly with proper care. There, all cleaned and bandaged. Keep it dry for 24 hours and change the dressing daily.
+
+user:
+That feels so much better already. Do you need to document this or fill out any forms?
+
+assistant channel=commentary to=tool.log_incident:
+{"guest_name": "Guest (Room Kitchenette)", "injury_type": "finger laceration - 1 inch cut", "treatment_provided": "wound cleaning, antiseptic, butterfly closure, antibiotic ointment, sterile bandage"}
+
+tool.log_incident channel=commentary to=assistant:
+{"logged": true, "incident_number": "MR-2024-0847", "follow_up_required": false}
+
+assistant channel=analysis:
+I've logged the incident as required. I should let them know this is just for safety records and provide any follow-up care instructions.
+
+assistant channel=final:
+Yes, I've logged it in our medical records - just standard safety documentation, incident number MR-2024-0847. No forms needed from you. Here's a backup bandage and some antibiotic ointment. If there's increased redness, swelling, or the wound reopens, please come back. Otherwise, you're all set!
+
+user:
+Great, thank you for taking such good care of me. I feel much more confident now.
+
+assistant channel=analysis:
+The treatment is complete and the guest feels better. A warm closing is appropriate.
+
+assistant channel=final:
+You're very welcome! That's exactly what we're here for. Take care of that finger and don't hesitate to return if you have any concerns. Wishing you a wonderful rest of your stay.

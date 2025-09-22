@@ -1,0 +1,54 @@
+"""
+Guest requests a motorbike rental via hotel partner; confirm license requirement, deposit, models, and reservation window.
+
+ROLES: user (guest wanting motorbike), assistant (concierge arranging partner rental, not in-house)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"query_partner_inventory","description":"Query partner motorbike availability and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"model":{"type":"string"},"start_time":{"type":"string","format":"date-time"},"hours":{"type":"integer"},"guest_name":{"type":"string"}},"required":["partner_id","model","start_time","hours","guest_name"]},"strict":true},
+  {"name":"create_partner_reservation","description":"Create partner motorbike reservation","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"room":{"type":"string"},"model":{"type":"string"},"hours":{"type":"integer"},"deposit_currency":{"type":"string"},"deposit_amount":{"type":"number"}},"required":["partner_id","guest_name","room","model","hours","deposit_currency","deposit_amount"]},"strict":true}
+]
+```
+"""
+
+system:
+Coastal Heights Da Nang (CHDN-09), 270 Vo Nguyen Giap, Da Nang, Vietnam.
+Concierge 8:00–21:00.
+Motorbike rentals via partner DragonRide (partner_id DRIDE-01). Requirements: Passport and valid motorcycle license; deposit VND 2,000,000 by card; popular models: Honda Air Blade, Yamaha NVX.
+Pickup in front driveway; helmets provided.
+
+user:
+Can you help me rent a Honda Air Blade for 4 hours? I’m in room 1204.
+
+assistant channel=analysis:
+Check partner availability for Honda Air Blade this afternoon and, if available, create a reservation noting the deposit.
+
+assistant channel=commentary to=tool.query_partner_inventory:
+{"partner_id":"DRIDE-01","model":"Honda Air Blade","start_time":"2025-08-29T14:00:00","hours":4,"guest_name":"Guest 1204"}
+
+tool.query_partner_inventory channel=commentary to=assistant:
+{"available":true,"hold_ref":"HOLD-DR-5531","helmet_included":true}
+
+assistant channel=commentary to=tool.create_partner_reservation:
+{"partner_id":"DRIDE-01","guest_name":"Guest 1204","room":"1204","model":"Honda Air Blade","hours":4,"deposit_currency":"VND","deposit_amount":2000000}
+
+tool.create_partner_reservation channel=commentary to=assistant:
+{"reservation_id":"DR-RES-8822","pickup_location":"Hotel driveway","status":"confirmed"}
+
+assistant channel=final:
+Confirmed with DragonRide: reservation DR-RES-8822 for a Honda Air Blade, 4 hours. Pickup at the hotel driveway; helmets included. A VND 2,000,000 card deposit and valid license are required at pickup.
+
+user:
+Thanks! The sea breeze feels great.
+
+assistant channel=final:
+Enjoy the coastal ride and stay safe.
+
+user:
+Can you send me the partner’s insurance policy wording?
+
+assistant channel=final:
+[ATTENTION] Checking available resources.
+

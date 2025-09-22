@@ -1,0 +1,85 @@
+"""
+Guest requests alcohol pads and asks about ETA; confirm stock and deliver. Include small talk and an [ATTENTION] request beyond scope.
+
+ROLES: user (guest), assistant (front desk coordinating first-aid amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_first_aid","description":"Check first-aid inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"deliver_first_aid","description":"Deliver first-aid item to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer"}},"required":["room","item","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cityline Exchange (hotel_id: cle_il_15)
+Address: 500 W Madison St, Chicago, IL 60661
+Timezone: America/Chicago
+Check-in/Out: 15:00 / 11:00
+Amenity Delivery Window: 07:30–22:30
+
+First-Aid:
+- alcohol pads, bandages, sterile gauze; typical ETA 10–15 minutes
+— No diagnostic or medical guidance provided
+
+Facilities:
+1) Skybridge lounge with city views
+2) Espresso bar 06:30–12:00
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Meeting pods on Level 3
+
+Dining:
+- Grab-and-go breakfast 06:30–10:30
+
+Accessibility:
+- Elevators to all floors; ADA rooms available
+
+Sustainability:
+- Recycling and water refill stations on each floor
+
+Design:
+- Steel-and-glass interiors with skyline motifs
+
+user:
+Could I get 8 alcohol pads to room 2204? How long does delivery usually take?
+
+assistant channel=analysis:
+Check inventory, deliver 8, then answer ETA from system.
+
+assistant channel=commentary to=tool.check_first_aid:
+{"item":"alcohol pads"}
+
+tool.check_first_aid channel=commentary to=assistant:
+{"item":"alcohol pads","available":true}
+
+assistant channel=commentary to=tool.deliver_first_aid:
+{"room":"2204","item":"alcohol pads","qty":8}
+
+tool.deliver_first_aid channel=commentary to=assistant:
+{"confirmation":"CLE-FA-2204-733","eta_minutes":12}
+
+assistant channel=final:
+Delivery confirmed—8 alcohol pads are heading to 2204 (CLE-FA-2204-733) with an ETA of about 12 minutes. Our typical window is 10–15 minutes.
+
+user:
+The skybridge view is stunning at dusk.
+
+assistant channel=analysis:
+Chit-chat from system.
+
+assistant channel=final:
+It is—our Skybridge lounge is popular around sunset.
+
+user:
+Could you also pick up antiseptic cream from a pharmacy and charge it to my room?
+
+assistant channel=analysis:
+Out of scope for the tools/system.
+
+assistant channel=final:
+[ATTENTION] Accessing relevant resources.
+
+user:
+Okay, thanks.

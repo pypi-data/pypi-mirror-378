@@ -1,0 +1,86 @@
+"""
+Guest reports ankle sprain; requests elastic wrap and cold pack; confirm inventory and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (injured guest), assistant (first aid coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"sprain_supplies_check","description":"Check elastic wrap and instant cold pack availability.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"location":{"type":"string","enum":["gym","front_desk"]},
+                  "item_type":{"type":"string","enum":["elastic_wrap","cold_pack"]}},
+     "required":["location","item_type"]},"strict":true},
+  {"name":"sprain_deliver","description":"Deliver sprain care items to a room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},
+                  "priority":{"type":"string","enum":["standard","urgent"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverbend Sports Hotel (hotel_id: RSH_pit_04)
+Address: 50 Riverwalk Ln, Pittsburgh, PA 15212 | TZ: America/New_York
+
+Athletic Medical Corners:
+- Gym: elastic wraps, cold packs, massage balls
+- Front desk: complete kits + pain relief tablets
+- Protocol: document minor injuries upon supply delivery
+- Quiet floors: 8–10
+
+user:
+I rolled my ankle—can I get an elastic wrap and a cold pack to 932?
+
+assistant channel=analysis:
+Check gym stock, then deliver urgently, and be ready to document if needed.
+
+assistant channel=commentary to=tool.sprain_supplies_check:
+{"location":"gym","item_type":"elastic_wrap"}
+
+tool.sprain_supplies_check channel=commentary to=assistant:
+{"available":true,"item":"elastic_wrap"}
+
+assistant channel=commentary to=tool.sprain_supplies_check:
+{"location":"gym","item_type":"cold_pack"}
+
+tool.sprain_supplies_check channel=commentary to=assistant:
+{"available":true,"item":"cold_pack"}
+
+assistant channel=commentary to=tool.sprain_deliver:
+{"room_number":"932","items":["elastic_wrap","cold_pack"],"priority":"urgent"}
+
+tool.sprain_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":7,"runner":"gym-desk","ticket":"RSH-932-SP"}
+
+assistant channel=final:
+We’ll bring an elastic wrap and a cold pack to room 932—about 7 minutes (gym-desk, ticket RSH-932-SP). We’ll also note the minor injury per protocol.
+
+user:
+Are there quiet floors?
+
+assistant channel=analysis:
+Answer from system: floors 8–10.
+
+assistant channel=final:
+Yes—floors 8 through 10 are designated quiet floors.
+
+user:
+The riverwalk outside is great for recovery walks.
+
+assistant channel=analysis:
+Chitchat referencing address context.
+
+assistant channel=final:
+It’s convenient for easy laps right by the hotel.
+
+user:
+Can you recommend a sports clinic for imaging?
+
+assistant channel=analysis:
+Out of scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check nearby sports clinic imaging options.
+

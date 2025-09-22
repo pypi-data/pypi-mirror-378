@@ -1,0 +1,50 @@
+"""
+Guest requests directions to the FX counter and asks to exchange 2,200 USD to EUR; include quote and ID reminder.
+
+ROLES: user (guest with a large exchange), assistant (cashier giving directions and quoting FX)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"quote_fx","description":"Quote a currency exchange with applied fee and total payout.","parameters":{"type":"object","additionalProperties":false,"properties":{"from":{"type":"string"},"to":{"type":"string"},"amount":{"type":"number"}},"required":["from","to","amount"]},"strict":true}
+]
+```
+"""
+
+system:
+Metropolitan Gallery Hotel — Currency Counter
+Hours: 09:00–20:00 daily
+Directions: From main entrance, pass the art wall to the Concierge; counter is on the right
+Supported: USD, EUR, GBP, JPY
+ID: Passport for ≥ USD 500 equivalent
+Fee: Flat per transaction
+Security: CCTV and dual‑counting at counter
+Receipts: Printed with stamp
+
+user:
+Where exactly is the currency counter? Also, can you quote 2,200 USD to EUR?
+
+assistant channel=analysis:
+Give the directions from system and run the quote with the tool; include passport reminder given amount.
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"USD","to":"EUR","amount":2200}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":0.89,"fee":"EUR 2.00","payout":"EUR 1,956.00"}
+
+assistant channel=final:
+From the main entrance, walk past the art wall to the Concierge—our counter is on the right. For 2,200 USD, the quote is EUR 1,956.00 after a EUR 2.00 fee (rate 0.89). Please bring a passport for this amount.
+
+user:
+Love the art wall!
+
+assistant channel=final:
+The counter sits just beyond that feature wall.
+
+user:
+Can I reserve this rate for pickup tomorrow morning?
+
+assistant channel=final:
+[ATTENTION] We don’t have a rate reservation policy listed. Verifying information.
+

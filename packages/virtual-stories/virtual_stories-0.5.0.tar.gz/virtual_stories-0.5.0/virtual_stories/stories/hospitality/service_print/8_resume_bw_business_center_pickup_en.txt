@@ -1,0 +1,70 @@
+"""
+Guest prints a black-and-white resume; includes friendly exchange and an unsupported request.
+
+ROLES: user (job seeker guest), assistant (print counter staff)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "start_print_job",
+    "description": "Start a standard PDF print and return id and estimate.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "color": {"type": "boolean"},
+        "pickup": {"type": "string", "enum": ["business_center", "front_desk"]}
+      },
+      "required": ["room", "pages", "color", "pickup"],
+      "additionalProperties": false
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Seaside Crescent Resort
+Address: 44 Coral Strand, Santa Monica, CA 90401
+Printing Window: 07:00–22:00
+Formats: PDF only; file size under 25MB
+Rates: B/W $0.17; Color $0.54 per page
+Pickup Points: Business Center or Front Desk
+Billing: Room folio at pickup
+Queue: Average wait 5–8 minutes
+
+user:
+Could you print 3 pages in black and white for room 261? I’ll pick them up at the business center.
+
+assistant channel=analysis:
+Queue 3 B/W pages for room 261, business center pickup.
+
+assistant channel=commentary to=tool.start_print_job:
+{"room":"261","pages":3,"color":false,"pickup":"business_center"}
+
+tool.start_print_job channel=commentary to=assistant:
+{"job_id":"scr_261bw","estimated_cost":0.51,"currency":"USD"}
+
+assistant channel=final:
+All queued—3 B/W pages for room 261 (scr_261bw). Estimated cost $0.51 USD. Pick up at the Business Center; it will post to your folio.
+
+user:
+The lobby art is fun.
+
+assistant channel=analysis:
+Keep it friendly, short.
+
+assistant channel=final:
+It adds a bright splash to the space.
+
+user:
+Can you print on glossy resume paper?
+
+assistant channel=analysis:
+Paper types aren’t specified. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Thanks—checking whether specialty paper is available.
+

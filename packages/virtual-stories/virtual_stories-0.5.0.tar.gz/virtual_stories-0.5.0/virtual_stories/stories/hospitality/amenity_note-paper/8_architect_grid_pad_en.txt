@@ -1,0 +1,84 @@
+"""
+Guest requests a gridded pad for sketches plus envelopes for sending notes.
+Provide specialized pad option and matching envelope set.
+
+ROLES: user (architect needing grid pad), assistant (guest services with stationery catalog)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check available stationery supplies in hotel inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_type":{"type":"string","enum":["note_paper","letterhead","envelopes","memo_pads","writing_pads","sticky_notes"]},"quality_level":{"type":"string","enum":["standard","premium","luxury"]}},"required":["item_type"]},"strict":true},
+  {"name":"deliver_stationery_supplies","description":"Arrange delivery of stationery items to guest room or business center.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center","meeting_room"]},"quantity_per_item":{"type":"number"},"special_requests":{"type":"string"}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborline Design Hotel (hotel_id: hd_sea_08)
+Address: 88 Alaskan Way, Seattle, WA 98104
+TZ: America/Los_Angeles
+Studios Floor: 9F
+
+Special Stationery:
+- Grid pad: 5mm dots grid, A4, 90gsm
+- Sketch pad: smooth 100gsm, A4
+- Envelopes: A5 and C5
+- Note sets: plain 120gsm cards (ivory)
+- Add-ons: pencil set loan
+
+Delivery: 10–15 minutes typical
+
+user:
+Room 927 here. Do you have a grid pad I can sketch on, and envelopes to mail notes?
+
+assistant channel=analysis:
+Check writing_pads standard for grid option and envelopes standard; then deliver.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"writing_pads","quality_level":"standard"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"writing_pads","quality_level":"standard","options":["A4_grid_5mm_90gsm","A4_smooth_100gsm"],"stock_count":33}
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"envelopes","quality_level":"standard"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"envelopes","quality_level":"standard","options":["A5_plain","C5_plain"],"stock_count":120}
+
+assistant channel=final:
+Yes—an A4 5mm grid pad is available, and we have A5 or C5 envelopes. Which envelope size would you like sent to room 927 with the grid pad?
+
+user:
+A5, please.
+
+assistant channel=analysis:
+Deliver grid pad and A5 envelopes.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"927","items":["A4_grid_5mm_90gsm","A5_plain"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"include pencil loan set"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":13,"items_included":["A4_grid_5mm_pad_1","A5_envelopes_10","pencil_loan_set"],"delivery_team":"guest_services"}
+
+assistant channel=final:
+Great—one A4 5mm grid pad, 10 A5 envelopes, and a pencil loan set will arrive at room 927 in about 13 minutes.
+
+user:
+Thanks! The lobby’s art is inspiring.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+It pairs well with sketch sessions.
+
+user:
+Can you mail them internationally for me tonight?
+
+assistant channel=analysis:
+International mailing not defined; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Compiling available data.
+

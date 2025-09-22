@@ -1,0 +1,71 @@
+"""
+Guest needs ice for an injury pack; asks SLA and casual chitchat.
+
+ROLES: user (guest in room 709 requesting one bucket), assistant (services arranging delivery and quoting floor SLA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Amenity delivery",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Beacon Row — Library Tower
+Room: 709 (Superior Twin)
+Ice: One bucket standard; can include zipper bag on request
+Hours: 06:30–22:30 normal; 22:30–00:15 urgent
+SLA floors 7–10: 10–16 minutes
+Dispatch: LT-7 pantry; S1 after 22:00
+Extensions: 0; 7870; 7871
+
+user:
+Could I get one bucket of ice to 709?
+
+assistant channel=analysis:
+Place a normal delivery for one bucket to room 709; note zipper bag if applicable not requested.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"709","amenity_name":"ice (bucket)","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-709-2210","eta_minutes":12}
+
+assistant channel=final:
+Done—one bucket of ice is scheduled for room 709 with an ETA of about 12 minutes.
+
+user:
+Thanks—hope your shift’s going well.
+
+assistant channel=final:
+Appreciate it—it’s going smoothly.
+
+user:
+What’s the usual timeframe for 7–10?
+
+assistant channel=final:
+For floors 7–10, normal deliveries are about 10–16 minutes.
+
+user:
+Do you know the freezer brand?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

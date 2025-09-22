@@ -1,0 +1,68 @@
+"""
+Parent requests handheld holder at lower height and anti-scald limit for infant bath.
+
+ROLES: user (parent bathing infant), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_anti_scald_limit","description":"Set anti-scald limit (°F).","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"max_temp_f":{"type":"integer","minimum":95,"maximum":110}},"required":["room_number","max_temp_f"]},"strict":true},
+  {"name":"deliver_child_bath_kit","description":"Deliver child bath items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string","enum":["handheld_shower_holder","non_slip_mat","rinse_cup"]}}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Garden Court Inn (hotel_id: gci_pdx_11)
+Address: 455 Park Ave, Portland, OR 97205
+Timezone: America/Los_Angeles
+
+Child-Friendly Bath:
+- Adjustable handheld holder can be mounted lower on request
+- Anti-scald range 95–110°F (default 103°F)
+- Non-slip mats sanitized daily
+
+Family Services:
+- Lending library of board books at front desk
+- Cribs and safety rails available
+- Family concierge 08:00–21:00
+
+user:
+Hi—please set anti-scald to 99°F and send a handheld holder and a non-slip mat to 518.
+
+assistant channel=analysis:
+Apply 99°F and deliver requested items.
+
+assistant channel=commentary to=tool.set_anti_scald_limit:
+{"room_number":"518","max_temp_f":99}
+
+tool.set_anti_scald_limit channel=commentary to=assistant:
+{"room_number":"518","max_temp_f":99,"applied":true}
+
+assistant channel=commentary to=tool.deliver_child_bath_kit:
+{"room_number":"518","items":["handheld_shower_holder","non_slip_mat"]}
+
+tool.deliver_child_bath_kit channel=commentary to=assistant:
+{"delivery_id":"CBK-518-2213","eta_minutes":14,"items":["handheld_shower_holder","non_slip_mat"]}
+
+assistant channel=final:
+All set: anti-scald is at 99°F, and your handheld holder plus non-slip mat are on the way (CBK-518-2213) with an ETA of about 14 minutes.
+
+user:
+Great—do you have board books to borrow?
+
+assistant channel=analysis:
+Use Family Services.
+
+assistant channel=final:
+Yes—the front desk keeps a small lending library of board books.
+
+user:
+Can you recommend an after-hours pediatrician?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about an after-hours pediatrician and will review options.
+

@@ -1,0 +1,60 @@
+"""
+Guest needs travel-size solution and spare case before flight.
+
+ROLES: user (guest before flight), assistant (guest services coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_amenities","description":"Check availability of personal care and optical amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["contact_lens_case","lens_solution","eye_drops","complete_kit","travel_size"]},"brand_preference":{"type":"string","enum":["any","specific_brand","hypoallergenic"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_amenity_delivery","description":"Arrange delivery or pickup of personal care amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["room_delivery","front_desk_pickup","concierge_hand_delivery"]},"timing":{"type":"string","enum":["immediate","within_hour","specific_time"]}},"required":["room_number","items","delivery_method"]},"strict":true}
+]
+```
+"""
+
+system:
+Harborfront Transit Hotel (hotel_id: hth_singapore)
+Address: 1 Harbourfront Walk, Singapore
+Timezone: Asia/Singapore
+
+Optical Amenity Stock:
+- Travel-size multi-purpose solution (60ml)
+- Sterile contact lens cases
+- Lubricating eye drops (single-use vials)
+
+user:
+Hi, flying tonight—do you have a travel-size solution and a spare case?
+
+assistant channel=analysis:
+Check travel-size solution and cases.
+
+assistant channel=commentary to=tool.check_personal_care_amenities:
+{"amenity_type":"travel_size"}
+
+tool.check_personal_care_amenities channel=commentary to=assistant:
+{"available_items":[{"type":"Travel-size solution 60ml","availability":"in_stock"},{"type":"Sterile contact lens case","availability":"in_stock"}]}
+
+assistant channel=final:
+Yes—60ml travel solution and sterile cases are in stock. What’s your room number and do you prefer front desk pickup or room delivery?
+
+user:
+Room 1119—front desk pickup is perfect. Also, do you know the MRT schedule?
+
+assistant channel=analysis:
+Arrange pickup; MRT schedule beyond scope -> [ATTENTION].
+
+assistant channel=commentary to=tool.arrange_amenity_delivery:
+{"room_number":"1119","items":["Travel-size solution 60ml","Sterile contact lens case"],"delivery_method":"front_desk_pickup","timing":"within_hour"}
+
+tool.arrange_amenity_delivery channel=commentary to=assistant:
+{"delivery_id":"OPT-1119-TS-01","ready_in":"15 minutes","note":"held at concierge"}
+
+assistant channel=final:
+[ATTENTION] Your kit will be ready at the concierge in about 15 minutes (OPT-1119-TS-01). I’ll check the MRT timing separately.
+
+user:
+Thank you! Appreciate the quick help.
+
+assistant channel=final:
+Happy to help—have a smooth flight.
+

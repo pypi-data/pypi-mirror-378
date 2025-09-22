@@ -1,0 +1,77 @@
+"""
+Guest checks availability; assistant searches via tool and echoes only tool data; then answers a question that is in system. Include small talk and an [ATTENTION] query outside system scope.
+
+ROLES: user (city visitor), assistant (Urban Loft booking desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+{ "Hotel": "Urban Loft Midtown",
+  "Address": "701 W 38th St, Austin, TX 78705, USA",
+  "Hours": {"check_in":"16:00","check_out":"12:00"},
+  "WiFi": {"tier":"free","speed":"300 Mbps"},
+  "Parking": {"valet":"$45/night","self":"$30/night","ev_chargers":4},
+  "Breakfast": {"weekday":"06:30-10:00","weekend":"07:00-11:00"},
+  "Gym": {"open":"24/7","equipment":["Peloton","free weights","rower"]},
+  "Policies": {"quiet_hours":"22:00-07:00","smoke_free":true,"deposit":"$100 hold"},
+  "Rooms": [
+    {"code":"LOFT_QN","name":"Loft Queen","size_m2":26},
+    {"code":"LOFT_KG","name":"Loft King","size_m2":29},
+    {"code":"CORNER","name":"Corner King","size_m2":34}
+  ]
+}
+
+user:
+Any rooms for two adults 2025-11-07 to 2025-11-09?
+
+assistant channel=analysis:
+Query inventory; respond with tool output mapped to room names.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-11-07","check_out":"2025-11-09","adults":2,"children":0}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"LOFT_QN","name":"Loft Queen","rate":"USD 169/night"},{"code":"CORNER","name":"Corner King","rate":"USD 229/night"}]}
+
+assistant channel=final:
+Loft Queen at USD 169/night or Corner King at USD 229/night are available. Check‑in 16:00; checkout 12:00.
+
+user:
+Looks good. Hope your day’s smooth.
+
+assistant channel=final:
+Thanks from Urban Loft Midtown.
+
+user:
+When is weekend breakfast served?
+
+assistant channel=final:
+Weekend breakfast is 07:00–11:00.
+
+user:
+Can you waive the deposit if I use Apple Pay?
+
+assistant channel=final:
+[ATTENTION] Deposit waivers aren’t covered by the provided details. Processing your request.
+

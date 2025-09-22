@@ -1,0 +1,62 @@
+"""
+Guest asks about helmet hair nets and return checklist; proceed to book.
+
+ROLES: user (guest concerned about hygiene and returns), assistant (concierge confirming accessories and inspection flow, then arranging booking)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_slot","description":"Check slot","parameters":{"type":"object","properties":{"partner_id":{"type":"string"},"model":{"type":"string"},"start":{"type":"string","format":"date-time"},"hours":{"type":"integer"}},"required":["partner_id","model","start","hours"],"additionalProperties":false},"strict":true},
+  {"name":"book","description":"Book","parameters":{"type":"object","properties":{"partner_id":{"type":"string"},"guest":{"type":"string"},"room":{"type":"string"},"model":{"type":"string"},"hours":{"type":"integer"}},"required":["partner_id","guest","room","model","hours"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Garden City Singapore (GCS-02)
+Address: 3 Temasek Ave, Singapore 039190
+Concierge: 07:00–23:00
+Partner: CityScoot SG (partner_id CS-08)
+Models: Honda PCX 160, Vespa LX 125
+Requirements: Passport + license; age 21+
+Deposit: SGD 200 card hold
+Helmets: S–XL; disposable hair nets provided by concierge
+Inspection: Return photo checklist at concierge desk before card release
+Fuel: Full-to-full
+Pickup: Drop-off loop zone A; return same
+Assistance: Ext. 77
+
+user:
+Do you have hair nets? I want the PCX from 9 am for 3 hours. Room 1721. How is the return inspection done?
+
+assistant channel=analysis:
+Hair nets are available. Explain the return photo checklist at concierge; check slot for PCX at 09:00 for 3 hours; then book for room 1721.
+
+assistant channel=commentary to=tool.check_slot:
+{"partner_id":"CS-08","model":"Honda PCX 160","start":"2025-09-09T09:00:00","hours":3}
+
+tool.check_slot channel=commentary to=assistant:
+{"available":true,"hold":"CSH-909"}
+
+assistant channel=commentary to=tool.book:
+{"partner_id":"CS-08","guest":"Guest 1721","room":"1721","model":"Honda PCX 160","hours":3}
+
+tool.book channel=commentary to=assistant:
+{"reservation_id":"CS-RES-909","status":"confirmed"}
+
+assistant channel=final:
+Yes—disposable hair nets are available. PCX 160 is confirmed (CS-RES-909) from 9 am for 3 hours. Please return to zone A and complete the photo checklist at concierge before we release the SGD 200 card hold.
+
+user:
+The atrium is bright today.
+
+assistant channel=final:
+Morning sun lights the atrium wonderfully.
+
+user:
+Could you send me historical service records for this unit?
+
+assistant channel=final:
+[ATTENTION] Assessing available records.
+

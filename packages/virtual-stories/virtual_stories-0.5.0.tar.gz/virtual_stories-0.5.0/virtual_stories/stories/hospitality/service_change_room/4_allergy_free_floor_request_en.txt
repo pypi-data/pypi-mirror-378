@@ -1,0 +1,61 @@
+"""
+Allergy-free floor request; include in-context policy and [ATTENTION] availability tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"check_room_inventory","description":"Availability","parameters":{"type":"object","properties":{"requested_type":{"type":"string","enum":["standard","deluxe","suite"]},"zone":{"type":"string","enum":["high_floor","courtyard","corner"]}},"required":["requested_type","zone"]}},
+  {"name":"move_reservation","description":"Move","parameters":{"type":"object","properties":{"from_room":{"type":"string"},"to_room":{"type":"string"}},"required":["from_room","to_room"]}}
+]
+"""
+
+system:
+Hotel: Aria Wellness (hotel_id: aria_wellness_van)
+Address: 655 Burrard St, Vancouver, BC | Timezone: America/Vancouver
+Allergy program: hypoallergenic rooms on floors 15–17; feather-free bedding standard there.
+Policy: same-category moves free; upgrades charged difference.
+Cutoff: assignment freeze at 20:00.
+
+user:
+Can I move to a hypoallergenic floor?
+
+assistant channel=analysis:
+Explain program from system; offer check.
+
+assistant channel=final:
+We keep hypoallergenic rooms on floors 15–17 with feather-free bedding. I can check availability for you now.
+
+user:
+Is there a fee if it’s the same category?
+
+assistant channel=analysis:
+Answer from system: free.
+
+assistant channel=final:
+No fee for a same-category move.
+
+user:
+[ATTENTION] Any deluxe high-floor currently free?
+
+assistant channel=analysis:
+Run inventory deluxe/high_floor.
+
+assistant channel=commentary to=check_room_inventory:
+{"requested_type":"deluxe","zone":"high_floor"}
+
+tool.check_room_inventory:
+{"available": true, "candidate_room":"1605","ready": false}
+
+assistant channel=final:
+Deluxe 1605 is available but still being prepared. We can notify you once it’s ready.
+
+user:
+Please move me when it’s ready.
+
+assistant channel=analysis:
+Acknowledge and close politely.
+
+assistant channel=final:
+Noted—we’ll alert you as soon as 1605 is ready and arrange the move.
+

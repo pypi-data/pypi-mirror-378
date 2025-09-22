@@ -1,0 +1,91 @@
+"""
+Guest says the built-in mirror is cracked; request a portable magnifying mirror delivery. Include small talk, an in-context amenity window answer, and an [ATTENTION] maintenance escalation (no tool available), so use flag only.
+
+ROLES: user (guest reporting cracked mirror), assistant (concierge arranging portable amenity)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"stock_portable","description":"Check portable mirror stock.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string"}},"required":["item_code"]},"strict":true},
+  {"name":"send_portable","description":"Send portable mirror.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1}} ,"required":["room_number","item_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Mariner’s Compass (hotel_id: tmc_ca_81)
+Address: 1 Cannery Row, Monterey, CA 93940
+Timezone: America/Los_Angeles
+Amenity Runs: 08:00–22:00
+
+Portable Mirror Stock:
+- bath_mirror_magnifying: 7
+- table_led_mirror: 2
+
+Spaces:
+1) Kelp-forest lobby mural
+2) Coffee counter 06:30–12:00
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Coastal path access
+
+Accessibility:
+- Step-free lobby and path access; ADA rooms
+- Portable vanity stools on request
+
+Sustainability:
+- Ocean-friendly policies; refillable amenities
+
+Transportation:
+- Coastal trail access; rideshare pickup at Cannery Row
+
+user:
+Hi—our built-in mirror has a crack. Could you send a magnifying mirror to room 418 for now?
+
+assistant channel=analysis:
+Check portable magnifying stock and send 1. Maintenance escalation is out of scope of tools here.
+
+assistant channel=commentary to=tool.stock_portable:
+{"item_code":"bath_mirror_magnifying"}
+
+tool.stock_portable channel=commentary to=assistant:
+{"item_code":"bath_mirror_magnifying","on_hand":7}
+
+assistant channel=commentary to=tool.send_portable:
+{"room_number":"418","item_code":"bath_mirror_magnifying","quantity":1}
+
+tool.send_portable channel=commentary to=assistant:
+{"ticket":"TMC-418-883","eta_minutes":12}
+
+assistant channel=final:
+I’ve arranged one magnifying mirror for room 418 (ticket TMC-418-883). ETA is about 12 minutes.
+
+user:
+Are amenity deliveries available this evening?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—amenity runs operate 08:00–22:00.
+
+user:
+The kelp-forest mural is impressive.
+
+assistant channel=analysis:
+Chit-chat referencing spaces.
+
+assistant channel=final:
+It’s a centerpiece of the lobby.
+
+user:
+Can you send maintenance to replace the cracked mirror tonight?
+
+assistant channel=analysis:
+No maintenance tool provided; out of scope per this dialogue; use flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+
+user:
+Thanks for the portable one.

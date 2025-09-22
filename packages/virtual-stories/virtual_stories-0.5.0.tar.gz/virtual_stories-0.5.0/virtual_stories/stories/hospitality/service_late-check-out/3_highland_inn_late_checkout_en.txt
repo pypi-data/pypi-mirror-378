@@ -1,0 +1,70 @@
+"""
+Late checkout request; assistant calls tool and returns approval/fee per tool; then answers a policy item from system. Include small talk and an [ATTENTION] request not covered by system.
+
+ROLES: user (guest), assistant (Highland Inn front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_late_checkout",
+    "description": "Request a late checkout within policy and return approval and fee.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "requested_time": {"type": "string", "description": "24h time, e.g., 14:00"}
+      },
+      "required": ["room_number", "requested_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+[Highland Inn Glencoe]
+Address: A82, Glencoe, PH49 4HX, Scotland
+Checkout: 10:00
+Late Window: up to 13:00 (subject to availability)
+Fees: £20 until 12:00; £40 until 13:00
+Breakfast: 07:00–10:00
+Wi‑Fi: 100 Mbps shared
+Parking: Free
+QuietHours: 22:00–07:00
+
+user:
+Room A12—possible to leave at 12:15?
+
+assistant channel=analysis:
+12:15 is within policy (<=13:00); fee should be £40 if approved past noon.
+
+assistant channel=commentary to=tool.request_late_checkout:
+{"room_number":"A12","requested_time":"12:15"}
+
+tool.request_late_checkout channel=commentary to=assistant:
+{"approved":true,"fee":40,"currency":"GBP","note":"Return keys by 13:00 latest"}
+
+assistant channel=final:
+Approved—late checkout for room A12 is set for 12:15 with a £40 GBP fee (return keys by 13:00 latest).
+
+user:
+Cheers. Weather holding up?
+
+assistant channel=final:
+Have a cozy day at Highland Inn.
+
+user:
+When’s regular checkout?
+
+assistant channel=final:
+Checkout is 10:00.
+
+user:
+Could you store luggage until evening?
+
+assistant channel=final:
+[ATTENTION] Evening luggage storage isn’t specified in the provided details. Processing your request.
+

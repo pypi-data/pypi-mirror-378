@@ -1,0 +1,83 @@
+"""
+Guest wants twin beds; include in-context timing answer and [ATTENTION] inventory check via tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"check_room_inventory","description":"Check availability","parameters":{"type":"object","properties":{"requested_type":{"type":"string","enum":["standard","deluxe","suite"]},"zone":{"type":"string","enum":["courtyard","high_floor","near_elevator","corner"]}},"required":["requested_type","zone"]}},
+  {"name":"move_reservation","description":"Move rooms","parameters":{"type":"object","properties":{"from_room":{"type":"string"},"to_room":{"type":"string"}},"required":["from_room","to_room"]}}
+]
+"""
+
+system:
+Hotel: Lakeside Pavilion (hotel_id: lakeside_pavilion_chi)
+Address: 700 E Grand Ave, Chicago, IL 60611 | Timezone: America/Chicago
+Bed policy: twins exist in standard and deluxe only; suites are king.
+Housekeeping windows: new rooms are typically ready by 15:00; last cleaning pass ends 19:30.
+Fees: lateral moves free; upgrades billed per nightly difference.
+Keys: return old keys after move.
+
+user:
+Do you have a twin-bed room instead of my king?
+
+assistant channel=analysis:
+Explain policy and offer to check.
+
+assistant channel=final:
+Twin-bed rooms are available in standard or deluxe categories. Shall I check what we have now?
+
+user:
+By when are new rooms usually ready?
+
+assistant channel=analysis:
+Answer from system: by 15:00 typically; last pass ends 19:30.
+
+assistant channel=final:
+Most new rooms are ready by 15:00, with the final housekeeping pass ending around 19:30.
+
+user:
+[ATTENTION] Any deluxe courtyard twin available now?
+
+assistant channel=analysis:
+Run inventory for deluxe/courtyard.
+
+assistant channel=commentary to=check_room_inventory:
+{"requested_type":"deluxe","zone":"courtyard"}
+
+tool.check_room_inventory:
+{"available": false}
+
+assistant channel=final:
+I’m not seeing a deluxe courtyard twin at the moment.
+
+user:
+What about a standard high-floor twin?
+
+assistant channel=analysis:
+Call inventory for standard/high_floor.
+
+assistant channel=commentary to=check_room_inventory:
+{"requested_type":"standard","zone":"high_floor"}
+
+tool.check_room_inventory:
+{"available": true, "candidate_room":"1807","ready": true}
+
+assistant channel=final:
+We do have 1807 (standard high-floor twin) ready now. Would you like me to move you?
+
+user:
+Yes, please—move from 1112 to 1807.
+
+assistant channel=analysis:
+Execute move.
+
+assistant channel=commentary to=move_reservation:
+{"from_room":"1112","to_room":"1807"}
+
+tool.move_reservation:
+{"status":"moved"}
+
+assistant channel=final:
+Done—your room is now 1807. New keys are at the desk.
+

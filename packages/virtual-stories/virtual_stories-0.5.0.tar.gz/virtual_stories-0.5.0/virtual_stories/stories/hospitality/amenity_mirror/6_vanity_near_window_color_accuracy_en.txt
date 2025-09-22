@@ -1,0 +1,74 @@
+"""
+Guest requests vanity mirror near window with daylight color accuracy.
+Provide options, install, and quick tip.
+
+ROLES: user (guest preparing for photos), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_mirror_options", "description": "Check vanity mirror with daylight setting.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "mirror_type": { "type": "string", "enum": ["vanity"] }, "lighting_needed": { "type": "boolean" } }, "required": ["mirror_type"] }, "strict": true },
+  { "name": "install_mirror_setup", "description": "Install vanity mirror near window.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mirror_type": { "type": "string", "enum": ["vanity"] }, "lighting_type": { "type": "string", "enum": ["daylight_5000k"] }, "placement_location": { "type": "string", "enum": ["near_window"] }, "power_source": { "type": "string", "enum": ["plug_in"] } }, "required": ["room_number", "mirror_type", "placement_location"] }, "strict": true },
+  { "name": "adjust_mirror_lighting", "description": "Set brightness level for accuracy.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "brightness_level": { "type": "integer", "minimum": 1, "maximum": 10 }, "color_temp": { "type": "string", "enum": ["daylight_5000k"] } }, "required": ["room_number", "brightness_level", "color_temp"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Orchard Garden Hotel (hotel_id: ogh_sfo_04)
+Address: 466 Bush St, San Francisco, CA 94108
+Timezone: America/Los_Angeles
+
+Vanity Services:
+- Daylight 5000K mirrors for color accuracy
+- Setup near window for natural blend
+- Install 30–45 minutes
+- Dimmer 1–10 levels
+- Removal at checkout
+
+user:
+Hi—room 708. Vanity near the window with daylight color please.
+
+assistant channel=analysis:
+Check vanity/daylight; install near window; set brightness 7.
+
+assistant channel=commentary to=tool.check_mirror_options:
+{"mirror_type":"vanity","lighting_needed":true}
+
+tool.check_mirror_options channel=commentary to=assistant:
+{"available_types":["vanity"],"lighting_options":["daylight_5000k"],"inventory_status":"available"}
+
+assistant channel=commentary to=tool.install_mirror_setup:
+{"room_number":"708","mirror_type":"vanity","lighting_type":"daylight_5000k","placement_location":"near_window","power_source":"plug_in"}
+
+tool.install_mirror_setup channel=commentary to=assistant:
+{"service_id":"MIR_SF708","installation_time":"within 40 minutes","placement":"window desk","notes":"cable managed"}
+
+assistant channel=commentary to=tool.adjust_mirror_lighting:
+{"room_number":"708","brightness_level":7,"color_temp":"daylight_5000k"}
+
+tool.adjust_mirror_lighting channel=commentary to=assistant:
+{"adjustment_completed":true,"brightness":7,"color_temp":"daylight_5000k"}
+
+assistant channel=final:
+We’ll set up a daylight 5000K vanity by your window within ~40 minutes and set brightness to 7 for accurate color.
+
+user:
+The rooftop garden is pretty.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It brings in soft natural light—great for photos.
+
+user:
+Can you arrange a photographer?
+
+assistant channel=analysis:
+Outside mirror scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with concierge about photography services.
+"""
+

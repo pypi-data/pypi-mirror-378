@@ -1,0 +1,52 @@
+"""
+Conference-floor guest requests restock; include chat and [ATTENTION].
+
+ROLES: user (guest C221), assistant (conference services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"request_amenity_delivery","description":"Deliver amenity item.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Summit Convention Hotel (hotel_id: sch_vegas)
+Address: 1200 Convention Center Dr, Las Vegas, NV 89109
+Timezone: America/Los_Angeles
+Conference Level C:
+- Meeting rooms numbered C100–C300
+- Ice buckets supplied on request
+- Delivery window: 08:00–21:00; ETA 10–18 min
+- Ice stations: at each corridor junction
+- Contact: Conference Services x500
+Inline: {"ice_stations":"corridor junctions"}
+
+user:
+Could I get an ice bucket restock to C221?
+
+assistant channel=analysis:
+Arrange normal delivery of one ice bucket.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"C221","amenity_name":"ice bucket","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ok":true,"eta_minutes":13,"ticket":"SCH-ICE-C221-1"}
+
+assistant channel=final:
+All set—one ice bucket will reach C221 in about 13 minutes. Ref SCH-ICE-C221-1.
+
+user:
+The expo hall felt energetic today.
+
+assistant channel=final:
+It’s lively when all the sessions break.
+
+user:
+Can you provide logo ice buckets?
+
+assistant channel=final:
+[ATTENTION] I’ll check if branded buckets are available.
+

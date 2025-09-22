@@ -1,0 +1,143 @@
+"""
+Guest reports suspected bathtub leak and requests inspection and repair window.
+Include diagnostics, ticketing, and scheduling with safety guidance.
+
+ROLES: user (guest noticing water pooling near bathtub), assistant (engineering liaison coordinating diagnostics and repair)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "run_bathtub_leak_test",
+    "description": "Perform remote diagnostic on bathtub drain and supply lines (cold/hot).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "test_type": { "type": "string", "enum": ["drain", "cold_supply", "hot_supply"] }
+      },
+      "required": ["room_number", "test_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_maintenance_ticket",
+    "description": "Open an engineering ticket for plumbing issues.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "note": { "type": "string" }
+      },
+      "required": ["room_number", "category", "priority"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_engineer_visit",
+    "description": "Schedule an engineering visit window in minutes.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "window_minutes": { "type": "integer", "minimum": 15 }
+      },
+      "required": ["room_number", "window_minutes"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harbor Crest Waterfront Hotel (hotel_id: hc_wh_seattle_02)
+Address: 88 Elliott Bay Way, Seattle, WA 98121
+Timezone: America/Los_Angeles
+
+Plumbing Coverage and SOP:
+- Engineering coverage: 06:00–22:00 on-site; on-call overnight.
+- Bathtub models: Porcelain-over-cast-iron tubs by SoundWorks Bath, model HC-Deluxe; slip-resistant enamel.
+- Shutoff valves: Access panel in bathroom closet; do not operate unless directed by engineering.
+- Safety: Place towels to contain minor pooling; avoid using tub if active leak is detected.
+
+Article A — Design & Materials:
+The Harbor Crest bathtubs are cast-iron cores finished with a triple-baked porcelain enamel, chosen for heat retention and acoustic dampening. The bathroom floors use marine-grade porcelain tile with anti-wick grout that resists water intrusion, while the underlayment is a cement board with waterproof membrane. All visible caulking is a mildew-resistant silicone rated for wet environments and inspected quarterly.
+
+Article B — Preventive Maintenance Program:
+Every tub assembly undergoes a quarterly inspection of overflow gaskets, P-trap seals, and supply line compression fittings. Engineers use moisture meters behind access panels to detect hidden seepage, tighten compression nuts to factory torque specs, and replace aging gaskets proactively. Drain flow is tested with a timed fill-and-release method to baseline performance.
+
+Article C — Sustainability & Water Use:
+Low-flow aerators on supply lines reduce consumption without affecting fill comfort, and graywater from laundry is reclaimed for non-potable applications. Guest communications emphasize responsible water use through gentle prompts in the in-room guide. Maintenance prioritizes repairing even minor drips because cumulative loss can be significant over months of occupancy.
+
+Article D — Guest Comfort & Wellness:
+Thermal retention from cast-iron tubs extends warm soak duration, complemented by optional bath trays and aromatherapy menus available on request. The bathrooms include dimmable lighting and quiet ventilation fans to maintain air quality. Non-slip mats are available upon request for guests preferring additional traction beyond the enamel texture.
+
+Article E — Neighborhood & Views:
+Rooms on the bay side overlook Elliott Bay ferries and evening marina lights. The property’s waterfront path connects to the Olympic Sculpture Park within a ten-minute walk, making post-soak strolls easy. Morning fog often softens the skyline, creating a calm ambience that pairs well with the hotel’s quiet-room policy after 10 PM.
+
+user:
+Hi—there’s a small puddle forming beside the tub in room 1914 after I shower. Could it be leaking?
+
+assistant channel=analysis:
+Verify whether the leak is from drain or supply. Run drain test first, then proceed based on result.
+
+assistant channel=commentary to=tool.run_bathtub_leak_test:
+{"room_number":"1914","test_type":"drain"}
+
+tool.run_bathtub_leak_test channel=commentary to=assistant:
+{"room_number":"1914","test_type":"drain","result":"abnormal","details":"slow seep at overflow gasket suspected"}
+
+assistant channel=analysis:
+Overflow gasket seep likely. Open high-priority maintenance ticket and schedule a 30-minute visit window. Advise holding off tub use.
+
+assistant channel=commentary to=tool.create_maintenance_ticket:
+{"room_number":"1914","category":"bathtub_overflow_gasket","priority":"high","note":"Puddle after shower; remote test indicates seep at overflow gasket"}
+
+tool.create_maintenance_ticket channel=commentary to=assistant:
+{"ticket_id":"ENG-PLUMB-1914-7331","status":"open"}
+
+assistant channel=commentary to=tool.schedule_engineer_visit:
+{"room_number":"1914","window_minutes":30}
+
+tool.schedule_engineer_visit channel=commentary to=assistant:
+{"ticket_id":"ENG-PLUMB-1914-7331","visit_window_minutes":30,"eta_minutes":25}
+
+assistant channel=final:
+Thanks for letting us know. I’ve opened ticket ENG-PLUMB-1914-7331 and scheduled a 30‑minute engineering window with an ETA of about 25 minutes. Please avoid using the tub until they reseat the overflow gasket; towels can be used to contain any minor pooling meanwhile.
+
+user:
+It’s a nice bathroom, by the way. The tile feels really solid underfoot.
+
+assistant channel=analysis:
+Small talk acknowledgment referencing system design details.
+
+assistant channel=final:
+I’m glad it feels sturdy—the floors use marine‑grade porcelain tile with waterproof underlayment, so they’re built to stay solid and dry.
+
+user:
+Do you know the exact tub model in these rooms?
+
+assistant channel=analysis:
+Answer from system: SoundWorks Bath HC-Deluxe.
+
+assistant channel=final:
+Yes—our rooms use SoundWorks Bath cast‑iron tubs, model HC‑Deluxe with a triple‑baked porcelain enamel finish.
+
+user:
+Could you also tell me if nearby restaurants do late-night happy hour?
+
+assistant channel=analysis:
+Out of scope; no restaurant directory tools. Use special flag.
+
+assistant channel=final:
+[ATTENTION] Noted. Checking available options.
+
+user:
+No problem, I’ll wait here for engineering.
+

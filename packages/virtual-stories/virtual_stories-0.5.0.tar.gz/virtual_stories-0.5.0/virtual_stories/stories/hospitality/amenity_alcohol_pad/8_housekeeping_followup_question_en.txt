@@ -1,0 +1,81 @@
+"""
+Guest asks for alcohol pads and whether housekeeping can clean a small scrape; deliver items and keep within policy. Include small talk and the [ATTENTION] response to the out-of-scope question.
+
+ROLES: user (guest), assistant (guest services with first-aid item tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"fa_inv","description":"Check first-aid stock.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"fa_send_delivery","description":"Send first-aid item to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer"}},"required":["room","item","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Gardenstone House (hotel_id: gsh_pa_41)
+Address: 300 Walnut St, Philadelphia, PA 19106
+Timezone: America/New_York
+Check-in/Out: 15:00 / 11:00
+Delivery: 07:30–22:00
+
+Policy:
+- Provide stocked first-aid items only; no medical or wound-care advice
+
+Lobby & Spaces:
+1) Reading alcove with local history books
+2) Conservatory-style breakfast room 06:30–10:30
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Courtyard fountain
+
+Dining:
+- Breakfast in the conservatory 06:30–10:30
+
+Accessibility:
+- Step-free lobby access; elevator to all floors
+
+Sustainability:
+- Glass water bottles; recycling on each floor
+
+Design:
+- Federal-style details with modern furnishings
+
+user:
+Could I get 5 alcohol pads to room 410?
+
+assistant channel=analysis:
+Check stock and send 5.
+
+assistant channel=commentary to=tool.fa_inv:
+{"item":"alcohol pads"}
+
+tool.fa_inv channel=commentary to=assistant:
+{"item":"alcohol pads","available":true}
+
+assistant channel=commentary to=tool.fa_send_delivery:
+{"room":"410","item":"alcohol pads","qty":5}
+
+tool.fa_send_delivery channel=commentary to=assistant:
+{"ref":"GSH-FA-410-552","eta_minutes":12}
+
+assistant channel=final:
+Five alcohol pads are on the way to room 410, reference GSH-FA-410-552, arriving in about 12 minutes.
+
+user:
+Can housekeeping help clean a small scrape on my knee?
+
+assistant channel=analysis:
+Out of scope per policy; use flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+
+user:
+The courtyard fountain sounds relaxing.
+
+assistant channel=analysis:
+Chit-chat referencing spaces.
+
+assistant channel=final:
+It does—the courtyard fountain adds a calm background sound.

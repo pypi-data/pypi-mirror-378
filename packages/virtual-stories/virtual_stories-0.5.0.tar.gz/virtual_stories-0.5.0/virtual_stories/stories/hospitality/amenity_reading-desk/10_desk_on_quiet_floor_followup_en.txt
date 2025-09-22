@@ -1,0 +1,66 @@
+"""
+Guest follows up to ensure placement on a quiet floor with a desk; confirms quiet hours and chair, plus an out-of-scope ask.
+
+ROLES: user (Detail-focused guest.), assistant (Front desk manager.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "find_available_room",
+    "description": "Finds an available room with specific features.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "feature": {"type": "string"},
+        "start_date": {"type": "string", "format": "date"},
+        "end_date": {"type": "string", "format": "date"}
+      },
+      "required": ["feature", "start_date", "end_date"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: The Study Hall
+Desk Rooms: Executive Study, Atelier Corner
+Lamp: Warm dimmable; task lamp on request
+Chair: Adjustable ergonomic
+Upgrade: Complimentary if desk is essential
+Quiet Floors: 9–11
+Front Desk: 0
+
+user:
+Can you place me on a quiet floor with a reading desk for two nights?
+
+assistant channel=analysis:
+Search for reading_desk and ensure quiet floor is included (9–11). Then confirm features and upgrade.
+
+assistant channel=commentary to=tool.find_available_room:
+{"feature": "reading_desk", "start_date": "2025-09-08", "end_date": "2025-09-10"}
+
+tool.find_available_room channel=commentary to=assistant:
+{"rooms": [{"room_number": "906", "room_type": "Executive Study", "features": ["reading_desk", "quiet_floor"]}]}
+
+assistant channel=final:
+Executive Study 906 is available on a quiet floor, with a dedicated reading desk, warm dimmable lamp, and an ergonomic chair. Upgrades are complimentary when the desk is essential.
+
+user:
+What are the quiet hours?
+
+assistant channel=final:
+I don’t have specific quiet hours listed in my system, but floors 9–11 are designated quiet floors.
+
+user:
+Thanks—how are you doing today?
+
+assistant channel=final:
+Doing well—happy to help get you settled.
+
+user:
+[ATTENTION] Can you deliver a standing desk?
+
+assistant channel=final:
+Standing desks aren’t in my system. I can confirm the desk-equipped room and task lamp if needed.

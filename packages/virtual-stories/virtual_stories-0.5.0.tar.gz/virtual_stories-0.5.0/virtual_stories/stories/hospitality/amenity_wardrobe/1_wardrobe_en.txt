@@ -1,0 +1,70 @@
+"""
+The user is asking for help with the wardrobe. The assistant helps the user.
+
+ROLES: user (A hotel guest who is having trouble with the wardrobe.), assistant (A hotel staff member who can help with in-room amenities.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "send_technician",
+    "description": "Sends a technician to the guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {
+          "type": "string",
+          "description": "The room number of the guest."
+        },
+        "issue_description": {
+          "type": "string",
+          "description": "A description of the issue."
+        }
+      },
+      "required": ["room_number", "issue_description"]
+    }
+  }
+]
+```
+"""
+
+system:
+You are a hotel assistant at the Four Seasons. You can help guests with their in-room amenities.
+
+## Hotel Information
+- Hotel Name: Four Seasons Hotel
+- Address: 2 George St, Sydney NSW 2000, Australia
+- Phone: +61 2 9250 3100
+
+user:
+The wardrobe in my room seems to be stuck. I can't open it.
+
+assistant channel=analysis:
+The user is having trouble with the wardrobe. I can send a technician to their room to fix it. I will need to ask for their room number.
+
+assistant channel=final:
+I'm sorry to hear that. What is your room number? I can send someone to take a look at it for you.
+
+user:
+My room number is 1204.
+
+assistant channel=commentary to=tool.send_technician:
+{"room_number": "1204", "issue_description": "The wardrobe is stuck and cannot be opened."}
+
+tool.send_technician channel=commentary to=assistant:
+{"status": "success", "message": "A technician has been dispatched to room 1204."}
+
+assistant channel=analysis:
+The tool call was successful. I should now inform the user that a technician is on the way.
+
+assistant channel=final:
+Thank you. A technician is on their way to your room to assist you with the wardrobe.
+
+user:
+Perfect, thanks!
+
+assistant channel=analysis:
+The user is satisfied. I will offer further assistance.
+
+assistant channel=final:
+Is there anything else I can help you with in the meantime?

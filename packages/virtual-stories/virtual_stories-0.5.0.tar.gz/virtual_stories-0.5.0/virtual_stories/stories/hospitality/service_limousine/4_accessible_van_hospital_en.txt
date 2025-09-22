@@ -1,0 +1,63 @@
+"""
+Guest needs a wheelchair-accessible van to a medical center with specific pickup time.
+
+ROLES: user (guest requesting accessible transport), assistant (concierge coordinating accessible vehicle)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"check_accessible_van","description":"Check availability for wheelchair-accessible van.","parameters":{"type":"object","additionalProperties":false,"properties":{"pickup_time":{"type":"string"},"destination":{"type":"string"}},"required":["pickup_time","destination"]},"strict":true},
+  {"name":"quote_flat_destination","description":"Quote flat rate to a named destination.","parameters":{"type":"object","additionalProperties":false,"properties":{"destination":{"type":"string"}},"required":["destination"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Redwood Medical Stay Suites (hotel_id: rmss_sf_01)
+Address: 900 Van Ness Ave, San Francisco, CA 94109
+Timezone: America/Los_Angeles
+Desk Hours: 24/7
+
+Transport Policy:
+- Wheelchair-accessible vans available on request (fold-out ramp)
+- Assistance: Driver assists with boarding but not medical lifting
+- Priority Windows: 06:00–20:00 recommended for medical visits
+- Billing: Room charge permitted
+- Safety: Seatbelts required at all times
+
+Flat Destinations:
+- UCSF Parnassus: $75
+- Zuckerberg SF General: $55
+- Kaiser Geary: $45
+- Downtown Clinic Loop: $35
+
+user:
+I need an accessible van to UCSF Parnassus at 8:15 am.
+
+assistant channel=analysis:
+Check accessible van availability at 08:15 and quote UCSF Parnassus $75.
+
+assistant channel=commentary to=tool.check_accessible_van:
+{"pickup_time":"08:15","destination":"UCSF Parnassus"}
+
+tool.check_accessible_van channel=commentary to=assistant:
+{"available":true,"unit_id":"van_wch_07"}
+
+assistant channel=commentary to=tool.quote_flat_destination:
+{"destination":"UCSF Parnassus"}
+
+tool.quote_flat_destination channel=commentary to=assistant:
+{"rate":75,"currency":"USD"}
+
+assistant channel=final:
+We have an accessible van available at 08:15 for UCSF Parnassus. The flat rate is $75 USD, and the driver will deploy a fold‑out ramp and assist with boarding. Would you like it charged to your room?
+
+user:
+Thanks. Do you play music in the van?
+
+assistant channel=analysis:
+Music availability isn’t defined. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Checking available options.
+

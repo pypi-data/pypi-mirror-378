@@ -1,0 +1,73 @@
+"""
+Late arrival needs light fruit refresh; follow-up questions included.
+
+ROLES: user (guest in 1002), assistant (night concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service",
+    "description": "Order food and beverages to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "item_name": {"type": "string"},
+        "room_number": {"type": "string"},
+        "quantity": {"type": "integer"},
+        "notes": {"type": "string"}
+      },
+      "required": ["item_name", "room_number", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Boutique: Lantern & Lime
+Neighborhood: Old Wharf Quarter
+Hours: In-room dining 06:30–23:00; After-hours snacks 23:00–01:00
+Fruit: Light Refresh Cup (melon, grape) | Citrus Wake-Up | Banana-Oat add-on $2
+Fees: Tray $2 waived for suites
+Phones: Dining x44 | Front Desk x0
+
+user:
+Just arrived to 1002—can I get the Light Refresh Cup?
+
+assistant channel=analysis:
+Place Light Refresh Cup order to 1002.
+
+assistant channel=commentary to=tool.order_room_service:
+{"item_name":"Light Refresh Cup","room_number":"1002","quantity":1}
+
+tool.order_room_service channel=commentary to=assistant:
+{"status":"placed","eta":16}
+
+assistant channel=final:
+All set—the Light Refresh Cup is en route. ETA ~16 minutes.
+
+user:
+Is the tray fee waived?
+
+assistant channel=analysis:
+System: Tray $2 waived for suites. The guest did not state suite; avoid assuming; answer policy fact only.
+
+assistant channel=final:
+Tray fee is $2 and it’s waived for suites.
+
+user:
+Thanks—nice lobby lighting.
+
+assistant channel=final:
+Appreciate it—welcome to Lantern & Lime.
+
+user:
+Do you know if the ferry runs past midnight?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I’ll verify the late ferry schedule.
+

@@ -1,0 +1,113 @@
+"""
+Guest complains about noisy air conditioner during nighttime and requests quieter operation.
+
+ROLES: user (light sleeper concerned about AC noise), assistant (night concierge with HVAC controls)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_hvac_noise_level",
+    "description": "Check current AC noise levels and available quiet settings.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string", "description": "Room number" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "set_quiet_mode",
+    "description": "Enable quiet mode for nighttime AC operation.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "quiet_level": { "type": "string", "enum": ["whisper", "silent", "ultra_quiet"] },
+        "duration_hours": { "type": "number", "minimum": 1, "maximum": 12 }
+      },
+      "required": ["room_number", "quiet_level"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Serenity Springs Wellness Resort (hotel_id: ss_sedona_01)  
+Address: 2525 West State Route 89A, Sedona, AZ 86336
+Timezone: America/Phoenix
+Rating: 5-star wellness retreat with sound therapy focus
+CEO: Dr. Marcus Soundwell
+Phone: +1-928-282-9300
+Email: wellness@serenitysprings.com
+Website: serenityspringsresort.com
+
+Wellness Philosophy:
+- Holistic healing through sound, silence, and natural harmony
+- Meditation pavilions positioned at energy vortex points
+- Silent zones maintained throughout property from 9 PM to 7 AM
+- Crystal singing bowl therapy sessions in healing gardens
+- Organic meditation gardens with native desert plants
+- Sunrise yoga decks facing red rock formations
+
+HVAC Acoustic Design:
+- Ultra-quiet variable speed compressors with noise dampening
+- Whisper mode: <25 dB (quieter than library)
+- Silent mode: <20 dB (near-imperceptible)
+- Ultra-quiet mode: <15 dB (meditation-grade silence)
+- Smart scheduling automatically reduces noise during sleep hours
+- Sound masking available with nature sounds or white noise
+
+user:
+Hi, I'm in room 1205 and having trouble sleeping because the air conditioner is quite noisy. Is there a way to make it quieter? I'm a very light sleeper.
+
+assistant channel=analysis:
+Guest in room 1205 is having sleep issues due to AC noise. I should check current noise levels and offer our quiet mode options.
+
+assistant channel=commentary to=tool.check_hvac_noise_level:
+{"room_number": "1205"}
+
+tool.check_hvac_noise_level channel=commentary to=assistant:
+{"room_number": "1205", "current_noise_db": 35, "recommended_quiet_mode": "whisper", "available_modes": ["whisper", "silent", "ultra_quiet"], "estimated_noise_levels": {"whisper": 24, "silent": 19, "ultra_quiet": 14}}
+
+assistant channel=analysis:
+Current noise is 35 dB which is quite audible for a light sleeper. I should enable whisper mode as recommended, which will reduce it to 24 dB.
+
+assistant channel=commentary to=tool.set_quiet_mode:
+{"room_number": "1205", "quiet_level": "whisper", "duration_hours": 8}
+
+tool.set_quiet_mode channel=commentary to=assistant:
+{"enabled": true, "mode": "whisper", "noise_level_db": 24, "duration": "8 hours", "auto_disable_time": "07:00"}
+
+assistant channel=final:
+I completely understand - restful sleep is essential for wellness. I've enabled whisper mode for room 1205, reducing the AC noise from 35 dB to just 24 dB (quieter than a library). It's set for 8 hours and will automatically return to normal at 7 AM. Sweet dreams!
+
+user:
+That's much better, thank you! I can barely hear it now. I love how quiet this place is overall.
+
+assistant channel=analysis:
+Guest appreciates the quieter AC and is complimenting the hotel's overall peaceful atmosphere. This is small talk about our wellness philosophy.
+
+assistant channel=final:
+I'm so glad that helped! Serenity Springs is designed around the principle of healing through silence and natural harmony. We maintain silent zones from 9 PM to 7 AM to support our guests' wellness journeys. The red rock formations outside your window are particularly beautiful at sunrise if you're an early riser.
+
+user:
+Actually, speaking of wellness, do you offer any special sleep programs or therapies?
+
+assistant channel=analysis:
+Guest is asking about sleep programs and therapies. This goes beyond my HVAC-focused tools and into wellness programming that would require specialized booking systems.
+
+assistant channel=final:
+[ATTENTION] We do have various wellness programs focused on restorative sleep. Reviewing available resources.
+
+user:
+No problem, the quiet AC will definitely help. Good night!
+
+assistant channel=final:
+Good night! Sleep well in your peaceful sanctuary. The whisper mode will keep you comfortable all night long.

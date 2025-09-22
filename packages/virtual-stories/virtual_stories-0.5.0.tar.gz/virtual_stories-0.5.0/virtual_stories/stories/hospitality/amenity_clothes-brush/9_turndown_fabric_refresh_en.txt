@@ -1,0 +1,70 @@
+"""
+Guest asks to coordinate turndown delivery of a brush set for morning event.
+
+ROLES: user (guest planning ahead), assistant (turndown coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"list_garment_care_items","description":"List brushes and kits",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"category":{"type":"string","enum":["clothes_brush"]}},"required":["category"]},"strict":true},
+  {"name":"deliver_garment_care_item","description":"Deliver items at turndown",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"priority":{"type":"string","enum":["normal","express"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Linden House (hotel_id: tlh_savannah)
+Address: 44 Magnolia Sq, Savannah, GA 31401
+Timezone: America/New_York
+
+Turndown Notes:
+- Amenity requests can be staged at turndown between 19:00–21:00
+- Brush kits include instruction card for fabric types
+
+Inventory: evening_kit_basic, boar_bristle, horsehair_soft
+SLA: Turndown staging window 19:00–21:00; confirmation ticket issued
+
+user:
+Could I have a basic brush kit brought at turndown to room 512?
+
+assistant channel=analysis:
+Offer evening_kit_basic at turndown; confirm window.
+
+assistant channel=commentary to=tool.list_garment_care_items:
+{"category":"clothes_brush"}
+
+tool.list_garment_care_items channel=commentary to=assistant:
+{"items":["evening_kit_basic","boar_bristle","horsehair_soft"],"window":"19:00-21:00"}
+
+assistant channel=final:
+Certainly—our evening_kit_basic includes a boar brush and a guide card. I’ll stage it for turndown between 19:00 and 21:00 for room 512.
+
+user:
+Your courtyard fountain is so peaceful.
+
+assistant channel=final:
+It’s a restored cast‑iron piece under the magnolia canopy.
+
+assistant channel=commentary to=tool.deliver_garment_care_item:
+{"room_number":"512","items":["evening_kit_basic"],"priority":"normal"}
+
+tool.deliver_garment_care_item channel=commentary to=assistant:
+{"request_id":"TLH-512-70","scheduled":"turndown","window":"19:00-21:00"}
+
+assistant channel=final:
+Scheduled—ticket TLH-512-70 will be placed during turndown.
+
+user:
+Can you store my luggage after checkout tomorrow?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the options for you.
+

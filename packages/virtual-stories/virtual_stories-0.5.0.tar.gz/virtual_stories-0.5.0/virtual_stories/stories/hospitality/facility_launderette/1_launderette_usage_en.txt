@@ -1,0 +1,68 @@
+"""
+Guest asks about using the launderette: location, hours, and pricing.
+
+ROLES: user (guest planning to do laundry), assistant (hotel staff providing launderette details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_launderette_details",
+    "description": "Return launderette location, hours, and pricing.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": []
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Azure Quays Hotel (harbor-side business & leisure)
+Facility: Self-service launderette (coin/card-operated)
+Location notes: B2 annex corridor, signposted past service elevators
+Hours: 06:00–23:00 (last wash start 22:00)
+Amenities: 10 washers, 10 dryers, folding stations, detergent & softener vending
+Payments accepted: Credit/debit (contactless), hotel laundry tokens available at reception
+Assistance window: Attendant rounds at 09:00, 14:00, 20:00 for light support
+Safety: Lint filters cleaned daily; please do not leave items unattended
+
+user:
+Do you have a launderette? Where is it, and how does it work?
+
+assistant channel=analysis:
+Use the launderette details tool for location, hours, and pricing. Supplement with system-listed amenities and payments.
+
+assistant channel=commentary to=tool.get_launderette_details:
+{}
+
+tool.get_launderette_details channel=commentary to=assistant:
+{"location":"B2 annex corridor (past service elevators)","hours":"06:00–23:00 (last wash 22:00)","pricing":"Washer £3 / Dryer £2 per cycle","payment":"Contactless cards or hotel tokens"}
+
+assistant channel=analysis:
+Format a clear answer with location, hours, pricing, plus vending and folding stations from system facts. Add a bit of friendly small talk.
+
+assistant channel=final:
+Yes—our self-service launderette is on the B2 annex corridor (past the service elevators). It’s open 06:00–23:00 with the last wash at 22:00. Pricing is Washer £3 and Dryer £2 per cycle, payable by contactless cards or hotel tokens. Detergent and softener are available from the vending machine, and there are folding stations onsite. Have a smooth laundry run!
+
+user:
+Thanks, that sounds convenient.
+
+assistant channel=analysis:
+Acknowledge small talk without tools.
+
+assistant channel=final:
+Glad it helps—enjoy your stay.
+
+user:
+Can someone monitor my clothes the whole time?
+
+assistant channel=analysis:
+Continuous monitoring isn’t described and there’s no tool covering staffing beyond brief rounds—use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking coverage. Reviewing available resources.

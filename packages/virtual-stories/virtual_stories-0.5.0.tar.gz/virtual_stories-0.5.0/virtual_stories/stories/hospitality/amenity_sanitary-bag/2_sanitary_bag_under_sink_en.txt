@@ -1,0 +1,80 @@
+"""
+Guest requests sanitary bags with specific placement; confirm availability and deliver; include small talk and one acknowledgment message.
+
+ROLES: user (guest requesting sanitary bags), assistant (front desk arranging bathroom supplies)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bathroom_supplies","description":"Check availability for sanitary bags.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_bag"]}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_bathroom_supplies","description":"Deliver bathroom supplies to a room with placement.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1},"placement":{"type":"string","enum":["bathroom_counter","under_sink"]}},"required":["room_number","item_code","quantity","placement"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Pinecrest Residences (hotel_id: pr_slc_02)
+Address: 280 S Main St, Salt Lake City, UT 84101
+Bathroom supply hours: 06:30–23:00; ETA 8–14 minutes
+Housekeeping: daily 09:00–17:00; turn-down on request
+Wi‑Fi: 300/150 Mbps; streaming optimized
+Scent: alpine pine in the lobby mornings
+Laundry: coin-op on 8th floor, 24h
+Check-in/out: 15:00 / 11:00
+
+Sanitary bag stock:
+- Packaging: opaque white sleeves; biodegradable
+- On hand: 210 sleeves
+- Placement options: bathroom_counter, under_sink
+
+user:
+Could I get three sanitary bags placed under the sink in 805?
+
+assistant channel=analysis:
+Check availability; deliver 3 under_sink to 805.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"item_code":"sanitary_bag"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_bag","on_hand":210}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"805","item_code":"sanitary_bag","quantity":3,"placement":"under_sink"}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"ticket_id":"BS-805-5521","eta_minutes":10}
+
+assistant channel=final:
+Absolutely—three sanitary bag sleeves will be placed under the sink in 805. Ticket BS-805-5521, ETA about 10 minutes.
+
+user:
+The alpine scent in the lobby is refreshing.
+
+assistant channel=analysis:
+Tie back to scent detail.
+
+assistant channel=final:
+We diffuse a light alpine pine aroma in the mornings—glad it feels refreshing.
+
+user:
+Are bathroom supplies available until 11 pm?
+
+assistant channel=analysis:
+Answer from system hours.
+
+assistant channel=final:
+Yes—bathroom supply runs operate 06:30–23:00 daily.
+
+user:
+Do you carry biodegradable trash bags for the room, too?
+
+assistant channel=analysis:
+Not in system/tools; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on room trash bags. Reviewing supply details.
+

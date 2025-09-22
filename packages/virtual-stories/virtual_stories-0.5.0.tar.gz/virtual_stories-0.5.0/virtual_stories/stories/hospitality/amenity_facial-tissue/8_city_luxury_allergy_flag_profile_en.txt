@@ -1,0 +1,88 @@
+"""
+Guest requests allergy-flagged tissues and profile update.
+Provide check, delivery, and allergy flag persistence.
+
+ROLES: user (allergy-profile guest), assistant (guest experience agent)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_tissue_inventory", "description": "Verify fragrance/dye-free premium boxes.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "tissue_type": { "type": "string", "enum": ["premium", "hypoallergenic"] }, "brand_preference": { "type": "string", "enum": ["hotel_luxury_brand", "any"] }, "quantity_boxes": { "type": "number" } }, "required": ["tissue_type"] }, "strict": true },
+  { "name": "deliver_tissue_amenity", "description": "Deliver boxes with bedside placement.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_products": { "type": "array", "items": { "type": "string" } }, "delivery_priority": { "type": "string", "enum": ["standard"] }, "special_placement": { "type": "string" } }, "required": ["room_number", "tissue_products"] }, "strict": true },
+  { "name": "update_housekeeping_notes", "description": "Persist allergy flag and brand preference.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_preference": { "type": "string" }, "restocking_frequency": { "type": "string", "enum": ["daily", "upon_request"] }, "allergy_notes": { "type": "string" } }, "required": ["room_number", "tissue_preference"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Grand Meridian Downtown (hotel_id: gmd_nyc_05)
+Address: 501 Madison Ave, New York, NY 10022
+Timezone: America/New_York
+
+Tissue Program:
+- Premium 3‑ply, fragrance/dye‑free
+- Delivery in 10–14 minutes
+- Placement at both nightstands by default
+- Daily or on‑request restocking
+- Allergy flags persist for the stay
+
+Property Notes:
+- 380 rooms; turndown 18:00–21:00
+- Espresso bar 6:00–14:00; lobby bar 17:00–23:30
+- Quiet hours 22:00–7:00; pillow menu on request
+
+user:
+Room 2806—please send 2 premium fragrance‑free boxes and note my allergy for the stay.
+
+assistant channel=analysis:
+Check fragrance/dye‑free premium; deliver 2 boxes to both nightstands; update housekeeping with allergy flag.
+
+assistant channel=commentary to=tool.check_tissue_inventory:
+{"tissue_type":"premium","brand_preference":"hotel_luxury_brand","quantity_boxes":2}
+
+tool.check_tissue_inventory channel=commentary to=assistant:
+{"available_products":["Hotel Luxury 3-ply fragrance-free"],"stock_levels":{"lux_ff":90}}
+
+assistant channel=commentary to=tool.deliver_tissue_amenity:
+{"room_number":"2806","tissue_products":["2 boxes Hotel Luxury 3-ply fragrance-free"],"delivery_priority":"standard","special_placement":"both nightstands"}
+
+tool.deliver_tissue_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"12 minutes","placement_confirmed":"both nightstands","tracking_id":"GMD2806_P2"}
+
+assistant channel=commentary to=tool.update_housekeeping_notes:
+{"room_number":"2806","tissue_preference":"Hotel Luxury 3-ply fragrance-free, both nightstands","restocking_frequency":"daily","allergy_notes":"fragrance/dye-free only"}
+
+tool.update_housekeeping_notes channel=commentary to=assistant:
+{"profile_updated":true,"restocking_scheduled":"daily","allergy_flag":"active","housekeeping_notified":true}
+
+assistant channel=final:
+All set—2 premium fragrance‑free boxes will be on both nightstands in ~12 minutes, and I’ve flagged your allergy with daily restocking for the stay.
+
+user:
+Is the lobby bar open later tonight?
+
+assistant channel=analysis:
+From system: 17:00–23:30.
+
+assistant channel=final:
+Open 17:00 to 23:30.
+
+user:
+Turndown is thoughtful here.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Our team sets water and freshened linens 18:00–21:00 nightly.
+
+user:
+Can you secure last-minute theatre tickets?
+
+assistant channel=analysis:
+Outside amenity scope; flag.
+
+assistant channel=final:
+[ATTENTION] Looping in concierge regarding theatre ticket availability.
+"""
+

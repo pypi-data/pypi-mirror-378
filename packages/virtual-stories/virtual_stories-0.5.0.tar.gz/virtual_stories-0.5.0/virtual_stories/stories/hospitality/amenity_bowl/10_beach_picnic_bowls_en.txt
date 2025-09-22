@@ -1,0 +1,65 @@
+"""
+Beach guest requests bowls for a picnic; asks if delivery to lobby is possible for pickup.
+
+ROLES: user (beachgoer), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_inventory","description":"Check bowl stock","parameters":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["item_code"],"additionalProperties":false},"strict":true},
+  {"name":"request_amenity_delivery","description":"Arrange pickup at lobby","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"quantity_map":{"type":"object","additionalProperties":{"type":"integer"}},"priority":{"type":"string","enum":["normal","express"]},"sanitized":{"type":"boolean"}},"required":["room_number","items"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Marina Cove Resort (hotel_id: mcr_sdn_01)
+Address: 1 Beachfront Ave, San Diego, CA 92109
+Timezone: America/Los_Angeles
+
+Beach Notes:
+- Bowls: porcelain 16 oz, bamboo 14 oz, stainless 18 oz
+- Delivery: 10–15 minutes to rooms; lobby pickup available
+- Re-sanitization on request
+- Beach towel hut hours: 09:00–18:00
+- Outdoor showers near lobby terrace
+
+user:
+Hi—can I get four bowls for a beach picnic and pick them up at the lobby? Room 1012.
+
+assistant channel=analysis:
+Confirm lobby pickup is available from system; check stock; schedule pickup.
+
+assistant channel=final:
+Yes—lobby pickup is available. I’ll set aside four bowls and have them re-sanitized.
+
+assistant channel=commentary to=tool.check_amenity_inventory:
+{"item_code":"bowl_stainless","quantity":4}
+
+tool.check_amenity_inventory channel=commentary to=assistant:
+{"item_code":"bowl_stainless","on_hand":19,"can_fulfill":true,"notes":"durable_for_picnic"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1012","items":["bowl_stainless"],"quantity_map":{"bowl_stainless":4},"priority":"normal","sanitized":true}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ticket_id":"MCR-PU-1012-88","pickup_location":"Lobby Desk","ready_in_minutes":6,"items":[{"code":"bowl_stainless","qty":4}],"sanitized":"re_sanitized"}
+
+assistant channel=final:
+Your pickup is set—order MCR-PU-1012-88 will be ready at the Lobby Desk in ~6 minutes.
+
+user:
+Awesome, thanks! The outdoor showers are handy after the beach.
+
+assistant channel=final:
+They’re right by the terrace—super convenient before heading back.
+
+user:
+Any beach volleyball games scheduled today?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check today’s beach activity schedule.
+

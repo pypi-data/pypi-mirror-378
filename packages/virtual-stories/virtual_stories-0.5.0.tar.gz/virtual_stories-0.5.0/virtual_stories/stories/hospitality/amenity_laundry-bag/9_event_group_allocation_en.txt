@@ -1,0 +1,63 @@
+"""
+Event group guest asks for multiple bags; assistant confirms allocation and delivers; includes chit-chat and an out-of-scope query.
+
+ROLES: user (conference attendee in room 1006 asking for 4 laundry bags), assistant (events concierge coordinating with housekeeping within allocation)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_availability","description":"Check stock","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Cascade Center Hotel — Conference Wing
+Block: Rooms 1001–1020 reserved for Summit Group
+Allocation: Laundry bags pre-allocated 3/room; extras available on request
+Turnaround: Same-day available for pickups before 09:30; next-day by 18:00
+Pickup windows: 07:00–09:30; 13:00–15:00
+Contacts: Event Concierge 4400; Housekeeping 3300
+Note: Conference Wing elevator C2 serves Floor 10
+Policy: Group code SGM must be on laundry ticket
+
+user:
+Hi, could I get four laundry bags to 1006? I’m with the Summit Group.
+
+assistant channel=analysis:
+Allocation is 3/room but extras allowed—check stock for 4 and deliver; remind guest to include group code SGM.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"laundry bag","quantity":4}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"laundry bag","available":true,"in_stock":77}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1006","amenity_name":"laundry bag","quantity":4,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"LB-1006-9099","eta_minutes":11}
+
+assistant channel=final:
+Confirmed—four laundry bags are on the way to 1006, ETA about 11 minutes. Please include group code SGM on your laundry ticket.
+
+user:
+Thanks! What are today’s pickup windows?
+
+assistant channel=final:
+Pickups run 07:00–09:30 and 13:00–15:00.
+
+user:
+How’s your day going with the event?
+
+assistant channel=final:
+Busy but smooth—appreciate you asking!
+
+user:
+Any update on tomorrow’s keynote speaker lineup?
+
+assistant channel=final:
+[ATTENTION] Event speaker details are outside the provided system context.
+

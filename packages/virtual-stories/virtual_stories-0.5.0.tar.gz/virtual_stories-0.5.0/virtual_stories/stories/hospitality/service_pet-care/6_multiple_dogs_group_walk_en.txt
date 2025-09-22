@@ -1,0 +1,129 @@
+"""
+Guest traveling with multiple dogs requesting group walking services.
+
+ROLES: user (dog breeder with three dogs of different sizes), assistant (pet services coordinator managing group dynamics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_pet_care",
+    "description": "Arrange on‑property pet walking with duration and start time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "start_time": {"type": "string"},
+        "duration_minutes": {"type": "integer", "enum": [15, 30, 45, 60]}
+      },
+      "required": ["room_number", "start_time", "duration_minutes"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_group_services",
+    "description": "Check services for multiple pets and group dynamics.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": {"type": "string", "enum": ["multi_pet", "size_separation", "pack_dynamics", "breed_specialist"]}
+      },
+      "required": ["service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Countryside Manor Resort — Expansive estate with extensive grounds for pet activities
+LOCATION: 500-acre private estate with multiple walking trails, fields, and training areas
+STAR RATING: 4.5-star luxury resort with comprehensive pet accommodation programs
+ARCHITECTURE: Historic manor house with modern pet facilities and spacious outdoor areas
+GUEST CAPACITY: 150 luxury rooms, 25 pet suites with private yards, 8 multi-pet family accommodations
+Pet Care Services:
+- Specialized multi-pet walking services with experienced handlers trained in pack dynamics
+- Professional dog walkers certified in managing groups of mixed sizes and temperaments  
+- Separate walking areas for different size categories and energy levels
+- Group rates available for multiple pets from same guest reservation
+- On‑property walks utilizing different trail systems based on group needs and abilities
+- Durations: 15/30/45/60 minutes with customized routes for group dynamics
+- Rates: $15/15 min per dog, $25/30 min per dog, $35/45 min per dog, $45/60 min per dog
+- Group discounts: 2 dogs (10% off), 3+ dogs (20% off total service)
+- Meet point: Pet services building with separate size-appropriate areas
+ESTATE GROUNDS:
+- Network of 8 different walking trails ranging from gentle paths to challenging terrain
+- Separate exercise fields for small dogs (under 30lbs) and large dogs (30lbs+)
+- Professional agility course with obstacles suitable for different skill levels
+- Dog training academy with certified instructors for breed-specific behaviors
+- Private fenced areas available for off-leash supervised play sessions
+- On-site veterinary clinic with emergency services (staffed 8:00-18:00, on-call 24/7)
+
+user:
+I'm traveling with three dogs - a Chihuahua, a Border Collie, and a Great Dane. Can one person walk all three together?
+
+assistant channel=analysis:
+Guest has three very different sized dogs - need to check multi-pet services and size considerations.
+
+assistant channel=commentary to=tool.check_group_services:
+{"service_type": "multi_pet"}
+
+tool.check_group_services channel=commentary to=assistant:
+{"service_type": "multi_pet", "available": true, "group_rates": "2 dogs 10% off, 3+ dogs 20% off", "experienced_handlers": "trained in pack dynamics", "mixed_sizes": "separate areas available if needed"}
+
+assistant channel=commentary to=tool.check_group_services:
+{"service_type": "size_separation"}
+
+tool.check_group_services channel=commentary to=assistant:
+{"service_type": "size_separation", "available": true, "fields": "small dogs under 30lbs, large dogs 30lbs+", "trails": "8 different options for various group needs"}
+
+assistant channel=final:
+Yes! Our handlers are trained in pack dynamics for mixed groups. We can walk all three together or use separate size-appropriate areas if needed, with 20% group discount.
+
+user:
+They're all well-socialized and used to walking together. I'd prefer them as a group.
+
+assistant channel=analysis:
+Owner confirms dogs are used to being together, which makes group walking easier.
+
+assistant channel=final:
+Perfect! Since they're socialized together, we can keep them as a group using our trails designed for mixed-size packs.
+
+user:
+The agility course sounds fun - do you run classes for different breeds?
+
+assistant channel=analysis:
+Chitchat about agility course - can share system info about breed-specific training and skill levels.
+
+assistant channel=final:
+Absolutely! Our dog training academy offers breed-specific agility classes with obstacles suitable for different skill levels.
+
+user:
+Can I book 45 minutes tomorrow at 11 AM from room 624?
+
+assistant channel=analysis:
+Guest wants to book multi-pet service - the standard tool doesn't handle multiple pets or group discounts.
+
+assistant channel=final:
+[ATTENTION] Let me coordinate the 45-minute group walking service for all three dogs with our specialized multi-pet handlers.
+
+user:
+What's the rate structure for three dogs?
+
+assistant channel=analysis:
+Guest asking about pricing - system shows per-dog rates with group discount but calculation needed.
+
+assistant channel=final:
+It's $35 per dog for 45 minutes, so $105 total, then 20% group discount brings it to $84 for all three dogs together.
+
+user:
+Do you have separate trails in case the Border Collie needs more exercise?
+
+assistant channel=analysis:
+Guest asking about trail options which system mentions - 8 different trails for various group needs.
+
+assistant channel=final:
+Yes, we have 8 different trails ranging from gentle paths to challenging terrain, perfect for accommodating a Border Collie's higher energy needs.

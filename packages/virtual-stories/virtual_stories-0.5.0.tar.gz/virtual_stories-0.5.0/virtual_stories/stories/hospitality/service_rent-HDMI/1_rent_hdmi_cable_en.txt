@@ -1,0 +1,112 @@
+"""
+Guest requests to rent an HDMI cable for in-room TV connection; confirm availability, place order, and arrange delivery.
+
+ROLES: user (hotel guest with a presentation need), assistant (front desk agent coordinating in-house services and logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {
+    "name": "check_inventory",
+    "description": "Check availability of rentable items and hold stock if available.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "item": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "room": {"type": "string"}
+      },
+      "required": ["hotel_id", "item", "quantity", "room"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_rental_order",
+    "description": "Create a rental order and charge or comp to room folio as configured.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "item": {"type": "string"},
+        "duration_hours": {"type": "integer", "minimum": 1},
+        "charge_code": {"type": "string", "description": "comp or a billable code"},
+        "delivery_option": {"type": "string", "enum": ["room_drop", "pick_up_at_desk"]}
+      },
+      "required": ["hotel_id", "room", "item", "duration_hours", "charge_code", "delivery_option"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_delivery",
+    "description": "Schedule runner delivery to a room with ETA.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "order_id": {"type": "string"}
+      },
+      "required": ["hotel_id", "room", "order_id"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborview Grand Boston (HVGR-01), 1 Seaport Blvd, Boston, MA 02210.
+5-star waterfront property; 42 floors; 24/7 front desk and runners.
+Check-in 3:00 PM; check-out 12:00 PM; late check-out on availability.
+Complimentary in-room HDMI cables (10 units total); no deposit; first-come, first-served; typical delivery ETA 10–15 minutes.
+Other facts: Gym 24/7 (keycard access); Business Center 7:00–22:00; In-room TVs support HDMI on input 2; Room folio comp code: COMP-IT-ACC.
+Only services explicitly listed here are available.
+
+user:
+Hi, can I borrow an HDMI cable to connect my laptop? I'm in room 1421.
+
+assistant channel=analysis:
+Confirm availability, hold one HDMI cable, then create a comped rental and schedule delivery to 1421.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"HVGR-01","item":"HDMI_cable","quantity":1,"room":"1421"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["HDMI-2871"],"notes":"Complimentary HDMI cables available; no deposit"}
+
+assistant channel=analysis:
+Availability is confirmed and one unit is on hold. Next, create a comp order and schedule delivery.
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"HVGR-01","room":"1421","item":"HDMI_cable","duration_hours":24,"charge_code":"COMP-IT-ACC","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"RNT-1421-98315","status":"created","charge":"comp","item":"HDMI_cable"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"HVGR-01","room":"1421","order_id":"RNT-1421-98315"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":12,"runner":"Kevin","order_id":"RNT-1421-98315"}
+
+assistant channel=final:
+All set—one HDMI cable is held and on the way. Order RNT-1421-98315 is comped, and Kevin will deliver to 1421 in about 12 minutes. Your TV supports HDMI on input 2 if you need it.
+
+user:
+Thanks! Also, what time is your gym open?
+
+assistant channel=final:
+The gym is open 24/7 with keycard access.
+
+user:
+Out of curiosity, can you share last quarter’s detailed sustainability audit?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

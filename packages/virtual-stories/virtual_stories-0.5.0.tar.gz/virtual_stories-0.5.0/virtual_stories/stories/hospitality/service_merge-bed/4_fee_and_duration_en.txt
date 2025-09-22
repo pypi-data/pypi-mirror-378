@@ -1,0 +1,60 @@
+"""
+Guest asks whether there’s a fee and how long it takes; schedule a merge. Include small talk and [ATTENTION].
+
+ROLES: user (cost-conscious guest), assistant (housekeeping clarifying fee policy and scheduling task)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"queue_merge","description":"Queue a merge with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"preferred":{"type":"string"}},"required":["room","preferred"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Coral Sands Dubai (CSDX-47)
+Address: Jumeirah Beach Rd, Dubai
+Merge overview:
+- Fee: included for in‑house guests; code HK-MERGE used for tracking
+- Duration: 20–30 minutes; window 10:00–18:00
+- Materials: bridge + topper + king linens
+- Safety: no straps; gap inspection done
+- Reversal on departure upon request
+Additional:
+- Team staging: L3 service corridor
+- Contact via Front Desk
+- FIFO scheduling
+- Mattress rotation excluded
+- Tools sanitized between rooms
+
+user:
+Is there a charge for merging? Can you come at 14:30 to 1612?
+
+assistant channel=analysis:
+State fee included; queue 14:30 window with ETA.
+
+assistant channel=final:
+It’s included for in‑house guests.
+
+assistant channel=commentary to=tool.queue_merge:
+{"room":"1612","preferred":"14:30"}
+
+tool.queue_merge channel=commentary to=assistant:
+{"task_id":"merge_1612_1430","eta_minutes":25}
+
+assistant channel=final:
+Booked—task merge_1612_1430 for 14:30; the merge takes about 25 minutes using a bridge, topper, and king linens.
+
+user:
+The beach view is superb.
+
+assistant channel=final:
+We’re happy you’re enjoying it.
+
+user:
+Can you also rotate the mattresses?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

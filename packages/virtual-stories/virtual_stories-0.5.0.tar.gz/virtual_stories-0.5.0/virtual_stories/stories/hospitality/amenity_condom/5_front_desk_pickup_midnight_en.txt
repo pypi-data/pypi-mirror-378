@@ -1,0 +1,49 @@
+"""
+Guest prefers sealed front-desk pickup near midnight.
+
+ROLES: user (late-night pickup), assistant (wellness concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_wellness_amenities","description":"Retrieve available personal wellness and health products.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["protection","personal_care","health_wellness","all_wellness"]}},"required":[]},"strict":true},
+  {"name":"arrange_wellness_delivery","description":"Arrange discreet delivery of personal wellness amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_method":{"type":"string","enum":["room_service_tray","housekeeping_supplies","front_desk_envelope"]},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown","next_housekeeping","specific_time"]}},"required":["room_number","items","delivery_method","delivery_timing"]},"strict":true}
+]
+```
+"""
+
+system:
+Cityline Central Hotel (hotel_id: cch_berlin)
+Address: Friedrichstrasse 55, Berlin, Germany
+Timezone: Europe/Berlin
+
+Inventory:
+- WELLNESS_PROTECTION_STANDARD
+
+user:
+Could I pick up a sealed 3‑pack at the front desk around midnight?
+
+assistant channel=analysis:
+Confirm availability and arrange specific time pickup.
+
+assistant channel=commentary to=tool.get_wellness_amenities:
+{"category":"protection"}
+
+tool.get_wellness_amenities channel=commentary to=assistant:
+{"available_products":[{"sku":"WELLNESS_PROTECTION_STANDARD"}]}
+
+assistant channel=commentary to=tool.arrange_wellness_delivery:
+{"room_number":"824","items":[{"sku":"WELLNESS_PROTECTION_STANDARD","quantity":1}],"delivery_method":"front_desk_envelope","delivery_timing":"specific_time"}
+
+tool.arrange_wellness_delivery channel=commentary to=assistant:
+{"delivery_id":"CCH-824-FD-12","pickup_window":"23:50-00:10"}
+
+assistant channel=final:
+Ready for pickup 23:50–00:10 at the front desk—sealed envelope under CCH-824-FD-12. May I note any preferences?
+
+user:
+Thanks! And compliments to housekeeping—the room is spotless.
+
+assistant channel=final:
+I’ll happily pass that along—thank you!
+

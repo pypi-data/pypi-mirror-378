@@ -1,0 +1,64 @@
+"""
+Guest reports bathroom phone keypad backlight is out; verify functionality and arrange replacement.
+
+ROLES: user (guest reporting backlight issue), assistant (front desk coordinating parts swap)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"run_remote_line_test","description":"Run remote diagnostic for room phone.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"location":{"type":"string","enum":["bathroom","desk"]}},"required":["room_number","location"]},"strict":true},
+  {"name":"create_engineering_ticket","description":"Open an engineering ticket.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"category":{"type":"string"},"priority":{"type":"string","enum":["low","medium","high","urgent"]},"note":{"type":"string"}},"required":["room_number","category","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Atlas City Center (hotel_id: acc_dallas)
+Address: 1212 Elm St, Dallas, TX 75201
+Timezone: America/Chicago
+
+Device Policy:
+1) Keypad backlight failures do not affect call function but must be replaced within 48 hours.
+2) Standard bathroom handsets use LED backlighting rated 25,000 hours.
+3) Remote tests confirm line health; visual faults are scheduled for swap.
+4) Engineering hours 06:30–22:00; parts cage audit 16:00 daily.
+5) Guests may request swap window to avoid disturbance.
+
+user:
+Hi, the bathroom phone in 1608 works, but the keypad isn’t lit. Hard to see at night.
+
+assistant channel=analysis:
+Confirm line health; open medium-priority ticket for backlight replacement; offer timing.
+
+assistant channel=commentary to=tool.run_remote_line_test:
+{"room_number":"1608","location":"bathroom"}
+
+tool.run_remote_line_test channel=commentary to=assistant:
+{"room_number":"1608","location":"bathroom","result":"ok","details":"backlight_visual_fault_only"}
+
+assistant channel=commentary to=tool.create_engineering_ticket:
+{"room_number":"1608","category":"bathroom_phone_backlight","priority":"medium","note":"Backlight out; handset functional"}
+
+tool.create_engineering_ticket channel=commentary to=assistant:
+{"ticket_id":"ENG-ACC-1608-7411","status":"open","sla_hours":48}
+
+assistant channel=final:
+Thanks for flagging this. The line is healthy; I’ve opened ticket ENG-ACC-1608-7411 to replace the backlit keypad, and we’ll schedule a convenient swap within the next 48 hours.
+
+user:
+Thanks! The lobby art is really interesting here.
+
+assistant channel=analysis:
+Small talk reply.
+
+assistant channel=final:
+Glad you enjoyed the lobby art.
+
+user:
+Could you also dim the bathroom lights remotely?
+
+assistant channel=analysis:
+Lighting control isn’t covered here; use the flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check if light dimming can be arranged.

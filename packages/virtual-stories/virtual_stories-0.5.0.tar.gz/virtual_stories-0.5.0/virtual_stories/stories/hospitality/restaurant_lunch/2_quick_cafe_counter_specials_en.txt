@@ -1,0 +1,58 @@
+"""
+Guest asks about lunch hours and a counter-service special; include small talk and [ATTENTION].
+
+ROLES: user (casual lunch guest), assistant (concierge with lunch facts)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_lunch_hours","description":"Return lunch hours for a venue.","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"}},"required":["restaurant_id"],"additionalProperties":false},"strict":true},
+  {"name":"get_specials","description":"Return today's counter specials.","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"}},"required":["restaurant_id"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+PROPERTY: Harborline Boardwalk Hotel (hotel_id: harborline_bdwk)
+LUNCH VENUE: Quayside Canteen (restaurant_id: rest_quayside_canteen)
+LUNCH: 11:45–14:30; counter service; waterfront seating
+DETAILS
+- Order kiosks with tap-to-pay
+- Cold brew on nitro; refill station by windows
+- Shade sails; misting fans (summer)
+- Gluten-aware prep zone and labeling
+- Boardwalk access via Gate B, 1 minute
+
+user:
+When’s lunch at Quayside Canteen? Any special at the counter today?
+
+assistant channel=analysis:
+Return lunch hours and specials using tools.
+
+assistant channel=commentary to=tool.get_lunch_hours:
+{"restaurant_id":"rest_quayside_canteen"}
+
+tool.get_lunch_hours channel=commentary to=assistant:
+{"hours":"11:45–14:30"}
+
+assistant channel=commentary to=tool.get_specials:
+{"restaurant_id":"rest_quayside_canteen"}
+
+tool.get_specials channel=commentary to=assistant:
+{"items":[{"name":"Lemon-herb roast chicken bowl"},{"name":"Chilled soba with sesame"}]}
+
+assistant channel=final:
+Lunch runs 11:45–14:30. Today’s counter specials: Lemon-herb roast chicken bowl; Chilled soba with sesame.
+
+user:
+Nice breeze by the windows today.
+
+assistant channel=final:
+The waterfront seating catches it—shade sails and misting fans help too.
+
+user:
+What’s the calorie count for the chicken bowl?
+
+assistant channel=final:
+[ATTENTION] Nutritional values aren’t provided in the current context.
+

@@ -1,0 +1,80 @@
+"""
+Guest requests light pads without wings; confirm availability and deliver; include small talk and acknowledgment; answer a system-context question.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check sanitary pads by absorbency and wings.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_pad"]},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"}},"required":["item_code","absorbency","with_wings"]},"strict":true},
+  {"name":"deliver_personal_care","description":"Deliver personal care items discreetly in a paper bag.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"absorbency":{"type":"string","enum":["light","regular","super"]},"with_wings":{"type":"boolean"},"quantity":{"type":"integer","minimum":1},"bag_type":{"type":"string","enum":["discreet_paper"]}},"required":["room_number","item_code","absorbency","with_wings","quantity","bag_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Silver Willow (hotel_id: sw_den_07)
+Address: 1801 Wewatta St, Denver, CO 80202
+Personal care window: 06:30–23:00; ETA 7–12 minutes
+Wi‑Fi: 300/300 Mbps; streaming OK
+Scent: light pine in winter; unscented otherwise
+Check-in/out: 15:00 / 11:00
+Gym: 24h; hydration station
+Laundry: same-day by 09:30
+
+Pads snapshot:
+- light/no_wings(18), light/with_wings(14)
+- regular/with_wings(25), super/with_wings(20)
+- Delivery: discreet_paper bag
+
+user:
+Could I get one pack of light pads without wings to 1110?
+
+assistant channel=analysis:
+Check light/no_wings; deliver 1 pack to 1110.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"item_code":"sanitary_pad","absorbency":"light","with_wings":false}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_pad","absorbency":"light","with_wings":false,"on_hand_packs":18}
+
+assistant channel=analysis:
+Proceed with delivery order.
+
+assistant channel=commentary to=tool.deliver_personal_care:
+{"room_number":"1110","item_code":"sanitary_pad","absorbency":"light","with_wings":false,"quantity":1,"bag_type":"discreet_paper"}
+
+tool.deliver_personal_care channel=commentary to=assistant:
+{"ticket_id":"PC-1110-2241","eta_minutes":8}
+
+assistant channel=final:
+Certainly—one pack of light pads without wings will arrive at 1110 in a discreet paper bag. Ticket PC-1110-2241, about 8 minutes.
+
+user:
+Do you stop deliveries at 11 pm?
+
+assistant channel=analysis:
+Answer from system window 06:30–23:00.
+
+assistant channel=final:
+Yes—deliveries run until 23:00.
+
+user:
+The lobby smelled neutral—appreciated.
+
+assistant channel=analysis:
+Link to unscented note.
+
+assistant channel=final:
+We keep the lobby unscented outside winter pine—thanks for the feedback.
+
+user:
+Do you carry disposable heating patches?
+
+assistant channel=analysis:
+Not listed; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability of heating patches. Reviewing options.
+

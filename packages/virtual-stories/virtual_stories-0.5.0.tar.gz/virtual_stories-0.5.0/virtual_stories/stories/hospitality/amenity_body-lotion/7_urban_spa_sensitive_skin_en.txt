@@ -1,0 +1,67 @@
+"""
+Guest with sensitive skin requests a soothing body lotion; asks if hypoallergenic options exist.
+
+ROLES: user (city break traveler), assistant (spa retail advisor)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_skincare_inventory","description":"Sensitive-skin body lotions","parameters":{"type":"object","properties":{"product_type":{"type":"string","enum":["body_lotion"]},"skin_type":{"type":"string","enum":["sensitive","all"]}},"required":["product_type"],"additionalProperties":false},"strict":true},
+  {"name":"check_ingredient_allergies","description":"Check for common allergens","parameters":{"type":"object","properties":{"product_id":{"type":"string"},"allergen_concerns":{"type":"array","items":{"type":"string"}}},"required":["product_id","allergen_concerns"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Canal District Urban Spa Hotel (hotel_id: cdus_ams_01)
+Address: Herengracht 250, 1016 BV Amsterdam, Netherlands
+Timezone: Europe/Amsterdam
+
+Spa Essentials:
+- Hypoallergenic line available for sensitive guests
+- In-room delivery: 09:00–21:00
+- Bicycles at concierge; spa-provided helmets on request
+- Aromatherapy in public areas; hypo rooms upon request
+- Canal-view relaxation lounge
+
+Lotion Menu (table):
+| ID | Name |
+| TULIP_SOOTHE | Tulip Soothe Body Lotion |
+| CALM_CANAL | Calm Canal Gel-Lotion |
+
+user:
+Hi! Do you have hypoallergenic body lotions? Fragrance-free is ideal.
+
+assistant channel=analysis:
+List sensitive options; check allergen for Tulip Soothe.
+
+assistant channel=commentary to=tool.get_skincare_inventory:
+{"product_type":"body_lotion","skin_type":"sensitive"}
+
+tool.get_skincare_inventory channel=commentary to=assistant:
+{"available_products":[{"id":"TULIP_SOOTHE","name":"Tulip Soothe Body Lotion","description":"Hypoallergenic"},{"id":"CALM_CANAL","name":"Calm Canal Gel-Lotion","description":"Lightweight"}]}
+
+assistant channel=commentary to=tool.check_ingredient_allergies:
+{"product_id":"TULIP_SOOTHE","allergen_concerns":["fragrance"]}
+
+tool.check_ingredient_allergies channel=commentary to=assistant:
+{"product_id":"TULIP_SOOTHE","allergen_status":"safe","ingredients_summary":"fragrance-free, hypoallergenic base"}
+
+assistant channel=final:
+Yes—Tulip Soothe is both hypoallergenic and fragrance-free. In-room delivery runs 09:00–21:00. Would you like it sent now?
+
+user:
+Yes please, and the canal-view lounge was lovely this afternoon.
+
+assistant channel=final:
+Wonderful—it’s our quietest corner for unwinding.
+
+user:
+Any local bike routes you’d suggest?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check favorite bike routes with the concierge.
+

@@ -1,0 +1,81 @@
+"""
+Guest needs late-night file folders and quick-print labels.
+Provide after-hours service confirmation and delivery.
+
+ROLES: user (startup founder), assistant (night manager covering business center operations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supply_inventory","description":"After-hours supply check.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_category":{"type":"string","enum":["folders","labels"]},"quantity_needed":{"type":"number"}},"required":["supply_category"]},"strict":true},
+  {"name":"deliver_office_supplies","description":"After-hours runner dispatch.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center"]},"urgency":{"type":"string","enum":["standard","urgent"]}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Tech House (hotel_id: sth_21)
+Address: 10 Battery St, San Francisco, CA 94111
+Timezone: America/Los_Angeles
+
+Night Ops:
+- 24/7 access; night manager authorized for supplies and label prints
+- Typical ETA: 12–18 minutes
+- Printers: STH-PRN-01 (labels), STH-PRN-02 (docs)
+- Complimentary small batches (<= 25 folders)
+- Contact: ext. 9900
+
+user:
+It's 1 AM—can I get 15 folders and a sheet of labels to 1812?
+
+assistant channel=analysis:
+Check after-hours inventory then dispatch to room 1812.
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"folders","quantity_needed":15}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"labels","quantity_needed":1}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true,"format":"tab file labels"}
+
+assistant channel=commentary to=tool.deliver_office_supplies:
+{"room_number":"1812","items":["folders_15","labels_1sheet"],"delivery_location":"guest_room","urgency":"urgent"}
+
+tool.deliver_office_supplies channel=commentary to=assistant:
+{"delivered":true,"eta":"14 minutes","runner":"night_mgr","ticket":"STH-1812-007"}
+
+assistant channel=final:
+Yes—ticket STH-1812-007. Fifteen folders and one label sheet are en route with an ETA of about 14 minutes.
+
+user:
+Is there a fee at night?
+
+assistant channel=analysis:
+Complimentary small batches per system.
+
+assistant channel=final:
+No fee—small batches up to 25 folders are complimentary even after hours.
+
+user:
+This skyline view is unreal.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Agreed—clear nights make the Bay lights pop.
+
+user:
+Can you also extend my checkout to 3 PM?
+
+assistant channel=analysis:
+Out of scope for current tools—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

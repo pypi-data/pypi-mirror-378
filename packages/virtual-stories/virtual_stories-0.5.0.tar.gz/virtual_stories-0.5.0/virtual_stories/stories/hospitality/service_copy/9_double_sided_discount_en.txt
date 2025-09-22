@@ -1,0 +1,47 @@
+"""
+Guest requests duplex B/W copies and asks about pricing; create job and state standard rates; include chitchat and ATTENTION for bulk discount policy beyond listed rates.
+
+ROLES: user (guest wanting double‑sided copies), assistant (copy attendant creating job and clarifying rates)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"create_copy_job","description":"Create a duplex copy job.","parameters":{"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"},"color":{"type":"boolean"},"paper_size":{"type":"string","enum":["A4","Letter"]},"duplex":{"type":"boolean"}},"required":["pages","color","paper_size"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeside Atrium Hotel — Business Services (Lobby West)
+Hours: 06:00–22:00
+Rates: B/W USD 0.15; Color USD 0.50; duplex available on request
+Payments: Room charge or card; receipt available
+Turnaround: 10–20 minutes depending on queue
+
+user:
+Could you do 30 pages black‑and‑white on A4, double‑sided?
+
+assistant channel=analysis:
+Create a B/W duplex job for 30 A4 pages; use tool to create and return price if supplied; confirm rates and timing.
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":30,"color":false,"paper_size":"A4","duplex":true}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-5842","price":"USD 4.50"}
+
+assistant channel=final:
+Your duplex job CPY-5842 is queued for 30 A4 B/W pages at USD 4.50. Collection is at Lobby West Business Services in about 10–20 minutes; receipts are available.
+
+user:
+Thanks—love the lake view.
+
+assistant channel=final:
+We’ll have it ready shortly.
+
+user:
+Do you offer bulk discounts over 500 pages?
+
+assistant channel=final:
+[ATTENTION] Bulk discount details aren’t available here. Checking available options.
+

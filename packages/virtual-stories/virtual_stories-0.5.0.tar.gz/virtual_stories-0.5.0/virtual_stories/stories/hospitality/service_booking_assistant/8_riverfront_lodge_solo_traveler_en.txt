@@ -1,0 +1,72 @@
+"""
+Solo traveler availability; assistant queries tool and shares results; then answers one system question. Include small talk and an [ATTENTION] request beyond system.
+
+ROLES: user (solo traveler), assistant (Riverfront Lodge desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Riverfront Lodge Boise
+Addr: 455 Greenbelt Way, Boise, ID 83702, USA
+Check‑in: 16:00 | Check‑out: 11:00
+Wi‑Fi: Included; typical 120–180 Mbps
+Breakfast: 06:30–09:30 (weekday), 07:00–10:00 (weekend)
+Parking: Free surface lot; no valet
+Laundry: Self‑serve 24/7
+Quiet Hours: 22:00–07:00
+Rooms: Standard King (25 m²), Standard Twin (25 m²), River View King (28 m²)
+
+user:
+One adult, 2025-02-10 to 2025-02-12—anything with river view?
+
+assistant channel=analysis:
+Search inventory; provide tool output only.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-02-10","check_out":"2025-02-12","adults":1,"children":0}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"RV_K","name":"River View King","rate":"USD 139/night"}]}
+
+assistant channel=final:
+River View King is available at USD 139/night. Check‑in 16:00; checkout 11:00.
+
+user:
+Nice—hope the river’s calm today.
+
+assistant channel=final:
+Greetings from Riverfront Lodge.
+
+user:
+Is parking free onsite?
+
+assistant channel=final:
+Yes—free surface lot; no valet.
+
+user:
+Could you reserve a kayak rental for me?
+
+assistant channel=final:
+[ATTENTION] Kayak reservations aren’t in the provided details. Processing your request.
+

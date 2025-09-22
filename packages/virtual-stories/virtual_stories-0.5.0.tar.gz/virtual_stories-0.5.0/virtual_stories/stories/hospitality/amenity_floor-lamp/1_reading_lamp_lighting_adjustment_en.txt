@@ -1,0 +1,146 @@
+"""
+Guest requests floor lamp positioning and lighting adjustments for room ambiance and reading comfort.
+Provide detailed lighting assistance with lamp controls and positioning options.
+
+ROLES: user (hotel guest wanting better reading light), assistant (housekeeping coordinator with lighting controls)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_room_lighting_status",
+    "description": "Get current lighting configuration for guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string", "description": "Room number" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "adjust_floor_lamp_settings",
+    "description": "Adjust floor lamp brightness, position, and bulb type.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "brightness_level": { "type": "number", "minimum": 10, "maximum": 100 },
+        "lamp_position": { "type": "string", "enum": ["reading_chair", "desk_area", "bedside_left", "bedside_right", "window_corner"] },
+        "light_temperature": { "type": "string", "enum": ["warm_2700k", "neutral_3000k", "cool_4000k", "daylight_5000k"] }
+      },
+      "required": ["room_number", "brightness_level", "lamp_position"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_additional_lamp",
+    "description": "Request additional floor lamp for guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "lamp_type": { "type": "string", "enum": ["reading_floor_lamp", "accent_floor_lamp", "adjustable_task_lamp", "decorative_floor_lamp"] },
+        "placement_preference": { "type": "string" },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "asap"] }
+      },
+      "required": ["room_number", "lamp_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Mountain Vista Lodge (hotel_id: mv_lodge_01)
+Address: 2500 Alpine Trail, Aspen, CO 81611
+Timezone: America/Denver
+
+Lighting Features:
+- Each suite includes two adjustable floor lamps with LED bulbs and dimmer controls
+- Reading lamps: 10-100% brightness with color temperature adjustment (2700K-5000K)
+- Lamp positions can be relocated: reading chair, desk area, bedside, window corner
+- Smart lighting controls integrated with room automation system
+- Additional lamps available upon request from housekeeping inventory
+
+Room Lighting Standards:
+- Reading area: recommended 70-80% brightness, warm 3000K temperature
+- Desk work: recommended 85-95% brightness, daylight 5000K temperature  
+- Evening ambiance: recommended 30-50% brightness, warm 2700K temperature
+- Bedside: recommended 40-60% brightness, neutral 3000K temperature
+
+Services:
+- Housekeeping available 7 AM - 11 PM for lamp positioning and additional requests
+- Maintenance on-call for electrical issues 24/7
+- Complimentary room lighting consultation for extended stay guests
+
+user:
+Hello! The lighting in my room isn't quite right for reading. Could you help me adjust the floor lamp?
+
+assistant channel=analysis:
+Guest needs lighting adjustment for reading. I should check current lighting status first, then help optimize the floor lamp settings.
+
+assistant channel=commentary to=tool.check_room_lighting_status:
+{"room_number": ""}
+
+assistant channel=analysis:
+I need the guest's room number to check lighting status. Let me ask for it.
+
+assistant channel=final:
+I'd be happy to help you get the perfect reading light! Could you please tell me your room number so I can check the current lighting setup?
+
+user:
+I'm in room 1205. The lamp seems dim and it's positioned awkwardly near the window.
+
+assistant channel=analysis:
+Guest is in room 1205, lamp is too dim and poorly positioned for reading. I'll check current status then adjust brightness and reposition for optimal reading comfort.
+
+assistant channel=commentary to=tool.check_room_lighting_status:
+{"room_number": "1205"}
+
+tool.check_room_lighting_status channel=commentary to=assistant:
+{"room_number": "1205", "floor_lamp_1": {"brightness": 45, "position": "window_corner", "temperature": "warm_2700k"}, "floor_lamp_2": {"brightness": 60, "position": "bedside_right", "temperature": "neutral_3000k"}}
+
+assistant channel=analysis:
+Room 1205 has a floor lamp at window corner with only 45% brightness and warm 2700K - too dim and wrong position for reading. I'll move it to reading chair area and increase brightness to 75% with neutral 3000K for optimal reading.
+
+assistant channel=commentary to=tool.adjust_floor_lamp_settings:
+{"room_number": "1205", "brightness_level": 75, "lamp_position": "reading_chair", "light_temperature": "neutral_3000k"}
+
+tool.adjust_floor_lamp_settings channel=commentary to=assistant:
+{"success": true, "room_number": "1205", "lamp_repositioned": "reading_chair", "new_brightness": 75, "temperature": "neutral_3000k", "estimated_completion": "10 minutes"}
+
+assistant channel=final:
+Perfect! I've arranged for housekeeping to move your floor lamp from the window to your reading chair area and adjusted it to 75% brightness with neutral lighting. The changes should be completed within 10 minutes for optimal reading comfort.
+
+user:
+That sounds great! I'm planning to read by the fireplace this evening - the mountains look incredible from here.
+
+assistant channel=analysis:
+Guest making pleasant conversation about the mountain views and evening reading plans. This is small talk that doesn't require tools - I can respond warmly about the lodge's mountain setting.
+
+assistant channel=final:
+The mountain views from Mountain Vista Lodge are absolutely breathtaking, especially in the evening light! The reading chair by the fireplace will be perfect for enjoying a good book with that alpine scenery.
+
+user:
+Actually, could you also help me book a helicopter tour of the mountains?
+
+assistant channel=analysis:
+Guest asking about helicopter tours which is outside my defined tools and system capabilities. I need to use the special flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources for tour options.
+
+user:
+No problem, thanks for fixing the lighting though!
+
+assistant channel=analysis:
+Guest expressing appreciation, simple acknowledgment needed.
+
+assistant channel=final:
+You're very welcome! Enjoy your reading by the fireplace tonight with the improved lighting setup.

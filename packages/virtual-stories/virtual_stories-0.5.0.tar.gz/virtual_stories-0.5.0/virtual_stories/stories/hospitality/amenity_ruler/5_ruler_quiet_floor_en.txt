@@ -1,0 +1,71 @@
+"""
+Guest requests a ruler and asks about quiet floor policy; confirm availability and deliver; include small talk and a policy acknowledgment.
+
+ROLES: user (guest reviewing proofs), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check rulers by length and material.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["ruler"]},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["item_code","length","material"]},"strict":true},
+  {"name":"deliver_stationery","description":"Deliver a ruler to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["room_number","item_code","length","material"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Gallery Hotel (hotel_id: sg_den_04)
+Address: 1200 Blake St, Denver, CO 80202
+Stationery runs: 06:45–22:15; ETA 9–14 minutes
+Quiet floors: 10–14 after 21:00 (courtesy request)
+Art program: rotating local photography in hallways
+Wi‑Fi: 250/250 Mbps; VPN optimized
+Gym: 24h with key; towels replaced hourly
+Scent: light pine in winter months
+
+Rulers on hand:
+- 15cm plastic(13), 15cm metal(7)
+- 30cm plastic(9), 30cm metal(5)
+- Sanitization: UV cabinet cycle nightly
+
+user:
+Please send a 30 cm plastic ruler to 1421.
+
+assistant channel=analysis:
+Check 30cm/plastic; deliver to 1421.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_code":"ruler","length":"30cm","material":"plastic"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":9,"item_code":"ruler","length":"30cm","material":"plastic"}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"1421","item_code":"ruler","length":"30cm","material":"plastic"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-1421-5534","eta_minutes":11}
+
+assistant channel=final:
+Done—one 30 cm plastic ruler is on its way to 1421. Ticket ST-1421-5534, about 11 minutes.
+
+user:
+Is 14 a quiet floor tonight?
+
+assistant channel=analysis:
+Answer from system quiet floors detail.
+
+assistant channel=final:
+Yes—floors 10–14 observe quiet hours after 21:00.
+
+user:
+Do you have gridded drafting paper as well?
+
+assistant channel=analysis:
+Not in the system/tools; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on drafting pads. Reviewing supply info.
+

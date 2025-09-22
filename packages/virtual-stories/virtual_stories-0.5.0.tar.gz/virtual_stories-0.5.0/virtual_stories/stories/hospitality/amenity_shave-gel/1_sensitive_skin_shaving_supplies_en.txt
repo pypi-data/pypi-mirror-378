@@ -1,0 +1,127 @@
+"""
+Guest with sensitive skin requests specialized shaving gel and grooming supplies for comfortable shaving experience.
+
+ROLES: user (guest with skin sensitivity needing gentle shaving products), assistant (spa amenity specialist with grooming product access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: The Oceanview Wellness Resort Charleston (hotel_id: owr_chs_01)
+Address: 85 Broad Street, Charleston, SC 29401
+Timezone: America/New_York
+
+Premium Grooming Collection:
+- Sensitive Skin Line: Clinique, Kiehl's, Art of Shaving sensitive formulas
+- Organic Options: Aesop, Malin+Goetz botanical shaving gels
+- Luxury Brands: Tom Ford, Acqua di Parma, L'Occitane men's grooming
+- Hypoallergenic: Fragrance-free, alcohol-free, dermatologist-tested options
+
+Shaving Product Features:
+- Sensitive gel: Aloe vera, vitamin E, glycerin-based for comfort
+- Cooling gel: Menthol-free cooling effect without irritation
+- Moisturizing cream: Rich lather for dry skin protection
+- Complete kits: Gel, aftershave balm, pre-shave oil combinations
+
+Spa Amenity Service:
+- Standard delivery: Within 30 minutes during spa operating hours
+- Express service: 15-minute delivery for urgent guest needs
+- Consultation: Skin assessment and product matching available
+
+user:
+Good morning! I have really sensitive skin and the standard hotel shaving cream is causing irritation. Do you have any gentle alternatives, maybe something with aloe or for sensitive skin?
+
+assistant channel=analysis:
+Guest needs sensitive skin shaving products. Check available gentle options, focusing on aloe-based or hypoallergenic formulas.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type": "shaving_gel", "skin_type": "sensitive", "brand_preference": "hypoallergenic"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available": true, "recommended_products": ["Clinique_Sensitive_Skin_Gel", "Kiehl's_Aloe_Vera_Formula", "Art_of_Shaving_Sensitive"], "features": "aloe_enriched, fragrance_free, alcohol_free", "complete_kits_available": true}
+
+assistant channel=analysis:
+Excellent sensitive skin options available including Kiehl's with aloe. Offer complete kit with aftershave balm for comprehensive care.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number": "pending", "products": ["Kiehl's_Aloe_Vera_Shaving_Gel", "Sensitive_Skin_Aftershave_Balm"], "delivery_window": "immediate", "include_instructions": true}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_ready": false, "reason": "room_number_required", "products_reserved": ["Kiehl's_Aloe_Vera_Shaving_Gel", "Sensitive_Skin_Aftershave_Balm"], "estimated_delivery": "15_minutes_after_room_confirmation"}
+
+assistant channel=final:
+Good morning! Perfect timing—I have excellent sensitive skin options including Kiehl's Aloe Vera Shaving Gel, which is fragrance-free and alcohol-free. I'll include a gentle aftershave balm too. What's your room number?
+
+user:
+I'm in room 1156. That Kiehl's option sounds perfect!
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number": "1156", "products": ["Kiehl's_Aloe_Vera_Shaving_Gel", "Sensitive_Skin_Aftershave_Balm"], "delivery_window": "immediate", "include_instructions": true}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled": true, "arrival_time": "14_minutes", "products_confirmed": ["Kiehl's_Aloe_Vera_Shaving_Gel_150ml", "Oceanview_Sensitive_Aftershave_Balm_100ml"], "instructions_included": "application_guide_for_sensitive_skin"}
+
+assistant channel=final:
+Excellent! Your Kiehl's Aloe Vera Shaving Gel and sensitive skin aftershave balm are heading to room 1156 now—should arrive in 14 minutes with application instructions. Much gentler than standard products!
+
+user:
+Fantastic! I really appreciate hotels that think about guests with sensitive skin. It makes such a difference.
+
+assistant channel=analysis:
+Guest expressing appreciation for accommodating skin sensitivities. Acknowledge their feedback positively.
+
+assistant channel=final:
+You're so welcome! We believe everyone deserves a comfortable stay, and sensitive skin considerations are absolutely important. It's our pleasure to help!
+
+user:
+I'm also wondering about booking a sunset sailing trip from the marina. Do you handle those arrangements?
+
+assistant channel=analysis:
+Sailing trip booking is outside grooming amenity service scope. Use special flag for external activity coordination.
+
+assistant channel=final:
+[ATTENTION] Great idea for a sunset sail! Let me research sailing options from the marina. Examining the possibilities.
+
+user:
+No rush on that. The shaving gel delivery is exactly what I needed. Thank you!
+
+assistant channel=analysis:
+Guest satisfied with grooming service and understanding about sailing inquiry. Positive conclusion response.
+
+assistant channel=final:
+Perfect! The gentle Kiehl's products should arrive any minute and will be so much better for your sensitive skin. Enjoy your comfortable shave!

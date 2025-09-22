@@ -1,0 +1,102 @@
+"""
+Guest requests a mesh shower sponge and timing; confirm availability and deliver.
+
+ROLES: user (guest before evening shower), assistant (bath amenities runner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_bath_amenities",
+    "description": "Check bath amenity availability by type.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_type": { "type": "string", "enum": ["natural_sponge", "mesh_sponge", "exfoliating_pad"] }
+      },
+      "required": ["amenity_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_bath_amenity",
+    "description": "Deliver a bath amenity to the room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "amenity_type": { "type": "string" },
+        "quantity": { "type": "integer", "minimum": 1, "maximum": 3 }
+      },
+      "required": ["room_number", "amenity_type", "quantity"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harbor Light Inn (hotel_id: hli_bos_12)
+Address: 185 Atlantic Ave, Boston, MA 02110
+Timezone: America/New_York
+
+Bath Amenities:
+- Sponge options: mesh_sponge (white), natural_sponge (Mediterranean), exfoliating_pad (gentle grit)
+- Delivery window: 8–18 minutes typical; rush available on request
+- Replacement policy: 1 complimentary replacement per stay
+- Housekeeping hours: 08:00–20:00; on-call runner 20:00–23:00
+- Extension: Dial 0 then ask for "Bath Runner"
+
+Water & Wellness:
+- Softened water in guest floors 10–18; standard elsewhere
+- Sauna: 06:00–22:00 daily
+- Pool: indoor lap pool 82°F; lane reservations via concierge
+
+user:
+Could I get a mesh shower sponge to 1412?
+
+assistant channel=analysis:
+Confirm mesh_sponge availability, then arrange one for room 1412.
+
+assistant channel=commentary to=tool.check_bath_amenities:
+{"amenity_type":"mesh_sponge"}
+
+tool.check_bath_amenities channel=commentary to=assistant:
+{"amenity_type":"mesh_sponge","on_hand":22,"estimated_delivery_minutes":12}
+
+assistant channel=commentary to=tool.deliver_bath_amenity:
+{"room_number":"1412","amenity_type":"mesh_sponge","quantity":1}
+
+tool.deliver_bath_amenity channel=commentary to=assistant:
+{"delivery_id":"BATH-DEL-1412-7731","room_number":"1412","amenity_type":"mesh_sponge","quantity":1,"eta_minutes":12}
+
+assistant channel=final:
+Confirmed—one mesh shower sponge is on its way to 1412 (BATH-DEL-1412-7731), ETA about 12 minutes.
+
+user:
+Is the sauna open right now?
+
+assistant channel=analysis:
+Answer with sauna hours from system.
+
+assistant channel=final:
+Yes, our sauna operates 06:00–22:00 daily.
+
+user:
+Thanks! By the way, any favorite seafood spots nearby?
+
+assistant channel=analysis:
+Dining recommendations aren’t in system or tools.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your seafood question. Considering options.
+
+user:
+No worries—appreciate the quick help.
+
+assistant channel=final:
+You’re very welcome—enjoy your evening.
+

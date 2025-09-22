@@ -1,0 +1,77 @@
+"""
+Late-night toothbrush request; confirm availability and note longer ETA window. Include chit-chat and [ATTENTION] for unrelated request.
+
+ROLES: user (guest needing a toothbrush after midnight), assistant (night auditor handling amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_toothbrush_stock","description":"Check adult soft availability","parameters":{"type":"object","properties":{"bristle":{"type":"string","enum":["soft"]},"size":{"type":"string","enum":["adult"]}},"required":["bristle","size"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_toothbrush","description":"Deliver toothbrush at night","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"bristle":{"type":"string"},"size":{"type":"string"}},"required":["room_number","bristle","size"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbor & Hearth Inn (hotel_id: hhi_charleston_02)
+Address: 88 East Bay St, Charleston, SC 29401, USA
+Timezone: America/New_York
+
+Amenity Operations:
+- Toothbrush types: adult soft, adult medium
+- Night window: deliveries 00:00–06:00 may take 15–25 minutes
+- Water: In-room glass bottles, locally filtered
+
+YAML Ops:
+---
+front_desk: 24_7
+valet: 06_00_23_00
+quiet_hours: "22:00-07:00"
+---
+
+JSON Night Team:
+{"staff_on_duty": ["Jade", "Marcus"], "runner":"Marcus"}
+
+CSV Nearby (spot,walk_min):
+Waterfront_Park,3
+City_Market,8
+
+user:
+Hi, it’s past midnight—could I get an adult soft toothbrush to room 714?
+
+assistant channel=analysis:
+Confirm adult soft availability; schedule delivery with night ETA.
+
+assistant channel=commentary to=tool.check_toothbrush_stock:
+{"bristle":"soft","size":"adult"}
+
+tool.check_toothbrush_stock channel=commentary to=assistant:
+{"available":true,"brand":"HarborSmile"}
+
+assistant channel=commentary to=tool.deliver_toothbrush:
+{"room_number":"714","bristle":"soft","size":"adult"}
+
+tool.deliver_toothbrush channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":18,"runner":"Marcus"}
+
+assistant channel=final:
+Absolutely—HarborSmile adult soft toothbrush is heading to room 714. Night deliveries typically take 15–25 minutes; ETA is about 18 minutes with Marcus from our night team.
+
+user:
+The glass water bottles are a nice detail.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+Thanks—we use locally filtered water in reusable glass bottles.
+
+user:
+Could you also book me a harbor tour for tomorrow afternoon?
+
+assistant channel=analysis:
+Beyond amenity scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

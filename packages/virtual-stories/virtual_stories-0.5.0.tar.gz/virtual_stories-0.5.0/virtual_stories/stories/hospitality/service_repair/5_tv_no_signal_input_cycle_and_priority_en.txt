@@ -1,0 +1,49 @@
+"""
+Guest’s TV shows no signal; asks about input cycle steps and repair priority.
+
+ROLES: user (guest with TV issue), assistant (front desk guiding basic input cycle, creating ticket, and setting priority)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"new_ticket","description":"Open TV ticket","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"issue":{"type":"string"},"priority":{"type":"string","enum":["low","normal","high","urgent"]}},"required":["hotel_id","room","issue","priority"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Atlantic Boston (ATB-09)
+Address: 200 Seaport Blvd, Boston, MA 02210, USA
+Engineering: 08:00–22:00; on-call overnight
+Response: Normal 15–30 minutes
+Triage: Suggest HDMI/Input button cycle to TV, then power-cycle set-top box
+Dispatch: Ticket required
+
+user:
+TV in 1903 says “no signal.” How do I fix the input, and can someone still come?
+
+assistant channel=analysis:
+Guide HDMI/Input cycle and set-top box power cycle; open a normal ticket.
+
+assistant channel=commentary to=tool.new_ticket:
+{"hotel_id":"ATB-09","room":"1903","issue":"TV no signal; needs input cycle","priority":"normal"}
+
+tool.new_ticket channel=commentary to=assistant:
+{"ticket_id":"ATB-ENG-712","status":"open"}
+
+assistant channel=final:
+Please press the TV’s Input/Source button to cycle through HDMI inputs, then power-cycle the set-top box for 10 seconds. I’ve opened ticket ATB-ENG-712; an engineer is queued under normal priority.
+
+user:
+The harbor breeze is nice.
+
+assistant channel=final:
+It’s refreshing near the waterfront.
+
+user:
+Can you provide the set-top box admin guide?
+
+assistant channel=final:
+[ATTENTION] Checking available resources.
+

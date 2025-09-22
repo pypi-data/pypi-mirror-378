@@ -1,0 +1,52 @@
+"""
+Two-bucket request for a suite; include chat and [ATTENTION].
+
+ROLES: user (guest 3401), assistant (amenities logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"request_amenity_delivery","description":"Deliver multiple amenity items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Seabreeze Tower (hotel_id: sbt_mia)
+Address: 77 Collins Ave, Miami Beach, FL 33139
+Timezone: America/New_York
+Suite Policy:
+- Two ice buckets available per suite on request
+- Tongs included with each bucket
+- Delivery: 11:00–23:00; ETA 12–20 min
+- Ice machines: floors 6, 12, 18
+- Contact: Service x71
+JSON: {"per_suite_limit":2}
+
+user:
+Could we get two ice buckets to 3401?
+
+assistant channel=analysis:
+Arrange two buckets normal priority.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"3401","amenity_name":"ice bucket","quantity":2,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ok":true,"eta_minutes":15,"ref":"SBT-ICE-3401-2"}
+
+assistant channel=final:
+Done—two ice buckets are on their way to 3401, ETA about 15 minutes. Ref SBT-ICE-3401-2.
+
+user:
+The ocean looks turquoise this afternoon.
+
+assistant channel=final:
+It’s especially bright under today’s sun.
+
+user:
+Can you pre-fill the buckets with ice?
+
+assistant channel=final:
+[ATTENTION] I’ll check if pre-filling is supported.
+

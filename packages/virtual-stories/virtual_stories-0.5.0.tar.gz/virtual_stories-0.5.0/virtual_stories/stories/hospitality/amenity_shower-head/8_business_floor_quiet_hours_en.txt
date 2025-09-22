@@ -1,0 +1,64 @@
+"""
+Guest on business floor wants quieter flow at night and solid pressure in morning; configure schedule.
+
+ROLES: user (business traveler), assistant (engineering coordinator with scheduling)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_shower_schedule","description":"Set quiet-hours gentle flow and morning high flow.",
+    "parameters":{"type":"object","additionalProperties":false,
+      "properties":{"room_number":{"type":"string"},"quiet_hours":{"type":"string"},"morning_boost":{"type":"string"}},
+      "required":["room_number","quiet_hours","morning_boost"]},
+    "strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Executive Tower (hotel_id: set_sea_09)
+Address: 900 5th Ave, Seattle, WA 98164
+Timezone: America/Los_Angeles
+
+Business Floor Policy:
+- Quiet hours 22:00–06:00; default gentle flow
+- Morning boost 06:00–09:00; default high flow
+- Rooms may set custom schedules upon request
+
+Water Infrastructure:
+- Pressure 50–62 PSI, stabilized by accumulator tanks
+- White-noise dampers in valves to reduce hiss
+
+user:
+Can you set 2315 to gentle flow overnight and high flow 6–8 am?
+
+assistant channel=analysis:
+Use scheduling tool to set quiet hours and morning boost windows.
+
+assistant channel=commentary to=tool.set_shower_schedule:
+{"room_number":"2315","quiet_hours":"22:00-06:00:gentle","morning_boost":"06:00-08:00:high"}
+
+tool.set_shower_schedule channel=commentary to=assistant:
+{"room_number":"2315","quiet_hours":"22:00-06:00:gentle","morning_boost":"06:00-08:00:high","applied":true}
+
+assistant channel=final:
+Scheduled: 2315 will use gentle flow from 22:00–06:00 and high flow from 06:00–08:00. You can adjust anytime.
+
+user:
+Do you have anything that reduces valve hiss?
+
+assistant channel=analysis:
+Answer from Water Infrastructure.
+
+assistant channel=final:
+Yes—we use white-noise dampers in the valves to reduce hiss.
+
+user:
+Is there heavy rain forecast tomorrow morning?
+
+assistant channel=analysis:
+Weather is beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about the weather and will review external sources.
+

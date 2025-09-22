@@ -1,0 +1,101 @@
+"""
+Guest requests a specific metal ruler for drafting; confirm availability and deliver; include small talk and one background-acknowledgment message.
+
+ROLES: user (guest doing architectural sketches), assistant (front desk coordinating stationery loans)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_stationery_inventory",
+    "description": "Check availability of rulers by length and material.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "enum": ["ruler"] },
+        "length": { "type": "string", "enum": ["15cm", "30cm"] },
+        "material": { "type": "string", "enum": ["plastic", "metal"] }
+      },
+      "required": ["item_code", "length", "material"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_stationery",
+    "description": "Deliver a ruler to a guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "length": { "type": "string", "enum": ["15cm", "30cm"] },
+        "material": { "type": "string", "enum": ["plastic", "metal"] }
+      },
+      "required": ["room_number", "item_code", "length", "material"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harbor Quay Hotel (hotel_id: hq_bos_12)
+Address: 88 Seaport Blvd, Boston, MA 02210
+Stationery window: 06:30–23:00; typical ETA 8–15 minutes
+Check-in/Check-out: 15:00 / 11:00
+Wi‑Fi: fiber 500/500 Mbps; meeting floors prioritized from 08:00–18:00
+Quiet policy: floors 18–22 designated quiet after 21:30
+Sustainability: in-room recycling, metal rulers sanitized with 70% IPA after return
+Amenities: 24h gym (floor 3), rooftop terrace 17:00–22:00 (weather permitting)
+
+Ruler inventory:
+- Lengths: 15cm, 30cm
+- Materials: plastic (clear), metal (steel edge)
+- Current stock: 15cm/plastic(12), 15cm/metal(5), 30cm/plastic(8), 30cm/metal(9)
+- Loan policy: one item per room; 24h loan then pickup
+
+user:
+Could you send a 30 cm metal ruler to room 1916?
+
+assistant channel=analysis:
+Verify 30cm/metal availability; then create a delivery to 1916.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_code":"ruler","length":"30cm","material":"metal"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":9,"item_code":"ruler","length":"30cm","material":"metal"}
+
+assistant channel=analysis:
+Proceed with delivery for 1916.
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"1916","item_code":"ruler","length":"30cm","material":"metal"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-1916-3021","eta_minutes":9}
+
+assistant channel=final:
+Absolutely—one 30 cm metal ruler is headed to 1916. Ticket ST-1916-3021, arriving in about 9 minutes.
+
+user:
+The rooftop terrace is lovely at sunset.
+
+assistant channel=analysis:
+Acknowledge the rooftop terrace hour window.
+
+assistant channel=final:
+We open the rooftop terrace 17:00–22:00—sunset makes it shine.
+
+user:
+Do you also have a parallel bar for drafting?
+
+assistant channel=analysis:
+Parallel bars aren’t in system or tools; use the attention flag.
+
+assistant channel=final:
+[ATTENTION] I’ll investigate availability. Reviewing current equipment data.
+

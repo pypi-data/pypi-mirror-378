@@ -1,0 +1,47 @@
+"""
+Guest requests delivery with a return note; schedule delivery and clarify that runners do not wait onsite; include chitchat and ATTENTION for cash tip via folio.
+
+ROLES: user (guest sending item and a note), assistant (service center arranging delivery with return instruction)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_inhouse_delivery","description":"Schedule delivery and capture note for recipient.","parameters":{"type":"object","additionalProperties":false,"properties":{"from_room":{"type":"string"},"to_room":{"type":"string"},"item":{"type":"string"},"note":{"type":"string"}},"required":["from_room","to_room","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Bayfront Plaza Hotel — Service Center
+Hours: 24/7
+ETAs: Usually 10–20 minutes
+Policy: Runners deliver and depart; they don’t wait on standby at destination
+Payments: No cash handling by Service Center; tips can be given in person
+
+user:
+Please take a phone charger to 1822 and include a note that I’ll call them at noon.
+
+assistant channel=analysis:
+Schedule delivery with a brief note; confirm ETA and runner policy.
+
+assistant channel=commentary to=tool.schedule_inhouse_delivery:
+{"from_room":"1808","to_room":"1822","item":"phone charger","note":"Caller will reach you at 12:00"}
+
+tool.schedule_inhouse_delivery channel=commentary to=assistant:
+{"delivery_id":"DLV-6979","status":"scheduled","eta_minutes":15}
+
+assistant channel=final:
+Delivery DLV-6979 is set from 1808 to 1822 with a note included; ETA is about 15 minutes. Our runners deliver and depart—they do not wait on standby.
+
+user:
+Thanks—love the bay breeze.
+
+assistant channel=final:
+We’ll update the desk when delivered.
+
+user:
+Can I add a cash tip to my room folio for the runner?
+
+assistant channel=final:
+[ATTENTION] Cash tips can’t be posted via this service. Checking available options.
+

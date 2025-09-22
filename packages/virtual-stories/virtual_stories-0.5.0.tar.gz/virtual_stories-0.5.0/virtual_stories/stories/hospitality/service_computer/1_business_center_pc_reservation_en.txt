@@ -1,0 +1,68 @@
+"""
+Guest needs a business center computer; confirm availability and reserve a slot via tool. Include small talk and a background handoff for a software installation request.
+
+ROLES: user (guest requiring a hotel computer), assistant (business center attendant managing reservations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_pc_availability",
+    "description": "List available business center PC time slots for a date.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"date":{"type":"string","format":"date"}},"required":["date"]},
+    "strict": true
+  },
+  {
+    "name": "reserve_pc_slot",
+    "description": "Reserve a specific PC time slot.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"slot_id":{"type":"string"},"last_name":{"type":"string"}},"required":["slot_id","last_name"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Skyline Convention Hotel — Business Center (Level 2)
+Hours: 07:00–22:00
+Equipment: 8 PCs, laser printer, USB access enabled
+Session duration: 45 minutes per booking
+
+user:
+Do you have a computer I can use today (2025-09-01)?
+
+assistant channel=analysis:
+Check availability for the date, then reserve an offered slot upon request.
+
+assistant channel=commentary to=tool.get_pc_availability:
+{"date":"2025-09-01"}
+
+tool.get_pc_availability channel=commentary to=assistant:
+{"slots":[{"slot_id":"PC-2025-09-01-09:00","time":"09:00–09:45"},{"slot_id":"PC-2025-09-01-10:00","time":"10:00–10:45"}]}
+
+assistant channel=final:
+We have availability at 09:00–09:45 and 10:00–10:45. Sessions are 45 minutes, and the Business Center runs 07:00–22:00 on Level 2. Would you like me to reserve a slot under your name?
+
+user:
+Yes, please book 10:00 under Chen.
+
+assistant channel=commentary to=tool.reserve_pc_slot:
+{"slot_id":"PC-2025-09-01-10:00","last_name":"Chen"}
+
+tool.reserve_pc_slot channel=commentary to=assistant:
+{"status":"confirmed","slot_id":"PC-2025-09-01-10:00","time":"10:00–10:45"}
+
+assistant channel=final:
+You’re confirmed for 10:00–10:45 under Chen. PCs are on Level 2; printing is available via the Business Center laser printer.
+
+user:
+Thanks—hope your day is going well.
+
+assistant channel=final:
+Appreciate it—enjoy your session.
+
+user:
+Thanks! Could you also install Adobe Premiere on the PC?
+
+assistant channel=final:
+[ATTENTION] Software installation isn’t available through these resources. Looking up the latest information.

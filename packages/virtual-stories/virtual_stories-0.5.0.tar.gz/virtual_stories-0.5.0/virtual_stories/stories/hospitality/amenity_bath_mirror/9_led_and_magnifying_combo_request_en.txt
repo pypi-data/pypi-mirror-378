@@ -1,0 +1,103 @@
+"""
+Guest asks for both LED and magnifying mirrors; verify both stocks and deliver. Include small talk, an in-context question, and an [ATTENTION] off-property booking request.
+
+ROLES: user (detail-oriented guest), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"inv_multi","description":"Check inventory for multiple items (one by one).","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string"}},"required":["item_code"]},"strict":true},
+  {"name":"send_multi","description":"Send amenity to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1}} ,"required":["room_number","item_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Quayside Pavilion (hotel_id: qp_ca_84)
+Address: 500 Embarcadero, San Diego, CA 92101
+Timezone: America/Los_Angeles
+Amenity Window: 08:00–22:00
+
+Mirror Stock:
+- bath_mirror_magnifying: 6
+- table_led_mirror: 4
+
+Spaces:
+1) Bay-view esplanade
+2) Coffee kiosk 06:30–12:00
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Maritime art wall
+
+Accessibility:
+- Step-free access; ADA rooms available
+- Vanity stools available on request
+
+Sustainability:
+- Water refill stations; recycling on each floor
+
+Transportation:
+- Light rail stop within two blocks; rideshare pickup on Embarcadero
+
+user:
+Could I get one LED mirror and one magnifying mirror to room 1116?
+
+assistant channel=analysis:
+Check both items individually, then send each 1 unit.
+
+assistant channel=commentary to=tool.inv_multi:
+{"item_code":"table_led_mirror"}
+
+tool.inv_multi channel=commentary to=assistant:
+{"item_code":"table_led_mirror","on_hand":4}
+
+assistant channel=commentary to=tool.inv_multi:
+{"item_code":"bath_mirror_magnifying"}
+
+tool.inv_multi channel=commentary to=assistant:
+{"item_code":"bath_mirror_magnifying","on_hand":6}
+
+assistant channel=commentary to=tool.send_multi:
+{"room_number":"1116","item_code":"table_led_mirror","quantity":1}
+
+tool.send_multi channel=commentary to=assistant:
+{"ticket":"QP-1116-LED-771","eta_minutes":13}
+
+assistant channel=commentary to=tool.send_multi:
+{"room_number":"1116","item_code":"bath_mirror_magnifying","quantity":1}
+
+tool.send_multi channel=commentary to=assistant:
+{"ticket":"QP-1116-MAG-772","eta_minutes":13}
+
+assistant channel=final:
+Both mirrors are on the way to 1116: LED (QP-1116-LED-771) and magnifying (QP-1116-MAG-772). ETA is about 13 minutes.
+
+user:
+Is the coffee kiosk open at 11?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—the coffee kiosk runs 06:30–12:00.
+
+user:
+The maritime art wall is striking.
+
+assistant channel=analysis:
+Chit-chat referencing spaces.
+
+assistant channel=final:
+It’s a distinctive part of the lobby.
+
+user:
+Could you book a bay sailing lesson for this afternoon?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] Accessing relevant resources.
+
+user:
+Appreciated!

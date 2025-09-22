@@ -1,0 +1,51 @@
+"""
+AED standby for terrace event; confirm max duration and supervision; include small talk and [ATTENTION] query.
+
+ROLES: user (terrace event host), assistant (duty manager arranging AED standby with Security placement)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_aed","description":"Reserve AED for supervised on-property standby.","parameters":{"type":"object","additionalProperties":false,"properties":{"event_space":{"type":"string"},"start_time":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":8}},"required":["event_space","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Skyline Vista Hotel
+Policy Summary:
+- AED units (2) available; Security places and retrieves; on-property only.
+- Rate: $26/hour; max 8 hours; briefing required.
+- Security Office: Lobby level next to Bell Desk.
+Spaces: Sky Terrace, Horizon Ballroom, Cloud Salon.
+
+user:
+Book AED standby on Sky Terrace from 17:00 for 6 hours.
+
+assistant channel=analysis:
+Reserve AED and reiterate terms.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"Sky Terrace","start_time":"17:00","duration_hours":6}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_sv_510","hourly_rate":26,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+Reserved AED standby on Sky Terrace 17:00 for 6 hours (aed_sv_510). Security will place and brief; rate is $26/hour, and units remain on property.
+
+user:
+Sunset there is gorgeous.
+
+assistant channel=final:
+Security is on the lobby level next to the Bell Desk for deployment and return.
+
+user:
+Can you provide written medical clearance for our performers?
+
+assistant channel=analysis:
+Medical clearance is not provided; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Checking available options regarding medical clearance documents.
+

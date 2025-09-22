@@ -1,0 +1,73 @@
+"""
+Guest requests cuticle nipper and softening oil for dry hands after flights.
+Provide cuticle tools, oil, and delivery ETA.
+
+ROLES: user (frequent flyer with dry cuticles), assistant (guest services providing cuticle care tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_grooming_supplies","description":"Check cuticle care tools and oils.","parameters":{"type":"object","properties":{"tool_type":{"type":"string","enum":["cuticle_tools"]},"quality_level":{"type":"string","enum":["premium"]}},"required":["tool_type"]},"strict":true},
+  {"name":"deliver_grooming_tools","description":"Deliver cuticle tools and oils.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"tools_requested":{"type":"array","items":{"type":"object","properties":{"tool_name":{"type":"string"},"quality":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_priority":{"type":"string","enum":["standard","urgent"]}},"required":["room_number","tools_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Golden Dunes Beach Resort (hotel_id: gdb_goa_61)
+Address: Candolim Beach Rd, Goa 403515, India
+Timezone: Asia/Kolkata
+
+Cuticle Care:
+- Precision cuticle nippers; rounded tips
+- Dual‑end pushers; stainless
+- Softening oil (unscented); travel vial
+- Healing balm; shea + vitamin E
+- UV‑C sanitized tools; sealed
+
+Service Window:
+- Delivery 10 AM–11 PM; urgent available
+- Typical ETA 9–13 minutes for Beach Wing
+- Complimentary for guests
+- Microfiber towel included
+- Tool swap if uncomfortable
+
+user:
+Hello, room B217. Do you have cuticle nippers and some softening oil?
+
+assistant channel=analysis:
+Check cuticle tools and oil; arrange delivery to B217.
+
+assistant channel=commentary to=tool.check_grooming_supplies:
+{"tool_type":"cuticle_tools","quality_level":"premium"}
+
+tool.check_grooming_supplies channel=commentary to=assistant:
+{"available_tools":["cuticle_nipper_precision","cuticle_pusher_dual"],"oils":["softening_oil_unscented"],"sanitized":"UV-C"}
+
+assistant channel=commentary to=tool.deliver_grooming_tools:
+{"room_number":"B217","tools_requested":[{"tool_name":"cuticle_nipper_precision","quality":"premium","quantity":1},{"tool_name":"softening_oil_unscented","quality":"premium","quantity":1}],"delivery_priority":"standard"}
+
+tool.deliver_grooming_tools channel=commentary to=assistant:
+{"service_id":"GDB-GOA-CT-11","eta":"11 minutes","staff":"Anika","items":["cuticle_nipper_precision","softening_oil_unscented","microfiber_towel"],"sealed":true}
+
+assistant channel=final:
+Yes—cuticle nippers and unscented softening oil are on the way to B217 in about 11 minutes, sealed and UV‑C sanitized.
+
+user:
+Is there a balm included?
+
+assistant channel=analysis:
+Answer from Cuticle Care list.
+
+assistant channel=final:
+Yes—our healing balm (shea + vitamin E) is available on request; I can include it with your set.
+
+user:
+Any seafood shacks you recommend?
+
+assistant channel=analysis:
+Out of scope; ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

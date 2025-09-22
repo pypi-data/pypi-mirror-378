@@ -1,0 +1,57 @@
+"""
+Guest requests extra laundry bags and briefly chats.
+
+ROLES: user (guest in room 1911 requesting two laundry bags), assistant (concierge arranging amenity delivery and noting service details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check if amenity is available and counts","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Send amenity to a room","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Meridian Galleria — West Tower
+Room: 1911 (Grand Deluxe)
+Laundry service: Same-day pickup by 10:00; return by 19:00
+Amenity policy: Laundry bags provided on request; up to 4 per night per room
+Hours: 06:30–23:00
+SLA floors 16–20: 12–20 minutes
+
+user:
+Hi, could I get two more laundry bags to 1911?
+
+assistant channel=analysis:
+Verify availability and deliver 2 laundry bags to room 1911.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"laundry bag","quantity":2}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"laundry bag","available":true,"in_stock":60}
+
+assistant channel=analysis:
+Proceed with a normal delivery to 1911.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1911","amenity_name":"laundry bag","quantity":2,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"LB-1911-5542","eta_minutes":13}
+
+assistant channel=final:
+All set—two laundry bags are scheduled to arrive at room 1911 in about 13 minutes. If you need same-day service, pickups before 10:00 return by 19:00.
+
+user:
+Appreciate it! The hallway art is cool.
+
+assistant channel=final:
+Glad you’re enjoying your stay—just let me know if you need anything else.
+
+user:
+What’s the exact fabric composition of the laundry bags?
+
+assistant channel=final:
+[ATTENTION] Cross-referencing sources.

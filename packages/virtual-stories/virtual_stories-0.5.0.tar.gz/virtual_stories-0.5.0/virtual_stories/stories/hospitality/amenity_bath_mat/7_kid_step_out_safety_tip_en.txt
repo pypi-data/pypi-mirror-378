@@ -1,0 +1,86 @@
+"""
+Guest asks for a mat and placement safety tips; verify inventory and deliver. Include chit-chat, an in-context safety answer, and an [ATTENTION] item.
+
+ROLES: user (guest), assistant (front desk with amenity tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"inv","description":"Inventory query by SKU.","parameters":{"type":"object","additionalProperties":false,"properties":{"sku":{"type":"string"}},"required":["sku"]},"strict":true},
+  {"name":"deliver","description":"Deliver amenity to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"sku":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","sku","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Granite Promenade (hotel_id: tgp_nh_05)
+Address: 55 Mill Wharf Rd, Portsmouth, NH 03801
+Timezone: America/New_York
+Check-in/Out: 15:00 / 11:00
+Amenity Runs: 07:00–22:00
+
+Bath Safety & Linens:
+- bath_mat, bath_mat_non_slip
+- Safety: place on dry floor outside the tub; wipe excess water
+- Typical ETA: 10–16 minutes
+
+Public Spaces:
+1) Harbor Walkway with granite benches
+2) Tea Library nook in the lobby
+3) Fitness studio with rowing ergometers
+4) Evening tea service 17:00–19:00
+5) Quiet hours 22:00–07:00
+
+Dining:
+- Tea service 17:00–19:00; light bites in the lobby
+
+Accessibility:
+- Grab bars on request; some rooms with step-in showers
+
+Design:
+- Granite, brass, and nautical accents throughout
+
+Sustainability:
+- Recycling on each floor; towel reuse program
+
+user:
+Could you send a bath mat to 305? Also, what’s the safest way to place it for kids stepping out?
+
+assistant channel=analysis:
+Check inventory, deliver 1 mat, then provide safety tip from system.
+
+assistant channel=commentary to=tool.inv:
+{"sku":"bath_mat"}
+
+tool.inv channel=commentary to=assistant:
+{"sku":"bath_mat","on_hand":21}
+
+assistant channel=commentary to=tool.deliver:
+{"room":"305","sku":"bath_mat","qty":1}
+
+tool.deliver channel=commentary to=assistant:
+{"ticket":"TGP-DEL-305-884","eta_minutes":12}
+
+assistant channel=final:
+One bath mat is on the way to 305 (ticket TGP-DEL-305-884), about 12 minutes. For safety, place it on a dry floor just outside the tub and wipe excess water.
+
+user:
+The Tea Library nook is charming.
+
+assistant channel=analysis:
+Small talk referencing public spaces.
+
+assistant channel=final:
+It’s a cozy spot—the evening tea service there runs from 17:00 to 19:00.
+
+user:
+Can you purchase a specific brand of bath mat for me to take home?
+
+assistant channel=analysis:
+Out of scope for tools/system; use flag.
+
+assistant channel=final:
+[ATTENTION] Investigating potential answers.
+
+user:
+Understood—thanks.

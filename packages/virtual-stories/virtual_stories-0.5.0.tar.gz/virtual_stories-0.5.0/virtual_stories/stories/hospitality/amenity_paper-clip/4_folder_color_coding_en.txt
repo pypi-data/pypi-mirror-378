@@ -1,0 +1,64 @@
+"""
+Guest needs color-coded filing and various clip sizes for organizing invoices.
+
+ROLES: user (guest sorting invoices), assistant (supplies liaison managing color coding kits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"inventory_lookup","description":"Lookup color folders and clip sizes.","parameters":{"type":"object","additionalProperties":false,"properties":{"color":{"type":"string"},"size":{"type":"string"}},"required":[]},"strict":true},
+  {"name":"queue_delivery","description":"Queue a supply delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"bundle":{"type":"string"}},"required":["room","bundle"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Rivergate Conference Hotel (hotel_id: rgh_atl_12)
+Address: 2 Canal St NW, Atlanta, GA 30313
+Timezone: America/New_York
+Business Hub: 06:00–22:00; Delivery SLA: 12–18 minutes
+Included (conference rate): color folders (red/blue/green), paper clips (assorted), index tabs
+Contact: Hub x5520
+
+user:
+I need green folders and a mix of clip sizes to 816.
+
+assistant channel=analysis:
+Confirm green folders and mixed clips; schedule delivery bundle.
+
+assistant channel=commentary to=tool.inventory_lookup:
+{"color":"green","size":"mixed"}
+
+tool.inventory_lookup channel=commentary to=assistant:
+{"in_stock":true,"folders":{"green":40},"clips":{"small":60,"large":30}}
+
+assistant channel=analysis:
+Items in stock; prepare “invoice_sorting_bundle”.
+
+assistant channel=commentary to=tool.queue_delivery:
+{"room":"816","bundle":"invoice_sorting_bundle"}
+
+tool.queue_delivery channel=commentary to=assistant:
+{"accepted":true,"eta_min":14}
+
+assistant channel=final:
+All set—green folders and a mix of small/large paper clips are queued as the invoice sorting bundle to 816, ETA about 14 minutes.
+
+user:
+Nice lobby plants here.
+
+assistant channel=analysis:
+Keep it light without inventing details.
+
+assistant channel=final:
+Rivergate’s conference-level ambiance makes organizing a bit calmer.
+
+user:
+Can you arrange a private riverboat cruise tonight?
+
+assistant channel=analysis:
+Out of scope; apply attention.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

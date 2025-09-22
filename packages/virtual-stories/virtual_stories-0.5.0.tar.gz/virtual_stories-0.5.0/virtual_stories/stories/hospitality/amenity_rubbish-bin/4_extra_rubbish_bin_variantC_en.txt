@@ -1,0 +1,74 @@
+"""
+Guest needs a compact 6 L lidded bin by the bedside with standard liner; verify and schedule; include small talk and an [ATTENTION] request.
+
+ROLES: user (guest), assistant (guest services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bin_availability","description":"Check bin stock by type.","parameters":{"type":"object","properties":{"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]}},"required":["bin_type"],"additionalProperties":false},"strict":true},
+  {"name":"request_additional_bin","description":"Request bin delivery with placement and liner.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]},"placement":{"type":"string","enum":["bathroom","bedside","desk"]},"liner_type":{"type":"string","enum":["standard","compostable"]}},"required":["room_number","bin_type","placement","liner_type"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Venue: Pinecrest Galleries Hotel (hotel_id: pgh_den_33)
+Address: 900 Blake St, Denver, CO 80205
+Housekeeping service: 08:00–21:00; ETA 10–16 minutes
+
+Bins
+compact_6L_lid(7)
+standard_12L_open(6)
+Liners: standard, compostable
+
+Property details
+- Check-in 16:00; Check-out 12:00
+- Gallery lights dim to 40% at 21:30
+- Ice buckets at elevator lobbies
+- Night security tour every hour
+- Lobby fragrance: pine-resin
+- Languages: EN
+
+user:
+Could I get a compact bin with a lid by the bedside in 1205, standard liner?
+
+assistant channel=analysis:
+Check compact_6L_lid availability; deliver to bedside with standard liner for room 1205.
+
+assistant channel=commentary to=tool.check_bin_availability:
+{"bin_type":"compact_6L_lid"}
+
+tool.check_bin_availability channel=commentary to=assistant:
+{"available":true,"bin_type":"compact_6L_lid","on_hand":7}
+
+assistant channel=analysis:
+Place delivery request.
+
+assistant channel=commentary to=tool.request_additional_bin:
+{"room_number":"1205","bin_type":"compact_6L_lid","placement":"bedside","liner_type":"standard"}
+
+tool.request_additional_bin channel=commentary to=assistant:
+{"ticket_id":"HK-1205-7709","eta_minutes":12}
+
+assistant channel=final:
+Added—a compact 6 L lidded bin will be placed bedside in 1205 with a standard liner. Ticket HK-1205-7709, ETA about 12 minutes.
+
+user:
+The lobby smells like a pine forest.
+
+assistant channel=analysis:
+Use property details.
+
+assistant channel=final:
+That’s our pine‑resin lobby fragrance.
+
+user:
+Can I get a 20 L bin instead?
+
+assistant channel=analysis:
+Only 6 L and 12 L types defined; 20 L not listed—flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking if 20 L bins are available. Reviewing options.
+

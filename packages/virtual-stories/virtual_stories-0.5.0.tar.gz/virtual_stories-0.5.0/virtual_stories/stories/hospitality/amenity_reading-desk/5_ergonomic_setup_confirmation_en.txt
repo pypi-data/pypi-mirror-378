@@ -1,0 +1,61 @@
+"""
+Guest wants assurance about chair ergonomics and desk lamp specs; asks about upgrade cost and does small talk.
+
+ROLES: user (Remote worker.), assistant (Front desk knowledgeable about features.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "find_available_room",
+    "description": "Finds an available room with specific features.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "feature": {"type": "string"},
+        "start_date": {"type": "string", "format": "date"},
+        "end_date": {"type": "string", "format": "date"}
+      },
+      "required": ["feature", "start_date", "end_date"]
+    }
+  }
+]
+```
+"""
+
+system:
+Property: Meridian Academic House
+Desk Availability: Reading desks in Work Suite and Executive floors
+Lamp: Warm 2700K dimmable; task lamp on request
+Chair: Ergonomic, adjustable
+Upgrade: Complimentary if desk required
+Quiet Hours: 10pm–7am
+Contact: 0
+
+user:
+Do you have a room with a proper desk and ergonomic chair for tonight?
+
+assistant channel=analysis:
+Search for reading_desk feature for tonight. Then state chair and lamp specs and upgrade policy.
+
+assistant channel=commentary to=tool.find_available_room:
+{"feature": "reading_desk", "start_date": "2025-09-05", "end_date": "2025-09-06"}
+
+tool.find_available_room channel=commentary to=assistant:
+{"rooms": [{"room_number": "1122", "room_type": "Work Suite", "features": ["reading_desk"]}]}
+
+assistant channel=final:
+Yes—Work Suite 1122 has a reading desk. The chair is ergonomic and adjustable; the lamp is warm 2700K and dimmable. If the desk is essential for work, the upgrade is complimentary.
+
+user:
+Thanks—busy lobby today?
+
+assistant channel=final:
+Lively, but we’ll set you up quickly.
+
+user:
+[ATTENTION] Could you reserve a boardroom for tomorrow?
+
+assistant channel=final:
+I don’t have boardroom reservations in my system. I can confirm the desk-equipped suite for you.
+

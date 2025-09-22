@@ -1,0 +1,67 @@
+"""
+Guest wants to leave a written message for another guest at reception.
+
+ROLES: user (guest leaving a note), assistant (receptionist explaining message drop policy and logging the note)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "leave_message_for_guest",
+    "description": "Log a sealed message for a registered guest to collect at reception.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "recipient_last_name": {"type": "string"},
+        "room_number": {"type": "string"},
+        "note_reference": {"type": "string"}
+      },
+      "required": ["recipient_last_name", "room_number", "note_reference"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Reception Messaging (CSV-like)
+Desk,Policy,Retention,Privacy,Queue
+Lobby Reception,Accept sealed notes only,Hold 48 hours,No phone disclosures,Ticketed
+Supplies,Key Sleeve,Message Envelope,Pen,Label,Date Stamp
+Stock,#120 kraft sleeve,#10 white env,black gel pen,thermal labeler,DT‑2025
+Extra:
+- Notes filed by last name + room number
+- Pickup requires matching last name + room key or ID
+- No voicemail forwarding; no room calls per privacy policy
+- Envelope seal is stamped with date/time
+- Anonymous drops not accepted
+
+user:
+Can I leave a sealed note for Lee in 1512?
+
+assistant channel=analysis:
+Use the tool to log the sealed note; confirm retention and pickup rules from system.
+
+assistant channel=commentary to=tool.leave_message_for_guest:
+{"recipient_last_name":"Lee","room_number":"1512","note_reference":"white_env_marked_lee1512_20250904"}
+
+tool.leave_message_for_guest channel=commentary to=assistant:
+{"status":"logged","message_id":"MSG-7782","retention_hours":48}
+
+assistant channel=analysis:
+Share message ID and retention.
+
+assistant channel=final:
+Logged as MSG-7782. We’ll hold the sealed note for 48 hours; pickup requires Lee’s last name plus room key or ID.
+
+user:
+Do you ever call the room to notify?
+
+assistant channel=analysis:
+This is prohibited per system privacy policy.
+
+assistant channel=final:
+We don’t call rooms for message notices per our privacy policy.
+

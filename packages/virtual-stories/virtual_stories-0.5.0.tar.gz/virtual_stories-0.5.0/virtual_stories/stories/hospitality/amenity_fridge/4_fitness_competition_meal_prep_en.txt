@@ -1,0 +1,109 @@
+"""
+Athlete requests mini-fridge for meal prep containers; confirm capacity, temp, and delivery. Include chitchat and one ATTENTION item.
+
+ROLES: user (athlete guest), assistant (amenities dispatcher)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "fridge_check",
+    "description": "Confirm availability and specs for performance-meal storage.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "containers": { "type": "integer" }
+      },
+      "required": ["room_number","containers"]
+    },
+    "strict": true
+  },
+  {
+    "name": "fridge_deliver",
+    "description": "Deliver specified fridge model for meal prep storage.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "model": { "type": "string" },
+        "priority": { "type": "string", "enum": ["standard","urgent"] }
+      },
+      "required": ["room_number","model","priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Skyline Athletic Hotel (hotel_id: SAH_chi_04)
+Address: 455 North Lakeshore Dr, Chicago, IL 60611
+Timezone: America/Chicago
+
+Specs:
+- Capacity baseline: 48 L (fits 8 meal-prep containers 1L)
+- Temp range: 3–9°C | Noise: 33 dB | Energy: 120 kWh/yr
+- Models: SAH-48L, SAH-58L (tall)
+- Delivery: 24/7 for athletes week of events
+- Fee: Waived for registered competitors
+
+Facilities Snapshot:
+Gym: 24h access | Ice bath bay 06:00–22:00 | Track shuttle hourly
+
+Codes: ATH_FRIDGE_WAIVE, QUIET_33DB, SAH_EVENT_WEEK
+
+user:
+Hi, I’m competing tomorrow—could I get a fridge for 6 meal containers in room 2103?
+
+assistant channel=analysis:
+Check capacity fit for 6 containers; SAH-48L should work. Verify and deliver urgent.
+
+assistant channel=commentary to=tool.fridge_check:
+{"room_number":"2103","containers":6}
+
+tool.fridge_check channel=commentary to=assistant:
+{"available":true,"recommended":"SAH-48L","fits":8,"fee_waived":true}
+
+assistant channel=analysis:
+Proceed with urgent delivery of SAH-48L.
+
+assistant channel=commentary to=tool.fridge_deliver:
+{"room_number":"2103","model":"SAH-48L","priority":"urgent"}
+
+tool.fridge_deliver channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":9,"runner":"mara","ticket":"SAH-2103-771"}
+
+assistant channel=final:
+Done—SAH-48L is heading to 2103 now. It fits up to 8 standard 1L containers. Fee is waived for competitors. ETA ~9 minutes (runner Mara, ticket SAH-2103-771).
+
+user:
+Is it quiet enough to sleep?
+
+assistant channel=analysis:
+Answer from Specs: 33 dB.
+
+assistant channel=final:
+Yes—33 dB, designed for quiet overnight use.
+
+user:
+The lakefront looks amazing tonight.
+
+assistant channel=analysis:
+Chitchat acknowledgment grounded in address context.
+
+assistant channel=final:
+It’s a beautiful stretch along Lakeshore—many guests enjoy a pre-race stroll there.
+
+user:
+Can you secure me a late pool slot at 11 PM for an ice bath?
+
+assistant channel=analysis:
+Pool/ice bath access outside hours not defined for scheduling here—flag ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability for a late ice bath slot.
+

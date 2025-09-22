@@ -1,0 +1,59 @@
+"""
+Guest double‑checks refund method and after‑hours return, then rents. Include small talk and an [ATTENTION] query.
+
+ROLES: user (guest clarifying logistics), assistant (front desk confirming refund method and after‑hours process, issuing order)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"set_order","description":"Set handset order with after‑hours return noted","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"hours":{"type":"integer"},"return_point":{"type":"string"}},"required":["hotel_id","room","hours","return_point"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Redwood Conference Lodge SF (RCLS-09)
+Address: 401 Market St, San Francisco, CA 94105
+Key terms:
+- $18/day incl. $7 credit; charge code RENT-PHONE
+- Deposit $50; refund to original payment method on return
+- Hours: Concierge 08:00–22:00; Front Desk 24/7 handles after‑hours returns
+- Scope: Local calls; no data; SIM nano
+Extras:
+- Inventory 10 units (RCL-PHN-71…80)
+- Pickup: Concierge shelf behind column C; after hours Front Desk
+- Accessories: USB‑C charger
+- Device languages: EN only
+- Data wipe on return
+
+user:
+Will the deposit go back to my card if I return it at 23:30? Room 1220.
+
+assistant channel=analysis:
+Answer refund method applies regardless of hour; then set order with after‑hours return point.
+
+assistant channel=final:
+Yes—the deposit is refunded to the original payment method, and Front Desk accepts returns after 22:00.
+
+assistant channel=commentary to=tool.set_order:
+{"hotel_id":"RCLS-09","room":"1220","hours":24,"return_point":"Front Desk"}
+
+tool.set_order channel=commentary to=assistant:
+{"order_id":"PHN-1220-98","serial":"RCL-PHN-74"}
+
+assistant channel=final:
+Order PHN-1220-98 is ready with unit RCL-PHN-74. Pick up at the Concierge shelf behind column C; daily rate is $18 with $7 credit.
+
+user:
+Nice lobby woodwork.
+
+assistant channel=final:
+Thanks for the kind words.
+
+user:
+Can you export my call logs to email?
+
+assistant channel=final:
+[ATTENTION] Evaluating options.
+

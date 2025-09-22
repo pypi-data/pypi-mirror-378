@@ -1,0 +1,67 @@
+"""
+Executive floor guest requests velvet scrunchies; includes timing Q&A and an outside-scope question.
+
+ROLES: user (guest in 2708), assistant (executive lounge concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check amenity stock.","parameters":{"type":"object","properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Grand Meridian — Executive Floors (26–30)
+Amenity: velvet scrunchies (onyx/navy)
+Delivery SLA: 10–15 min (exec floors)
+Hours: 07:00–23:00
+Limit: 6/night
+Contacts: Exec Lounge x88; Concierge x0
+
+user:
+Hello—2708. Could I get 2 velvet scrunchies?
+
+assistant channel=analysis:
+Check stock; deliver 2 to 2708 priority normal.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"velvet scrunchies","quantity":2}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"available":true,"in_stock":22}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2708","amenity_name":"velvet scrunchies","quantity":2,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"GM-2708-VEL-02","eta_minutes":11}
+
+assistant channel=final:
+Done—2 velvet scrunchies are heading to 2708. ETA ~11 minutes.
+
+user:
+Is delivery faster on executive floors?
+
+assistant channel=analysis:
+System: SLA 10–15 min exec floors.
+
+assistant channel=final:
+Yes—executive floors have a 10–15 minute SLA.
+
+user:
+Skyline looks sharp tonight.
+
+assistant channel=final:
+Enjoy the view.
+
+user:
+Any lounge mixology class this evening?
+
+assistant channel=analysis:
+Not in system.
+
+assistant channel=final:
+[ATTENTION] I’ll check for lounge events.
+

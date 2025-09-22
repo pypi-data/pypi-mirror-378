@@ -1,0 +1,64 @@
+"""
+Guest reports frayed bathroom phone coil cord; log safety note and arrange temporary replacement handset.
+
+ROLES: user (guest noticing frayed cord), assistant (front desk coordinating replacement)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"log_safety_issue","description":"Log a minor safety issue for engineering.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"issue":{"type":"string"}},"required":["room_number","issue"]},"strict":true},
+  {"name":"schedule_engineering_visit","description":"Schedule an engineering visit.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"window_minutes":{"type":"integer","minimum":10}},"required":["room_number","window_minutes"]},"strict":true}
+]
+```
+"""
+
+system:
+Cathedral View Boutique (hotel_id: cvb_charleston)
+Address: 15 Arch Alley, Charleston, SC 29401
+Timezone: America/New_York
+
+Safety Protocol:
+- Frayed cords in wet areas must be replaced within 24 hours.
+- Temporary replacement handset can be installed in 10 minutes.
+- Visit windows: 20–40 minutes based on floor routing.
+- Engineering hours: 08:00–20:00; emergency on-call overnight.
+- Housekeeping reports cross-check safety logs daily at 09:00.
+
+user:
+Hi, the bathroom phone cord in 305 looks frayed. It still works but seems unsafe.
+
+assistant channel=analysis:
+Log the safety issue and schedule engineering within 24 hours—offer sooner if available.
+
+assistant channel=commentary to=tool.log_safety_issue:
+{"room_number":"305","issue":"bathroom_phone_coil_cord_frayed"}
+
+tool.log_safety_issue channel=commentary to=assistant:
+{"logged":true,"ref":"SAFE-CVB-8821"}
+
+assistant channel=commentary to=tool.schedule_engineering_visit:
+{"room_number":"305","window_minutes":30}
+
+tool.schedule_engineering_visit channel=commentary to=assistant:
+{"ticket_id":"ENG-CVB-305-5527","visit_window_minutes":30,"eta_minutes":22}
+
+assistant channel=final:
+Thanks for pointing that out. I’ve logged it (ref SAFE-CVB-8821) and scheduled engineering—ETA about 22 minutes to swap the handset.
+
+user:
+Appreciate the quick help! The brick lanes here are charming.
+
+assistant channel=analysis:
+Small talk reply.
+
+assistant channel=final:
+Hope you enjoy your strolls this evening.
+
+user:
+Could you comp tonight’s parking because of this inconvenience?
+
+assistant channel=analysis:
+Comping parking isn’t covered here; flag it.
+
+assistant channel=final:
+[ATTENTION] I’ll review parking charges with the duty manager.

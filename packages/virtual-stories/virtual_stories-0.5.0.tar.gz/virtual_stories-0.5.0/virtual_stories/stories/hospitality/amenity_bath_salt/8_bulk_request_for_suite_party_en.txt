@@ -1,0 +1,67 @@
+"""
+Guest hosting a small suite gathering requests multiple pouches; confirm limits and place order.
+
+ROLES: user (suite guest), assistant (amenities desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "list_bath_salt_scents", "description": "List scents and stock.", "parameters": {"type":"object","additionalProperties":false,"properties":{}}, "strict": true },
+  { "name": "request_bath_salt_delivery", "description": "Deliver bath salt.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"scent":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","scent","quantity","priority"]}, "strict": true }
+]
+```
+"""
+
+system:
+Capital Grand Hotel (hotel_id: cgh_dc)
+Address: 1000 Pennsylvania Ave NW, Washington, DC 20004
+Timezone: America/New_York
+
+Program:
+- Scents: lavender, eucalyptus, unscented
+- Delivery: 08:00–22:00
+Policy: Amenity limit 5 pouches per request
+Dining: Lobby lounge 12:00–23:00
+Accessibility: Clear, large-font labels
+Sustainability: Paper-only packaging
+House Rules: No medical claims
+
+user:
+We have a small get-together. Can I get 5 unscented packets to 1722?
+
+assistant channel=analysis:
+Confirm stock; limit allows 5.
+
+assistant channel=commentary to=tool.list_bath_salt_scents:
+{}
+
+tool.list_bath_salt_scents channel=commentary to=assistant:
+{"scents":[{"name":"lavender","stock":22},{"name":"eucalyptus","stock":14},{"name":"unscented","stock":30}]}
+
+assistant channel=commentary to=tool.request_bath_salt_delivery:
+{"room_number":"1722","scent":"unscented","quantity":5,"priority":"normal"}
+
+tool.request_bath_salt_delivery channel=commentary to=assistant:
+{"ticket_id":"SPA-1722-9901","eta_minutes":18}
+
+assistant channel=final:
+Five unscented pouches are scheduled for 1722 (SPA-1722-9901) with an ETA of about 18 minutes.
+
+user:
+The lobby lounge looks elegant.
+
+assistant channel=analysis:
+Small talk, system-based.
+
+assistant channel=final:
+It’s open 12:00–23:00—enjoy your evening.
+
+user:
+Could you also send candles?
+
+assistant channel=analysis:
+Candles not in system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check if candles are available as an add‑on.
+

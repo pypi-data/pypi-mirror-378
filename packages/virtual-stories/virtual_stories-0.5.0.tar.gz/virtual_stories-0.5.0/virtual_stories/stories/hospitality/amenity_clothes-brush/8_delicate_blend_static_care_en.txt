@@ -1,0 +1,69 @@
+"""
+Guest with static on viscose-blend dress; recommend anti-static nylon brush.
+
+ROLES: user (guest dressing for dinner), assistant (amenities)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"list_garment_care_items","description":"List items",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"category":{"type":"string","enum":["clothes_brush"]}},"required":["category"]},"strict":true},
+  {"name":"deliver_garment_care_item","description":"Deliver",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"priority":{"type":"string","enum":["normal","express"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Azure Promenade (hotel_id: ap_miami)
+Address: 701 Ocean Dr, Miami Beach, FL 33139
+Timezone: America/New_York
+
+Blends Guide:
+- Viscose and rayon blends: use anti‑static nylon; avoid heavy pressure
+
+Inventory: nylon_anti_static_slim, boar_bristle_standard, horsehair_fine
+Delivery ETA to tower A floors 8–12: 8–12 minutes
+
+user:
+I’m in A-1112—my viscose-blend dress has static. What helps?
+
+assistant channel=analysis:
+Recommend nylon_anti_static_slim and deliver.
+
+assistant channel=commentary to=tool.list_garment_care_items:
+{"category":"clothes_brush"}
+
+tool.list_garment_care_items channel=commentary to=assistant:
+{"items":["nylon_anti_static_slim","boar_bristle_standard","horsehair_fine"],"eta":"8-12"}
+
+assistant channel=final:
+An anti‑static nylon brush with a light touch works best. Shall I send the slim anti‑static brush to A-1112?
+
+user:
+Yes please. Love the ocean breeze in the lobby.
+
+assistant channel=final:
+We keep the terrace doors open—sea air drifts right through.
+
+assistant channel=commentary to=tool.deliver_garment_care_item:
+{"room_number":"A-1112","items":["nylon_anti_static_slim"],"priority":"express"}
+
+tool.deliver_garment_care_item channel=commentary to=assistant:
+{"request_id":"AP-1112-29","eta_minutes":9}
+
+assistant channel=final:
+Confirmed—AP-1112-29, arriving in roughly 9 minutes.
+
+user:
+Do you validate parking for dinner guests?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check that for you.
+

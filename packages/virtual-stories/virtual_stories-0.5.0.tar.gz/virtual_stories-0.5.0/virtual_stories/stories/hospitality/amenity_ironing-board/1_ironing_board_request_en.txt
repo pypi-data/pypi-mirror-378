@@ -1,0 +1,56 @@
+"""
+Guest requests an ironing board and engages in small talk.
+
+ROLES: user (guest in room 2206 asking for an ironing board), assistant (concierge coordinating delivery and sharing service windows)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check if an amenity is available","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver an amenity to a room","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Lakeside Promenade — North Tower
+Room 2206 (Corner King)
+Policy: Ironing boards provided on request; 1 per room maximum
+Service window: 07:00–23:00 (normal), 23:00–01:00 (urgent limited)
+Delivery SLA to floors 20–24: normal 12–18 minutes
+
+user:
+Could I have an ironing board brought to 2206?
+
+assistant channel=analysis:
+Check board availability and place a normal delivery to room 2206.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board","available":true,"in_stock":10}
+
+assistant channel=analysis:
+Create the delivery request now.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2206","amenity_name":"ironing board","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-2206-9012","eta_minutes":13}
+
+assistant channel=final:
+All set—an ironing board is scheduled for room 2206 with an ETA of about 13 minutes.
+
+user:
+Thanks! The lake view is lovely.
+
+assistant channel=final:
+It is—North Tower corner rooms tend to have wide views.
+
+user:
+Do you know the board’s exact surface dimensions?
+
+assistant channel=final:
+[ATTENTION] Verifying information.

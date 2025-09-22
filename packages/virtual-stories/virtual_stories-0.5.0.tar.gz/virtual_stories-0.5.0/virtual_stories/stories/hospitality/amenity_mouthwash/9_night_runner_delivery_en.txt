@@ -1,0 +1,49 @@
+"""
+Late request for mouthwash; assistant confirms night delivery window and dispatches; includes chit-chat and out-of-scope query.
+
+ROLES: user (guest in room 2212 requesting mouthwash late), assistant (night runner coordinating delivery in allowed hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"request_amenity_delivery","description":"Deliver amenity to room","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Skyport Hotel — Terminal Wing
+Room 2212: Runway View King
+Mouthwash: Brand "SkyMint"; 30 ml; regular
+Delivery hours: 24/7; night runner 23:00–05:00 limited menu (mouthwash included)
+Policy: Up to 2 per request
+Contacts: Night Desk 990; Operator 0
+Notes: Terminal Wing lift T1 to 22nd floor
+
+user:
+Could I get two mouthwash bottles to 2212?
+
+assistant channel=analysis:
+Night delivery is allowed; send 2 bottles to 2212.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2212","amenity_name":"mouthwash","quantity":2,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MW-2212-5570","eta_minutes":12}
+
+assistant channel=final:
+Sure—two SkyMint mouthwash bottles are on the way to 2212, ETA about 12 minutes.
+
+user:
+Appreciate it. How’s your night?
+
+assistant channel=final:
+Quiet so far—thanks for asking!
+
+user:
+Any update on tomorrow’s flight delays?
+
+assistant channel=final:
+[ATTENTION] Flight status information is beyond the provided system context.
+

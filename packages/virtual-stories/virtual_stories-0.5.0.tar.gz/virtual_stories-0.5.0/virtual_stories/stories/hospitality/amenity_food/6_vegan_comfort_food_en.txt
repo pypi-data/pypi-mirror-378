@@ -1,0 +1,91 @@
+"""
+Guest requests vegan comfort food late evening.
+Provide options and place order.
+
+ROLES: user (vegan traveler), assistant (late-night dining coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_kitchen_availability","description":"Confirm late-night service.","parameters":{"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["late_night_menu"]},"time_requested":{"type":"string"}},"required":["service_type"]},"strict":true},
+  {"name":"get_available_menu_items","description":"List vegan comfort items.","parameters":{"type":"object","additionalProperties":false,"properties":{"menu_type":{"type":"string","enum":["late_night"]},"dietary_restrictions":{"type":"array","items":{"type":"string","enum":["vegan"]}},"portion_size":{"type":"string","enum":["regular_meal"]}},"required":["menu_type"]},"strict":true},
+  {"name":"place_food_order","description":"Place vegan late-night order.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"estimated_delivery":{"type":"string"},"total_cost":{"type":"number"}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Aurora Downtown (hotel_id: adt_14)
+Address: 150 Lake St, Chicago, IL 60601
+Timezone: America/Chicago
+
+Late-Night Vegan Comforts:
+- Creamy coconut tomato soup with herb croutons (vegan) $18
+- Truffle fries with rosemary sea salt $14
+- Roasted veggie panini on sourdough (vegan aioli) $22
+- Delivery 20–30 minutes
+- Service window: 10 PM – 4 AM
+
+user:
+Do you have vegan comfort food now? I'm in 1222.
+
+assistant channel=analysis:
+Check late-night menu availability; then list vegan items and place order.
+
+assistant channel=commentary to=tool.check_kitchen_availability:
+{"service_type":"late_night_menu","time_requested":"current"}
+
+tool.check_kitchen_availability channel=commentary to=assistant:
+{"available":true,"window":"10 PM – 4 AM","eta":"20–30 minutes"}
+
+assistant channel=commentary to=tool.get_available_menu_items:
+{"menu_type":"late_night","dietary_restrictions":["vegan"],"portion_size":"regular_meal"}
+
+tool.get_available_menu_items channel=commentary to=assistant:
+{"menu_items":[{"name":"coconut_tomato_soup","price":18},{"name":"truffle_fries","price":14},{"name":"roasted_veggie_panini","price":22}]}
+
+assistant channel=final:
+Yes—vegan options include coconut tomato soup ($18), truffle fries ($14), and a roasted veggie panini ($22). What would you like in room 1222?
+
+user:
+Soup and fries please.
+
+assistant channel=analysis:
+Place order for room 1222.
+
+assistant channel=commentary to=tool.place_food_order:
+{"room_number":"1222","items":["coconut_tomato_soup","truffle_fries"],"estimated_delivery":"~25 minutes","total_cost":32}
+
+tool.place_food_order channel=commentary to=assistant:
+{"order_confirmed":true,"order_id":"ADT-1222-LN03","eta":"25 minutes","items":["coconut_tomato_soup","truffle_fries"],"total":32}
+
+assistant channel=final:
+Order ADT-1222-LN03 is confirmed. Your soup and truffle fries will arrive in about 25 minutes.
+
+user:
+Is the window until 4 AM?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—the late‑night window runs until 4 AM.
+
+user:
+The river reflections look amazing tonight.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+They do—clear skies make the skyline sparkle.
+
+user:
+Could you add a bottle of wine from the cellar list?
+
+assistant channel=analysis:
+Cellar list not provided; use attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

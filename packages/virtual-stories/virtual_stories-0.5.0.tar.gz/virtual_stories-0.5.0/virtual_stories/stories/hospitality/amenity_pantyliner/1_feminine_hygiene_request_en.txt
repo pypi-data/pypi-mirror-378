@@ -1,0 +1,134 @@
+"""
+Guest requests pantyliner and feminine hygiene supplies for personal comfort during hotel stay.
+Provide discreet wellness support with tool-based inventory check and private delivery coordination.
+
+ROLES: user (female guest needing feminine hygiene supplies), assistant (wellness coordinator with personal care inventory)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_personal_care_inventory",
+    "description": "Check availability of personal care and hygiene supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_category": { "type": "string", "enum": ["feminine_hygiene", "personal_care", "wellness_supplies", "comfort_items"] },
+        "specific_item": { "type": "string", "enum": ["pantyliners", "sanitary_pads", "tampons", "intimate_wipes", "pain_relief"] }
+      },
+      "required": ["product_category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_discreet_delivery",
+    "description": "Arrange private delivery of personal care items to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items_requested": { "type": "array", "items": { "type": "string" } },
+        "delivery_method": { "type": "string", "enum": ["housekeeping_discrete", "wellness_staff", "room_service_bag"] },
+        "timing_preference": { "type": "string" }
+      },
+      "required": ["room_number", "items_requested"]
+    },
+    "strict": true
+  },
+  {
+    "name": "connect_wellness_support",
+    "description": "Connect guest with wellness team for additional feminine health support.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "support_type": { "type": "string", "enum": ["menstrual_comfort", "wellness_consultation", "pharmacy_coordination", "spa_treatments"] },
+        "guest_room": { "type": "string" },
+        "consultation_type": { "type": "string", "enum": ["phone", "in_person", "text_guidance"] }
+      },
+      "required": ["support_type", "guest_room"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Tranquil Springs Women's Wellness Retreat (hotel_id: ts_ash_06)
+Address: 290 Macon Avenue, Asheville, NC 28801
+Timezone: America/New_York
+
+Wellness Services:
+- Women-focused wellness center with comprehensive personal care supplies
+- Discreet delivery service available 24/7 for feminine hygiene needs
+- Licensed women's health practitioners available for consultation
+- Partnership with local pharmacy for specialized product delivery
+
+Personal Care Inventory:
+- Organic cotton pantyliners (ultra-thin, regular, overnight) - Always, Natracare, Seventh Generation
+- Menstrual products: tampons (regular, super), sanitary pads (day, night, heavy flow)
+- Intimate care: pH-balanced wipes, natural feminine wash, comfort spray
+- Wellness support: heating pads, herbal tea blends, magnesium supplements
+
+user:
+Hello! I'm in room 218 and I'm wondering if you have any pantyliners available? I forgot to pack enough for my trip.
+
+assistant channel=analysis:
+Guest needs pantyliners for personal comfort. Check personal care inventory for available options.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"product_category":"feminine_hygiene","specific_item":"pantyliners"}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"product_category":"feminine_hygiene","brands":["Always","Natracare_organic","Seventh_Generation"],"types":["ultra_thin","regular","overnight"],"stock_sufficient":true,"delivery_options":["discrete_housekeeping","wellness_bag"]}
+
+assistant channel=analysis:
+Multiple pantyliner options available including organic and conventional brands. Offer choices and arrange discreet delivery.
+
+assistant channel=final:
+Yes, we have several pantyliner options available—Always, organic Natracare, and Seventh Generation in ultra-thin, regular, and overnight types. Which brand and type would you prefer, and I'll arrange discreet delivery to room 218?
+
+user:
+The organic Natracare in regular would be perfect, thank you!
+
+assistant channel=analysis:
+Guest selected organic Natracare regular pantyliners. Arrange discreet delivery to room 218.
+
+assistant channel=commentary to=tool.arrange_discreet_delivery:
+{"room_number":"218","items_requested":["natracare_pantyliners_regular"],"delivery_method":"wellness_staff","timing_preference":"within_30_minutes"}
+
+tool.arrange_discreet_delivery channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":18,"delivery_method":"wellness_staff","package_contents":["natracare_regular_pack_20_count","complimentary_wellness_tea"],"discreet_packaging":true}
+
+assistant channel=final:
+Perfect! Our wellness staff will discreetly deliver a pack of Natracare regular pantyliners to room 218 within 18 minutes, along with some complimentary wellness tea. Everything will be in discreet packaging.
+
+user:
+This place is amazing for women travelers! You really understand what we need.
+
+assistant channel=analysis:
+Guest appreciating women-focused services at Tranquil Springs. Acknowledge the retreat's specialized approach to women's wellness.
+
+assistant channel=final:
+Thank you! Tranquil Springs is designed specifically for women's comfort and wellness. We believe these thoughtful touches make such a difference in your travel experience.
+
+user:
+Could you also help me book a horseback riding lesson for tomorrow afternoon?
+
+assistant channel=analysis:
+Guest requesting horseback riding lessons which is outside the scope of wellness and personal care tools available.
+
+assistant channel=final:
+[ATTENTION] I'd love to help with activity arrangements. Exploring different approaches.
+
+user:
+No problem at all! Thanks so much for helping with the personal care items—you've been wonderful.
+
+assistant channel=analysis:
+Guest expressing gratitude and satisfaction with personal care assistance. Simple appreciative response.
+
+assistant channel=final:
+You're so welcome! I'm glad we could help make your stay more comfortable. Enjoy your time at Tranquil Springs!

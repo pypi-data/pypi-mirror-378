@@ -1,0 +1,67 @@
+"""
+Guest requests a window seat and asks about dietary options; we check availability, book, share a desserts preview, include small talk, and flag an out‑of‑scope music setlist request.
+
+ROLES: user (guest planning afternoon tea with preferences), assistant (lounge concierge booking and sharing menu previews)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_table_availability","description":"Check availability for a party size and time.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer","minimum":1},"datetime":{"type":"string","format":"date-time"},"seating_pref":{"type":"string","enum":["window","sofa","standard"]}},"required":["restaurant_id","party_size","datetime"]}},
+  {"name":"book_table","description":"Book a table.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"},"note":{"type":"string"}},"required":["restaurant_id","guest_name","party_size","datetime"]}},
+  {"name":"get_menu_section","description":"Preview menu section.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["desserts","beverages","savouries"]}},"required":["restaurant_id","section"]}}
+]
+```
+"""
+
+system:
+Orchid Lounge — Regency Crown London (restaurant_id: rest_orchid_lounge)
+Facts and niceties:
+- Afternoon Tea: 13:00–17:00 | Location: Level 2
+- Seating: window alcoves, sofa nooks, standard tables
+- Dietary: vegan and gluten‑free selections available on request
+- Access: lift; step‑free; cloakroom adjacent
+- Music: live piano on select days
+Contact: Listed with the hotel
+
+user:
+Can you book a window seat for 2 at 15:30 next Sunday under Lin? Also, do you have vegan dessert options?
+
+assistant channel=analysis:
+Check availability with a window preference, book if available, then preview desserts.
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_orchid_lounge","party_size":2,"datetime":"2025-09-07T15:30:00","seating_pref":"window"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"W03"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_orchid_lounge","guest_name":"Lin","party_size":2,"datetime":"2025-09-07T15:30:00","note":"window seat"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"ORC-TEA-9210"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_orchid_lounge","section":"desserts"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"desserts","items":[{"name":"Vegan Chocolate Mousse"},{"name":"Gluten‑Free Lemon Tart"},{"name":"Seasonal Berries"}]}
+
+assistant channel=final:
+Booked 15:30 next Sunday for two under Lin (ORC‑TEA‑9210), window preference noted. Vegan dessert preview: Vegan Chocolate Mousse, Gluten‑Free Lemon Tart, Seasonal Berries.
+
+user:
+The window alcoves sound lovely.
+
+assistant channel=final:
+They’re guest favorites on Level 2.
+
+user:
+Can you send me the pianist’s exact setlist for that day?
+
+assistant channel=analysis:
+Setlists aren’t provided; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Specific setlists aren’t available here. Looking up the latest information.
+

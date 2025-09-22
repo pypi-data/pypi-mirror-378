@@ -1,0 +1,67 @@
+"""
+Guest requests Bordeaux-style red wine glasses; asks about delivery time, fee, and extras like a corkscrew and ice bucket; includes small talk and an out-of-scope ask.
+
+ROLES: user (Wine lover settling in.), assistant (Room service operator.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service_item",
+    "description": "Order an item from room service.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"},
+        "quantity": {"type": "integer"}
+      },
+      "required": ["room_number", "item_name", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Property: Crimson Oak Winery Lodge
+Glassware Inventory: Bordeaux red, Burgundy red, universal stem, flute
+Room Service Hours: 12:00–23:00 for glassware
+Delivery ETA: 10–15 minutes
+Fees: Glassware delivery is complimentary; breakage billed at cost
+Extras on Request: Corkscrew, ice bucket, polishing cloth
+Contact: Dial Room Service at 0
+
+user:
+Hi—room 1702. Could we get two Bordeaux red glasses?
+
+assistant channel=analysis:
+Within hours; Bordeaux glasses available; fee is complimentary; deliver with tool.
+
+assistant channel=commentary to=tool.order_room_service_item:
+{"room_number": "1702", "item_name": "bordeaux_red_glass", "quantity": 2}
+
+tool.order_room_service_item channel=commentary to=assistant:
+{"status": "success", "message": "Two Bordeaux glasses dispatched to 1702. ETA 10–15 min."}
+
+assistant channel=final:
+All set—two Bordeaux red glasses are on their way. Delivery is complimentary and should arrive in 10–15 minutes.
+
+user:
+Could you add a corkscrew and an ice bucket?
+
+assistant channel=final:
+Yes—we offer those on request. I can send both along with the glasses.
+
+user:
+How’s your evening going?
+
+assistant channel=final:
+Lovely—thanks for asking. Enjoy your pour.
+
+user:
+[ATTENTION] Can you recommend a vineyard tour for tomorrow?
+
+assistant channel=final:
+I don’t have external tour recommendations in my system. I can provide the glassware and extras listed above.
+

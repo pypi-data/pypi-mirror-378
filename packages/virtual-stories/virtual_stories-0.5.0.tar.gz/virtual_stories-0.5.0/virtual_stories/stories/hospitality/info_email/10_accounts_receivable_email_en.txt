@@ -1,0 +1,56 @@
+"""
+Guest asks for accounts receivable email; include invoice hours from system, small talk, and out-of-scope direct accountant email.
+
+ROLES: user (company guest), assistant (front desk providing official AR contact)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Blue Harbor Suites (hotel_id: blue_harbor_suites)
+Accounts Receivable Email: ar@blueharborsuites.com
+Billing Hours: Mon–Fri 09:00–17:00 local time
+Phone: +1 206-555-0310
+Website: https://www.blueharborsuites.com
+Address: 700 Seaview Ave, Seattle, WA 98109, USA
+Notes: e‑invoices accepted (PDF); VAT fields required on PO
+Wi‑Fi: SSID "BlueHarbor-Guest"; voucher at check‑in
+
+user:
+I need the accounts receivable email.
+
+assistant channel=analysis:
+Return AR email via tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"blue_harbor_suites","channel":"email"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"email":"ar@blueharborsuites.com"}
+
+assistant channel=final:
+ar@blueharborsuites.com.
+
+user:
+Thanks—hope your afternoon’s smooth.
+
+assistant channel=final:
+Appreciate it—happy to help further.
+
+user:
+When does billing pick up calls?
+
+assistant channel=final:
+Mon–Fri 09:00–17:00.
+
+user:
+Can you share your accountant’s private email?
+
+assistant channel=final:
+[ATTENTION] That contact isn’t available within these resources. Checking.
+

@@ -1,0 +1,62 @@
+"""
+Guest requests a full housekeeping clean with timing preference and turndown option.
+
+ROLES: user (guest requesting housekeeping), assistant (housekeeping coordinator scheduling service and options)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_housekeeping",
+    "description": "Schedule housekeeping service for a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "service_type": {"type": "string", "enum": ["full_clean", "refresh", "turn_down"]},
+        "preferred_window": {"type": "string", "description": "e.g., 14:00-15:00"}
+      },
+      "required": ["room_number", "service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Garden Court Residences
+Housekeeping Operating Window: 08:00–20:00
+Service types:
+- full_clean: full linen change, bathroom deep clean, vacuum, trash removal
+- refresh: towel swap, trash, quick wipe-down
+- turn_down: evening setup with curtain close and water placement
+Notes: DND sign respected; guests may set a 1-hour preferred window.
+
+user:
+Could I get a full clean around 2–3 pm for room 1107?
+
+assistant channel=analysis:
+Schedule full_clean with preferred window 14:00-15:00.
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"1107","service_type":"full_clean","preferred_window":"14:00-15:00"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_4412","status":"scheduled","window":"14:00-15:00"}
+
+assistant channel=final:
+Full clean is scheduled for room 1107 (request hk_4412) in the 14:00–15:00 window. DND signs pause service; otherwise, we’ll proceed within that hour.
+
+user:
+Thanks! And your lobby smells amazing today.
+
+assistant channel=final:
+Housekeeping operates 08:00–20:00 if you need any other room care.
+
+user:
+Do you offer hypoallergenic steam cleaning for mattresses?
+
+assistant channel=final:
+[ATTENTION] That option isn’t listed in our housekeeping menu. Looking up the latest information.

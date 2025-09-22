@@ -1,0 +1,47 @@
+"""
+Guest needs a thesis scanned with some color pages; include in-context limits and an [ATTENTION] live turnaround estimate via tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"quote_scan_job","description":"Quote mixed pages (approximate)","parameters":{"type":"object","properties":{"pages":{"type":"integer"},"color":{"type":"string","enum":["color","b&w"]}},"required":["pages","color"]}},
+  {"name":"estimate_turnaround","description":"Estimate current turnaround time in minutes","parameters":{"type":"object","properties":{"pages":{"type":"integer"}},"required":["pages"]}}
+]
+"""
+
+system:
+Business Center – Riverstone Boutique (hotel_id: riverstone_ams)
+Limits: up to 50 pages per job; for larger, split into batches.
+Pricing: b&w €0.20/page; color €0.40/page.
+Recommendation: 300 dpi; OCR available.
+
+user:
+I have a 40-page thesis with 6 color pages—can you scan it with OCR?
+
+assistant channel=analysis:
+Yes—fits within 50-page limit; explain batches if larger. Offer an approximate quote by color rate for 40 pages all color to stay within rule; or better, provide two quotes: but tool only accepts one color param; we’ll quote color as upper-bound.
+
+assistant channel=commentary to=quote_scan_job:
+{"pages":40,"color":"color"}
+
+tool.quote_scan_job:
+{"currency":"EUR","per_page":0.40,"pages":40,"total":16.0}
+
+assistant channel=final:
+We can scan all 40 pages with OCR. As an upper-bound, scanning at the color rate would be €16.00; b&w pages are cheaper (€0.20/page).
+
+user:
+[ATTENTION] Roughly how long would 40 pages take right now?
+
+assistant channel=analysis:
+Use estimate_turnaround with pages=40 to avoid guessing.
+
+assistant channel=commentary to=estimate_turnaround:
+{"pages":40}
+
+tool.estimate_turnaround:
+{"minutes": 12}
+
+assistant channel=final:
+About 12 minutes for a 40-page job at 300 dpi with OCR.

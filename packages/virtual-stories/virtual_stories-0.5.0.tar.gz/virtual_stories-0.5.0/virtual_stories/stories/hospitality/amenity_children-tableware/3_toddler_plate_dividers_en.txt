@@ -1,0 +1,79 @@
+"""
+Parent asks for a divided plate and spill-proof cup for a toddler; confirms materials and asks about delivery speed.
+
+ROLES: user (parent), assistant (family services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"list_toddler_sets","description":"List toddler sets with materials.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"send_toddler_set","description":"Deliver chosen toddler set to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","set":"string"},"required":["room","set"]}}
+]
+```
+"""
+
+system:
+Pinecone Family Lodge (hotel_id: pfl_den_07)
+Address: 600 15th St, Denver, CO 80202
+Timezone: America/Denver
+
+Toddler Sets (1–3 yrs):
+- Bamboo divided plate + small spoon
+- Silicone plate + spill-proof cup
+
+Delivery:
+- 12–20 minutes typical
+
+Safety:
+- Soft edges; BPA-free
+
+Policy:
+- Loan and collect at turndown
+
+Contact:
+- Family services ext. 88; Guestline ext. 0
+
+user:
+Hi—do you have a divided plate and a spill-proof cup for our 2-year-old in room 908? How fast can it get here?
+
+assistant channel=analysis:
+List sets and deliver silicone plate + spill-proof cup; cite delivery time.
+
+assistant channel=commentary to=tool.list_toddler_sets:
+{}
+
+tool.list_toddler_sets channel=commentary to=assistant:
+{"sets":["bamboo_divided_plate_small_spoon","silicone_plate_spill_cup"],"safety":"bpa_free_soft_edges"}
+
+assistant channel=final:
+Yes—silicone plate with a spill-proof cup or a bamboo divided plate with a small spoon. Typical delivery is 12–20 minutes. Which would you like for room 908?
+
+user:
+Silicone plate with the spill-proof cup, please.
+
+assistant channel=commentary to=tool.send_toddler_set:
+{"room":"908","set":"silicone_plate_spill_cup"}
+
+tool.send_toddler_set channel=commentary to=assistant:
+{"ticket":"PFL-908-441","eta_minutes":16}
+
+assistant channel=final:
+Booked—ticket PFL-908-441. Arrival in about 16 minutes.
+
+user:
+Your lobby fireplace is cozy!
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+We’re glad it’s keeping things snug.
+
+user:
+Do you have toddler step stools for the sink?
+
+assistant channel=analysis:
+Not listed; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on toddler step stools beyond the tableware program.

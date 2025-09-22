@@ -1,0 +1,73 @@
+"""
+Guest wants a curated “business corner” bundle and confirms care/return policies.
+
+ROLES: user (guest in 2009 preparing for meetings), assistant (concierge bundling business titles and clarifying policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_magazine_inventory","description":"List titles in a category.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string"}},"required":["category"]},"strict":true},
+  {"name":"deliver_magazines","description":"Deliver selected magazines.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"magazine_titles":{"type":"array","items":{"type":"string"}},"delivery_time":{"type":"string"}},"required":["room_number","magazine_titles"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Capital View Hotel — Financial District
+Room: 2009 (Executive King)
+Business Bundle Guidance:
+- Suggested: The Economist, Harvard Business Review, Bloomberg Businessweek, Forbes
+- Add‑ons: The Atlantic (analysis), MIT Technology Review (tech trends)
+Policies:
+- Delivery 06:30–22:00; typical ETA 20 minutes
+- Care: protective sleeves; please keep away from damp surfaces
+- Return: leave on desk at checkout or front desk bin
+- Replacement fee: $10–$18 per issue if damaged/soiled
+- Back issues: limited; 48‑hour notice
+
+Amenities:
+- Wi‑Fi SSID CapitalView-Guest / Pass LedgerLine2025
+- Lounge desks with charging; Floor 3, 07:00–21:00
+- Printer access via concierge
+- Quiet hours 22:00–07:00
+- Digital editions on request (select titles)
+
+user:
+Could you send a business bundle to 2009—The Economist, HBR, and Bloomberg Businessweek—within 30 minutes? Also, what’s your return policy?
+
+assistant channel=analysis:
+Confirm inventory then deliver; summarize policy from system.
+
+assistant channel=commentary to=tool.get_magazine_inventory:
+{"category":"business"}
+
+tool.get_magazine_inventory channel=commentary to=assistant:
+{"available_titles":["The Economist","Harvard Business Review","Bloomberg Businessweek","Forbes"],"issues":["January 2025"],"copies":22}
+
+assistant channel=commentary to=tool.deliver_magazines:
+{"room_number":"2009","magazine_titles":["The Economist","Harvard Business Review","Bloomberg Businessweek"],"delivery_time":"within 30 minutes"}
+
+tool.deliver_magazines channel=commentary to=assistant:
+{"delivery_id":"CV-2009-BIZ-01","runner":"Marcus","eta_minutes":20}
+
+assistant channel=final:
+Confirmed: The Economist, Harvard Business Review, and Bloomberg Businessweek are on the way to 2009 (delivery CV‑2009‑BIZ‑01, ~20 minutes). Please return magazines at checkout or leave them on your desk; replacement fees apply only if issues are damaged.
+
+user:
+Great, thanks! Big day tomorrow.
+
+assistant channel=analysis:
+Light encouragement.
+
+assistant channel=final:
+You’ve got this—if you need meeting printouts, the concierge can assist.
+
+user:
+Any chance of getting tomorrow’s WSJ print edition?
+
+assistant channel=analysis:
+Not in the system magazine list.
+
+assistant channel=final:
+[ATTENTION] Understood. Checking availability for that print edition.
+

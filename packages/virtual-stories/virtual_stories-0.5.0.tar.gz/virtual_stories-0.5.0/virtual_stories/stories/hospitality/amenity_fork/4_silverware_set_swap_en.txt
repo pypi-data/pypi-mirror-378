@@ -1,0 +1,66 @@
+"""
+Guest wants to swap disposable fork for a silverware set.
+Dispatch stainless set to room.
+
+ROLES: user (guest preferring reusable), assistant (guest services attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_amenity","description":"Deliver amenity set to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","room_number","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Sterling Court (hotel_id: stc_13)
+Address: 25 Park Ave, New York, NY 10016
+Timezone: America/New_York
+
+Cutlery Options:
+- Stainless fork/knife/spoon sets
+- Delivery 8–12 minutes
+- Complimentary swaps upon request
+
+user:
+Can I get a stainless fork instead? Room 834.
+
+assistant channel=analysis:
+Use tool to send a stainless set to 834.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name":"stainless_cutlery_set","room_number":"834","quantity":1}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status":"success","eta":"10 minutes","ticket":"STC-834-SV01"}
+
+assistant channel=final:
+Certainly—one stainless cutlery set is en route to room 834 (ticket STC-834-SV01). ETA about 10 minutes.
+
+user:
+Is the swap complimentary?
+
+assistant channel=analysis:
+Yes per system.
+
+assistant channel=final:
+Yes—swaps to stainless are complimentary.
+
+user:
+Nice lobby art.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+It’s a rotating exhibit from local artists.
+
+user:
+Can you print my boarding pass now?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

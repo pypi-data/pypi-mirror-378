@@ -1,0 +1,66 @@
+"""
+Guest asks which scent pairs with a post‑workout soak and requests delivery.
+
+ROLES: user (guest after gym), assistant (amenities desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "list_bath_salt_scents", "description": "List scents and stock.", "parameters": {"type":"object","additionalProperties":false,"properties":{}}, "strict": true },
+  { "name": "request_bath_salt_delivery", "description": "Deliver bath salt.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"scent":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","scent","quantity","priority"]}, "strict": true }
+]
+```
+"""
+
+system:
+Harbor Fitness Hotel (hotel_id: hfh_seattle)
+Address: 600 Alaskan Way, Seattle, WA 98104
+Timezone: America/Los_Angeles
+
+Program:
+- Scents: lavender, eucalyptus, unscented (no medical claims)
+- Delivery: 09:00–22:00
+Gym: 24/7 access for guests
+Accessibility: Large-type labels
+Sustainability: Recyclable sachets
+House Rules: Skin‑safe formulations only
+
+user:
+Just finished at the gym. I’m in 1012—what would you suggest? Maybe eucalyptus? Please send one.
+
+assistant channel=analysis:
+List scents; proceed with eucalyptus by guest preference; place order.
+
+assistant channel=commentary to=tool.list_bath_salt_scents:
+{}
+
+tool.list_bath_salt_scents channel=commentary to=assistant:
+{"scents":[{"name":"lavender","stock":18},{"name":"eucalyptus","stock":13},{"name":"unscented","stock":27}]}
+
+assistant channel=commentary to=tool.request_bath_salt_delivery:
+{"room_number":"1012","scent":"eucalyptus","quantity":1,"priority":"normal"}
+
+tool.request_bath_salt_delivery channel=commentary to=assistant:
+{"ticket_id":"SPA-1012-6610","eta_minutes":15}
+
+assistant channel=final:
+One eucalyptus packet is on the way to 1012 (SPA-1012-6610) with an ETA of about 15 minutes.
+
+user:
+Gym’s 24/7 access is so convenient.
+
+assistant channel=analysis:
+Small talk acknowledging system fact.
+
+assistant channel=final:
+It’s nice having the gym open around the clock here.
+
+user:
+Do you include magnesium flakes in any blend?
+
+assistant channel=analysis:
+Ingredients not specified; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check ingredient specifics like magnesium content.
+

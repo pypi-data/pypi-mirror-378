@@ -1,0 +1,54 @@
+"""
+Couple in adjacent rooms schedules two wake‑up calls; asks about ring behavior.
+
+ROLES: user (guest setting two wake‑ups), assistant (operator scheduling automated calls)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_wake_up_call","description":"Set a wake‑up call for a room at a given time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time":{"type":"string"}},"required":["room_number","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Coral Sands Resort — Wake‑Up System
+Behavior: Automated rings up to 3 times if not answered
+Time Format: 24‑hour or hh:mm am/pm accepted
+Follow‑Ups: No courtesy door knocks
+Hours: System operates 24/7
+Location Note: Operator desk beside Lobby Bar
+
+user:
+Please set 6:15 am for rooms 418 and 420. Does it ring multiple times?
+
+assistant channel=analysis:
+Book both rooms for 06:15; confirm ring behavior from system.
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"418","time":"06:15"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_418_0615","time":"06:15"}
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"420","time":"06:15"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_420_0615","time":"06:15"}
+
+assistant channel=final:
+Wake‑up calls set for 418 (wakeup_418_0615) and 420 (wakeup_420_0615) at 06:15. The system rings up to three times if not answered and doesn’t include door knocks.
+
+user:
+The Lobby Bar looks cozy.
+
+assistant channel=final:
+The operator desk is just beside the Lobby Bar.
+
+user:
+Could you also ping my mobile if I miss the call?
+
+assistant channel=final:
+[ATTENTION] External phone notifications aren’t listed. Reviewing available resources.
+

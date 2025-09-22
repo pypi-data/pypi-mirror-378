@@ -1,0 +1,62 @@
+"""
+Weekend extension request; assistant checks tool and returns tool result with policy reminder; answers a system policy question; includes small talk and an [ATTENTION] query beyond system.
+
+ROLES: user (guest), assistant (Mountain Meadow Lodge reception)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_extension_availability",
+    "description": "Check if the current room category can be extended with the new checkout date.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"new_checkout":{"type":"string","format":"date"}},"required":["reservation_id","new_checkout"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Name: Mountain Meadow Lodge — Estes Park
+Addr: 221 Trail Ridge Rd, Estes Park, CO 80517, USA
+In/Out: 15:00 / 11:00
+Extension: Subject to availability; rate fluctuates
+Breakfast: 07:00–10:00; to‑go packs by request
+Parking: Free; 2 EV chargers (7kW)
+Wi‑Fi: 150 Mbps
+Quiet: 21:30–07:00
+Rooms: Pine King (24 m²), Aspen Queen (23 m²), Meadow Suite (36 m²)
+
+user:
+Could you extend MM-55771 to check out on 2025-09-15?
+
+assistant channel=analysis:
+Use tool and quote availability/rate; reiterate extension policy.
+
+assistant channel=commentary to=tool.check_extension_availability:
+{"reservation_id":"MM-55771","new_checkout":"2025-09-15"}
+
+tool.check_extension_availability channel=commentary to=assistant:
+{"available":true,"room_id":"Pine King 214","rate":"USD 169/night"}
+
+assistant channel=final:
+We can extend to 2025-09-15 in Pine King 214 at USD 169/night. Extensions remain subject to availability and nightly rate changes.
+
+user:
+Thanks—how’s the lodge today?
+
+assistant channel=final:
+Warm greetings from Mountain Meadow.
+
+user:
+What time is quiet hours?
+
+assistant channel=final:
+Quiet hours are 21:30–07:00.
+
+user:
+Could you arrange a guided elk tour?
+
+assistant channel=final:
+[ATTENTION] Guided elk tours aren’t covered by the provided details. Processing your request.
+

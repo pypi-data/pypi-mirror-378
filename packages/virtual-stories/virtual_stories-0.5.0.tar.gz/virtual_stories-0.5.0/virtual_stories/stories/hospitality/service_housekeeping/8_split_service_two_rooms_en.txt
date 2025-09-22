@@ -1,0 +1,55 @@
+"""
+Guest manages two adjacent rooms and asks for coordinated refreshes.
+
+ROLES: user (guest coordinating multiple rooms), assistant (housekeeping coordinator arranging back‑to‑back windows)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_housekeeping","description":"Schedule housekeeping service for a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["full_clean","refresh","turn_down"]},"preferred_window":{"type":"string"}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Beacon Wharf Hotel — Housekeeping
+Hours: 08:00–20:00
+Services: full_clean, refresh, turn_down
+Coordination: Adjacent rooms may be scheduled back‑to‑back
+Windows: 60‑minute blocks
+Policy: DND respected
+Location: South tower service base
+
+user:
+Can you refresh 903 and 905 back‑to‑back around noon?
+
+assistant channel=analysis:
+Book two refreshes in consecutive windows spanning noon.
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"903","service_type":"refresh","preferred_window":"12:00-13:00"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_903","status":"scheduled","window":"12:00-13:00"}
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"905","service_type":"refresh","preferred_window":"13:00-14:00"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_905","status":"scheduled","window":"13:00-14:00"}
+
+assistant channel=final:
+Refresh is scheduled back‑to‑back: 903 at 12:00–13:00 (hk_903) and 905 at 13:00–14:00 (hk_905). Housekeeping runs 08:00–20:00 and respects DND.
+
+user:
+The south tower corridor is bright.
+
+assistant channel=final:
+We coordinate adjacent rooms whenever possible.
+
+user:
+Could you sanitize with a hospital‑grade product?
+
+assistant channel=final:
+[ATTENTION] Product specifics aren’t listed in our housekeeping details. Assessing the available data.
+

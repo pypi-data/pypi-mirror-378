@@ -1,0 +1,59 @@
+"""
+Guest schedules a wake-up call and asks for a confirmation.
+
+ROLES: user (guest requesting morning call), assistant (operator scheduling automated wake-up calls)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "set_wake_up_call",
+    "description": "Set a wake-up call for a room at a given time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "time": {"type": "string"}
+      },
+      "required": ["room_number", "time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harbor Lights Inn
+Wake‑Up Calls:
+- Automated system; rings up to 3 times if not answered
+- Time format: 24‑hour or hh:mm am/pm
+- Courtesy follow‑up is not included
+
+user:
+Please set a wake‑up call at 5:45 am for room 305.
+
+assistant channel=analysis:
+Schedule 05:45 for room 305.
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"305","time":"05:45"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_1443","time":"05:45"}
+
+assistant channel=final:
+Wake‑up call set for 05:45 in room 305 (wakeup_1443). The system will ring up to three times.
+
+user:
+The harbor bell sounds nice in the morning.
+
+assistant channel=final:
+The system will ring up to three times at 05:45 as scheduled.
+
+user:
+Can you also send a staff member to knock if I miss the calls?
+
+assistant channel=final:
+[ATTENTION] Door knocks aren’t included in our wake‑up options. Checking available options.

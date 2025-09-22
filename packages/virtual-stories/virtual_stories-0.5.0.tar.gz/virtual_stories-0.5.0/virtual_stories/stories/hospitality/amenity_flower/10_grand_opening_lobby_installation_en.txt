@@ -1,0 +1,76 @@
+"""
+Guest requests a lobby floral installation for a brand launch event tonight.
+Provide check and creation.
+
+ROLES: user (event marketer), assistant (floral/events liaison)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_floral_inventory", "description": "Check large installation capacity and elements.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "arrangement_type": { "type": "string", "enum": ["event_staging"] }, "flower_preference": { "type": "string", "enum": ["modern_minimalist", "mixed_seasonal"] }, "budget_range": { "type": "string", "enum": ["luxury_200_plus"] } }, "required": ["arrangement_type"] }, "strict": true },
+  { "name": "create_floral_arrangement", "description": "Create lobby installation and schedule setup window.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "arrangement_style": { "type": "string", "enum": ["modern_minimalist"] }, "delivery_time": { "type": "string" }, "special_message": { "type": "string" }, "occasion": { "type": "string", "enum": ["celebration"] } }, "required": ["room_number", "arrangement_style", "occasion"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Crescent Plaza Hotel (hotel_id: cph_la_01)
+Address: 700 Wilshire Blvd, Los Angeles, CA 90017
+Timezone: America/Los_Angeles
+
+Event Florals:
+- Lobby installations with modern greenery frames
+- Setup window 16:00–18:00; removal after 22:00
+- Pricing: from $480 luxury tier
+- Coordination with security and housekeeping
+- Brand card/sign stand available
+
+user:
+We need a modern lobby installation by 5:30 PM for a launch.
+
+assistant channel=analysis:
+Check event staging capacity; schedule 16:00–18:00 setup; confirm pricing start.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type":"event_staging","flower_preference":"modern_minimalist","budget_range":"luxury_200_plus"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available":true,"arrangements":["modern_greenery_frames"],"pricing_start":480}
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number":"Lobby","arrangement_style":"modern_minimalist","delivery_time":"setup 4:00–6:00 PM","special_message":"Brand Launch","occasion":"celebration"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed":true,"arrangement_id":"CPH_LOBBY_EVT","delivery_scheduled":"4:00–6:00 PM","includes":["greenery_frames","floral_accents","sign_stand"],"total_cost_from":480}
+
+assistant channel=final:
+Confirmed—we’ll install modern greenery frames between 4:00–6:00 PM for your 5:30 launch. Pricing starts from $480 and includes a sign stand.
+
+user:
+Can removal happen after 10 PM?
+
+assistant channel=analysis:
+From system: removal after 22:00.
+
+assistant channel=final:
+Yes—removal begins after 22:00.
+
+user:
+The lobby feels spacious.
+
+assistant channel=analysis:
+Small talk reply.
+
+assistant channel=final:
+The installation will keep sightlines open while framing your brand area.
+
+user:
+Could you arrange a step-and-repeat backdrop too?
+
+assistant channel=analysis:
+Outside floral scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with events for step‑and‑repeat options.
+"""
+

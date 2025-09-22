@@ -1,0 +1,73 @@
+"""
+Guest requests a calligraphy practice set with felt-tip markers and guide sheets.
+Provide calligraphy markers, guide sheets, and delivery ETA.
+
+ROLES: user (guest practicing calligraphy), assistant (stationery concierge supplying calligraphy sets)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_writing_instruments","description":"Check calligraphy markers and guides.","parameters":{"type":"object","properties":{"pen_type":{"type":"string","enum":["calligraphy"]},"quality_tier":{"type":"string","enum":["standard","premium"]}},"required":["pen_type"]},"strict":true},
+  {"name":"deliver_writing_supplies","description":"Deliver calligraphy set and guides.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"pen_selection":{"type":"array","items":{"type":"string"}},"accessories_included":{"type":"boolean"},"delivery_priority":{"type":"string","enum":["standard","express"]}},"required":["room_number","pen_selection"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Old Port Atelier Hotel (hotel_id: opa_mrs_85)
+Address: 30 Quai du Port, 13002 Marseille, France
+Timezone: Europe/Paris
+
+Calligraphy Corner:
+- Felt‑tip calligraphy markers (2.0 mm/3.5 mm)
+- Brush pens (soft/firm); water‑based
+- Guide sheets: Italic, Foundational, Brush script
+- Practice pads (dot grid)
+- Desk blotters and pen rests
+
+Logistics:
+- Express delivery 8–11 minutes to Atelier Wing
+- Protective sleeves; no bleed pads
+- Complimentary sets for resident artists
+- Refill water brushes available
+- Recycling of used tips
+
+user:
+Bonjour—room 508. Do you have a calligraphy practice set with guide sheets?
+
+assistant channel=analysis:
+Check calligraphy markers and guide sheets; deliver express to 508.
+
+assistant channel=commentary to=tool.check_writing_instruments:
+{"pen_type":"calligraphy","quality_tier":"premium"}
+
+tool.check_writing_instruments channel=commentary to=assistant:
+{"available":true,"sets":["felt_tip_calligraphy","brush_pen_set"],"guides":["Italic","Foundational","Brush_script"]}
+
+assistant channel=commentary to=tool.deliver_writing_supplies:
+{"room_number":"508","pen_selection":["felt_tip_calligraphy","Italic_guide","Brush_script_guide"],"accessories_included":true,"delivery_priority":"express"}
+
+tool.deliver_writing_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta_minutes":9,"items":["felt‑tip calligraphy set","Italic guide","Brush script guide","no‑bleed pad"],"runner":"Émile"}
+
+assistant channel=final:
+Yes—we have a felt‑tip calligraphy set with Italic and Brush script guides. Émile will arrive at 508 in about 9 minutes with a no‑bleed pad.
+
+user:
+Do you have pen rests?
+
+assistant channel=analysis:
+Answer from Calligraphy Corner.
+
+assistant channel=final:
+Yes—desk pen rests are available and can be added on request.
+
+user:
+Any calanques boat tours you suggest?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Gathering relevant data.
+

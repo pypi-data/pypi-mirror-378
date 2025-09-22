@@ -1,0 +1,58 @@
+"""
+Guest arrives late and asks about overnight pickup for an adapter; confirm 24/7 desk pickup and create order.
+
+ROLES: user (late arrival needing quick pickup), assistant (front desk handling after-hours requests)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Confirm stock for after-hours pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create rental for desk pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Granite Hall Boston (GHBX-12)
+Address: 60 School St, Boston, MA 02108, USA
+Profile: Historic downtown hotel; Timezone ET
+Electrical: 120V/60Hz; universal adapters available
+Inventory: 14 units; USD 3/night; no deposit; folio code RENT-ADPT
+Pickup: Front Desk is 24/7; Concierge 08:00–22:00; Room delivery upon request
+Other: Breakfast 06:30–10:30; Fitness 05:30–23:00
+Only services listed are available.
+
+user:
+It’s almost midnight—can I still pick up an adapter? Room 617.
+
+assistant channel=analysis:
+Confirm stock and create a desk-pickup order since the desk is 24/7.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"GHBX-12","item":"universal_power_adapter","quantity":1,"room":"617"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"GHBX-12","room":"617","item":"universal_power_adapter","duration_hours":24,"charge_code":"RENT-ADPT","delivery_option":"pick_up_at_desk"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"ORD-GHBX-12077","status":"created","rate":"USD 3/night"}
+
+assistant channel=final:
+Yes—Front Desk is open 24/7. I’ve created order ORD-GHBX-12077 at USD 3 per night; you can pick it up any time.
+
+user:
+Nice lobby music tonight!
+
+assistant channel=final:
+Thank you—enjoy your stay.
+
+user:
+Can you share your internal sourcing approval matrix for adapters?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

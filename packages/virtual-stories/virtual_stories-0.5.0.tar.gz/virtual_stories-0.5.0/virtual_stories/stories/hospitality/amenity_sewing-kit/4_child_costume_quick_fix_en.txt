@@ -1,0 +1,114 @@
+"""
+Parent needs quick fix kit for child’s costume before school event; provide basic kit and guidance.
+
+ROLES: user (parent guest with costume issue), assistant (guest services attendant with sewing amenity)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Lakeside Family Resort Toronto (hotel_id: lfr_yyz_04)
+Address: 11 Queen’s Quay W, Toronto, ON M5J 2X5, Canada
+Timezone: America/Toronto
+
+Family Sewing Support:
+- Basic kits at all floors: thread black/white/beige, safety pins, blunt-tip kid-safe needles
+- Emergency kits held at lobby for rapid pick-up
+- On-site help: 08:00–21:00 quick mends only
+- Delivery cadence: 10–20 minutes based on tower
+- Complimentary: 1 kit per stay, extras billed small fee
+
+Floors & Towers:
+- North Tower: floors 4–18
+- South Tower: floors 5–22 (family suites)
+- Pantry locations: near elevator lobbies (odd floors)
+
+Guidance Cards Included:
+- Quick hem tape how-to (pictorial)
+- Button sewing steps (3-stage)
+- Safety pin temporary fix tips
+
+user:
+Hi, my kid’s costume wing came apart. We’re in 1511 in the South Tower. Can we get something to fix it before we head out?
+
+assistant channel=analysis:
+South Tower floor 15; basic kit sufficient. Check availability and deliver; offer on-site quick mend inside hours.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type":"basic","floor_level":"15"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available":true,"kit_contents":["white_thread","safety_pins","kid_safe_needle","mini_scissors","quick_hem_tape"],"eta_minutes":12}
+
+assistant channel=analysis:
+Kit is available; arrange delivery to 1511 with guidance card.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number":"1511","service_type":"kit_delivery","urgency":"urgent","garment_type":"child_costume"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged":true,"delivery_time":"12_minutes","assistance_offered":true}
+
+assistant channel=final:
+Yes—sending a basic kit with safety pins, quick hem tape, and a kid-safe needle to 1511 now. It’ll arrive in about 12 minutes, and I can help with a quick mend if you’d like.
+
+user:
+Are you still doing on-site help right now?
+
+assistant channel=analysis:
+Within 08:00–21:00 window; answer from system.
+
+assistant channel=final:
+Yes—our on-site quick mends run 08:00–21:00 daily.
+
+user:
+Thanks! By the way, the lake view is amazing.
+
+assistant channel=analysis:
+Chit-chat reply; no new facts beyond system.
+
+assistant channel=final:
+So glad you’re enjoying it—have a great outing once the wing is secure!
+
+user:
+Could you recommend a kid-friendly museum nearby?
+
+assistant channel=analysis:
+External recommendation—beyond system; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can search for kid-friendly museums and share options shortly.

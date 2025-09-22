@@ -1,0 +1,52 @@
+"""
+Guest requests a late-night pickup with confirmation of service hours and grace time.
+
+ROLES: user (night owl returning from event), assistant (concierge confirming late service)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"check_service_hours","description":"Confirm whether requested time is supported for pickups.","parameters":{"type":"object","additionalProperties":false,"properties":{"pickup_time":{"type":"string"}},"required":["pickup_time"]}},
+  {"name":"create_reservation","description":"Create a scheduled pickup with time and location.","parameters":{"type":"object","additionalProperties":false,"properties":{"time":{"type":"string"},"from":{"type":"string"},"to":{"type":"string"},"room":{"type":"string"}},"required":["time","from","to","room"]}}
+]
+```
+"""
+
+system:
+Hotel: Nightfall Arts Hotel (hotel_id: nfa_la_01)
+Address: 901 S Broadway, Los Angeles, CA 90015
+Timezone: America/Los_Angeles
+Limousine Service Hours: 24/7 dispatch
+Grace Period: 10 minutes
+Billing: Room or card on file
+
+user:
+Can you pick me up at 01:00 at the Orpheum Theatre and bring me back?
+
+assistant channel=analysis:
+Service is 24/7; 01:00 is allowed. Confirm hours via tool and book.
+
+assistant channel=commentary to=tool.check_service_hours:
+{"pickup_time":"01:00"}
+
+tool.check_service_hours channel=commentary to=assistant:
+{"supported":true}
+
+assistant channel=commentary to=tool.create_reservation:
+{"time":"01:00","from":"Orpheum Theatre","to":"Nightfall Arts Hotel","room":"1509"}
+
+tool.create_reservation channel=commentary to=assistant:
+{"reservation_id":"nf_0100_22","status":"held"}
+
+assistant channel=final:
+Yes—dispatch runs 24/7. I’ve held reservation nf_0100_22 for a 01:00 pickup at the Orpheum Theatre. The 10‑minute grace period applies.
+
+user:
+Do your cars have in‑car Wi‑Fi?
+
+assistant channel=analysis:
+Wi‑Fi feature not listed. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Request received. Checking feature availability.
+

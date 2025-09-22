@@ -1,0 +1,138 @@
+"""
+Guest requests bamboo_eco queen set due to allergies and asks for remake time; verify and schedule.
+
+ROLES: user (allergy-sensitive guest), assistant (housekeeping services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_linen_inventory",
+    "description": "Check availability of sheet collections and sizes.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] }
+      },
+      "required": ["collection", "size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "order_linen_delivery",
+    "description": "Deliver specified sheet collection to room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] },
+        "quantity_sets": { "type": "integer", "minimum": 1, "maximum": 4 }
+      },
+      "required": ["room_number", "collection", "size", "quantity_sets"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_bed_service",
+    "description": "Schedule housekeeping to remake bed with specified sheets.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "preferred_time": { "type": "string", "description": "HH:MM in 24h local time" }
+      },
+      "required": ["room_number", "collection"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harbor Walk Hotel Boston (hotel_id: hwh_bos_06)
+Address: 200 Atlantic Ave, Boston, MA 02110
+Timezone: America/New_York
+
+Linen Options:
+- bamboo_eco: hypoallergenic, fragrance-free laundering
+- luxury_600tc: sateen cotton
+- standard_300tc: percale cotton
+- silk_1000tc: limited stock
+
+Service & Policy:
+- Same-day: 08:00–22:00
+- Priority: 15:00–18:00
+- Delivery ETA: 20–35 minutes
+- Spare sets: up to 2 per room
+- Contact: Housekeeping ext 7
+
+Allergy Notes:
+- Bamboo_eco processed with neutral detergent
+- Pillowcase swap on request
+- Hypoallergenic mattress protectors available separately
+- Turn-down 19:00–21:00
+- Inventory checks hourly
+
+user:
+Hi, I have allergies—could I switch to bamboo_eco queen sheets and schedule the change for 16:20? Room 1812.
+
+assistant channel=analysis:
+Check bamboo_eco queen; order 1 set; schedule 16:20.
+
+assistant channel=commentary to=tool.check_linen_inventory:
+{"collection":"bamboo_eco","size":"queen"}
+
+tool.check_linen_inventory channel=commentary to=assistant:
+{"collection":"bamboo_eco","size":"queen","available_sets":11,"estimated_delivery_minutes":28}
+
+assistant channel=analysis:
+Proceed with order and scheduling.
+
+assistant channel=commentary to=tool.order_linen_delivery:
+{"room_number":"1812","collection":"bamboo_eco","size":"queen","quantity_sets":1}
+
+tool.order_linen_delivery channel=commentary to=assistant:
+{"room_number":"1812","collection":"bamboo_eco","size":"queen","quantity_sets":1,"delivery_eta_minutes":28,"delivery_id":"LINEN-BQ-1188"}
+
+assistant channel=commentary to=tool.schedule_bed_service:
+{"room_number":"1812","collection":"bamboo_eco","preferred_time":"16:20"}
+
+tool.schedule_bed_service channel=commentary to=assistant:
+{"scheduled":true,"room_number":"1812","collection":"bamboo_eco","window":"16:10–16:35"}
+
+assistant channel=final:
+Confirmed—we’ll deliver bamboo_eco queen sheets (ETA ~28 minutes) and remake at 16:20 (window 16:10–16:35). Bamboo_eco is hypoallergenic and laundered fragrance-free.
+
+user:
+Do you offer turn-down later tonight?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—turn-down service is available from 19:00 to 21:00.
+
+user:
+Thanks—the harbor breeze is nice.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Enjoy your evening—we’ll see you at 16:20.
+
+user:
+Could you recommend a clam chowder place?
+
+assistant channel=analysis:
+Beyond linen scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up popular chowder spots and share a couple of options.

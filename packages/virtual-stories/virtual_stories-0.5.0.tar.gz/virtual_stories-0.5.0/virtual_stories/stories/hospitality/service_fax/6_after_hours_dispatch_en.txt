@@ -1,0 +1,47 @@
+"""
+Guest asks about after‑hours fax; confirm after‑hours dispatch via Front Desk and submit a job; include small talk and ATTENTION for guaranteed send‑time.
+
+ROLES: user (guest sending after regular hours), assistant (front desk dispatching fax via business center systems)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"send_fax","description":"Submit a fax via after‑hours dispatch.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"recipient_number":{"type":"string"},"pages":{"type":"integer"},"cover_note":{"type":"string"},"destination_type":{"type":"string","enum":["domestic","international"]}},"required":["room_number","recipient_number","pages","destination_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Bayfront Plaza Hotel — Business Center
+Hours: 07:00–23:00; after‑hours dispatch available via Front Desk
+Rates: Domestic USD 2/page; International USD 5/page; cover complimentary
+Limit: 20 pages per job
+Receipt: Available on request
+
+user:
+It’s midnight—can you fax 3 pages domestically to +1-312-555-0150?
+
+assistant channel=analysis:
+After‑hours dispatch is available; submit a domestic fax and note receipt availability.
+
+assistant channel=commentary to=tool.send_fax:
+{"room_number":"1733","recipient_number":"+1-312-555-0150","pages":3,"cover_note":"Midnight submission","destination_type":"domestic"}
+
+tool.send_fax channel=commentary to=assistant:
+{"job_id":"fax_2025_09_07_603","status":"queued","billed_pages":3,"rate_per_page":2,"currency":"USD"}
+
+assistant channel=final:
+We’ve queued fax_2025_09_07_603 for 3 pages via after‑hours dispatch; billing is USD 2/page, and a receipt is available on request.
+
+user:
+Thanks—quiet night in the lobby.
+
+assistant channel=final:
+We’ll route it through now.
+
+user:
+Can you guarantee it sends by 12:05 AM exactly?
+
+assistant channel=final:
+[ATTENTION] Exact send‑time guarantees aren’t available here. Checking available options.
+

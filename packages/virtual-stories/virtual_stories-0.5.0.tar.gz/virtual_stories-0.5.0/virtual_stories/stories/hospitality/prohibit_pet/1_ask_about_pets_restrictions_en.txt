@@ -1,0 +1,96 @@
+"""
+Guest asks about bringing a pet; hotel has a no-pet policy with service-animal exception.
+
+ROLES: user (guest traveling with a small dog), assistant (front-desk agent explaining pet restrictions and alternatives)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_policy",
+    "description": "Retrieve policy details for a given category.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["fire", "fireworks", "pets", "smoking", "drugs"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_boarding_options",
+    "description": "List hotel-partnered offsite pet boarding options.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pet_type": { "type": "string" }
+      },
+      "required": ["pet_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+HOTEL: Linden Court City Hotel
+POLICY DIGEST (PETS):
+- No pets permitted in guestrooms or public areas.
+- Exception: trained service animals that perform specific tasks for a person with a disability are welcome; they must remain under control at all times.
+- Emotional support animals are not classified as service animals under this policy.
+PARTNER SERVICE:
+- Boarding Partner: “Harbor Paws Kennel” — distance 0.8 km; climate-controlled suites; 24/7 onsite staff; day-visit and overnight options.
+AMENITIES:
+- Central Courtyard with tiled fountain (quiet zone); Library Lounge with daily pastry tasting at 16:30.
+
+user:
+Can I keep my small dog with me for one night?
+
+assistant channel=analysis:
+Check pet policy and then offer the partner kennel as an alternative.
+
+assistant channel=commentary to=tool.get_policy:
+{"category": "pets"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"pets","allowed":false,"summary":"No pets permitted in guestrooms or public areas.","exception":"Trained service animals welcome; must remain under control."}
+
+assistant channel=commentary to=tool.get_boarding_options:
+{"pet_type": "dog"}
+
+tool.get_boarding_options channel=commentary to=assistant:
+{"partners":[{"name":"Harbor Paws Kennel","distance_km":0.8,"staff":"24/7 onsite","climate_control":true,"stay_types":["day-visit","overnight"]}]}
+
+assistant channel=final:
+Guestrooms and public areas are pet-free. If you’re traveling with a trained service animal, they’re welcome while under control. For other pets, our partner Harbor Paws Kennel is 0.8 km away with 24/7 staff and climate-controlled suites for day or overnight stays.
+
+user:
+It’s actually an emotional support animal—does that count as a service animal here?
+
+assistant channel=analysis:
+Clarify per system policy.
+
+assistant channel=final:
+Under our policy, emotional support animals aren’t classified as service animals. Only trained service animals that perform specific tasks are permitted onsite.
+
+user:
+The courtyard fountain looked beautiful this afternoon.
+
+assistant channel=analysis:
+Provide a light chitchat response referencing the courtyard amenity.
+
+assistant channel=final:
+It’s a favorite quiet spot—the tiled fountain area is part of our central courtyard.
+
+user:
+Which statute defines a service animal for your policy?
+
+assistant channel=analysis:
+No statute references available via system or tools; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Reviewing the documentation context for the precise definition.

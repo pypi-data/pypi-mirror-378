@@ -1,0 +1,66 @@
+"""
+Guest asks to set a precise temperature and change fan speed; verify panel is unlocked and apply changes.
+
+ROLES: user (guest adjusting HVAC), assistant (concierge with panel tools)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_panel_status", "description": "Get wall control panel lock status.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "set_room_temperature", "description": "Set target temperature and fan mode.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"temperature_f":{"type":"number"},"fan":{"type":"string","enum":["auto","low","medium","high"]}},"required":["room_number","temperature_f","fan"]}, "strict": true }
+]
+```
+"""
+
+system:
+Harborfront Conference Hotel (hotel_id: hch_baltimore)
+Address: 501 Pratt St, Baltimore, MD 21202
+Timezone: America/New_York
+
+HVAC Panel Policy:
+- Guest‑adjustable target range: 66–74°F
+- Fan modes: auto/low/medium/high
+- Lockouts: child lock or failed attempts; engineering 07:00–22:00
+Amenities: Harbor boardwalk access 06:00–22:00
+Accessibility: High‑contrast panel labels
+Sustainability: Energy set‑back when room unoccupied
+
+user:
+Please set room 836 to 70°F and fan to medium.
+
+assistant channel=analysis:
+Check panel status, then apply settings.
+
+assistant channel=commentary to=tool.get_panel_status:
+{"room_number":"836"}
+
+tool.get_panel_status channel=commentary to=assistant:
+{"room_number":"836","locked":false}
+
+assistant channel=commentary to=tool.set_room_temperature:
+{"room_number":"836","temperature_f":70,"fan":"medium"}
+
+tool.set_room_temperature channel=commentary to=assistant:
+{"applied":true,"temperature_f":70,"fan":"medium"}
+
+assistant channel=final:
+836 is now set to 70°F with the fan on medium.
+
+user:
+The boardwalk looks lovely this evening.
+
+assistant channel=analysis:
+Small talk referencing system amenity.
+
+assistant channel=final:
+It’s accessible 06:00–22:00—enjoy the harbor breeze.
+
+user:
+Can I extend the temperature range below 66°F?
+
+assistant channel=analysis:
+Outside allowed range per system; attention flag to escalate.
+
+assistant channel=final:
+[ATTENTION] I can check whether exceptions to the 66–74°F range are possible.
+

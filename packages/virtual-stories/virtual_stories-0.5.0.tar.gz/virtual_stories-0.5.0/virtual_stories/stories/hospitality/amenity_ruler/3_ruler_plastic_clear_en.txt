@@ -1,0 +1,72 @@
+"""
+Guest asks for a clear plastic ruler; confirm availability and deliver; include one casual remark and a background acknowledgment turn.
+
+ROLES: user (guest annotating documents), assistant (front desk handling stationery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check rulers by length and material.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["ruler"]},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["item_code","length","material"]},"strict":true},
+  {"name":"deliver_stationery","description":"Deliver a ruler to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["room_number","item_code","length","material"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Orchard Lane Hotel (hotel_id: ol_sfo_07)
+Address: 515 Grove St, San Francisco, CA 94102
+Stationery desk: 07:00–22:00; ETA 10–16 minutes
+Check-in/out: 16:00 / 11:00
+Wi‑Fi: 300/300 Mbps; printing kiosk lobby-side
+Lobby detail: seasonal citrus arrangement; background music paused after 21:00
+Housekeeping: daily 09:00–17:00; eco linen change every 3rd night
+Accessibility: step-free entry via Grove St ramp
+
+Ruler program:
+- Lengths: 15cm, 30cm
+- Materials: plastic (clear, flexible), metal (non-slip edge)
+- Stock now: 15cm/plastic(20), 15cm/metal(4), 30cm/plastic(11), 30cm/metal(6)
+- Return: please leave on desk for pickup
+
+user:
+Could I get a 15 cm clear plastic ruler to 704?
+
+assistant channel=analysis:
+Check 15cm/plastic availability; deliver to 704.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_code":"ruler","length":"15cm","material":"plastic"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":20,"item_code":"ruler","length":"15cm","material":"plastic"}
+
+assistant channel=analysis:
+Place a delivery for room 704.
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"704","item_code":"ruler","length":"15cm","material":"plastic"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-704-1183","eta_minutes":12}
+
+assistant channel=final:
+On it—one 15 cm clear plastic ruler to 704. Ticket ST-704-1183, about 12 minutes.
+
+user:
+Your citrus display is cheerful.
+
+assistant channel=analysis:
+Tie to seasonal arrangement note.
+
+assistant channel=final:
+Thanks—we rotate a seasonal citrus arrangement in the lobby.
+
+user:
+Do you also have a protractor set?
+
+assistant channel=analysis:
+Not in system/tools; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on protractors. Reviewing supply records.
+

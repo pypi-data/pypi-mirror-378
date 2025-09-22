@@ -1,0 +1,56 @@
+"""
+Guest asks about cot dimensions and footprint to plan room layout; provide info if listed and schedule setup.
+
+ROLES: user (space-conscious parent), assistant (concierge giving available details and arranging setup)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Hold a cot for the guest","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"schedule_housekeeping_setup","description":"Schedule setup with safety note","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_note":{"type":"string"}},"required":["hotel_id","room","order_note"]},"strict":true}
+]
+```
+"""
+
+system:
+Blue Harbor Seattle (BHSE-27)
+Address: 1101 Alaskan Way, Seattle, WA 98101, USA
+Baby cots: Complimentary; bedding included; suitable up to 2 years; footprint approx. 120×60 cm; placement away from windows/cords; guest present
+Inventory: 11 units; setup window 15–25 minutes; Housekeeping 07:00–23:00
+Facilities: Breakfast 06:30–10:30; Pool 07:00–21:00
+Only services listed are available.
+
+user:
+How big is the cot? We’re in room 915 and want to plan space.
+
+assistant channel=analysis:
+Provide the listed footprint and arrange setup.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"BHSE-27","item":"baby_cot","quantity":1,"room":"915"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"BHSE-27","room":"915","order_note":"Set up 1 baby cot; guest present; away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":17,"ticket":"HK-915-4410"}
+
+assistant channel=final:
+The cot footprint is approximately 120×60 cm. Setup ticket HK-915-4410 is scheduled in about 17 minutes.
+
+user:
+Is the pool open now?
+
+assistant channel=final:
+Pool hours are 07:00 to 21:00.
+
+user:
+Could you provide internal supplier warranty SLAs?
+
+assistant channel=final:
+[ATTENTION] Looking into this.
+

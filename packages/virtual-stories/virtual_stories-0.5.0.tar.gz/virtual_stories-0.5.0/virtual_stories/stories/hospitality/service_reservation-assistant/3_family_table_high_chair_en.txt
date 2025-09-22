@@ -1,0 +1,56 @@
+"""
+Family of four requests a reservation and asks about high chair availability (note only if listed); proceed with booking.
+
+ROLES: user (family planner), assistant (concierge placing a standard booking; only listed services are used)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"search_restaurant_availability","description":"Search availability","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","party_size","date","time"]},"strict":true},
+  {"name":"create_restaurant_booking","description":"Create booking","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","guest_name","party_size","date","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Oak & Ember Chicago (OECH-18)
+Address: 505 N Michigan Ave, Chicago, IL 60611
+Concierge hours: 08:00–22:00; Front Desk 24/7
+Restaurant partner: TableLink (partner_id TBL-330) for River North/Magnificent Mile
+Recommendations: "Maple & Field" (new American), "Pasta Lume" (Italian)
+Only services listed are available.
+
+user:
+We need a table for 4 at 6:30 PM, room 1416. Do they have high chairs?
+
+assistant channel=analysis:
+Proceed with a standard booking via partner; only listed services—do not commit on high chairs; confirm booking.
+
+assistant channel=commentary to=tool.search_restaurant_availability:
+{"partner_id":"TBL-330","party_size":4,"date":"2025-08-29","time":"18:30"}
+
+tool.search_restaurant_availability channel=commentary to=assistant:
+{"available":true,"options":[{"restaurant":"Maple & Field","time":"18:30"}]}
+
+assistant channel=commentary to=tool.create_restaurant_booking:
+{"partner_id":"TBL-330","guest_name":"Guest 1416","party_size":4,"date":"2025-08-29","time":"18:30"}
+
+tool.create_restaurant_booking channel=commentary to=assistant:
+{"reservation_id":"TBL-RES-4044","restaurant":"Maple & Field","status":"confirmed"}
+
+assistant channel=final:
+Your 6:30 PM table for 4 is confirmed at Maple & Field under reservation TBL-RES-4044.
+
+user:
+Thanks! Your lobby smells amazing.
+
+assistant channel=final:
+Appreciate that—have a lovely dinner.
+
+user:
+Could you provide the restaurant’s internal equipment inventory for high chairs?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

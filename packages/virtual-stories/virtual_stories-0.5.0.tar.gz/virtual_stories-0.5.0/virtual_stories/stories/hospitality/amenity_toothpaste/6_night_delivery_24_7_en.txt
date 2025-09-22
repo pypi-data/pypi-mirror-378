@@ -1,0 +1,82 @@
+"""
+Late-night toothpaste request; confirm 24/7 delivery window and send mint. Include chitchat and ATTENTION.
+
+ROLES: user (guest), assistant (overnight amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"overnight_check","description":"Verify overnight delivery support and stock for mint.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"variant":{"type":"string","enum":["mint"]}},
+     "required":["variant"]},"strict":true},
+  {"name":"overnight_deliver","description":"Deliver toothpaste during overnight hours.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"variant":{"type":"string"}},
+     "required":["room_number","variant"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Metro Harbor Hotel (hotel_id: MHH_bal_14)
+Address: 41 Pratt St, Baltimore, MD 21202 | TZ: America/New_York
+
+Overnight Amenities:
+- Delivery window: 24/7
+- Toothpaste: mint (30 mL), herbal (30 mL), kids strawberry (25 mL)
+- Fee: none | Runner call sign: night-ops
+- Quiet hours: 22:00–06:00
+- Lobby: Harbor maps available
+
+user:
+Sorry for the late ping—can I get mint toothpaste to room 714?
+
+assistant channel=analysis:
+Confirm overnight availability and deliver to 714.
+
+assistant channel=commentary to=tool.overnight_check:
+{"variant":"mint"}
+
+tool.overnight_check channel=commentary to=assistant:
+{"in_stock":true,"overnight":true}
+
+assistant channel=analysis:
+Proceed to deliver.
+
+assistant channel=commentary to=tool.overnight_deliver:
+{"room_number":"714","variant":"mint"}
+
+tool.overnight_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":7,"runner":"night-ops","ticket":"MHH-714-N1"}
+
+assistant channel=final:
+No problem—mint toothpaste is on its way to 714 in about 7 minutes (runner night-ops, ticket MHH-714-N1). Complimentary.
+
+user:
+Is it okay to ping at this hour?
+
+assistant channel=analysis:
+Answer from Overnight Amenities: delivery window 24/7.
+
+assistant channel=final:
+Yes—amenities delivery runs 24/7.
+
+user:
+I grabbed a harbor map earlier—nice touch.
+
+assistant channel=analysis:
+Chitchat tied to Lobby note.
+
+assistant channel=final:
+Glad it helped—those maps make morning walks easy to plan.
+
+user:
+Any recommendations for a sunrise boat tour?
+
+assistant channel=analysis:
+Not defined—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll look into sunrise boat tour options.
+

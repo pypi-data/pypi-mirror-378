@@ -1,0 +1,67 @@
+"""
+Parent asks to cap temperature and set medium pressure for a teen after sports.
+
+ROLES: user (parent of teen), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_anti_scald_limit","description":"Set anti-scald limit (°F).","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"max_temp_f":{"type":"integer","minimum":95,"maximum":110}},"required":["room_number","max_temp_f"]},"strict":true},
+  {"name":"enable_handheld_lock","description":"Limit handheld pressure.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"lock_level":{"type":"string","enum":["low","medium"]}},"required":["room_number","lock_level"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Capitol Park Suites (hotel_id: cps_sac_04)
+Address: 500 L St, Sacramento, CA 95814
+Timezone: America/Los_Angeles
+
+Family Shower Controls:
+- Anti-scald range 95–110°F
+- Handheld limiter supports low/medium
+- Teen-friendly setting: 102°F, medium pressure
+
+Family Perks:
+- Laundry facilities 06:00–22:00
+- Sports towel service available
+
+user:
+Hi—please cap the shower at 102°F and set medium pressure in 734.
+
+assistant channel=analysis:
+Set anti-scald to 102°F and handheld limiter to medium.
+
+assistant channel=commentary to=tool.set_anti_scald_limit:
+{"room_number":"734","max_temp_f":102}
+
+tool.set_anti_scald_limit channel=commentary to=assistant:
+{"room_number":"734","max_temp_f":102,"applied":true}
+
+assistant channel=commentary to=tool.enable_handheld_lock:
+{"room_number":"734","lock_level":"medium"}
+
+tool.enable_handheld_lock channel=commentary to=assistant:
+{"room_number":"734","lock_level":"medium","applied":true}
+
+assistant channel=final:
+All set in 734: max temp limited to 102°F and handheld set to medium pressure.
+
+user:
+Thanks—what time are the laundry facilities open?
+
+assistant channel=analysis:
+Use Family Perks.
+
+assistant channel=final:
+Laundry runs from 06:00 to 22:00.
+
+user:
+Do you know local high school game times tonight?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about local game times and will review external info.
+

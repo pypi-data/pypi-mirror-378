@@ -1,0 +1,91 @@
+"""
+Guest notes low-light room and requests LED mirror; verify stock and deliver. Include chit-chat, an in-context coffee bar hours answer, and an [ATTENTION] external errand request.
+
+ROLES: user (guest), assistant (concierge with amenity tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"inv_led","description":"Inventory check for LED mirrors.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string"}},"required":["item_code"]},"strict":true},
+  {"name":"send_led","description":"Send LED mirror.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1}} ,"required":["room_number","item_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbor Beacon North (hotel_id: hbn_me_67)
+Address: 75 Wharf Rd, Portland, ME 04101
+Timezone: America/New_York
+Amenity Window: 08:00–22:00
+
+Mirror Stock:
+- table_led_mirror: 6
+- bath_mirror_magnifying: 8
+
+Lobby & Facilities:
+1) Lighthouse model in foyer
+2) Coffee bar 06:30–12:00
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Harbor promenade
+
+Accessibility:
+- Step-free access; ADA rooms available
+- Portable vanity stools on request
+
+Sustainability:
+- LED lighting; refillable amenities; recycling on each floor
+
+Transportation:
+- Ferry terminal two blocks away; rideshare pickup on Wharf Rd
+
+user:
+Room 714—could I get a table-top LED mirror? The room is a bit dim.
+
+assistant channel=analysis:
+Check LED stock and send 1.
+
+assistant channel=commentary to=tool.inv_led:
+{"item_code":"table_led_mirror"}
+
+tool.inv_led channel=commentary to=assistant:
+{"item_code":"table_led_mirror","on_hand":6}
+
+assistant channel=commentary to=tool.send_led:
+{"room_number":"714","item_code":"table_led_mirror","quantity":1}
+
+tool.send_led channel=commentary to=assistant:
+{"ticket":"HBN-714-LED-905","eta_minutes":12}
+
+assistant channel=final:
+One LED mirror is on its way to 714 (ticket HBN-714-LED-905). ETA about 12 minutes.
+
+user:
+Is the coffee bar still open?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—our coffee bar runs 06:30–12:00.
+
+user:
+The lighthouse model in the foyer is charming.
+
+assistant channel=analysis:
+Chit-chat referencing lobby.
+
+assistant channel=final:
+It’s a favorite detail in the foyer.
+
+user:
+Could you pick up a specific brand of makeup from a store?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] Verifying information.
+
+user:
+Thanks.

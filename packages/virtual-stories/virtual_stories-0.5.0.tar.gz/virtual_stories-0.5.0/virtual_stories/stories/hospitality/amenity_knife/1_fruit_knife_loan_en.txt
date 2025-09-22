@@ -1,0 +1,57 @@
+"""
+Guest requests a fruit knife; the assistant follows the hotel policy and arranges delivery.
+
+ROLES: user (guest in room 805 requesting a knife for fruit), assistant (guest services coordinating a restricted amenity loan under policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check loanable amenity availability","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Dispatch an amenity to a room under loan policy","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Bayview Arcade — South Wing
+Room 805 (Superior King)
+Knife policy: Only fruit knives may be loaned to guest rooms; 1 per room; delivered with a sheath; return pickup available
+Verification: ID check not required for in-room delivery; runner confirms room occupancy
+Hours: 07:00–23:00 normal; urgent 23:00–00:30 limited
+SLA to floors 6–10: normal 10–18 minutes
+
+user:
+Could I borrow a knife to cut some fruit in 805?
+
+assistant channel=analysis:
+Per policy, only fruit knives are loaned. Check availability for 1 and deliver to 805.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"fruit knife","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"fruit knife","available":true,"in_stock":5}
+
+assistant channel=analysis:
+Proceed with a normal delivery including note about sheath per policy.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"805","amenity_name":"fruit knife","quantity":1,"priority":"normal","note":"Deliver with sheath; loan item pickup upon checkout if left in room"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"FK-805-7719","eta_minutes":11}
+
+assistant channel=final:
+Confirmed—one fruit knife (with sheath) is on the way to room 805 with an ETA of about 11 minutes. We’ll collect it after your stay if it’s left in the room.
+
+user:
+Do you also have chef’s knives for cooking?
+
+assistant channel=final:
+Only fruit knives are provided to rooms under our policy.
+
+user:
+Could you tell me the knife manufacturer?
+
+assistant channel=final:
+[ATTENTION] Gathering relevant data.

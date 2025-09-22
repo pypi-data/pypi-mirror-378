@@ -1,0 +1,57 @@
+"""
+Guest requests multiple standard envelopes and asks about the exact mail slot location.
+
+ROLES: user (guest in 1815), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_stationery_item","description":"Deliver stationery items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_name":{"type":"string","enum":["envelope_standard","envelope_large","letterhead"]},"quantity":{"type":"integer","minimum":1}},"required":["room_number","item_name","quantity"]},"strict":true},
+  {"name":"get_mail_drop_info","description":"Mail drop details.","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true}
+]
+```
+"""
+
+system:
+Sunset Promenade Hotel (hotel_id: sph_la)
+Address: 901 Ocean Ave, Santa Monica, CA 90403
+Timezone: America/Los_Angeles
+Stationery & Mail:
+- Complimentary standard envelopes
+- Mail slot: at concierge podium, north side
+- Pickup: weekdays 16:30
+- Delivery ETA: 10–20 minutes
+- Contact: Concierge x9
+Inline Table:
+item | available
+standard_envelope | yes
+large_envelope | no
+letterhead | yes
+
+user:
+Could I get five standard envelopes to 1815? Also, where exactly is the mail slot?
+
+assistant channel=analysis:
+Deliver envelopes; provide mail slot location via system.
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"1815","item_name":"envelope_standard","quantity":5}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"ok":true,"eta_minutes":16}
+
+assistant channel=final:
+Five standard envelopes are on their way to 1815—about 16 minutes. The mail slot is at the concierge podium on the north side; weekday pickup is at 16:30.
+
+user:
+It’s breezy by the beach tonight.
+
+assistant channel=final:
+The ocean air feels great this evening.
+
+user:
+Do you sell stamps?
+
+assistant channel=final:
+[ATTENTION] I’ll check if stamps are available.
+

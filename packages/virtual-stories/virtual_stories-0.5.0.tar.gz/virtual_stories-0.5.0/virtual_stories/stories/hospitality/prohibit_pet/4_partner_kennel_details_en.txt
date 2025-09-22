@@ -1,0 +1,55 @@
+"""
+Guest asks for details about the partner kennel and distance.
+
+ROLES: user (guest seeking alternative boarding), assistant (front desk sharing partner info)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_partner_kennels","description":"List partner kennels with distance and features.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Bayfront Marina Hotel (hotel_id: bmh_mia)
+Address: 500 Biscayne Blvd, Miami, FL 33132
+Timezone: America/New_York
+
+Pets: Not permitted in rooms or public spaces.
+Service Animals: Welcome while under control.
+
+Partner Kennels:
+- Sunny Paws (0.9 mi) — climate control, 24/7 staff, webcam
+- Brickell Pet Lodge (1.7 mi) — day care + overnight, grooming
+
+user:
+How far is your partner kennel, and do they have webcams?
+
+assistant channel=analysis:
+Answer from system list; use tool to return details.
+
+assistant channel=commentary to=tool.get_partner_kennels:
+{"hotel_id":"bmh_mia"}
+
+tool.get_partner_kennels channel=commentary to=assistant:
+{"partners":[{"name":"Sunny Paws","distance_mi":0.9,"webcam":true},{"name":"Brickell Pet Lodge","distance_mi":1.7,"webcam":false}]}
+
+assistant channel=final:
+Sunny Paws is 0.9 miles away and offers webcams. Brickell Pet Lodge is 1.7 miles away with day care, overnight stays, and grooming.
+
+user:
+Great—thanks. The bay breeze feels nice.
+
+assistant channel=final:
+Enjoy the evening.
+
+user:
+Can you book Sunny Paws for me now?
+
+assistant channel=analysis:
+Booking capability for external partners isn’t defined. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Request received. Checking available options.
+

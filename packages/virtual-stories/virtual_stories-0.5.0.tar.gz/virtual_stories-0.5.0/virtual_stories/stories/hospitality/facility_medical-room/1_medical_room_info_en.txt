@@ -1,0 +1,61 @@
+"""
+Guest inquires about the medical/first-aid room availability and scope.
+
+ROLES: user (guest asking about onsite medical support), assistant (duty manager sharing medical room facts)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_medical_room_info",
+    "description": "Provide medical room location, hours, and scope of service.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Facility: Medical/First-Aid Room
+Location: Lobby level, behind Reception corridor B
+Hours: 08:00–22:00; on-call duty manager outside these hours
+Scope: Basic first aid supplies; non-prescription support; incident log recording
+Equipment: Automated external defibrillator (AED), wheelchair loan (subject to availability)
+Emergency: For urgent cases, contact local emergency services
+
+user:
+Do you have a medical room? Where is it and when can I use it?
+
+assistant channel=analysis:
+Use the tool for location, hours, and scope; include equipment from system facts.
+
+assistant channel=commentary to=tool.get_medical_room_info:
+{}
+
+tool.get_medical_room_info channel=commentary to=assistant:
+{"location":"Lobby level, Reception corridor B","hours":"08:00–22:00; duty manager on-call after hours","scope":"Basic first aid and non-prescription support"}
+
+assistant channel=analysis:
+Prepare a concise, factual answer.
+
+assistant channel=final:
+Yes—the Medical/First-Aid Room is on the lobby level along Reception corridor B. It operates 08:00–22:00, with the duty manager on-call outside those hours. The room provides basic first aid and non‑prescription support; an AED and a wheelchair are available on site.
+
+user:
+Thanks for the clarity.
+
+assistant channel=analysis:
+Offer a brief friendly reply.
+
+assistant channel=final:
+You’re welcome—wish you a comfortable stay.
+
+user:
+Can you dispense prescription medication there?
+
+assistant channel=analysis:
+Prescription dispensing is not defined; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking about prescriptions. Reviewing the documentation.

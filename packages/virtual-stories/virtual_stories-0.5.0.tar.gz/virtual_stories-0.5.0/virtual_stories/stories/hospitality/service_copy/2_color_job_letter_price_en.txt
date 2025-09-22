@@ -1,0 +1,55 @@
+"""
+Guest orders color copies; provide tool-quoted price and pickup window with location details, include small talk and an ATTENTION case for lamination.
+
+ROLES: user (guest requesting color copies), assistant (copy/print attendant quoting and creating job)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "create_copy_job",
+    "description": "Create a copy job and return total price.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"},"color":{"type":"boolean"},"paper_size":{"type":"string","enum":["A4","Letter"]}},"required":["pages","color","paper_size"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Skyline Central Hotel — Copy & Print Corner (Lobby Nook)
+Hours: 07:00–22:00 daily
+Paper sizes: Letter, A4
+Per‑page rate: Color USD 0.50; B/W USD 0.15
+Turnaround: Small jobs ready in ~10–15 minutes; text message on request
+Payment: Room charge or credit card accepted; receipt upon request
+Supplies: Staff provides staple on request (no charge); no lamination service available
+Contact: Ext. 2219; Queue tickets available at the kiosk
+
+user:
+I need 8 pages in color on Letter. Can you handle that now?
+
+assistant channel=analysis:
+Create a color copy job for 8 Letter pages. Use tool to return the price. Confirm pickup window and location from system.
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":8,"color":true,"paper_size":"Letter"}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-5120","price":"USD 4.00"}
+
+assistant channel=final:
+Your color copy job CPY-5120 is set for 8 Letter pages at USD 4.00. Please pick up at the Lobby Nook Copy & Print Corner in about 10–15 minutes; we can charge to your room or take a card.
+
+user:
+Thanks—how’s your day going?
+
+assistant channel=final:
+Appreciate it—prints will be queued right away.
+
+user:
+Can you laminate them after?
+
+assistant channel=final:
+[ATTENTION] Lamination isn’t offered through these resources. Checking available options.
+

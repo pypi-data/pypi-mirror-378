@@ -1,0 +1,58 @@
+"""
+Guest asks about decaf availability and requests pods; include small talk and out-of-scope ask.
+
+ROLES: user (guest preferring decaf), assistant (amenities agent arranging refills and answering program details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"order_coffee_supplies","description":"Send pods to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_type":{"type":"string","enum":["coffee_pods","tea_pods"]},"quantity":{"type":"integer"}},"required":["item_type","quantity"],"additionalProperties":false}}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel Name: Stonebridge City Center (hotel_id: scc_den)
+Coordinates: 17th & Arapahoe, Denver, CO
+Program Highlights:
+- Machine: Nespresso Vertuo Next in all king rooms
+- Daily: 4 coffee pods + 2 tea pods free; extras upon request
+- Decaf Option: Decaf Colombia
+- Teas: English Breakfast, Mint
+Delivery Window: 06:30–23:00; ETA 10–15 minutes
+Fees: None for standard refills
+Sustainability: Pod recycling mailers available at front desk
+
+user:
+Do you have decaf pods? I’m in 1112.
+
+assistant channel=analysis:
+Answer from system, then offer to send some.
+
+assistant channel=final:
+Yes—Decaf Colombia is available. Would you like me to send a couple up to 1112?
+
+user:
+Yes please, send 3.
+
+assistant channel=commentary to=tool.order_coffee_supplies:
+{"room_number":"1112","items":[{"item_type":"coffee_pods","quantity":3}]}
+
+tool.order_coffee_supplies channel=commentary to=assistant:
+{"order_id":"SCC-1112-DC3","delivery_eta_minutes":12,"items":[{"item_type":"coffee_pods","quantity":3,"varieties":["Decaf Colombia"]}]}
+
+assistant channel=final:
+Done—3 Decaf Colombia pods are headed to 1112 with an ETA of about 12 minutes.
+
+user:
+By the way, the lobby art is cool.
+
+assistant channel=final:
+Local artists rotate monthly—great to hear it caught your eye.
+
+user:
+Where can I rent ski gear nearby?
+
+assistant channel=final:
+[ATTENTION] Exploring this beyond the current hotel resources.
+

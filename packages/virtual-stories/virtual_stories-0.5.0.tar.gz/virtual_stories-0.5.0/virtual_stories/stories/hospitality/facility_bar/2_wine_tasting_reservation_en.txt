@@ -1,0 +1,131 @@
+"""
+Guest requests private wine tasting session with sommelier; check availability and coordinate experience.
+
+ROLES: user (wine enthusiast guest), assistant (sommelier services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sommelier_availability",
+    "description": "Check sommelier schedule for private wine tasting sessions.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferred_date": { "type": "string" },
+        "preferred_time": { "type": "string" },
+        "party_size": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "experience_level": { "type": "string", "enum": ["beginner", "intermediate", "advanced", "professional"] }
+      },
+      "required": ["preferred_date", "party_size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "book_wine_tasting",
+    "description": "Book private wine tasting with sommelier and select wine collection.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "session_id": { "type": "string" },
+        "wine_theme": { "type": "string", "enum": ["old_world_classics", "new_world_discovery", "vintage_collection", "organic_biodynamic", "rare_estate"] },
+        "room_preference": { "type": "string", "enum": ["wine_cellar", "private_tasting_room", "terrace_garden"] },
+        "sommelier_name": { "type": "string" }
+      },
+      "required": ["session_id", "wine_theme"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Vineyard Heights Luxury Resort (hotel_id: vhlr_nap_01)
+Address: 1200 Atlas Peak Road, Napa Valley, CA 94558
+Timezone: America/Los_Angeles
+
+Wine Program Excellence:
+- Head Sommelier: Elena Rodriguez, Master Sommelier certification, 15 years Napa Valley experience
+- Wine collection: 3,500+ bottles from 400+ vineyards across 25 countries
+- Private tastings: Customized experiences from 90 minutes to half-day immersion programs
+- Cellar tours: Climate-controlled underground facility with tasting rooms carved into hillside
+- Educational component: Wine chemistry, terroir analysis, vintage comparison methodologies
+
+Resort Heritage:
+- Established 1889 as working vineyard by Italian immigrants Lorenzo and Maria Benedetti
+- Property includes 50 acres of estate Cabernet Sauvignon and Chardonnay vines
+- Historic stone cellars date to 1895, now house rare wine collection and private dining spaces
+- Restored 1920s villa serves as main hotel building with period furniture and hand-painted frescoes
+- Family ownership maintained until 1987, converted to luxury resort while preserving winemaking tradition
+
+Vineyard Operations:
+- Annual production: 2,000 cases of estate wines sold exclusively to resort guests
+- Harvest participation: Guests can join September/October grape picking and crushing activities
+- Winemaker collaboration: Monthly dinners with visiting winemakers from partner vineyards
+- Organic certification: Sustainable farming practices eliminate synthetic pesticides and fertilizers
+- Climate monitoring: Advanced weather stations optimize harvest timing and quality
+
+Culinary Integration:
+- Executive Chef Marco Lombardi specializes in wine and food pairing with molecular gastronomy techniques
+- Farm-to-table program sources 60% of ingredients from on-property gardens and local Napa farms
+- Cheese cave ages artisanal selections from Northern California creameries
+- Olive grove produces estate extra-virgin olive oil pressed on-site using traditional methods
+- Herb garden provides fresh garnishes and infusion ingredients for craft cocktails
+
+Luxury Accommodations:
+- Villa suites feature private wine cellars stocked with personal sommelier selections
+- Vineyard view terraces with outdoor fireplaces for evening wine enjoyment
+- In-room wine service includes proper temperature control and decanting equipment
+- Grape picking season packages include participation in harvest and personalized wine blending
+- Wine library with 500+ books on viticulture, oenology, and regional wine history
+
+user:
+Good afternoon! My partner and I are celebrating our anniversary and would love a private wine tasting. We're intermediate level enthusiasts and really want to learn more about Napa terroir. Is tomorrow evening possible?
+
+assistant channel=analysis:
+Anniversary celebration with educational focus on terroir. Check sommelier availability for tomorrow evening with intermediate-level experience.
+
+assistant channel=commentary to=tool.check_sommelier_availability:
+{"preferred_date":"tomorrow","preferred_time":"evening","party_size":2,"experience_level":"intermediate"}
+
+tool.check_sommelier_availability channel=commentary to=assistant:
+{"available_slots":[{"time":"18:00","sommelier":"elena_rodriguez"},{"time":"19:30","sommelier":"elena_rodriguez"}],"experience_match":"intermediate_perfect","special_programs":"terroir_comparison_available","duration_options":["90_minutes","3_hours"]}
+
+assistant channel=final:
+Perfect for an anniversary! Master Sommelier Elena Rodriguez is available tomorrow at 18:00 or 19:30 for private tastings. For intermediate enthusiasts interested in Napa terroir, she offers specialized terroir comparison sessions—90 minutes or 3-hour immersion programs. Which time and duration would you prefer?
+
+user:
+The 19:30 time sounds perfect, and we'd love the 3-hour immersion! We want to really understand what makes Napa special.
+
+assistant channel=analysis:
+Book the extended terroir-focused session with Elena Rodriguez, emphasizing the educational terroir comparison program.
+
+assistant channel=commentary to=tool.book_wine_tasting:
+{"session_id":"19:30_tomorrow_3hour","wine_theme":"old_world_classics","room_preference":"wine_cellar","sommelier_name":"elena_rodriguez"}
+
+tool.book_wine_tasting channel=commentary to=assistant:
+{"booking_confirmed":"WINE-VHR-2025-445","sommelier":"elena_rodriguez_master_level","session_details":"3_hour_terroir_immersion","location":"underground_cellar_tasting_room","wine_selection":"napa_vs_world_comparison","educational_materials":"soil_samples_climate_data","cost":"$485_per_couple"}
+
+assistant channel=final:
+Wonderful! Booking WINE-VHR-2025-445 confirms your 3-hour terroir immersion tomorrow at 19:30 with Master Sommelier Elena Rodriguez in our underground cellar tasting room. She'll guide you through Napa vs. world comparisons using actual soil samples and climate data. Cost is $485 per couple for this anniversary celebration.
+
+user:
+That sounds absolutely perfect! Elena Rodriguez must have incredible expertise. This resort really knows wine.
+
+assistant channel=analysis:
+Guest appreciates the sommelier expertise. Share Elena's background and our wine heritage as casual conversation.
+
+assistant channel=final:
+Elena is exceptional—15 years of Napa Valley experience and one of only 270 Master Sommeliers worldwide. Our wine program started with the original Benedetti family vineyard in 1889, so we've had over a century to perfect the art of wine hospitality.
+
+user:
+Could you also arrange for us to participate in the grape harvest if it's happening during our stay?
+
+assistant channel=analysis:
+Harvest participation goes beyond wine tasting booking tools—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Great question about harvest participation. Checking our vineyard activity schedule.

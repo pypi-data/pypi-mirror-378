@@ -1,0 +1,59 @@
+"""
+Guest asks how much credit is included and how to top up; proceed with rental. Include small talk and [ATTENTION] query.
+
+ROLES: user (guest managing minutes), assistant (concierge explaining credit and top-up process, then issuing order)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"open_rental","description":"Open handset rental and note credit","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"hours":{"type":"integer"}},"required":["hotel_id","room","hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Midtown Link NYC (MLNY-33)
+Address: 128 W 44th St, New York, NY 10036
+Handset terms:
+- Day rate: $19/day with $8 call credit; charge code RENT-PHONE
+- Top‑up: sold at Concierge; calls pause when credit ends until top‑up
+- Hours: Concierge 07:00–23:00; Front Desk 24/7 (after‑hours pickup)
+- Deposit: $50; ID required; SIM nano
+More:
+- Inventory: 11 units (MLN-PHN-01…11)
+- Accessories: USB‑C charger
+- Language: EN/ES on device
+- Scope: local calls only; no data
+- Return: refund to original payment method
+
+user:
+How much credit is included? Room 1802.
+
+assistant channel=analysis:
+Answer with $8 credit and top‑up process; then open a 24-hour rental.
+
+assistant channel=final:
+Each day includes $8 of call credit, and you can top up at the Concierge when needed.
+
+assistant channel=commentary to=tool.open_rental:
+{"hotel_id":"MLNY-33","room":"1802","hours":24}
+
+tool.open_rental channel=commentary to=assistant:
+{"order_id":"PHN-1802-87","serial":"MLN-PHN-09"}
+
+assistant channel=final:
+Got it—order PHN-1802-87 is ready with unit MLN-PHN-09. Pickup is at the Concierge; the rate is $19/day with $8 credit.
+
+user:
+Nice service.
+
+assistant channel=final:
+Glad to help—Concierge is open until 23:00.
+
+user:
+Can you enable call recording?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

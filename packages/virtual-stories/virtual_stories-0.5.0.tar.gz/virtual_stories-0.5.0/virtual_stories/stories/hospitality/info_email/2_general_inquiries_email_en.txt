@@ -1,0 +1,77 @@
+"""
+Guest requests the general inquiries email; include a follow-up phone query, small talk, and an out-of-scope ask flagged.
+
+ROLES: user (guest asking for contact), assistant (front desk sharing official channels only)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Aurora Marina Hotel (hotel_id: aurora_marina_oslo)
+Contacts:
+  - Email: stay@auroramarina.no
+  - Phone: +47 21 88 00 11
+  - Fax: +47 21 88 00 12
+  - Website: https://www.auroramarina.no
+Location: Fjordgata 6, 0250 Oslo, Norway
+Check-in/out: 15:00 / 12:00
+Wi‑Fi: WPA2, SSID "Aurora-Guest", voucher per room
+Parking: Underground P2, 2.1 m height limit, 8 EV chargers (Type 2)
+Accessibility: Step‑free lobby, 3 elevators, tactile signage on levels 0–10
+Sustainability: 100% renewable electricity; towel reuse program
+Languages: Norwegian, English, German
+
+user:
+What’s your general email for inquiries?
+
+assistant channel=analysis:
+Retrieve email via tool; keep reply concise.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"aurora_marina_oslo","channel":"email"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"email":"stay@auroramarina.no"}
+
+assistant channel=final:
+Our email is stay@auroramarina.no.
+
+user:
+Nice—hope the fjord view’s treating you well today.
+
+assistant channel=final:
+Appreciate it—how else can I help?
+
+user:
+What’s the phone number too?
+
+assistant channel=analysis:
+Answer from system contacts without tools.
+
+assistant channel=final:
+Phone: +47 21 88 00 11.
+
+user:
+Do you have the GM’s private inbox for investor relations?
+
+assistant channel=final:
+[ATTENTION] That mailbox isn’t available within these resources. Reviewing options.
+

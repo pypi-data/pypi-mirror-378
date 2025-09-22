@@ -1,0 +1,77 @@
+"""
+Guest asks to reserve a window table for brunch and wants beverage highlights; include small talk, an accessibility confirmation from system, and an out-of-scope influencer handle ask.
+
+ROLES: user (guest), assistant (restaurant concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List on-property restaurants with cuisine and hours.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string","enum":["breakfast","brunch","lunch","dinner"]}},"required":["hotel_id"]},"strict":true},
+  {"name":"check_table_availability","description":"Check table availability for a restaurant.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer","minimum":1,"maximum":8},"datetime":{"type":"string","format":"date-time"},"seating":{"type":"string","enum":["window","patio","bar","standard"]}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book a table when availability exists.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"},"seating":{"type":"string"}},"required":["restaurant_id","guest_name","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Fetch a menu section preview for a restaurant.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["beverages","desserts","mains"]}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Meadowview Hotel & Gardens (hotel_id: meadowview_gardens)
+Brunch Venue: Glasshouse Bistro (restaurant_id: glasshouse_bistro)
+Hours: Sat–Sun 10:00–14:30; last seating 14:00
+Seating: Atrium windows, patio (weather), banquettes; highchairs on request
+Accessibility: Step‑free via East Lobby; accessible restrooms near host stand
+Address: 300 Garden Crest Ln, Portland, OR 97205
+Wi‑Fi: SSID "Meadowview-Guest"; open in dining venues
+Parking: Surface lot A; EV charging (4× Type 2)
+Sourcing: Herbs from on‑site greenhouse; local roasters for coffee
+
+user:
+Can you book a window table for two this Sunday at 12:15 under Maya Chen? Also, any brunch drinks I should know?
+
+assistant channel=analysis:
+List venues, check availability for window seating, book, then share beverage highlights from menu tool.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"meadowview_gardens","meal_period":"brunch"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"glasshouse_bistro","name":"Glasshouse Bistro","hours":"10:00-14:30","cuisine":"brunch"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"glasshouse_bistro","party_size":2,"datetime":"2025-09-07T12:15:00","seating":"window"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"W07","hold_until":"2025-09-07T12:25:00"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"glasshouse_bistro","guest_name":"Maya Chen","party_size":2,"datetime":"2025-09-07T12:15:00","seating":"window"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"GLH-BRN-3102"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"glasshouse_bistro","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"Cold-Brew Coffee"},{"name":"Mimosa Flight"},{"name":"Cucumber-Mint Spritz"}]}
+
+assistant channel=final:
+Confirmed—window table for two at 12:15 under Maya Chen (GLH-BRN-3102). Beverage highlights: Cold-Brew Coffee, Mimosa Flight, Cucumber-Mint Spritz.
+
+user:
+The atrium sounds lovely.
+
+assistant channel=final:
+Accessible route is via the East Lobby.
+
+user:
+Is there step‑free access to the bistro?
+
+assistant channel=final:
+Yes—step‑free via the East Lobby.
+
+user:
+What’s the chef’s TikTok handle?
+
+assistant channel=final:
+[ATTENTION] Thanks for asking—reviewing available resources.

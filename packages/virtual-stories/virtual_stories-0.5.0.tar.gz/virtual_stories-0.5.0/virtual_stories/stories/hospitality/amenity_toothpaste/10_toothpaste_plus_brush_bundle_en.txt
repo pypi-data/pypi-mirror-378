@@ -1,0 +1,82 @@
+"""
+Guest requests toothpaste plus brush bundle; confirm bundle availability and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (guest), assistant (amenity desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"bundle_check","description":"Check if brush + toothpaste bundle is available and which variants can be bundled.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"variant":{"type":"string","enum":["herbal","mint"]}},
+     "required":["variant"]},"strict":true},
+  {"name":"bundle_deliver","description":"Deliver the bundle to the room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"variant":{"type":"string"}},
+     "required":["room_number","variant"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborview Convention Center Hotel (hotel_id: HCCH_tpa_17)
+Address: 700 Channel Dr, Tampa, FL 33602 | TZ: America/New_York
+
+Bundle Policy:
+- Brush+paste bundle available for mint and herbal
+- Kids bundle includes cap (on request)
+- Fee: complimentary
+- Delivery hours: 07:00–23:00
+- Convention skywalk access
+
+user:
+Can I get the brush and mint toothpaste bundle to room 1510?
+
+assistant channel=analysis:
+Check bundle availability for mint, then deliver to 1510.
+
+assistant channel=commentary to=tool.bundle_check:
+{"variant":"mint"}
+
+tool.bundle_check channel=commentary to=assistant:
+{"available":true,"bundle":"brush+mint","fee":0}
+
+assistant channel=analysis:
+Proceed to deliver.
+
+assistant channel=commentary to=tool.bundle_deliver:
+{"room_number":"1510","variant":"mint"}
+
+tool.bundle_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":11,"runner":"harbor-amenity","ticket":"HCCH-1510-BM"}
+
+assistant channel=final:
+Yes—brush + mint toothpaste bundle is confirmed and on its way to room 1510. ETA ~11 minutes (harbor-amenity, ticket HCCH-1510-BM). Complimentary.
+
+user:
+Is the herbal bundle also an option?
+
+assistant channel=analysis:
+Answer using Bundle Policy.
+
+assistant channel=final:
+Yes—bundles are available for mint and herbal.
+
+user:
+The skywalk to the convention center saved me time.
+
+assistant channel=analysis:
+Chitchat from system.
+
+assistant channel=final:
+It makes back-to-back sessions much easier.
+
+user:
+Could you register me for tomorrow’s keynote?
+
+assistant channel=analysis:
+Registration isn’t covered here—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check keynote registration options for you.
+

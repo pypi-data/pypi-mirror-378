@@ -1,0 +1,134 @@
+"""
+Guest requests shopping bag for local market visit and sustainability information.
+Provide amenity assistance with eco-friendly options and local shopping guidance.
+
+ROLES: user (eco-conscious guest needing shopping bag for market visit), assistant (concierge with amenity services and local area expertise)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_amenity_availability",
+    "description": "Check availability of hotel amenities and supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_type": { "type": "string", "description": "Type of amenity requested" },
+        "quantity": { "type": "number", "description": "Quantity needed" },
+        "room_number": { "type": "string", "description": "Guest room number" }
+      },
+      "required": ["amenity_type", "quantity"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_amenity",
+    "description": "Deliver amenity to guest room or arrange pickup.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_type": { "type": "string" },
+        "quantity": { "type": "number" },
+        "room_number": { "type": "string" },
+        "delivery_method": { "type": "string", "enum": ["room_delivery", "front_desk_pickup"] },
+        "special_instructions": { "type": "string" }
+      },
+      "required": ["amenity_type", "quantity", "room_number", "delivery_method"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_local_info",
+    "description": "Get information about local attractions and services.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "info_type": { "type": "string", "description": "Type of local information" },
+        "category": { "type": "string", "description": "Category of local service" }
+      },
+      "required": ["info_type", "category"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Seaside Eco Resort Monterey (hotel_id: ser_mty_01)
+Address: 1700 17-Mile Drive, Monterey, CA 93953
+Timezone: America/Los_Angeles
+
+Amenities:
+- Complimentary reusable shopping bags made from organic cotton and bamboo fiber
+- Eco-friendly tote bags available in small (12L), medium (20L), and large (35L) sizes
+- Branded hotel bags with sustainability messaging and local market partnerships
+- Canvas bags with reinforced handles suitable for groceries and souvenirs
+
+Local Area:
+- Monterey Saturday Market: 8:00 AM–2:00 PM, 0.8 miles from hotel
+- Cannery Row Farmers Market: Tuesday/Friday 10:00 AM–3:00 PM, 1.2 miles
+- Pacific Grove Certified Organic Market: Wednesday/Sunday 8:00 AM–1:00 PM, 2.1 miles
+- Hotel partnerships with local sustainable vendors and organic produce suppliers
+
+Policies:
+- Bags provided free to registered guests for duration of stay
+- Maximum 3 bags per room to support local shopping and reduce plastic waste
+- Bags are yours to keep as part of our sustainability commitment
+
+user:
+Hi there! I'm planning to visit the local farmers market tomorrow morning. Do you have any shopping bags I could borrow? I'd prefer something reusable and eco-friendly.
+
+assistant channel=analysis:
+Guest wants shopping bags for farmers market visit. Check availability of reusable bags and provide local market information.
+
+assistant channel=commentary to=tool.get_amenity_availability:
+{"amenity_type": "reusable_shopping_bag", "quantity": 2}
+
+tool.get_amenity_availability channel=commentary to=assistant:
+{"available": true, "amenity_type": "reusable_shopping_bag", "quantity_available": 15, "sizes": ["small_12L", "medium_20L", "large_35L"], "materials": ["organic_cotton", "bamboo_fiber"]}
+
+assistant channel=final:
+Absolutely! We have complimentary eco-friendly shopping bags made from organic cotton and bamboo fiber. What's your room number, and would you like medium or large bags for the farmers market?
+
+user:
+Room 304. I think medium bags would be perfect. How many can I get?
+
+assistant channel=analysis:
+Deliver 2 medium reusable bags to room 304. Policy allows up to 3 bags per room.
+
+assistant channel=commentary to=tool.deliver_amenity:
+{"amenity_type": "reusable_shopping_bag", "quantity": 2, "room_number": "304", "delivery_method": "room_delivery", "special_instructions": "medium size bags for farmers market visit"}
+
+tool.deliver_amenity channel=commentary to=assistant:
+{"delivered": true, "amenity_type": "reusable_shopping_bag", "quantity": 2, "room_number": "304", "size": "medium_20L", "eta_minutes": 10}
+
+assistant channel=commentary to=tool.get_local_info:
+{"info_type": "market_schedule", "category": "farmers_market"}
+
+tool.get_local_info channel=commentary to=assistant:
+{"market_name": "Monterey Saturday Market", "schedule": "8:00 AM–2:00 PM", "distance": "0.8 miles", "specialties": ["organic_produce", "artisan_breads", "local_seafood"], "parking": "free_2_hour_street_parking"}
+
+assistant channel=final:
+Perfect! I'm sending 2 medium reusable bags to room 304—they'll arrive in about 10 minutes. The Monterey Saturday Market runs 8 AM to 2 PM, just 0.8 miles away, with great organic produce and artisan breads. Free 2-hour street parking available.
+
+user:
+That sounds perfect! What's the weather like tomorrow? Should I bring an umbrella too?
+
+assistant channel=analysis:
+Weather inquiry is outside my defined tools and system knowledge. Need to use the special flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available weather resources.
+
+user:
+No worries, I'll check myself. Thanks for the bags and market info!
+
+assistant channel=analysis:
+Guest appreciation; brief acknowledgment response.
+
+assistant channel=final:
+You're welcome! Enjoy your shopping at the farmers market tomorrow morning.

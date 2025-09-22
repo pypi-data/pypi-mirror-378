@@ -1,0 +1,51 @@
+"""
+Guest departs after midnight and asks about key drop; include small talk, restate express policy from system, and an out-of-scope ride-hail ETA.
+
+ROLES: user (late-departing guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"calculate_folio","description":"Return current folio summary for a reservation before checkout.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},"strict":true}
+]
+```
+"""
+
+system:
+North Pier Hotel — Front Office
+Address: 60 Harbor Way, Boston, MA 02210, USA
+Standard checkout: 12:00
+Express checkout: Key drop works at any hour
+Late checkout: On request, fees may apply
+Wi‑Fi: SSID "NorthPier-Guest"; Lobby coverage
+Parking: P2 deck; EV chargers level 1
+Dining: Pier Café 06:30–21:00
+Payment: USD; cards accepted
+Accessibility: Ramp at North Entrance
+
+user:
+Check out NP-33014; I’ll drop the key after midnight—is that fine?
+
+assistant channel=analysis:
+Return folio; confirm key drop works any hour.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"NP-33014"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 410","taxes":"USD 36.90","incidentals":"USD 5","total":"USD 451.90"}
+
+assistant channel=final:
+Total is USD 451.90 (room USD 410, taxes USD 36.90, incidentals USD 5). Express key drop works at any hour.
+
+user:
+Thanks—quiet night?
+
+assistant channel=final:
+Thanks—how else can I help?
+
+user:
+What’s the ETA for a ride-hail to Terminal 2 now?
+
+assistant channel=final:
+[ATTENTION] Ride‑hail ETAs aren’t included in these resources. Reviewing.

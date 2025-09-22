@@ -1,0 +1,52 @@
+"""
+Evening rush request for letterhead; include small talk and [ATTENTION].
+
+ROLES: user (guest 2901), assistant (front office)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_stationery_item","description":"Deliver stationery items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_name":{"type":"string","enum":["envelope_standard","envelope_large","letterhead"]},"quantity":{"type":"integer","minimum":1}},"required":["room_number","item_name","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Continental Arcade Hotel (hotel_id: cah_chi)
+Address: 99 State St, Chicago, IL 60601
+Timezone: America/Chicago
+Evening Stationery:
+- Delivery: 18:00–22:00
+- Letterhead: available
+- ETA: 10–15 minutes
+- Envelopes: standard, large available
+- Mail drop weekday pickup 16:30
+Inline: {"evening_delivery":true}
+
+user:
+Could I get six sheets of letterhead to 2901 right away?
+
+assistant channel=analysis:
+Deliver 6 sheets via tool.
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"2901","item_name":"letterhead","quantity":6}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"ok":true,"eta_minutes":11}
+
+assistant channel=final:
+On the way—six sheets of letterhead will reach 2901 in about 11 minutes.
+
+user:
+Thanks. The arcade ceiling looks grand.
+
+assistant channel=final:
+It’s a beautiful space to pass through.
+
+user:
+Do you have watermark paper too?
+
+assistant channel=final:
+[ATTENTION] I’ll check if watermark stock is available.
+

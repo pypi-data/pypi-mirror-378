@@ -1,0 +1,57 @@
+"""
+Guest requests downtown drop with quick quote and payment method.
+
+ROLES: user (guest heading to a dinner downtown), assistant (concierge with flat-rate table)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_flat_rates","description":"Return published flat rates for common destinations.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Meridian Court Hotel (hotel_id: mch_atl_01)
+Address: 210 Peachtree St NW, Atlanta, GA 30303
+Timezone: America/New_York
+
+Flat Rates (One-way):
+- ATL Airport: $75
+- Downtown Core: $40
+- Midtown Arts: $45
+- Buckhead: $55
+Billing: Charge to room or card on file
+Inclusions: 2 checked + 2 carry-ons
+Grace: 10 minutes at pickup
+
+user:
+How much to downtown core from here? I’m leaving now.
+
+assistant channel=analysis:
+Answer from published flat rates: Downtown Core $40. Use tool to return table and quote.
+
+assistant channel=commentary to=tool.get_flat_rates:
+{}
+
+tool.get_flat_rates channel=commentary to=assistant:
+{"ATL Airport":75,"Downtown Core":40,"Midtown Arts":45,"Buckhead":55,"currency":"USD"}
+
+assistant channel=final:
+The Downtown Core flat rate is $40 USD, including 2 checked bags and 2 carry‑ons. We can charge it to your room.
+
+user:
+Your lobby smells nice tonight.
+
+assistant channel=final:
+Thank you—have a great dinner downtown.
+
+user:
+Can I split the payment half cash and half room charge?
+
+assistant channel=analysis:
+Split tender policy not in system; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Verifying payment options.
+

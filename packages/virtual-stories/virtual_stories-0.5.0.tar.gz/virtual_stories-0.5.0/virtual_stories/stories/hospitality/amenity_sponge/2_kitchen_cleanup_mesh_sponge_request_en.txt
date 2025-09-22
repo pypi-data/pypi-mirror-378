@@ -1,0 +1,124 @@
+"""
+Guest in suite needs kitchen cleaning sponge for late-night cooking cleanup in kitchenette.
+
+ROLES: user (luxury suite guest with cooking needs), assistant (suite concierge with specialized kitchen amenity service)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_kitchen_amenity_stock",
+    "description": "Check availability of kitchen-specific amenities for suite guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "suite_level": { "type": "string", "description": "Level of suite accommodation" },
+        "amenity_type": { "type": "string", "description": "Type of kitchen amenity" },
+        "specialized_features": { "type": "string", "description": "Special features needed for amenity" }
+      },
+      "required": ["suite_level", "amenity_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_suite_delivery",
+    "description": "Schedule amenity delivery to suite with priority service.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_package": { "type": "string" },
+        "suite_number": { "type": "string" },
+        "delivery_urgency": { "type": "string", "enum": ["standard", "priority", "express"] },
+        "kitchen_specific": { "type": "boolean", "description": "Kitchen-specific delivery requirements" }
+      },
+      "required": ["amenity_package", "suite_number", "delivery_urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Skyline Palace Resort (hotel_id: spr_chi_01)
+Address: 500 North Lake Shore Drive, Chicago, IL 60611
+Timezone: America/Chicago
+Floor Configuration: Floors 20-35 are luxury suites with full kitchenettes
+
+Suite Amenities:
+- Professional-grade mesh sponges with antimicrobial coating for food safety
+- Dual-texture sponges combining gentle mesh and scrubbing surfaces
+- Non-scratch sponges specifically designed for delicate cookware and glassware
+- Eco-friendly bamboo fiber sponges for environmentally conscious guests
+- Heavy-duty industrial mesh sponges for stubborn cooking residue
+- Disposable compressed sponges that expand when wet for single-use convenience
+
+Kitchen Features:
+- Full-size kitchenettes in all suites with granite countertops and stainless steel appliances
+- Professional-grade cookware including non-stick pans requiring specialized cleaning tools
+- Built-in dishwasher with eco-friendly cleaning cycle options
+- Dedicated cooking utensil storage with organized amenity compartments
+- Premium glassware collection requiring gentle, non-abrasive cleaning methods
+
+Service Standards:
+- 24/7 suite concierge service with kitchen expertise and culinary consultation
+- Express delivery within 10 minutes for urgent kitchen cleaning needs
+- Complimentary kitchen amenity restocking for stays over 7 nights
+- Specialized cleaning product consultation for guest-owned cookware care
+- Partnership with local culinary suppliers for premium kitchen accessories
+
+Policies:
+- Maximum 5 specialized sponges per suite guest to maintain premium inventory
+- Kitchen amenities include usage instructions for optimal cookware preservation
+- Emergency cleaning services available for accidental spills or cooking mishaps
+- Environmentally responsible disposal programs for used kitchen cleaning materials
+
+user:
+I've been cooking in my suite and made quite a mess with sauce splatter. Could I get a mesh sponge that won't scratch my cookware?
+
+assistant channel=analysis:
+Suite guest needs specialized mesh sponge for kitchen cleanup. Check availability of non-scratch options suitable for cookware protection.
+
+assistant channel=commentary to=tool.check_kitchen_amenity_stock:
+{"suite_level": "luxury_kitchenette", "amenity_type": "mesh_sponge", "specialized_features": "non_scratch_cookware_safe"}
+
+tool.check_kitchen_amenity_stock channel=commentary to=assistant:
+{"available": true, "suite_level": "luxury_kitchenette", "stock_types": ["antimicrobial_mesh", "dual_texture_gentle", "bamboo_fiber_eco"], "cookware_compatibility": "all_non_stick_surfaces", "quantity_available": 25}
+
+assistant channel=final:
+Absolutely! We have specialized non-scratch mesh sponges perfect for your cookware. I can send up antimicrobial mesh sponges with dual texture - gentle on non-stick surfaces but effective for sauce cleanup. What's your suite number?
+
+user:
+Suite 2847. Can you send a couple? I'm planning to do more cooking this week.
+
+assistant channel=analysis:
+Guest in suite 2847 wants multiple sponges for extended cooking stay. Arrange priority delivery with extra sponges for week-long cooking needs.
+
+assistant channel=commentary to=tool.schedule_suite_delivery:
+{"amenity_package": "dual_texture_mesh_sponge_set", "suite_number": "2847", "delivery_urgency": "priority", "kitchen_specific": true}
+
+tool.schedule_suite_delivery channel=commentary to=assistant:
+{"delivery_scheduled": true, "amenity_package": "dual_texture_mesh_sponge_set", "quantity": 3, "delivery_time": "8_minutes", "included_items": ["antimicrobial_mesh_sponges", "usage_care_guide", "cookware_preservation_tips"]}
+
+assistant channel=final:
+Perfect! I'm sending a set of 3 antimicrobial mesh sponges to suite 2847 within 8 minutes, along with care instructions for your cookware. They're dual-texture - gentle mesh for delicate surfaces and effective scrubbing for stubborn residue.
+
+user:
+Thanks! By the way, I love cooking with the lake view. It's so peaceful here in Chicago.
+
+assistant channel=analysis:
+Guest appreciating the lake view and peaceful atmosphere. Simple acknowledgment of the hotel's location benefits.
+
+assistant channel=final:
+That's wonderful! The Lake Shore Drive location offers some of the best views in Chicago. Our suites are designed for guests who appreciate both luxury cooking and scenic dining experiences. Enjoy your culinary adventures!
+
+user:
+What's the best technique for cleaning burnt-on cheese from stainless steel?
+
+assistant channel=analysis:
+Guest asking for specialized cleaning advice beyond basic amenity provision. This requires detailed culinary knowledge not covered in available tools or system information.
+
+assistant channel=final:
+[ATTENTION] That's a great culinary question. Reviewing available resources.

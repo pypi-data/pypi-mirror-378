@@ -1,0 +1,58 @@
+"""
+Guest asks whether a deposit is required and how returns are processed; arrange a standard single-unit rental.
+
+ROLES: user (business traveler verifying charges), assistant (front desk confirming policy and processing rental)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check adapter availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Start rental and post fee","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Silverpine Grand Vienna (SPGV-07)
+Location: Kärntner Straße 22, 1010 Wien, Austria
+Star rating: 5-star city hotel; 19th-century facade; renovated 2022
+Electricity: 230V/50Hz; local sockets Type F; universal adapters available
+Adapters inventory: 18 units; fee €4 per night; NO deposit; posted under RENT-ADPT; return at Front Desk any time
+Desk hours: Front Desk 24/7; Concierge 08:00–22:00
+Amenities (select): Spa 10:00–21:00; Lounge 11:00–01:00; Breakfast 06:30–10:30
+Only listed services are available.
+
+user:
+Hello—do I need to pay a deposit for an adapter? I'm in 512.
+
+assistant channel=analysis:
+Confirm policy (no deposit), check availability, then create a 24-hour rental for room 512 with desk pickup.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"SPGV-07","item":"universal_power_adapter","quantity":1,"room":"512"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"notes":"€4/night, no deposit"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"SPGV-07","room":"512","item":"universal_power_adapter","duration_hours":24,"charge_code":"RENT-ADPT","delivery_option":"pick_up_at_desk"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"ORD-SPGV-3311","status":"created","rate":"€4/night"}
+
+assistant channel=final:
+No deposit is required. I’ve set up order ORD-SPGV-3311 at €4 per night—please pick it up at the Front Desk any time.
+
+user:
+When does the lounge close?
+
+assistant channel=final:
+The lounge runs 11:00 to 01:00.
+
+user:
+Can you provide your supplier’s wholesale invoice history for adapters?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

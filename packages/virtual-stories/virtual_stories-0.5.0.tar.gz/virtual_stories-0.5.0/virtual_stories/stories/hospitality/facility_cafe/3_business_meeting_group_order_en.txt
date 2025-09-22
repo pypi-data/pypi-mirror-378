@@ -1,0 +1,85 @@
+"""
+Business guest places a large group order for a morning meeting with multiple coffee and pastry items.
+
+ROLES: user (business executive organizing team meeting), assistant (cafe manager handling bulk order coordination)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"place_group_order","description":"Place a bulk order for multiple guests with scheduled delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"organizer_id":{"type":"string"},"delivery_location":{"type":"string"},"delivery_time":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_name":{"type":"string"},"quantity":{"type":"integer"},"customizations":{"type":"string"}},"required":["item_name","quantity"]}},"required":["organizer_id","delivery_location","delivery_time","items"]},"strict":true},
+  {"name":"check_bulk_discount","description":"Check if bulk order qualifies for group discount.","parameters":{"type":"object","additionalProperties":false,"properties":{"total_items":{"type":"integer"},"order_value":{"type":"number"}},"required":["total_items","order_value"]},"strict":true}
+]
+```
+"""
+
+system:
+Outlet: Rivet Café (facility_id: cafe_rivet_nyc)
+Property: Hudson Yardline Hotel (hotel_id: hudson_yardline_nyc)
+Address: 500 W 33rd St, New York, NY 10001
+Timezone: America/New_York
+Hours: Weekdays 06:30–14:30; Weekends 07:00–15:00
+Menu highlights: Flat white; Cappuccino; Almond croissant; Ham & gruyère croissant
+Group services: Bulk orders available for meetings; 10% discount on orders over $50
+Delivery: Available to hotel meeting rooms; minimum 30 minutes advance notice
+Payment: Corporate billing available; room charge accepted
+Meeting packages: Coffee service for 6-20 people; pastry platters available
+
+user:
+Good morning! I need to place a large order for our 8:30 AM board meeting. We have 12 people and need coffee service.
+
+assistant channel=analysis:
+Guest needs a bulk order for a business meeting. I should gather details about quantities, preferences, and delivery location, then check for bulk discounts.
+
+assistant channel=final:
+Perfect! We can definitely handle a group order for 12 people. What would you like to include? We offer coffee service packages and can deliver directly to your meeting room.
+
+user:
+Great! We'll need 8 cappuccinos, 4 flat whites, and 12 almond croissants. Can you deliver to the Hudson Conference Room on the 15th floor?
+
+assistant channel=analysis:
+Need to place the group order with all specified items and check for bulk discount eligibility. The order has 24 total items which should qualify for the 10% discount.
+
+assistant channel=commentary to=tool.place_group_order:
+{"organizer_id":"HY-723","delivery_location":"Hudson Conference Room, 15th floor","delivery_time":"08:30","items":[{"item_name":"Cappuccino","quantity":8,"customizations":""},{"item_name":"Flat white","quantity":4,"customizations":""},{"item_name":"Almond croissant","quantity":12,"customizations":""}]}
+
+tool.place_group_order channel=commentary to=assistant:
+{"status":"confirmed","order_id":"CAF-NYC-1089","delivery_time":"08:30","total_items":24}
+
+assistant channel=commentary to=tool.check_bulk_discount:
+{"total_items":24,"order_value":89.50}
+
+tool.check_bulk_discount channel=commentary to=assistant:
+{"discount_applied":true,"discount_percentage":10,"original_total":89.50,"discounted_total":80.55}
+
+assistant channel=analysis:
+Order confirmed with discount applied. I should provide the final details including pricing and delivery confirmation.
+
+assistant channel=final:
+Excellent! Your order is confirmed for 08:30 delivery to the Hudson Conference Room. You're getting 8 cappuccinos, 4 flat whites, and 12 almond croissants. With our 10% bulk discount, your total comes to $80.55. Order number CAF-NYC-1089.
+
+user:
+Perfect! Can you charge this to room 1523?
+
+assistant channel=analysis:
+Guest wants to charge to their hotel room, which is available according to the system prompt.
+
+assistant channel=final:
+Absolutely! I'll charge this to room 1523. Your order will be delivered at 08:30 sharp. Is there anything else you need for the meeting?
+
+user:
+Actually, do you have any decaf options? One of our board members prefers decaf.
+
+assistant channel=analysis:
+Guest is asking about decaf options. This information isn't specified in my system prompt, so I should use the [ATTENTION] flag.
+
+assistant channel=final:
+[ATTENTION] Let me check our current decaf options for you.
+
+user:
+That's fine, regular coffee is okay. The conference room setup looks great by the way.
+
+assistant channel=analysis:
+This is small talk about the conference room setup. I should acknowledge positively.
+
+assistant channel=final:
+Thank you! We're glad the setup works well for your meeting. Your coffee service will be ready right on time at 08:30.

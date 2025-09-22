@@ -1,0 +1,54 @@
+"""
+Marathon runners set synchronized wake‑ups for two rooms; confirm system behavior and format.
+
+ROLES: user (runner coordinating), assistant (operator scheduling calls for two rooms)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_wake_up_call","description":"Set a wake‑up call for a room at a given time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time":{"type":"string"}},"required":["room_number","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Cityline Plaza Hotel — Wake‑Up
+Attempts: Up to 3 rings
+Formats: 24‑hour or am/pm
+Knocks: Not provided
+Desk: Beside Fitness Center entrance
+Availability: 24/7
+
+user:
+Set 5:05 am for rooms 310 and 312.
+
+assistant channel=analysis:
+Schedule both at 05:05; then restate behavior.
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"310","time":"05:05"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_310_0505","time":"05:05"}
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"312","time":"05:05"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_312_0505","time":"05:05"}
+
+assistant channel=final:
+Wake‑ups set for 310 (wakeup_310_0505) and 312 (wakeup_312_0505) at 05:05. The system rings up to three times; no door knocks.
+
+user:
+Gym looks busy already.
+
+assistant channel=final:
+Our desk is next to the Fitness Center entrance.
+
+user:
+Can you auto‑call again at 05:20 if I don’t pick up?
+
+assistant channel=final:
+[ATTENTION] Additional auto‑calls beyond the standard attempts aren’t listed. Checking available options.
+

@@ -1,0 +1,65 @@
+"""
+Long-stay guest requests a set of bowls for a kitchenette; asks about borrow duration.
+
+ROLES: user (long-stay traveler), assistant (residence desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_inventory","description":"Check bowl sets","parameters":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["item_code"],"additionalProperties":false},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver set","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"quantity_map":{"type":"object","additionalProperties":{"type":"integer"}},"priority":{"type":"string","enum":["normal","express"]},"sanitized":{"type":"boolean"}},"required":["room_number","items"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Dockside Residence Hotel (hotel_id: drh_bos_02)
+Address: 130 Atlantic Ave, Boston, MA 02110
+Timezone: America/New_York
+
+Residence Policies:
+- Loan duration: during stay; collect at checkout
+- Bowls: porcelain 16 oz, bamboo 14 oz, stainless 18 oz
+- Delivery: 10–20 minutes
+- Re-sanitization on request
+- Starter pantry on L1 for long-stays
+
+user:
+Hi—could I borrow 4 bowls for my kitchenette in 608? How long can I keep them?
+
+assistant channel=analysis:
+Answer policy; check set availability; deliver re-sanitized.
+
+assistant channel=final:
+You can keep loaned items for the duration of your stay; we collect at checkout. I’ll send four bowls now.
+
+assistant channel=commentary to=tool.check_amenity_inventory:
+{"item_code":"bowl_porcelain","quantity":4}
+
+tool.check_amenity_inventory channel=commentary to=assistant:
+{"item_code":"bowl_porcelain","on_hand":25,"can_fulfill":true,"notes":"microwave_safe"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"608","items":["bowl_porcelain"],"quantity_map":{"bowl_porcelain":4},"priority":"normal","sanitized":true}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ticket_id":"DRH-608-221","estimated_minutes":11,"items":[{"code":"bowl_porcelain","qty":4}],"sanitized":"re_sanitized"}
+
+assistant channel=final:
+Four porcelain bowls are en route under DRH-608-221, ETA ~11 minutes.
+
+user:
+Thanks! The starter pantry downstairs was handy today.
+
+assistant channel=final:
+Happy it helped—let us know if you need more basics.
+
+user:
+Any farmers markets on weekends?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check weekend market schedules for you.
+

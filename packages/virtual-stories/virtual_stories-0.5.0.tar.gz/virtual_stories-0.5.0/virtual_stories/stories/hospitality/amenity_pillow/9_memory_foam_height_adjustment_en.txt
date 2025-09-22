@@ -1,0 +1,73 @@
+"""
+Guest asks for higher memory foam pillow for reading and sleep.
+Provide high-loft model, protector, and delivery timing.
+
+ROLES: user (guest wanting higher loft), assistant (sleep concierge managing pillow heights)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_loft","description":"Check high-loft memory foam models.","parameters":{"type":"object","properties":{"size":{"type":"string","enum":["standard","queen","king"]},"loft_cm":{"type":"integer"}},"required":["size"]},"strict":true},
+  {"name":"deliver_loft","description":"Deliver selected high-loft model with protector.","parameters":{"type":"object","properties":{"room":{"type":"string"},"model":{"type":"string"},"protector":{"type":"boolean"}},"required":["room","model"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Alpine Serenity Chalet (hotel_id: asc_zrh_16)
+Address: Bahnhofstrasse 88, 3920 Zermatt, Switzerland
+Timezone: Europe/Zurich
+
+Loft Options:
+- Memory foam high-loft 14 cm (standard/queen)
+- Hybrid foam with cooling channels 12–13 cm
+- Adjustable layer system (+2 cm inserts)
+- Washable knit covers; protector available
+- Quiet headboard reading light alignment service
+
+Ops:
+- Delivery loop 12–15 minutes to Levels 4–9
+- RFID-tracked inventory
+- Sanitized and sealed per item
+- Turndown alignment upon request
+- No extra charge
+
+user:
+Room 612—do you have a higher memory foam pillow for reading, queen size?
+
+assistant channel=analysis:
+Check 14 cm queen model; deliver with protector.
+
+assistant channel=commentary to=tool.check_loft:
+{"size":"queen","loft_cm":14}
+
+tool.check_loft channel=commentary to=assistant:
+{"available":true,"models":["mf_highloft_14cm_queen"],"adjust_layers":["+2cm_insert"],"protector_available":true}
+
+assistant channel=commentary to=tool.deliver_loft:
+{"room":"612","model":"mf_highloft_14cm_queen","protector":true}
+
+tool.deliver_loft channel=commentary to=assistant:
+{"sent":true,"eta_minutes":13,"runner":"Elena","items":["mf_highloft_14cm_queen","protector"],"sealed":true}
+
+assistant channel=final:
+Yes—our 14 cm high‑loft queen memory foam is available. Elena will arrive in about 13 minutes with a protector and sealed packaging.
+
+user:
+Can you add the +2 cm insert later if needed?
+
+assistant channel=analysis:
+Answer from system Loft Options adjustable layer system.
+
+assistant channel=final:
+Absolutely—the adjustable layer system includes a +2 cm insert we can add on request.
+
+user:
+Is the Gornergrat train running late tonight?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Verifying information.
+

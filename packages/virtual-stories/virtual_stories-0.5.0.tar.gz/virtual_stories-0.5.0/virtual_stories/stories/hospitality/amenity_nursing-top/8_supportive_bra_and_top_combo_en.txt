@@ -1,0 +1,76 @@
+"""
+Guest asks for a supportive nursing bra and a matching top.
+Provide available sizes and coordinate delivery.
+
+ROLES: user (mother seeking support and coverage), assistant (maternal care coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_family_amenities","description":"Check availability of family and maternal support amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["nursing_tops","nursing_pillow","privacy_screen","comfortable_chair","baby_supplies"]},"size_needed":{"type":"string","enum":["XS","S","M","L","XL","XXL"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_maternal_support","description":"Coordinate maternal wellness and nursing support services.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["nursing_clothing","privacy_setup","comfort_furniture","feeding_supplies"]},"size_specifications":{"type":"string"},"delivery_urgency":{"type":"string","enum":["standard","priority","immediate"]}},"required":["room_number","service_type"]},"strict":true},
+  {"name":"coordinate_wellness_services","description":"Connect with wellness team for specialized maternal health support.","parameters":{"type":"object","additionalProperties":false,"properties":{"wellness_service":{"type":"string","enum":["lactation_consultation","postpartum_massage","nutrition_guidance","baby_care_coaching"]},"guest_room":{"type":"string"},"appointment_preference":{"type":"string"}},"required":["wellness_service","guest_room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Pinecrest Wellness Lodge (hotel_id: pwl_slc_18)
+Address: 250 Canyon Rd, Salt Lake City, UT 84103
+Timezone: America/Denver
+
+Maternal Wardrobe:
+- Nursing bras: wire‑free, sizes S–XL
+- Nursing tops: crossover/pull‑down, cotton and bamboo
+- Colors: almond, dusk, navy
+- Delivery: 9–12 min rooms
+- Wellness: posture coaching Thu 15:00–17:00
+
+user:
+Hi—room 512. Do you have a supportive nursing bra and a top to match in navy?
+
+assistant channel=analysis:
+Check nursing_tops for tops; bras mentioned in system but tools scope covers clothing generally; proceed with clothing service for top and provide bra as part of items_included in delivery description.
+
+assistant channel=commentary to=tool.check_family_amenities:
+{"amenity_type":"nursing_tops"}
+
+tool.check_family_amenities channel=commentary to=assistant:
+{"available":true,"colors":["almond","dusk","navy"],"styles":["crossover","pull_down"],"stock_levels":{"S":3,"M":5,"L":5,"XL":2}}
+
+assistant channel=final:
+Yes—navy tops are available in crossover or pull‑down. What sizes do you prefer for the bra and the top in room 512?
+
+user:
+Top medium, bra large.
+
+assistant channel=analysis:
+Arrange clothing delivery noting top M navy and include wire‑free bra L navy.
+
+assistant channel=commentary to=tool.arrange_maternal_support:
+{"room_number":"512","service_type":"nursing_clothing","size_specifications":"top M navy (crossover or pull_down per guest), wire_free_bra L navy","delivery_urgency":"standard"}
+
+tool.arrange_maternal_support channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":11,"items_included":["nursing_top_navy_M_crossover","wire_free_bra_navy_L"],"delivery_team":"maternal_care"}
+
+assistant channel=final:
+Confirmed—one navy crossover top (M) and a wire‑free bra (L) will arrive at room 512 in about 11 minutes.
+
+user:
+Thanks! The mountain air is crisp.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+It’s refreshing up here.
+
+user:
+Could you fit me for a custom bra size now?
+
+assistant channel=analysis:
+Custom fitting not in system/tools; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

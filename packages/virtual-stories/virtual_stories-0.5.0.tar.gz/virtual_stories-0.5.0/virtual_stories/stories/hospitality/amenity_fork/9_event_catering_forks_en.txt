@@ -1,0 +1,66 @@
+"""
+Guest requests forks for an in-suite brief catering setup.
+Provide quick batch delivery.
+
+ROLES: user (meeting host), assistant (banquet liaison for small amenity requests)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_amenity","description":"Deliver batch forks.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","room_number","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverfront Conference Suites (hotel_id: rcs_28)
+Address: 60 Water St, Brooklyn, NY 11201
+Timezone: America/New_York
+
+Quick Banquet Support:
+- Amenity add-ons: cutlery, plates, napkins
+- Delivery target: 10–15 minutes
+- Complimentary up to 20 pieces
+
+user:
+Need 15 forks to suite 1803 for a quick meeting.
+
+assistant channel=analysis:
+Dispatch 15 forks to 1803.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name":"fork","room_number":"1803","quantity":15}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status":"success","eta":"12 minutes","ticket":"RCS-1803-FK15"}
+
+assistant channel=final:
+On it—15 forks are en route to suite 1803 (ticket RCS-1803-FK15). ETA around 12 minutes.
+
+user:
+Are the first 20 complimentary?
+
+assistant channel=analysis:
+Yes per system.
+
+assistant channel=final:
+Yes—up to 20 pieces are complimentary.
+
+user:
+That bridge view is inspiring.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+The river breeze makes meetings feel lighter.
+
+user:
+Can you arrange a photographer for the session?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Processing your request.
+

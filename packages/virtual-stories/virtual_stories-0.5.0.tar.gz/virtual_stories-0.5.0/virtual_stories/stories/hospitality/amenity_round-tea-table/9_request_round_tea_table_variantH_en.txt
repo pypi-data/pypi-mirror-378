@@ -1,0 +1,76 @@
+"""
+Guest wants an 80 cm walnut round tea table sofa-side; confirm inventory and request setup; include small talk and an [ATTENTION] case.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_furniture_inventory","description":"Check round tea table stock.","parameters":{"type":"object","properties":{"item_code":{"type":"string","enum":["round_tea_table"]},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]}},"required":["item_code","size_cm","finish"],"additionalProperties":false},"strict":true},
+  {"name":"request_in_room_setup","description":"Arrange delivery and sofa-side placement.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]},"placement":{"type":"string","enum":["near_window","center","sofa_side"]},"surface_protectors":{"type":"boolean"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","item_code","size_cm","finish","placement","surface_protectors","priority"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel name: Bayview Serene (hotel_id: bs_syd_08)
+Address: 9 Macquarie St, Sydney NSW 2000
+Furniture ops: 08:30–21:30; ETA 11–17 minutes
+
+Inventory grid
+60/walnut: 2
+60/birch: 2
+80/walnut: 2
+80/birch: 3
+Note: sofa_side preferred for suites with sectional sofas
+
+House facts
+- Check-in 15:00 | Check-out 11:00
+- Pool: 06:00–21:00; towels at deck
+- Taxis queue at side porte-cochère
+- Room fragrance disabled on request
+- Corridor carpeting replaced last month
+- Staff languages: EN, ZH
+
+user:
+Could you send an 80 cm walnut round tea table next to the sofa in 2304?
+
+assistant channel=analysis:
+Confirm 80/walnut availability, then schedule sofa_side setup for room 2304.
+
+assistant channel=commentary to=tool.check_furniture_inventory:
+{"item_code":"round_tea_table","size_cm":80,"finish":"walnut"}
+
+tool.check_furniture_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":2,"item_code":"round_tea_table","size_cm":80,"finish":"walnut"}
+
+assistant channel=analysis:
+Submit setup order.
+
+assistant channel=commentary to=tool.request_in_room_setup:
+{"room_number":"2304","item_code":"round_tea_table","size_cm":80,"finish":"walnut","placement":"sofa_side","surface_protectors":true,"priority":"normal"}
+
+tool.request_in_room_setup channel=commentary to=assistant:
+{"ticket_id":"FN-2304-6631","eta_minutes":12}
+
+assistant channel=final:
+Set—80 cm walnut table sofa-side for 2304 is scheduled. Ticket FN-2304-6631, ETA roughly 12 minutes.
+
+user:
+The corridor carpet looks brand new.
+
+assistant channel=analysis:
+Use house facts to acknowledge.
+
+assistant channel=final:
+Yes—the corridor carpeting was replaced last month.
+
+user:
+Can you extend pool hours to 23:00 tonight?
+
+assistant channel=analysis:
+Pool hour changes aren’t defined; flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking if extended pool hours are possible. Coordinating internally.
+

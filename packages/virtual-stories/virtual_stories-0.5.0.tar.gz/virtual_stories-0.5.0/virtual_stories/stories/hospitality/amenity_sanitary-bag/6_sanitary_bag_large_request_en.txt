@@ -1,0 +1,71 @@
+"""
+Guest requests a larger quantity of sanitary bags; confirm availability and deliver; include small talk and property acknowledgment.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bathroom_supplies","description":"Check availability for sanitary bags.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_bag"]}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_bathroom_supplies","description":"Deliver bathroom supplies to a room with placement.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1},"placement":{"type":"string","enum":["bathroom_counter","under_sink"]}},"required":["room_number","item_code","quantity","placement"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Redwood Square Hotel (hotel_id: rs_sjc_15)
+Address: 60 S Market St, San Jose, CA 95113
+Bathroom supply hours: 07:00–23:00; ETA 8–12 minutes
+Business lounge: 06:00–22:00; snacks 15:00–18:00
+Wi‑Fi: 500/200 Mbps; conference QoS daytime
+Parking: self-park; EV chargers (6)
+Scent: redwood and citrus
+Check-in/out: 16:00 / 12:00
+
+Sanitary bag inventory:
+- Stock: 240 sleeves
+- Packaging: matte white compostable
+- Placement: counter or under sink by request
+
+user:
+Could I get eight sanitary bags to 1220, placed on the counter?
+
+assistant channel=analysis:
+Check availability; deliver 8 to bathroom_counter.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"item_code":"sanitary_bag"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_bag","on_hand":240}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"1220","item_code":"sanitary_bag","quantity":8,"placement":"bathroom_counter"}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"ticket_id":"BS-1220-6632","eta_minutes":10}
+
+assistant channel=final:
+All set—eight sanitary bag sleeves will be on the bathroom counter in 1220. Ticket BS-1220-6632, roughly 10 minutes.
+
+user:
+The redwood and citrus scent is nice.
+
+assistant channel=analysis:
+Tie to scent detail.
+
+assistant channel=final:
+We diffuse a redwood-and-citrus blend in the lobby—thanks for the note.
+
+user:
+Do you have menstrual cup sterilizing bags as well?
+
+assistant channel=analysis:
+Not listed; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check that item. Reviewing personal care inventory.
+

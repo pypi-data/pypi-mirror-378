@@ -1,0 +1,78 @@
+"""
+Long‑weekend availability; assistant searches via tool and relays only tool output; then answers a system-based question. Include small talk and an [ATTENTION] query beyond scope.
+
+ROLES: user (history buff), assistant (Heritage Manor reservations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+<hotel name="Heritage Manor" city="Charleston" state="SC" country="USA">
+  <address>11 Battery Row, Charleston, SC 29401</address>
+  <checkin>15:00</checkin>
+  <checkout>11:00</checkout>
+  <breakfast>Southern buffet 07:00–10:30</breakfast>
+  <wifi>Wi‑Fi 200 Mbps included</wifi>
+  <parking>Valet $38/night; no self‑parking</parking>
+  <quiet_hours>22:00–07:00</quiet_hours>
+  <courtyard>Open 08:00–21:00</courtyard>
+  <rooms>
+    <room code="QTR_K">Quarters King 27 m²</room>
+    <room code="VER_T">Veranda Twin 29 m²</room>
+    <room code="CAR_S">Carriage Suite 44 m²</room>
+  </rooms>
+</hotel>
+
+user:
+Do you have anything for 2025-04-18 to 2025-04-21, two adults?
+
+assistant channel=analysis:
+Use the search tool and echo results.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-04-18","check_out":"2025-04-21","adults":2,"children":0}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"VER_T","name":"Veranda Twin","rate":"USD 259/night"}]}
+
+assistant channel=final:
+Veranda Twin is available at USD 259/night. Check‑in 15:00; checkout 11:00.
+
+user:
+Nice vibe there?
+
+assistant channel=final:
+Warm welcome from Heritage Manor.
+
+user:
+Is valet the only parking option?
+
+assistant channel=final:
+Yes—valet only at $38/night.
+
+user:
+Can you arrange a guided historic tour bundle?
+
+assistant channel=final:
+[ATTENTION] Guided tour bundles aren’t covered by the provided details. Processing your request.
+

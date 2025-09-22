@@ -1,0 +1,55 @@
+"""
+Guest asks about doorway clearance and chair dimensions before requesting delivery.
+
+ROLES: user (accessibility-conscious guest), assistant (guest services providing measurements and delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"allocate_and_send","description":"Allocate a unit and send with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbor North Vancouver (HNV-18)
+Address: 88 Esplanade W, North Vancouver, BC V7M 0A2, Canada
+Measurements: Folded dimensions 95 cm (H) x 56 cm (W) x 28 cm (D); doorway clearance required 78 cm; aisle clearance recommended 90 cm.
+Kids’ High Chairs: 10 units; complimentary; straps cleaned daily; max weight 15 kg.
+Delivery: ETA 12–20 minutes; elevators prioritized for accessibility.
+Notes: Do not block corridor fire doors; runners can adjust placement within the room.
+
+user:
+Will the high chair fit through our doorway? And can you send one to 715?
+
+assistant channel=analysis:
+Answer fit from system (needs 78 cm clearance); then allocate and send.
+
+assistant channel=commentary to=tool.allocate_and_send:
+{"hotel_id":"HNV-18","room":"715"}
+
+tool.allocate_and_send channel=commentary to=assistant:
+{"order_id":"HN-715-557","eta_minutes":16}
+
+assistant channel=final:
+Yes—doorway clearance needed is 78 cm, and the folded chair is 56 cm wide, so it will fit. One unit is on the way (HN-715-557) with an ETA of about 16 minutes.
+
+user:
+The harbor view is gorgeous tonight.
+
+assistant channel=analysis:
+Small talk response.
+
+assistant channel=final:
+It’s a perfect evening for it—enjoy the skyline.
+
+user:
+Do you have the detailed CAD specs?
+
+assistant channel=analysis:
+Outside scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Retrieving information.
+

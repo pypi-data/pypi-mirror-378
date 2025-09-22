@@ -1,0 +1,58 @@
+"""
+Guest requests a small beard comb and travel case; arrange immediate delivery.
+
+ROLES: user (guest with beard), assistant (amenities desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_grooming_amenities","description":"List grooming items","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["combs","all_grooming"]}},"required":[]},"strict":true},
+  {"name":"deliver_amenities","description":"Deliver items","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}},"required":["sku","quantity"],"additionalProperties":false}},"delivery_time":{"type":"string","enum":["immediate","with_turndown","next_housekeeping"]}},"required":["room_number","items","delivery_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Ironwood Plaza (hotel_id: ip_pittsburgh)
+Address: 310 Steelworkers Way, Pittsburgh, PA 15222
+Timezone: America/New_York
+
+SKUs: COMB_BEARD_POCKET, CASE_TRAVEL_SMALL, COMB_FINE_STYLING
+Delivery SLA floors 10–14: 9–14 minutes
+
+user:
+Do you have a small beard comb—and a travel case if possible? I’m in 1314.
+
+assistant channel=analysis:
+List inventory; offer COMB_BEARD_POCKET and CASE_TRAVEL_SMALL; deliver immediate.
+
+assistant channel=commentary to=tool.get_grooming_amenities:
+{"category":"all_grooming"}
+
+tool.get_grooming_amenities channel=commentary to=assistant:
+{"available_items":[{"sku":"COMB_BEARD_POCKET","name":"Pocket Beard Comb"},{"sku":"CASE_TRAVEL_SMALL","name":"Small Travel Case"},{"sku":"COMB_FINE_STYLING","name":"Fine-tooth Styling Comb"}]}
+
+assistant channel=commentary to=tool.deliver_amenities:
+{"room_number":"1314","items":[{"sku":"COMB_BEARD_POCKET","quantity":1},{"sku":"CASE_TRAVEL_SMALL","quantity":1}],"delivery_time":"immediate"}
+
+tool.deliver_amenities channel=commentary to=assistant:
+{"delivery_id":"IP-1314-44","eta_minutes":11}
+
+assistant channel=final:
+Yes—sending a pocket beard comb and a small travel case now. Delivery IP-1314-44 arrives in about 11 minutes.
+
+user:
+This lobby’s steel art installation is impressive.
+
+assistant channel=final:
+It nods to the city’s steel heritage—polished panels along the atrium.
+
+user:
+Can I book a barber through you?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check what we can arrange.
+

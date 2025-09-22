@@ -1,0 +1,49 @@
+"""
+Guest left safe open and sees an alert; confirm status, guidance, and include small talk plus an out-of-scope ask.
+
+ROLES: user (guest with door-ajar alert), assistant (front desk providing guidance; engineering if needed)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_safe_status","description":"Confirm door state and errors.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverbend Plaza (hotel_id: rbp_sac)
+Address: 200 Capitol Mall, Sacramento, CA
+Safes:
+- Model: SafeGuard S450
+- Door-ajar alert clears after closing and pressing lock
+Support: Front desk 24/7; Engineering 07:00–22:00
+Amenities Note: Coffee kiosk in lobby opens 06:30
+
+user:
+The safe in 918 keeps beeping—door is slightly open. Is that normal?
+
+assistant channel=analysis:
+Verify status then advise to close and lock.
+
+assistant channel=commentary to=tool.verify_safe_status:
+{"room_number":"918"}
+
+tool.verify_safe_status channel=commentary to=assistant:
+{"status":"door_ajar","error_code":null}
+
+assistant channel=final:
+Yes—when the door is ajar it beeps. Close it firmly and press lock; the alert will clear.
+
+user:
+Great—grabbing a coffee from the lobby kiosk.
+
+assistant channel=final:
+It opens at 06:30 if you’re heading early.
+
+user:
+Can you print a receipt from the safe’s logs?
+
+assistant channel=final:
+[ATTENTION] Reviewing this as it’s beyond the current resources.
+

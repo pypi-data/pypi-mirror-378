@@ -1,0 +1,90 @@
+"""
+Guest requests keto-friendly late-night options.
+Provide menu items and place order.
+
+ROLES: user (keto diet guest), assistant (late-night kitchen coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_kitchen_availability","description":"Confirm late-night availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["late_night_menu"]}},"required":["service_type"]},"strict":true},
+  {"name":"get_available_menu_items","description":"List keto-friendly items.","parameters":{"type":"object","additionalProperties":false,"properties":{"menu_type":{"type":"string","enum":["late_night"]},"dietary_restrictions":{"type":"array","items":{"type":"string","enum":["keto"]}}},"required":["menu_type"]},"strict":true},
+  {"name":"place_food_order","description":"Place keto order.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"estimated_delivery":{"type":"string"},"total_cost":{"type":"number"}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Meridian (hotel_id: tmd_31)
+Address: 1 City Plaza, Dallas, TX 75201
+Timezone: America/Chicago
+
+Late-Night Keto:
+- Grilled chicken salad (no croutons) $22
+- Lettuce‑wrap beef sliders (3 pcs) $24
+- Cheese and olive plate $18
+- Delivery: 20–30 minutes; window until 3 AM
+
+user:
+Any keto options now? Room 1502.
+
+assistant channel=analysis:
+Confirm late-night menu and list keto items.
+
+assistant channel=commentary to=tool.check_kitchen_availability:
+{"service_type":"late_night_menu"}
+
+tool.check_kitchen_availability channel=commentary to=assistant:
+{"available":true,"eta":"20–30 minutes","until":"3 AM"}
+
+assistant channel=commentary to=tool.get_available_menu_items:
+{"menu_type":"late_night","dietary_restrictions":["keto"]}
+
+tool.get_available_menu_items channel=commentary to=assistant:
+{"menu_items":[{"name":"grilled_chicken_salad","price":22},{"name":"lettuce_wrap_sliders","price":24},{"name":"cheese_olive_plate","price":18}]}
+
+assistant channel=final:
+Yes—keto choices include grilled chicken salad ($22), lettuce‑wrap sliders ($24), and a cheese & olive plate ($18). What can I send to room 1502?
+
+user:
+Sliders, please.
+
+assistant channel=analysis:
+Place order for sliders to 1502.
+
+assistant channel=commentary to=tool.place_food_order:
+{"room_number":"1502","items":["lettuce_wrap_sliders"],"estimated_delivery":"~25 minutes","total_cost":24}
+
+tool.place_food_order channel=commentary to=assistant:
+{"order_confirmed":true,"order_id":"TMD-1502-LN09","eta":"25 minutes","items":["lettuce_wrap_sliders"],"total":24}
+
+assistant channel=final:
+Order TMD-1502-LN09 is confirmed—sliders will arrive in about 25 minutes.
+
+user:
+Do you deliver until 3 AM?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—late‑night service runs until 3 AM.
+
+user:
+The skyline looks electric from up here.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+It does—the plaza lights are a favorite view.
+
+user:
+Could you schedule a 6 AM gym trainer?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

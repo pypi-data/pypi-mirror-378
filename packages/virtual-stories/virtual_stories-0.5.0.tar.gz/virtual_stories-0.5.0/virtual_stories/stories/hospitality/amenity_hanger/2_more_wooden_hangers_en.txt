@@ -1,0 +1,68 @@
+"""
+Guest requests additional wooden hangers; includes small talk and a policy question.
+
+ROLES: user (guest in room 1821 needing more wooden hangers), assistant (concierge coordinating amenity delivery and sharing service details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check if an amenity is in stock and quantity available","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Schedule delivery of an amenity to a room","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Meridian Arcade — Skyline Tower
+Room: 1821 (Premier Twin); Closet defaults: 6 mixed hangers (3 wooden, 3 non-slip)
+Amenity policy: Up to 10 extra hangers/night/room; types: {wooden, non-slip, clip}
+Service window: Normal 07:00–23:00; Urgent 23:00–01:00 (reduced crew)
+Extensions: Front Desk 0; Guest Services 7712; Housekeeping 7714
+SLA: Floors 16–20 normal deliveries 10–18 minutes; urgent 6–12 minutes
+Elevator bank: Cars A–C for floors 1–22; avoid Service Bank S2 after 23:00 (noise policy)
+Inventory snapshot (start of shift): wooden 164, non-slip 208, clip 72
+Staging: Tower L18 service closet holds a rolling hanger crate; knock & announce; signature required
+Environmental note: Retain re-usable garment clips; do not leave them in room unrequested
+
+user:
+Could I get 4 more wooden hangers to 1821?
+
+assistant channel=analysis:
+Check availability for 4 wooden hangers; if available, place a normal delivery to room 1821 with standard note.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"wooden hanger","quantity":4}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"wooden hanger","available":true,"in_stock":164}
+
+assistant channel=analysis:
+Proceed to schedule normal delivery of 4 wooden hangers to 1821; include signature required note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1821","amenity_name":"wooden hanger","quantity":4,"priority":"normal","note":"Signature required; Skyline Tower L18 dispatch"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HNG-1821-7420","eta_minutes":12}
+
+assistant channel=final:
+Confirmed—4 wooden hangers are scheduled for room 1821 with an ETA of about 12 minutes.
+
+user:
+Appreciate it—busy evening for you?
+
+assistant channel=final:
+Steady so far—if anything else comes up, just say.
+
+user:
+What are your delivery hours tonight?
+
+assistant channel=final:
+Normal deliveries run 07:00–23:00, with urgent coverage 23:00–01:00.
+
+user:
+Do you know the hanger brand?
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+

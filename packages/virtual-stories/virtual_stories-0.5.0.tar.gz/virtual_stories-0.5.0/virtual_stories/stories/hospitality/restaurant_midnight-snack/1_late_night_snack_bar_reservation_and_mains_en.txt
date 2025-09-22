@@ -1,0 +1,77 @@
+"""
+Guest wants a late-night snack seating and a mains preview; include small talk and one out-of-scope follow-up using the special flag.
+
+ROLES: user (guest craving a midnight snack), assistant (night concierge arranging late-night seating and menu previews)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List on-property restaurants with cuisine and hours.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string","enum":["breakfast","lunch","dinner","late_night"]}},"required":["hotel_id"]},"strict":true},
+  {"name":"check_table_availability","description":"Check table availability for a restaurant.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer","minimum":1,"maximum":8},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book a table when availability exists.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Fetch a menu section preview for a restaurant.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["starters","mains","desserts","beverages"]}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel JSON Card
+{
+  "name": "Nightfall Inn Las Vegas",
+  "hotel_id": "nightfall_inn_las",
+  "address": "77 Eclipse Blvd, Las Vegas, NV 89109",
+  "timezone": "America/Los_Angeles",
+  "venues": [
+    {"label":"Midnight Noodle Bar","restaurant_id":"rest_midnight_noodles","hours":"23:00-02:00","notes":"counter + booths"},
+    {"label":"Sunset Grill","restaurant_id":"rest_sunset_grill","hours":"17:00-22:00","notes":"steak & seafood"}
+  ],
+  "access": "24/7 lobby access; venue on Mezzanine via lift"
+}
+
+user:
+Can I get a booth for two at the Midnight Noodle Bar at 12:30 AM tonight under Dana Cho? Also, can I preview a few mains?
+
+assistant channel=analysis:
+List late-night venues, check 00:30 for party of 2, book if available, then fetch mains preview.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"nightfall_inn_las","meal_period":"late_night"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_midnight_noodles","name":"Midnight Noodle Bar","hours":"23:00-02:00","cuisine":"noodle_bar"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_midnight_noodles","party_size":2,"datetime":"2025-09-04T00:30:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"NB05","hold_until":"2025-09-04T00:40:00"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_midnight_noodles","guest_name":"Dana Cho","contact":"","party_size":2,"datetime":"2025-09-04T00:30:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"MNB-LN-3307"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_midnight_noodles","section":"mains"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"mains","items":[{"name":"Beef Brisket Ramen"},{"name":"Spicy Dan Dan Noodles"},{"name":"Mushroom Udon"}]}
+
+assistant channel=final:
+Your 12:30 AM booth for two at Midnight Noodle Bar is confirmed (MNB-LN-3307). Mains preview: Beef Brisket Ramen, Spicy Dan Dan Noodles, Mushroom Udon.
+
+user:
+Love that you’re open late—the neon glow in the mezzanine is fun.
+
+assistant channel=final:
+Glad you like the ambiance.
+
+user:
+Could you send me tonight’s CCTV camera coverage map for the mezzanine?
+
+assistant channel=analysis:
+No tooling or system coverage for security camera maps; use the neutral processing flag.
+
+assistant channel=final:
+[ATTENTION] Request noted regarding security details. Assessing the available data.

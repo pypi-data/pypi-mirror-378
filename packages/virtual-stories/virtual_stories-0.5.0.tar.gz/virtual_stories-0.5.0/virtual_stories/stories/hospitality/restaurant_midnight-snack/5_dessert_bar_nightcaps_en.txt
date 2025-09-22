@@ -1,0 +1,61 @@
+"""
+Guest asks about a dessert bar late-night menu and seating policy.
+
+ROLES: user (sweet-toothed guest), assistant (concierge with dessert bar details)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_dessert_menu","description":"Fetch late-night dessert menu.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"}},"required":["restaurant_id"]}},
+  {"name":"get_seating_policy","description":"Get seating rules (bar vs tables, time limits).","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"}},"required":["restaurant_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Crestline Chicago (hotel_id: crs_chi)
+Address: 233 N Michigan Ave, Chicago, IL 60601
+Timezone: America/Chicago
+
+Venue: Velvet Cocoa Bar (restaurant_id: r_velvet)
+- Hours: 22:00–01:30
+- Seating: Bar seats walk‑in; tables 60‑minute limit after midnight
+- Highlights: molten lava cake, affogato, cheesecake, churros
+- Payments: Room charge OK
+
+user:
+Is Velvet Cocoa Bar still serving desserts after midnight? Any seating limits?
+
+assistant channel=analysis:
+Use tools to return menu and seating policy. Answer time limit from system: 60‑minute limit after midnight at tables.
+
+assistant channel=commentary to=tool.get_dessert_menu:
+{"restaurant_id":"r_velvet"}
+
+tool.get_dessert_menu channel=commentary to=assistant:
+{"items":["molten lava cake","affogato","cheesecake","churros"]}
+
+assistant channel=commentary to=tool.get_seating_policy:
+{"restaurant_id":"r_velvet"}
+
+tool.get_seating_policy channel=commentary to=assistant:
+{"bar":"walk_in","table_time_limit_after_midnight_minutes":60}
+
+assistant channel=final:
+Yes—Velvet Cocoa Bar serves until 01:30. Desserts include molten lava cake, affogato, cheesecake, and churros. After midnight, tables have a 60‑minute limit; bar seats are walk‑in.
+
+user:
+The lobby jazz sounds nice.
+
+assistant channel=final:
+Enjoy the music and the desserts.
+
+user:
+Can I bring my dog to the dessert bar?
+
+assistant channel=analysis:
+Pet policy not defined for this venue. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Thanks for checking. Reviewing policy details.
+

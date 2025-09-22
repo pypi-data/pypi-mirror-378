@@ -1,0 +1,63 @@
+"""
+Guest inquires about VIP benefits and lounge access; confirm tier perks via tool and provide concrete lounge details. Include small talk and a background handoff for an out-of-scope ask.
+
+ROLES: user (VIP guest confirming benefits), assistant (hotel concierge verifying tier details and amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_vip_profile",
+    "description": "Look up a guest's VIP tier, benefits, and lounge eligibility.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "membership_id": {"type": "string"},
+        "last_name": {"type": "string"}
+      },
+      "required": ["membership_id", "last_name"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Aurora Grand Seaview — Harbor Wing
+Address: 88 Wavefront Ave, Marina City 01920
+VIP Lounge: Level 41, Ocean Vista Club
+  - Hours: 06:00–22:30 daily
+  - Evening canapés: 17:30–19:30
+  - Dress code: Smart casual; no swimwear
+VIP Tiers accepted for lounge: Gold, Platinum
+Complimentary pressing: 2 items per stay for Gold; 4 items for Platinum
+Late checkout policy: Gold until 14:00 (subject to availability); Platinum until 16:00 (subject to availability)
+
+user:
+Hi, could you confirm my VIP benefits and whether I can access the lounge tonight?
+
+assistant channel=analysis:
+Verify tier and benefits via tool using membership ID and last name; then match to lounge policy in system.
+
+assistant channel=commentary to=tool.get_vip_profile:
+{"membership_id":"AUR-924771","last_name":"Miller"}
+
+tool.get_vip_profile channel=commentary to=assistant:
+{"tier":"Platinum","benefits":["Lounge access","Breakfast at Ocean Vista Club","4 items pressing","Late checkout up to 16:00 subject to availability"]}
+
+assistant channel=final:
+You’re listed as Platinum, which includes Lounge access, breakfast at Ocean Vista Club, 4 items of complimentary pressing, and late checkout up to 16:00 subject to availability. The lounge is on Level 41 and operates 06:00–22:30; evening canapés run 17:30–19:30.
+
+user:
+Nice! By the way, how’s your evening going?
+
+assistant channel=final:
+Thanks for asking—happy to help anytime. How can I make your stay even better?
+
+user:
+Can you also upgrade my airline seat for tomorrow’s flight?
+
+assistant channel=final:
+[ATTENTION] This request is outside the available services here. Checking available options.

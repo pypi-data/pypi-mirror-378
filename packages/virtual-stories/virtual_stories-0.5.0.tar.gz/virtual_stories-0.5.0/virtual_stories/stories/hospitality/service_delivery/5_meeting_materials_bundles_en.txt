@@ -1,0 +1,47 @@
+"""
+Guest requests multiple bundles to a ballroom; schedule delivery and note fragile handling and signature; include chitchat and ATTENTION for outside vendor pickup.
+
+ROLES: user (guest sending meeting materials), assistant (service center dispatcher coordinating bundles delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_inhouse_delivery","description":"Arrange delivery of labeled bundles on property.","parameters":{"type":"object","additionalProperties":false,"properties":{"from_room":{"type":"string"},"to_location":{"type":"string"},"item":{"type":"string"}},"required":["from_room","to_location","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Seaside Meridian — Service Logistics
+Coverage: Guestrooms and event spaces; on‑property only
+Hours: 24/7; ETAs typically 10–20 minutes
+Handling: Fragile items are hand‑carried; signature taken at destination
+Restrictions: No third‑party pickup coordination via Service Center
+
+user:
+Please send three labeled bundles from 1110 to Coral Ballroom B.
+
+assistant channel=analysis:
+Schedule on‑property delivery with bundle description; confirm ETA and signature policy.
+
+assistant channel=commentary to=tool.schedule_inhouse_delivery:
+{"from_room":"1110","to_location":"Coral Ballroom B","item":"three labeled bundles (fragile)"}
+
+tool.schedule_inhouse_delivery channel=commentary to=assistant:
+{"delivery_id":"DLV-6427","status":"scheduled","eta_minutes":16}
+
+assistant channel=final:
+Delivery DLV-6427 is scheduled to Coral Ballroom B with an ETA around 16 minutes. We’ll hand‑carry and obtain a signature on arrival.
+
+user:
+Thank you—love the ocean breeze here.
+
+assistant channel=final:
+We’re dispatching now.
+
+user:
+Can you also pick up a banner stand from the vendor downstairs?
+
+assistant channel=final:
+[ATTENTION] Third‑party pickup isn’t supported here. Reviewing available resources.
+

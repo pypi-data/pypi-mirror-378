@@ -1,0 +1,57 @@
+"""
+Guest asks about evening shuttle timing and pickup spot; confirm schedule and reserve a seat.
+
+ROLES: user (guest catching an evening flight), assistant (front desk agent managing shuttle bookings)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_shuttle_schedule","description":"Return hourly schedule and capacity","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"book_shuttle","description":"Reserve a shuttle seat","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"time":{"type":"string"}},"required":["hotel_id","room","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Terminal View Hotel (TVH-08)
+Shuttle Policy:
+- Service hours: 05:00–23:00, hourly departures
+- Pickup: Front driveway canopy
+- Drop-off: Airport Terminal A
+- Capacity: 12 seats per departure
+- Travel time: ~12 minutes to Terminal A
+- Recommendation: Reserve seats in advance
+- Time Zone: Eastern Time (ET)
+
+user:
+What’s your evening shuttle like? Can you book me for 8 PM from room 712?
+
+assistant channel=analysis:
+Confirm schedule and reserve the 20:00 shuttle.
+
+assistant channel=commentary to=tool.get_shuttle_schedule:
+{"hotel_id":"TVH-08"}
+
+tool.get_shuttle_schedule channel=commentary to=assistant:
+{"hours":"05:00-23:00 hourly","capacity":12,"pickup":"Front driveway canopy","dropoff":"Terminal A"}
+
+assistant channel=commentary to=tool.book_shuttle:
+{"hotel_id":"TVH-08","room":"712","time":"20:00"}
+
+tool.book_shuttle channel=commentary to=assistant:
+{"reservation_id":"TVH-712-2000","status":"confirmed","pickup":"Front driveway canopy"}
+
+assistant channel=final:
+The shuttle runs hourly until 23:00. You’re confirmed for 20:00 (TVH-712-2000); pickup is at the front driveway canopy, about 12 minutes to Terminal A.
+
+user:
+Thanks—clear night out there.
+
+assistant channel=final:
+Perfect for a smooth run to the terminal.
+
+user:
+Can you share the operator’s insurance certificate?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

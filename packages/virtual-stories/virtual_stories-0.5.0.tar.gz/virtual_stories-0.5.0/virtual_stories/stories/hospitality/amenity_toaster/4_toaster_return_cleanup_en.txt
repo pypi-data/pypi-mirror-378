@@ -1,0 +1,140 @@
+"""
+Guest requests toaster pickup after use; arrange collection, provide cleanup instructions, include small talk, and one background acknowledgment.
+
+ROLES: user (guest requesting toaster pickup), assistant (guest services handling appliance returns)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "schedule_appliance_pickup",
+    "description": "Schedule pickup of loaned appliance from guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "appliance_type": { "type": "string" },
+        "pickup_time": { "type": "string" }
+      },
+      "required": ["room_number", "appliance_type", "pickup_time"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_appliance_availability",
+    "description": "Check availability of portable kitchen appliances for loan.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "appliance_type": { "type": "string", "enum": ["toaster", "hot_plate", "rice_cooker"] }
+      },
+      "required": ["appliance_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Residence: Garden Court Suites (hotel_id: gc_sfo_21)
+Address: 600 Pine Street, San Francisco, CA 94108
+Timezone: America/Los_Angeles
+
+Kitchenette Policy:
+- Portable toaster loan available on request
+- Safety: Use on the countertop only; keep 6 inches clearance
+- Supply: Limited units; first-come, first-served
+- Models: Dualit Mini Classic (2-slice), Cuisinart Compact (4-slice)
+- Loan duration: Up to 24 hours per request
+- Return: Clean crumb tray, unplug, and place in original location
+
+Lobby Feature:
+- Morning bakery cart with fresh sourdough slices and croissants
+- Gluten-free bread options available upon request
+- Organic butter and artisanal jams from local suppliers
+
+Room Service:
+- Continental breakfast available 6:00 AM - 11:00 AM
+- Special dietary accommodations: vegan, gluten-free, keto-friendly
+- Fresh fruit platters and yogurt parfaits
+
+Local Attractions:
+- Ferry Building Marketplace (0.3 miles) - artisanal food vendors
+- Union Square (0.4 miles) - shopping and dining district
+- Chinatown (0.6 miles) - authentic Asian cuisine and markets
+
+Hotel Amenities:
+- 24-hour fitness center with cardio equipment
+- Business center with printing and scanning services
+- Concierge desk for local recommendations and reservations
+
+Housekeeping:
+- Appliance pickup available 7:00 AM - 9:00 PM
+- Cleaning supplies provided for guest use
+- Sanitization protocol for all returned appliances
+
+user:
+Hello, I'm in room 308 and I'm done with the toaster. Could you please come pick it up?
+
+assistant channel=analysis:
+Guest in room 308 wants to return the toaster. Need to schedule pickup and provide cleanup instructions.
+
+assistant channel=final:
+Of course! I'll arrange pickup of the toaster from room 308. Before we collect it, could you please unplug it, clean out the crumb tray, and place it back in the original location? This helps us maintain our appliances for the next guest.
+
+user:
+Sure, I'll clean it up. When can you pick it up?
+
+assistant channel=analysis:
+Guest is asking about pickup timing. Need to schedule the pickup.
+
+assistant channel=commentary to=tool.schedule_appliance_pickup:
+{"room_number":"308","appliance_type":"toaster","pickup_time":"within 30 minutes"}
+
+tool.schedule_appliance_pickup channel=commentary to=assistant:
+{"scheduled":true,"pickup_time":"30 minutes","housekeeping_team":"Team A","confirmation":"HK-2024-001"}
+
+assistant channel=analysis:
+Pickup scheduled successfully. Provide confirmation to guest.
+
+assistant channel=final:
+Perfect! I've scheduled pickup within 30 minutes. Our housekeeping team will collect the toaster and sanitize it for the next guest. You'll receive a confirmation when it's been picked up.
+
+user:
+Great! I really enjoyed having the toaster. The breakfast I made was delicious.
+
+assistant channel=analysis:
+Guest is making small talk about enjoying their breakfast with the toaster.
+
+assistant channel=final:
+That's wonderful to hear! There's nothing quite like a perfectly toasted breakfast. The toaster service is one of our most popular amenities - guests love being able to prepare their own breakfast in the comfort of their room.
+
+user:
+Do you have any recommendations for local breakfast spots for tomorrow morning?
+
+assistant channel=analysis:
+Guest is asking about local breakfast recommendations, which goes beyond our system knowledge of hotel amenities.
+
+assistant channel=final:
+[ATTENTION] I'll look into local breakfast recommendations for you. Checking available options.
+
+user:
+Actually, I think I'll just use room service tomorrow. The continental breakfast sounds good.
+
+assistant channel=analysis:
+Guest is referencing our room service continental breakfast, which is mentioned in the system prompt.
+
+assistant channel=final:
+Excellent choice! Our continental breakfast is available from 6:00 AM to 11:00 AM and includes fresh fruit platters, yogurt parfaits, and special dietary accommodations. You can place your order through the room service menu.
+
+user:
+Perfect! Can I request a toaster again if I change my mind?
+
+assistant channel=analysis:
+Guest is asking about requesting another toaster, which is within our system knowledge of the toaster loan policy.
+
+assistant channel=final:
+Absolutely! You can request a toaster again anytime during your stay. Just give us a call and we'll deliver one to your room. The loan duration is up to 24 hours per request, so you have flexibility in how you use it.

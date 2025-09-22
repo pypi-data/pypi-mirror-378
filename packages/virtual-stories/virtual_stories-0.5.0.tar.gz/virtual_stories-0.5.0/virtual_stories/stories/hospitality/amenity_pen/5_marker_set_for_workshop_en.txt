@@ -1,0 +1,73 @@
+"""
+Guest requests a marker set for a workshop; asks for felt-tip options and flipchart pads.
+Provide marker set availability, accessories, and delivery.
+
+ROLES: user (guest running a small workshop), assistant (stationery concierge providing markers and flipchart pads)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_writing_instruments","description":"Check marker sets and flipchart pad availability.","parameters":{"type":"object","properties":{"pen_type":{"type":"string","enum":["marker","felt_tip"]},"quality_tier":{"type":"string","enum":["standard","premium"]}},"required":["pen_type"]},"strict":true},
+  {"name":"deliver_writing_supplies","description":"Deliver markers and accessories.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"pen_selection":{"type":"array","items":{"type":"string"}},"accessories_included":{"type":"boolean"},"delivery_priority":{"type":"string","enum":["standard","express"]}},"required":["room_number","pen_selection"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Canal Quarter Meeting House (hotel_id: cqm_ams_88)
+Address: 8 Prinsengracht, 1015 DV Amsterdam, Netherlands
+Timezone: Europe/Amsterdam
+
+Workshop Stationery:
+- Low‑odor whiteboard markers; chisel and bullet tips
+- Felt‑tip color sets (12‑pack)
+- Flipchart pads and easels
+- Sticky notes (recycled paper)
+- Masking tape and card stock
+
+Ops:
+-,Express delivery 7–10 minutes to Meeting Wing B
+- Inventory sealed multi‑packs
+- Refill recycling bin in corridor
+- Complimentary for meeting rooms
+- Carry caddies available
+
+user:
+Hi, room 422. I need a felt‑tip 12‑pack and a flipchart pad for a workshop.
+
+assistant channel=analysis:
+Check felt‑tip set and flipchart pad; deliver express.
+
+assistant channel=commentary to=tool.check_writing_instruments:
+{"pen_type":"felt_tip","quality_tier":"standard"}
+
+tool.check_writing_instruments channel=commentary to=assistant:
+{"available":true,"sets":["felt_tip_12_color"],"flipchart_pads":true}
+
+assistant channel=commentary to=tool.deliver_writing_supplies:
+{"room_number":"422","pen_selection":["felt_tip_12_color","flipchart_pad"],"accessories_included":true,"delivery_priority":"express"}
+
+tool.deliver_writing_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta_minutes":8,"items":["felt‑tip 12‑color set","flipchart pad","sticky notes"],"runner":"Noor"}
+
+assistant channel=final:
+Yes—an express set is on the way: a 12‑color felt‑tip pack and a flipchart pad will reach 422 in about 8 minutes, with sticky notes included.
+
+user:
+Do you have easels too?
+
+assistant channel=analysis:
+Answer from Workshop Stationery.
+
+assistant channel=final:
+Yes—easels are available and can be added to your setup on request.
+
+user:
+Any canal cruises you recommend?
+
+assistant channel=analysis:
+Out of scope; apply ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

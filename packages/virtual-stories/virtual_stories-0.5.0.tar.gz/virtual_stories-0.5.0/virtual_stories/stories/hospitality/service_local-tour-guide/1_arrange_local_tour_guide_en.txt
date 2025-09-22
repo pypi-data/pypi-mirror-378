@@ -1,0 +1,60 @@
+"""
+Guest requests a local tour guide with language preference and hours.
+
+ROLES: user (guest seeking private guided tour), assistant (concierge arranging certified guides and quoting fees)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_tour_guide",
+    "description": "Arrange a certified local tour guide with language and duration.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "language": {"type": "string"},
+        "hours": {"type": "integer", "minimum": 2, "maximum": 8},
+        "start_time": {"type": "string"}
+      },
+      "required": ["language", "hours", "start_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Old Town Heritage Inn
+Local Tour Guide Service:
+- Certified guides; languages available: English, Spanish, Japanese
+- Rates: $45/hour (minimum 2 hours); museum tickets not included
+- Meet: Concierge desk or lobby fireplace seating
+
+user:
+Could you arrange a Japanese-speaking guide for 3 hours starting at 10 am?
+
+assistant channel=analysis:
+Submit request for Japanese, 3 hours at 10:00.
+
+assistant channel=commentary to=tool.request_tour_guide:
+{"language":"Japanese","hours":3,"start_time":"10:00"}
+
+tool.request_tour_guide channel=commentary to=assistant:
+{"request_id":"guide_2205","rate_per_hour":45,"currency":"USD","meeting_point":"Concierge desk"}
+
+assistant channel=final:
+Confirmed—Japanese-speaking guide request (guide_2205) for 3 hours starting 10:00, meeting at the Concierge desk. Rate is $45/hour; admission tickets are separate.
+
+user:
+Your lobby fireplace looks cozy.
+
+assistant channel=final:
+The lobby fireplace seating is a common meet point for guides.
+
+user:
+Can the guide secure exclusive early entry to the cathedral?
+
+assistant channel=final:
+[ATTENTION] Exclusive entries aren’t listed in our guide arrangements. Checking available options.

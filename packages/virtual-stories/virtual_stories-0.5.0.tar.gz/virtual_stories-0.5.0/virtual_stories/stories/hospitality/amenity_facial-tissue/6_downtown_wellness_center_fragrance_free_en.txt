@@ -1,0 +1,81 @@
+"""
+Guest requests fragrance-free tissues and asks about wellness bar hours.
+Provide stock check and delivery.
+
+ROLES: user (allergy-conscious guest), assistant (wellness desk attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_tissue_inventory", "description": "Find fragrance-free boxes.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "tissue_type": { "type": "string", "enum": ["hypoallergenic", "premium"] }, "brand_preference": { "type": "string", "enum": ["any", "eco_bamboo"] }, "quantity_boxes": { "type": "number" } }, "required": ["tissue_type"] }, "strict": true },
+  { "name": "deliver_tissue_amenity", "description": "Deliver to room with placement note.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_products": { "type": "array", "items": { "type": "string" } }, "delivery_priority": { "type": "string", "enum": ["standard"] }, "special_placement": { "type": "string" } }, "required": ["room_number", "tissue_products"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Harbor Square Wellness (hotel_id: hsw_sea_01)
+Address: 500 Alaskan Way, Seattle, WA 98104
+Timezone: America/Los_Angeles
+
+Wellness & Amenities:
+- Fragrance-free tissue options: Eco‑Bamboo Hypoallergenic
+- Delivery 12–18 minutes
+- Placement: nightstand, vanity, workspace
+- Wellness juice bar: 7:00–15:00
+- Sauna 16:00–21:00
+
+Property Notes:
+- 190 rooms; harbor views; in‑room pour-over
+- Quiet hours 22:00–7:00
+- Bike share at curb
+
+user:
+Room 1515—fragrance-free tissues please. One by the bed.
+
+assistant channel=analysis:
+Check fragrance-free stock; deliver 1 box to nightstand.
+
+assistant channel=commentary to=tool.check_tissue_inventory:
+{"tissue_type":"hypoallergenic","brand_preference":"eco_bamboo","quantity_boxes":1}
+
+tool.check_tissue_inventory channel=commentary to=assistant:
+{"available_products":["Eco-Bamboo Hypoallergenic"],"stock_levels":{"eco_bamboo":40}}
+
+assistant channel=commentary to=tool.deliver_tissue_amenity:
+{"room_number":"1515","tissue_products":["1 box Eco-Bamboo Hypoallergenic"],"delivery_priority":"standard","special_placement":"nightstand"}
+
+tool.deliver_tissue_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"14 minutes","placement_confirmed":"nightstand","tracking_id":"SEA1515_E1"}
+
+assistant channel=final:
+On its way—1 box of Eco‑Bamboo Hypoallergenic will be on your nightstand in ~14 minutes.
+
+user:
+Is the wellness juice bar still open?
+
+assistant channel=analysis:
+From system: 7:00–15:00.
+
+assistant channel=final:
+Yes—open 7:00 to 15:00.
+
+user:
+The harbor view is lovely.
+
+assistant channel=analysis:
+Small talk reply.
+
+assistant channel=final:
+Sunsets over the water are especially nice from this side.
+
+user:
+Could you arrange a whale-watching tour for tomorrow?
+
+assistant channel=analysis:
+Outside amenity scope; flag.
+
+assistant channel=final:
+[ATTENTION] Handing this to concierge to check tour availability.
+"""
+

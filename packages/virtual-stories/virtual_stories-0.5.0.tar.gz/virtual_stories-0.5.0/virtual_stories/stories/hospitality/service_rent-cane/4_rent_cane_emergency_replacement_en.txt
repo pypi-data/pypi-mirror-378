@@ -1,0 +1,54 @@
+"""
+Guest's personal cane broke; needs immediate replacement; confirm emergency availability, arrange urgent delivery, and discuss temporary solutions.
+
+ROLES: user (guest whose personal cane broke unexpectedly), assistant (front desk providing emergency accessibility support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check accessibility item availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create rental with fee or comp","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Old Town Heritage Prague (OTHP-05), Karlova 7, 110 00 Prague 1, Czechia.
+Boutique heritage hotel; 7 floors; Front Desk 24/7.
+Walking canes: 6 units; complimentary for up to 48 hours; return at Front Desk; no deposit.
+Emergency policy: Priority access for broken personal equipment; immediate delivery available; temporary loan while repairs arranged.
+Other facts: Elevator to all floors; Breakfast 7:00–10:30; 24/7 concierge for emergencies; Local repair services directory.
+
+user:
+My walking cane just broke in the elevator! I really need a replacement right away. I'm in room 208.
+
+assistant channel=analysis:
+This is an emergency situation with a broken personal cane. I need to prioritize immediate availability and arrange urgent delivery.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"OTHP-05","item":"walking_cane","quantity":1,"room":"208"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["CANE-02"],"notes":"Emergency replacement; immediate delivery priority"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"OTHP-05","room":"208","item":"walking_cane","duration_hours":48,"charge_code":"COMP-ACCESS","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CAN-208-2220","status":"created","charge":"comp","priority":"urgent","delivery":"immediate"}
+
+assistant channel=final:
+I'm so sorry about your cane breaking! I've immediately reserved CANE-02 for you. Order CAN-208-2220 is complimentary and marked urgent—we'll deliver it to room 208 within 5 minutes. Are you comfortable waiting in your room?
+
+user:
+Yes, thank you so much! The staff here is really helpful.
+
+assistant channel=final:
+We're here to help, especially in situations like this. Your safety and comfort are our priority.
+
+user:
+Do you have information about local cane repair services for my broken one?
+
+assistant channel=final:
+[ATTENTION] Looking into local repair options.

@@ -1,0 +1,83 @@
+"""
+Guest requests a pre-staged conference supply pack including folders, binders, and tabs.
+Provide comprehensive staging with workspace reservation.
+
+ROLES: user (event planner), assistant (conference services coordinator with pre-staging capability)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"reserve_workspace_with_supplies","description":"Reserve a collab table and pre-stage supplies.","parameters":{"type":"object","additionalProperties":false,"properties":{"guest_name":{"type":"string"},"duration_hours":{"type":"number"},"workspace_type":{"type":"string","enum":["collab_table","private_office"]},"supplies":{"type":"array","items":{"type":"string"}}},"required":["guest_name","duration_hours","workspace_type"]},"strict":true},
+  {"name":"check_office_supply_inventory","description":"Verify supply availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_category":{"type":"string","enum":["folders","binders","dividers","labels"]},"quantity_needed":{"type":"number"}},"required":["supply_category"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeside Convention Resort (hotel_id: lcr_11)
+Address: 400 Boardwalk Ln, Chicago, IL 60611
+Timezone: America/Chicago
+
+Conference Pre-Staging:
+- Collab tables with power hubs and 32" displays
+- Staging window: 30–45 min prior to session start
+- Supply pack defaults: 20 folders, 2 1-inch binders, 2 packs 8-tab dividers, 1 sheet labels
+- Delivery team extension: 4419
+
+Inventory Snapshot:
+- Folders: manila/presentation (250+ each)
+- Binders: 1" (130), 2" (60)
+- Dividers: 8-tab colored (120), 12-tab (80)
+- Labels: clear/white/spine
+
+Policy:
+- Pre-staging complimentary; binder upgrades billed ($3 for 2")
+
+user:
+I need a collab table staged for 2 hours with 20 folders, two 1-inch binders, and 8-tab dividers.
+
+assistant channel=analysis:
+Check supplies then reserve the workspace with a supplies list.
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"folders","quantity_needed":20}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.reserve_workspace_with_supplies:
+{"guest_name":"Event Planner","duration_hours":2,"workspace_type":"collab_table","supplies":["folders_20","binder_1in_2","dividers_8tab_2packs","labels_1sheet"]}
+
+tool.reserve_workspace_with_supplies channel=commentary to=assistant:
+{"reserved":true,"workspace_id":"CT-3","start_pre_stage":"in 25 minutes"}
+
+assistant channel=final:
+Your collab table (CT-3) is reserved for 2 hours. We'll pre-stage 20 folders, two 1-inch binders, 2 packs of 8-tab dividers, and a sheet of labels about 25 minutes before start.
+
+user:
+Is the pre-staging complimentary?
+
+assistant channel=analysis:
+Answer from policy.
+
+assistant channel=final:
+Yes—pre-staging is complimentary. Only upgrading to 2" binders incurs a $3 fee.
+
+user:
+Nice, the lakeside breeze is perfect today.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+It is—our terrace level catches that cool lake wind.
+
+user:
+Can you order 50 custom printed binders with logos by tomorrow?
+
+assistant channel=analysis:
+Custom printing not covered by tools/system—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Assessing options.
+

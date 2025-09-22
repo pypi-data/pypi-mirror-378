@@ -1,0 +1,73 @@
+"""
+Tour group leader requests early check-in for 15-person group arriving from overnight flight. Includes travel small talk and handles group coordination request.
+
+ROLES: user (tour group leader with tired travelers), assistant (group coordinator agent)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_early_check_in",
+    "description": "Attempt early check-in for a reservation and return status and fee if approved.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_code":{"type":"string"},"desired_time":{"type":"string"}},"required":["reservation_code","desired_time"]},
+    "strict": true
+  },
+  {
+    "name": "check_group_services",
+    "description": "Check available group services and amenities.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"group_size":{"type":"integer"},"service_type":{"type":"string","enum":["dining","transportation","activities","meeting_space"]}},"required":["group_size","service_type"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Canopy Bay Hotel — Front Desk
+Standard check-in: 15:00
+Early check-in window: from 10:00, subject to availability; fee may apply depending on time
+Group services: Group check-in, bulk dining arrangements, tour coordination, meeting spaces, group transportation
+Hotel features: Oceanfront location with private beach access, 3 award-winning restaurants, full-service spa, 24-hour fitness center, business center, concierge services
+Room amenities: Premium bedding, marble bathrooms, smart TV, minibar, complimentary WiFi, room service, group room configurations
+Special services: Valet parking, airport shuttle, pet-friendly rooms, wheelchair accessible accommodations, group coordinator
+Loyalty program: Gold tier (25+ nights/year), Platinum tier (50+ nights/year), Diamond tier (100+ nights/year)
+Dining: The Oceanview Restaurant (fine dining), The Breeze Café (casual), The Sunset Bar (cocktails and light bites)
+Recreation: Private beach with cabanas, infinity pool, tennis courts, golf course access, water sports equipment rental
+Wellness: Full-service spa with 12 treatment rooms, sauna, steam room, yoga classes, personal training sessions
+Group facilities: Large meeting rooms, group dining areas, tour desk, group transportation, bulk amenity services
+
+user:
+Hello! I'm leading a tour group of 15 people and we're arriving around 7:30 AM from an overnight flight. We have reservation CB-66789. Can we check in early? Everyone is exhausted.
+
+assistant channel=analysis:
+Large tour group requesting early check-in after overnight flight. Check availability and also verify group services for their stay.
+
+assistant channel=commentary to=tool.request_early_check_in:
+{"reservation_code":"CB-66789","desired_time":"07:30"}
+
+tool.request_early_check_in channel=commentary to=assistant:
+{"status":"approved","fee":"USD 15 per room","note":"Group rate applied"}
+
+assistant channel=commentary to=tool.check_group_services:
+{"group_size":15,"service_type":"dining"}
+
+tool.check_group_services channel=commentary to=assistant:
+{"available":true,"options":["group_breakfast","private_dining_room","catering_service"],"discount":"15% for groups over 10"}
+
+assistant channel=analysis:
+Early check-in approved with group rate. Group dining services available with discount. Provide confirmation and group service options.
+
+assistant channel=final:
+Welcome to Canopy Bay! Early check-in at 7:30 AM is approved with a USD 15 fee per room (group rate). We can arrange group breakfast service with a 15% discount for your party of 15.
+
+user:
+That's wonderful! How was your night shift? Must be busy with all these early arrivals.
+
+assistant channel=final:
+Thank you for asking! It's been quite busy but we love welcoming guests to our beautiful property. We're here to make your group's stay as comfortable as possible.
+
+user:
+Can you also arrange for a group tour of the local attractions for tomorrow morning?
+
+assistant channel=final:
+[ATTENTION] Group tour arrangements require coordination with our tour desk and local partners. Reviewing available options.

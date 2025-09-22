@@ -1,0 +1,68 @@
+"""
+Team of six requests a booth and a mains preview; include small talk, confirm booth availability via tool, and an out-of-scope group discount policy ask.
+
+ROLES: user (team), assistant (restaurant concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_table_availability","description":"Check availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"},"seating":{"type":"string","enum":["booth","standard"]}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"},"seating":{"type":"string"}},"required":["restaurant_id","guest_name","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Preview mains.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["mains"]}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Bayfront Conference Hotel (hotel_id: bayfront_conf_hotel)
+Brunch: Harbor Grill (restaurant_id: harbor_grill)
+Hours: Sun 10:00–14:00
+Seating: Booths for up to 6; large tables on request
+Address: 900 Bayfront Dr, San Diego, CA 92101, USA
+Wi‑Fi: SSID "Bayfront-Guest" at venue
+Access: Escalator from Lobby; elevator adjacent
+
+user:
+Booth for 6 at 11:30 under Rivera—what mains are featured?
+
+assistant channel=analysis:
+Check booth availability, book, then list mains.
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"harbor_grill","party_size":6,"datetime":"2025-09-07T11:30:00","seating":"booth"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"B02"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"harbor_grill","guest_name":"Rivera","party_size":6,"datetime":"2025-09-07T11:30:00","seating":"booth"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"HBG-BRN-6404"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"harbor_grill","section":"mains"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"mains","items":[{"name":"Crab Cake Benedict"},{"name":"Braised Short Rib Hash"},{"name":"Garden Vegetable Frittata"}]}
+
+assistant channel=final:
+Confirmed—booth for 6 at 11:30 under Rivera (HBG-BRN-6404). Mains: Crab Cake Benedict, Braised Short Rib Hash, Garden Vegetable Frittata.
+
+user:
+Thanks—escalator or lift is fine for us.
+
+assistant channel=final:
+Escalator from the Lobby or the adjacent elevator both reach the venue.
+
+user:
+Do your booths seat six?
+
+assistant channel=final:
+Yes—booths accommodate up to 6.
+
+user:
+Do you offer team discounts on brunch?
+
+assistant channel=final:
+[ATTENTION] Discount details aren’t included in these resources. Reviewing.

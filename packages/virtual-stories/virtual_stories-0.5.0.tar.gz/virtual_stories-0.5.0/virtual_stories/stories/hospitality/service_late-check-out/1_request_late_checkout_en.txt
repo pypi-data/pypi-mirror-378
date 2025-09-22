@@ -1,0 +1,60 @@
+"""
+Guest requests late checkout; assistant checks policy window and quotes fee.
+
+ROLES: user (guest seeking late checkout), assistant (front desk agent applying policy and fee)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_late_checkout",
+    "description": "Request a late checkout within policy and return approval and fee.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "requested_time": {"type": "string", "description": "24h time, e.g., 14:00"}
+      },
+      "required": ["room_number", "requested_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Bayfront Convention Hotel
+Checkout Policy:
+- Standard checkout: 12:00
+- Late checkout window: up to 15:00, subject to occupancy
+- Fee: $30 until 14:00; $60 until 15:00; beyond 15:00 not available
+Billing: Fee posts to room folio on approval.
+
+user:
+Could I check out at 2:30 pm from room 1731?
+
+assistant channel=analysis:
+2:30 pm is within policy (<=15:00); fee should be $60.
+
+assistant channel=commentary to=tool.request_late_checkout:
+{"room_number":"1731","requested_time":"14:30"}
+
+tool.request_late_checkout channel=commentary to=assistant:
+{"approved":true,"fee":60,"currency":"USD","note":"Hold until 15:00 latest"}
+
+assistant channel=final:
+Approved—late checkout for room 1731 is set for 14:30 with a $60 USD fee (hold until 15:00 latest). The fee will appear on your folio.
+
+user:
+Thanks! Also, the lobby playlist is chill.
+
+assistant channel=final:
+Standard checkout is 12:00; your late checkout is confirmed for 14:30.
+
+user:
+Could you extend beyond 3 pm if my flight is at 7?
+
+assistant channel=final:
+[ATTENTION] Extensions past 15:00 aren’t in our checkout options. Assessing the available data.

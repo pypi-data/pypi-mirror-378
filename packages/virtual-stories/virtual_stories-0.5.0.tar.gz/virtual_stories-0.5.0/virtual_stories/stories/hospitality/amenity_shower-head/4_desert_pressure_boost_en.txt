@@ -1,0 +1,79 @@
+"""
+Guest requests stronger rainfall feel after long hike; check building PSI and apply high-pressure wide rainfall.
+
+ROLES: user (guest returning from hike), assistant (engineering coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_water_pressure","description":"Check PSI and flow.",
+    "parameters":{"type":"object","additionalProperties":false,
+      "properties":{"room_number":{"type":"string"},"fixture_type":{"type":"string","enum":["shower","sink","bathtub","all_fixtures"]},"measurement_type":{"type":"string","enum":["pressure_psi","flow_rate","temperature"]}},
+      "required":["room_number","fixture_type"]},"strict":true},
+  {"name":"adjust_shower_settings","description":"Set pressure and spray.",
+    "parameters":{"type":"object","additionalProperties":false,
+      "properties":{"room_number":{"type":"string"},"pressure_setting":{"type":"string","enum":["gentle","medium","high","massage"]},"spray_pattern":{"type":"string","enum":["wide_rainfall","focused_stream","massage_pulse","mist"]}},
+      "required":["room_number","pressure_setting"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Desert Springs Villas (hotel_id: dsv_phx_03)
+Address: 4200 E Cactus Rd, Phoenix, AZ 85032
+Timezone: America/Phoenix
+
+Shower Highlights:
+- Oversized 10-inch rainfall heads with desert mineral filter
+- Wide_rainfall and mist modes ideal for cooldown
+- Towel warmer racks and quick-dry ventilation
+
+Water & Ops:
+- Pressure window: 50–65 PSI; booster on floors 10–18
+- Peak hot water recirc at 05:30, 18:30
+- Engineering availability: 07:00–21:00; urgent on-call after
+
+Extras:
+- Aloe vera bath amenity on request
+- Hydration station at each elevator bank
+- Trail maps at concierge desk
+
+user:
+Hi—can you make the shower feel more like strong rainfall in 1412?
+
+assistant channel=analysis:
+Check PSI, then set high pressure with wide_rainfall.
+
+assistant channel=commentary to=tool.check_water_pressure:
+{"room_number":"1412","fixture_type":"shower","measurement_type":"pressure_psi"}
+
+tool.check_water_pressure channel=commentary to=assistant:
+{"room_number":"1412","current_pressure_psi":53,"status":"within_range"}
+
+assistant channel=commentary to=tool.adjust_shower_settings:
+{"room_number":"1412","pressure_setting":"high","spray_pattern":"wide_rainfall"}
+
+tool.adjust_shower_settings channel=commentary to=assistant:
+{"room_number":"1412","pressure_setting":"high","spray_pattern":"wide_rainfall","applied":true}
+
+assistant channel=final:
+Done—your shower in 1412 is set to high pressure with a wide rainfall pattern. Give it a try and enjoy the cooldown.
+
+user:
+Nice! Are you still available if I need help at 8:30 pm?
+
+assistant channel=analysis:
+Use engineering availability from system.
+
+assistant channel=final:
+Yes—engineering is on until 21:00, with urgent on-call support afterward.
+
+user:
+Any tips for sunset trails tomorrow?
+
+assistant channel=analysis:
+Trail recommendations are beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about trail tips and will review options.
+

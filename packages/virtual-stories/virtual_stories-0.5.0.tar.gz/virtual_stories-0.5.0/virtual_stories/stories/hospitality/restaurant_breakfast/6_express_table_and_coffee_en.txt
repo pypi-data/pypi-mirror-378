@@ -1,0 +1,86 @@
+"""
+Guest requests a quick breakfast slot and coffee options; include small talk and an ATTENTION follow‑up.
+
+ROLES: user (business traveler), assistant (host arranging express seating and coffee preview)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List breakfast venues","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string"}},"required":["hotel_id","meal_period"]},"strict":true},
+  {"name":"check_table_availability","description":"Check availability","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Get beverages","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"section":{"type":"string"}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Summit City Tower (hotel_id: summit_city_tower)
+Breakfast: Skybreak Cafe (restaurant_id: rest_skybreak) 06:30–10:00
+
+Access & View:
+- Elevator D to Level 38; step‑free
+- Skyline views on east side
+
+Seating & Pace:
+- Express seating available for solo travelers
+- Standard tables for 2–4
+
+Coffee & Beverages:
+- Espresso bar opens at 06:30
+- Drip and cold brew available
+
+Billing & Notes:
+- Room charge accepted
+- Paperless receipts available
+
+user:
+Need a quick spot at 7:00 for 1 under Rivera; what coffees do you have?
+
+assistant channel=analysis:
+List venue, check 07:00 for 1, book, then fetch beverages.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"summit_city_tower","meal_period":"breakfast"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_skybreak","name":"Skybreak Cafe","hours":"06:30-10:00"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_skybreak","party_size":1,"datetime":"2025-09-02T07:00:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_skybreak","guest_name":"Rivera","contact":"","party_size":1,"datetime":"2025-09-02T07:00:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"SB-BRK-7001"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_skybreak","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"Espresso"},{"name":"Americano"},{"name":"Latte"}]}
+
+assistant channel=final:
+Your 7:00 express seat for 1 at Skybreak Cafe is confirmed (SB-BRK-7001). Coffee options include Espresso, Americano, and Latte.
+
+user:
+The view must be stunning from Level 38.
+
+assistant channel=final:
+It’s a bright way to start the day.
+
+user:
+Does the cafe accept room charge?
+
+assistant channel=final:
+Yes—room charge is accepted.
+
+user:
+Can you pre‑pull a double shot for arrival?
+
+assistant channel=final:
+[ATTENTION] Pre‑pull requests aren’t handled here. Reviewing available options.

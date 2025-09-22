@@ -1,0 +1,81 @@
+"""
+Guest reports dust sensitivity and requests an allergen vacuum pass in-room; confirm method, timing, and noise limits, then dispatch.
+
+ROLES: user (allergy-sensitive guest), assistant (housekeeping coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_allergen_slots","description":"Return next slots for HEPA vacuum pass.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","urgency":{"type":"string","enum":["standard","expedite"]}},"required":["room","urgency"]}},
+  {"name":"dispatch_hepa_pass","description":"Dispatch HEPA vacuum and hypoallergenic wipe down.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","notes":"string","slot":"string"},"required":["room"]}}
+]
+```
+"""
+
+system:
+Harborline Business Hotel (hotel_id: hbh_bos_21)
+Address: 330 Seaport Blvd, Boston, MA 02210
+Timezone: America/New_York
+
+Carpet & Air:
+- Guestrooms: low-pile nylon, low-VOC backing
+- HEPA vacuums: true-HEPA, sealed system
+
+Methods:
+- HEPA pass + edge tool
+- Hypoallergenic surface wipe on request
+
+Noise & Hours:
+- Under 58 dB; quiet mode available
+- Service hours: 08:00–21:30
+
+Response:
+- Standard: 30–50 min; Expedite: 10–20 min
+
+Contact:
+- Housekeeping ext. 22; Front Desk ext. 0
+
+user:
+Hi, I’m sensitive to dust. Could you run a HEPA vacuum in room 1907 soon? Quietly if possible.
+
+assistant channel=analysis:
+Offer quiet mode; check expedite slot; then dispatch.
+
+assistant channel=commentary to=tool.check_allergen_slots:
+{"room":"1907","urgency":"expedite"}
+
+tool.check_allergen_slots channel=commentary to=assistant:
+{"next":"within_15_min","alt":"in_30_min"}
+
+assistant channel=final:
+We can run a quiet-mode HEPA pass (under 58 dB). The next expedite slot is within 15 minutes—shall I book it for 1907?
+
+user:
+Yes please. Could you also do a quick hypoallergenic surface wipe?
+
+assistant channel=commentary to=tool.dispatch_hepa_pass:
+{"room":"1907","notes":"quiet_mode + hypoallergenic_wipe","slot":"within_15_min"}
+
+tool.dispatch_hepa_pass channel=commentary to=assistant:
+{"ticket":"ALL-1907-552","eta_minutes":12}
+
+assistant channel=final:
+Booked—ticket ALL-1907-552. Arrival in about 12 minutes with quiet-mode HEPA and a hypoallergenic wipe down.
+
+user:
+Thank you. The harbor view is lovely tonight!
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+We’re glad you’re enjoying the lights on the water.
+
+user:
+Do you offer portable air purifiers for rooms?
+
+assistant channel=analysis:
+Not specified; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability of in-room air purifiers beyond our carpet services.

@@ -1,0 +1,71 @@
+"""
+Family with children requests multiple umbrellas for sightseeing in light rain.
+
+ROLES: user (parent planning family activities in rainy weather), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_family_amenities","description":"Check family-friendly amenities and services","parameters":{"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string"},"age_group":{"type":"string"},"quantity":{"type":"integer"}},"required":["service_type","age_group","quantity"]},"strict":true},
+  {"name":"create_family_rental","description":"Create rental order for family items","parameters":{"type":"object","additionalProperties":false,"properties":{"family_id":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item":{"type":"string"},"quantity":{"type":"integer"},"size":{"type":"string"}}}},"duration":{"type":"string"},"special_requests":{"type":"string"}},"required":["family_id","items","duration","special_requests"]},"strict":true},
+  {"name":"suggest_family_activities","description":"Suggest indoor and outdoor activities for families","parameters":{"type":"object","additionalProperties":false,"properties":{"weather_condition":{"type":"string"},"age_groups":{"type":"array","items":{"type":"string"}},"interests":{"type":"array","items":{"type":"string"}},"duration":{"type":"string"}},"required":["weather_condition","age_groups","interests","duration"]},"strict":true}
+]
+```
+"""
+
+system:
+The Oceanview Resort & Spa (OVR-MIA-007), 2500 Collins Avenue, Miami Beach, FL 33140, USA.
+Family-friendly beachfront resort with 320 rooms, featuring tropical gardens and ocean views.
+Family Services: Dedicated family concierge, kids' club (ages 4-12), teen lounge, family pool with water slides.
+Umbrella Collection: 150 units including compact travel umbrellas, large family umbrellas, and beach umbrellas; complimentary for resort guests, premium brands available.
+Weather Information: Subtropical climate with frequent afternoon showers; hurricane season June-November; average rainfall 60 inches annually.
+Resort Amenities: 3 swimming pools, 2 restaurants, beach bar, spa, fitness center, tennis courts, water sports center.
+Family Features: Children's menu, babysitting services, family movie nights, beach games, sandcastle building contests.
+Local Family Attractions: 5-minute walk to Lincoln Road, 10-minute drive to Miami Seaquarium, 15-minute drive to Zoo Miami.
+Special Services: Family photo sessions, birthday party arrangements, educational marine biology programs, sunset family cruises.
+
+user:
+Hi! We're a family of four with two kids (ages 8 and 12) staying in room 415. It looks like it might rain today - can we get some umbrellas for our sightseeing plans?
+
+assistant channel=analysis:
+The guest is a family of four with children aged 8 and 12, planning sightseeing in potentially rainy weather. I should check family amenities, create a family rental order for multiple umbrellas, and suggest family activities suitable for the weather.
+
+assistant channel=commentary to=tool.check_family_amenities:
+{"service_type": "umbrella_rental", "age_group": "family_with_children", "quantity": 4}
+
+tool.check_family_amenities channel=commentary to=assistant:
+{"available_items": ["compact_umbrellas", "large_family_umbrellas", "beach_umbrellas"], "family_discount": "20%_off", "child_sizes": "available"}
+
+assistant channel=commentary to=tool.create_family_rental:
+{"family_id": "OVR-FAM-415", "items": [{"item": "compact_umbrella", "quantity": 2, "size": "adult"}, {"item": "compact_umbrella", "quantity": 2, "size": "child"}], "duration": "full_day", "special_requests": "family_sightseeing"}
+
+tool.create_family_rental channel=commentary to=assistant:
+{"rental_id": "FAM-UMB-415", "total_cost": "complimentary", "pickup_location": "family_concierge_desk", "return_time": "6:00_PM"}
+
+assistant channel=commentary to=tool.suggest_family_activities:
+{"weather_condition": "light_rain", "age_groups": ["8", "12"], "interests": ["sightseeing", "family_fun"], "duration": "full_day"}
+
+tool.suggest_family_activities channel=commentary to=assistant:
+{"indoor_activities": ["Miami Seaquarium", "Frost Science Museum", "Lincoln Road Mall"], "outdoor_activities": ["covered beach walks", "Art Deco District tour"], "weather_backup": "resort_kids_club"}
+
+assistant channel=analysis:
+Great! I've arranged 4 umbrellas (2 adult, 2 child-sized) for the family, all complimentary. I also have activity suggestions that work well in light rain conditions.
+
+assistant channel=final:
+Perfect! I've arranged 4 umbrellas for your family - 2 adult-sized and 2 child-sized compact umbrellas. They're complimentary for resort guests and you can pick them up at our family concierge desk. For sightseeing in light rain, I'd recommend the Miami Seaquarium or Frost Science Museum, or a covered walk through the Art Deco District.
+
+user:
+That sounds wonderful! The kids will love the science museum. Is it far from here?
+
+assistant channel=final:
+The Frost Science Museum is about a 15-minute drive from our resort. It's perfect for a rainy day with interactive exhibits that both your 8 and 12-year-old will enjoy. We can arrange transportation if needed!
+
+user:
+Actually, do you have any information about the hotel's sustainability practices? The kids are learning about environmental conservation at school.
+
+assistant channel=analysis:
+The guest is asking about the hotel's sustainability practices. This information is not provided in my system context about umbrella services and basic hotel amenities. I should use the ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Let me gather information about our environmental initiatives for you.

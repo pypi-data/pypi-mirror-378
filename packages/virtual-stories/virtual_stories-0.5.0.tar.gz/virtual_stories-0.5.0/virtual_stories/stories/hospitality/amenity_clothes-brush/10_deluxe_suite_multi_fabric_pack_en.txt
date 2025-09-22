@@ -1,0 +1,70 @@
+"""
+Guest in a deluxe suite needs multiple brushes for a family’s mixed fabrics; assemble a multi-fabric pack.
+
+ROLES: user (family traveling for ceremony), assistant (amenities)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"list_garment_care_items","description":"List all brush types",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"category":{"type":"string","enum":["clothes_brush"]}},"required":["category"]},"strict":true},
+  {"name":"deliver_garment_care_item","description":"Deliver pack to suite",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"priority":{"type":"string","enum":["normal","express"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Golden Terrace Residences (hotel_id: gtr_las_vegas)
+Address: 4550 Horizon Ave, Las Vegas, NV 89109
+Timezone: America/Los_Angeles
+
+Suite Notes:
+- Family sets can include up to 3 items
+- Recommend: boar for wool, horsehair for silk, anti‑static for synthetics
+
+Inventory: boar, horsehair, anti_static, lint_roller
+SLA penthouse level: 10–15 minutes
+
+user:
+We’ve got wool, silk, and polyester in PH-2. Can you send a set for all?
+
+assistant channel=analysis:
+Recommend all three; deliver as a set.
+
+assistant channel=commentary to=tool.list_garment_care_items:
+{"category":"clothes_brush"}
+
+tool.list_garment_care_items channel=commentary to=assistant:
+{"items":["boar","horsehair","anti_static","lint_roller"],"eta":"10-15"}
+
+assistant channel=final:
+I’ll bundle a boar brush (wool), a horsehair brush (silk), and an anti‑static brush (polyester). Shall I send the trio to PH-2?
+
+user:
+Yes—and the terrace lights are fun.
+
+assistant channel=final:
+They wrap around the balustrade for a soft glow at night.
+
+assistant channel=commentary to=tool.deliver_garment_care_item:
+{"room_number":"PH-2","items":["boar","horsehair","anti_static"],"priority":"express"}
+
+tool.deliver_garment_care_item channel=commentary to=assistant:
+{"request_id":"GTR-PH2-33","eta_minutes":11}
+
+assistant channel=final:
+Confirmed—GTR-PH2-33 will arrive in about 11 minutes.
+
+user:
+Could we borrow a travel sewing machine?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll see what can be arranged.
+

@@ -1,0 +1,67 @@
+"""
+Marina hotel guest requests a color set of scrunchies; includes limit Q&A and beyond-context check.
+
+ROLES: user (guest in 422), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check amenity stock.","parameters":{"type":"object","properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string"},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Marina Boardwalk Suites
+Amenity: color set scrunchies (navy, coral, sand)
+Hours: 06:45–22:15
+Delivery: 10–16 min (Harbor Wing)
+Limit: 6/night
+Ext: Concierge 0; Harbor Desk 73
+
+user:
+422 here—may I have a color set of 3 scrunchies?
+
+assistant channel=analysis:
+Check stock; deliver 3 to 422 with note color set.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"color set scrunchies","quantity":3}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"available":true,"in_stock":58}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"422","amenity_name":"color set scrunchies","quantity":3,"priority":"normal","note":"Harbor Wing"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MB-422-CS-03","eta_minutes":12}
+
+assistant channel=final:
+All set—3-piece color set is on the way to 422. ETA ~12 minutes.
+
+user:
+Is 6 the nightly limit?
+
+assistant channel=analysis:
+System: 6/night.
+
+assistant channel=final:
+Yes—6 per night.
+
+user:
+Harbor lights look pretty.
+
+assistant channel=final:
+Enjoy the boardwalk.
+
+user:
+Are the sailboat rentals open at dawn?
+
+assistant channel=analysis:
+Beyond system context.
+
+assistant channel=final:
+[ATTENTION] I’ll check sailboat rental hours.
+

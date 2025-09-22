@@ -1,0 +1,112 @@
+"""
+Guest asks about ballroom capacity and setup, checks availability, and requests a quote.
+
+ROLES: user (event organizer planning a banquet), assistant (events sales providing facts and generating a quote)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_facility_availability",
+    "description": "Check availability for a facility with date and time window.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "facility_id": {"type": "string"},
+        "date": {"type": "string", "format": "date"},
+        "start_time": {"type": "string"},
+        "end_time": {"type": "string"}
+      },
+      "required": ["facility_id", "date", "start_time", "end_time"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_ballroom_quote",
+    "description": "Return a preliminary quote for ballroom rental with setup.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "setup": {"type": "string"},
+        "guests": {"type": "integer", "minimum": 1},
+        "hours": {"type": "number", "minimum": 1}
+      },
+      "required": ["setup", "guests", "hours"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Venue: Grand Aurora Ballroom (facility_id: ballroom_aurora_bkk)
+Property: Aurora Riverfront Hotel (hotel_id: aurora_bangkok)
+Address: 199 Charoen Krung Rd, Bangkok 10100
+Timezone: Asia/Bangkok
+Specs: 800 sqm; ceiling 7.2 m; built-in LED wall 9×3 m; movable partition to 2 salons
+Capacity: Banquet 420 pax; Classroom 300 pax; Theater 650 pax
+Policies: Standard rental spans 4 consecutive hours; Additional hour billed pro-rata
+
+user:
+Hi! What’s the maximum banquet capacity of your ballroom? Also, can it be divided?
+
+assistant channel=analysis:
+Answer from system facts: banquet capacity and partition info.
+
+assistant channel=final:
+For banquet setup the capacity is 420 guests, and the ballroom can be partitioned into two salons with movable walls.
+
+user:
+Is it free on 2025-10-18 from 17:00 to 21:00?
+
+assistant channel=analysis:
+Use availability tool for the requested date/time.
+
+assistant channel=commentary to=tool.check_facility_availability:
+{"facility_id":"ballroom_aurora_bkk","date":"2025-10-18","start_time":"17:00","end_time":"21:00"}
+
+tool.check_facility_availability channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=final:
+Yes—Grand Aurora Ballroom is available on 2025-10-18 from 17:00 to 21:00.
+
+user:
+Great. Could I get a preliminary quote for 380 guests, banquet setup, four hours?
+
+assistant channel=analysis:
+Generate quote via tool with setup=banquet, guests=380, hours=4.
+
+assistant channel=commentary to=tool.get_ballroom_quote:
+{"setup":"banquet","guests":380,"hours":4}
+
+tool.get_ballroom_quote channel=commentary to=assistant:
+{"currency":"THB","amount":220000,"includes":["LED wall","standard linens"],"notes":"Additional hour pro-rata"}
+
+assistant channel=analysis:
+Confirm quote with inclusions and policy note.
+
+assistant channel=final:
+The preliminary rental is THB 220000 for four hours, including the built-in LED wall and standard linens; additional hours are billed pro‑rata.
+
+user:
+By the way, the river breeze in your lobby was lovely.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+Appreciate the note—glad the riverfront felt refreshing.
+
+user:
+Are indoor drones allowed for a live stream in the ballroom?
+
+assistant channel=analysis:
+Not specified in system facts; no tool to verify—use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thank you for checking on drone use. Reviewing the documentation.
+

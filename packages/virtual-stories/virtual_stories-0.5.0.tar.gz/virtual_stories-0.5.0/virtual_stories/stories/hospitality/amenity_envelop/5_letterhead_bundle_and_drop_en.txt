@@ -1,0 +1,61 @@
+"""
+Guest requests a bundle of letterhead and asks about the exact drop location; include chat and [ATTENTION].
+
+ROLES: user (guest 1908), assistant (concierge/stationery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_stationery_item","description":"Deliver stationery items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_name":{"type":"string","enum":["envelope_standard","envelope_large","letterhead"]},"quantity":{"type":"integer","minimum":1}},"required":["room_number","item_name","quantity"]},"strict":true},
+  {"name":"get_mail_drop_info","description":"Mail drop details.","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true}
+]
+```
+"""
+
+system:
+Harbor Exchange Hotel (hotel_id: hex_sea)
+Address: 500 Alaskan Way, Seattle, WA 98104
+Timezone: America/Los_Angeles
+Services:
+- Letterhead available in singles or packs of 10
+- Envelopes: standard and large
+- Mail drop: adjacent to Concierge, west wall
+- Pickup: weekdays 16:15
+- Delivery ETA: 10–18 minutes
+Matrix:
+type:letterhead | pack:10 | available:true
+type:envelope_large | pack:— | available:true
+
+user:
+Could I get a pack of 10 letterhead sheets to 1908? Where’s the mail drop exactly?
+
+assistant channel=analysis:
+Deliver 10 letterhead sheets; describe drop location via tool.
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"1908","item_name":"letterhead","quantity":10}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"ok":true,"eta_minutes":15}
+
+assistant channel=commentary to=tool.get_mail_drop_info:
+{}
+
+tool.get_mail_drop_info channel=commentary to=assistant:
+{"location":"Concierge west wall","pickup_time":"weekdays 16:15"}
+
+assistant channel=final:
+Ten sheets of letterhead will arrive to 1908 in about 15 minutes. The mail drop is by the Concierge on the west wall; pickup is on weekdays at 16:15.
+
+user:
+The waterfront light rail is convenient.
+
+assistant channel=final:
+It’s a quick connection from here.
+
+user:
+Do you have branded folders too?
+
+assistant channel=final:
+[ATTENTION] I’ll check on branded folders.
+

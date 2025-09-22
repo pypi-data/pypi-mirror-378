@@ -1,0 +1,138 @@
+"""
+Guest upgrades from standard to luxury 600tc queen sheets and requests spare set; confirm inventory and schedule afternoon remake.
+
+ROLES: user (guest upgrading linens), assistant (housekeeping scheduler)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_linen_inventory",
+    "description": "Check availability of sheet collections and sizes.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] }
+      },
+      "required": ["collection", "size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "order_linen_delivery",
+    "description": "Deliver specified sheet collection to room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] },
+        "quantity_sets": { "type": "integer", "minimum": 1, "maximum": 4 }
+      },
+      "required": ["room_number", "collection", "size", "quantity_sets"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_bed_service",
+    "description": "Schedule housekeeping to remake bed with specified sheets.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "preferred_time": { "type": "string", "description": "HH:MM in 24h local time" }
+      },
+      "required": ["room_number", "collection"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Bay City Convention Hotel San Francisco (hotel_id: bcch_sfo_04)
+Address: 199 Fremont St, San Francisco, CA 94105
+Timezone: America/Los_Angeles
+
+Linen Tiers:
+- standard_300tc: crisp cotton
+- luxury_600tc: sateen finish, softer handfeel
+- bamboo_eco: cooling and hypoallergenic
+- silk_1000tc: premium mulberry silk
+
+Housekeeping Windows:
+- Same-day: 08:00–22:00
+- Afternoon priority: 15:00–18:00
+- Turn-down: 19:00–21:00
+- Delivery ETA: 20–35 minutes typical
+- Contact: Housekeeping ext 12
+
+Policy:
+- Spare sets: up to 2 per room on request
+- Silk spare limited to 1
+- Allergy-friendly laundering available on request
+- Inventory refreshed daily
+- Notes placed in room folio upon change
+
+user:
+Hi—please upgrade my queen bed to luxury_600tc and leave one extra set in the closet. Room 2308. Can you come at 16:15?
+
+assistant channel=analysis:
+Check luxury_600tc queen inventory; order 2 sets; schedule 16:15.
+
+assistant channel=commentary to=tool.check_linen_inventory:
+{"collection":"luxury_600tc","size":"queen"}
+
+tool.check_linen_inventory channel=commentary to=assistant:
+{"collection":"luxury_600tc","size":"queen","available_sets":12,"estimated_delivery_minutes":25}
+
+assistant channel=analysis:
+Inventory available; place order and schedule.
+
+assistant channel=commentary to=tool.order_linen_delivery:
+{"room_number":"2308","collection":"luxury_600tc","size":"queen","quantity_sets":2}
+
+tool.order_linen_delivery channel=commentary to=assistant:
+{"room_number":"2308","collection":"luxury_600tc","size":"queen","quantity_sets":2,"delivery_eta_minutes":25,"delivery_id":"LINEN-QL-5590"}
+
+assistant channel=commentary to=tool.schedule_bed_service:
+{"room_number":"2308","collection":"luxury_600tc","preferred_time":"16:15"}
+
+tool.schedule_bed_service channel=commentary to=assistant:
+{"scheduled":true,"room_number":"2308","collection":"luxury_600tc","window":"16:05–16:30"}
+
+assistant channel=final:
+Confirmed—two luxury_600tc queen sets will arrive in about 25 minutes. We’ll remake at 16:15 (window 16:05–16:30) and place the spare set in your closet.
+
+user:
+Is turn-down available tonight?
+
+assistant channel=analysis:
+From system: 19:00–21:00.
+
+assistant channel=final:
+Yes—turn-down service runs from 19:00 to 21:00 upon request.
+
+user:
+Thank you! The lobby art is cool.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+We’re glad you like it—see you at 16:15.
+
+user:
+Could you also recommend a good coffee shop?
+
+assistant channel=analysis:
+Beyond linens; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up nearby coffee spots and share a few options.

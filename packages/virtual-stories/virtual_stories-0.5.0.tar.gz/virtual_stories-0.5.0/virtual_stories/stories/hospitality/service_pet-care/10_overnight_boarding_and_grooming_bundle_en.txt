@@ -1,0 +1,162 @@
+"""
+Overnight boarding plus grooming bundle coordination for a guest’s two small dogs.
+
+ROLES: user (hotel guest with two small dogs seeking overnight care and grooming), assistant (concierge arranging pet-care services per hotel policies and tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_pet_care_slots",
+    "description": "List available pet-care service slots for a given date and service type.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": { "type": "string", "enum": ["walk", "grooming", "overnight_boarding"] },
+        "date": { "type": "string", "format": "date" },
+        "duration_minutes": { "type": "integer", "minimum": 15 }
+      },
+      "required": ["service_type", "date"]
+    },
+    "strict": true
+  },
+  {
+    "name": "quote_pet_bundle",
+    "description": "Get a price quote for combined services (e.g., boarding + grooming).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "n_pets": { "type": "integer", "minimum": 1 },
+        "weights_kg": { "type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 1 },
+        "include_grooming": { "type": "boolean" },
+        "nights": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["n_pets", "weights_kg", "nights"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: The Pecan Wharf Hotel & Residences
+Address: 88 Harbor Quay, Seafront District, Bayview City 20450
+Brand tier: Upper-upscale, pet-friendly floors (levels 6–8)
+Check-in/out: 15:00 / 12:00
+Contact: Front Desk ext. 9, Concierge ext. 55
+Pet policy basics: up to 2 pets/room; each ≤ 15 kg; cats or dogs only; no reptiles/arachnids
+Fees: nightly pet fee $35 per room; one-time deep-cleaning fee $80 if odor or excessive fur observed upon checkout
+Noise window: quiet hours 22:00–07:00; repeated noise complaints may require relocation or day-care
+
+[PET FACILITIES]
+- Relief area: Rooftop Terrace Wing C, GPS 37.792601, -122.389210; turf + waste stations
+- "Paws Gym" hours: 07:00–10:00, 17:00–20:00; supervised treadmill & agility course
+- Grooming studio: Level 1 Annex, glass room opposite Business Center
+
+[STAFF & SAFETY]
+- Handlers are Pet First Aid/CPR certified (REC-CPR-K9 v3.1)
+- Microchip scanning at intake; photos logged to guest folio
+- Enrichment: scent games, slow-feeding puzzles available on request
+
+[SERVICES & INVENTORY]
+- Boarding: climate-controlled suites; webcam opt-in; bedtime check 22:30
+- Walks: 20/40/60-min; standard routes around Harbor Quay promenade
+- Grooming: bath, blow-dry, nail trim, sanitary trim; hypoallergenic products available
+- Add-ons: GPS tag rental $6/night; calming vest; dental chew
+
+[FORMATS]
+Key=Value lines:
+MaxPetsPerRoom=2
+MaxWeightPerPetKg=15
+AllowedSpecies=Dog,Cat
+
+JSON sample menu:
+{
+  "in_room_pet_menu": [
+    {"item": "Chicken & Rice Bowl", "calories": 320},
+    {"item": "Salmon Crunch Bites", "calories": 180},
+    {"item": "Goat Milk Pup Latte", "calories": 90}
+  ]
+}
+
+Table-like specs:
+Service | Window | Notes
+Boarding | 18:00–09:00 | Late checkout to 11:00 with fee
+Grooming | 10:00–18:00 | Last intake 17:00
+Walks | 07:00–21:00 | Peak 17:00–19:00
+
+user:
+Hi there!
+
+assistant channel=analysis:
+Small talk acknowledged; then briefly introduce pet-care options from system context.
+
+assistant channel=final:
+Hello! Welcome to The Pecan Wharf. We offer boarding on-site, scheduled walks, and full-service grooming. How can I help with your pups today?
+
+user:
+We have two dogs, both around 12 kg. Is that within your pet limit?
+
+assistant channel=analysis:
+Answer directly from policy: up to 2 pets, each ≤15 kg. Confirm and restate key conditions.
+
+assistant channel=final:
+Yes—that fits our policy: up to 2 pets per room, each no more than 15 kg. Dogs and cats are welcome; quiet hours are 22:00–07:00.
+
+user:
+Could you check if there’s a grooming slot around 5 pm tomorrow?
+
+assistant channel=analysis:
+Use tool check_pet_care_slots for service_type=grooming, date=tomorrow, duration default.
+
+assistant channel=commentary to=tool.check_pet_care_slots:
+{"service_type":"grooming","date":"2025-09-09"}
+
+tool.check_pet_care_slots channel=commentary to=assistant:
+{"date":"2025-09-09","service_type":"grooming","slots":["15:30","16:15","17:00","17:45"],"notes":"Last intake 17:00"}
+
+assistant channel=analysis:
+Tool shows 17:00 available and 17:45 appears but last intake 17:00; offer 17:00.
+
+assistant channel=final:
+I can hold 17:00 tomorrow for grooming. The studio’s last intake is 17:00, so that timing works perfectly. Would you like me to place a provisional hold?
+
+user:
+Great. Also, how much for one night of boarding plus grooming for both dogs?
+
+assistant channel=analysis:
+Use quote_pet_bundle with n_pets=2, weights=[12,12], include_grooming=true, nights=1. Then present the tool’s quote.
+
+assistant channel=commentary to=tool.quote_pet_bundle:
+{"n_pets":2,"weights_kg":[12,12],"include_grooming":true,"nights":1}
+
+tool.quote_pet_bundle channel=commentary to=assistant:
+{"currency":"USD","breakdown":{"boarding_nightly":70,"grooming_per_pet":45,"pet_fee_per_night":35,"deep_cleaning_triggered":false},"total":195}
+
+assistant channel=analysis:
+Compute summary from tool output; ensure only tool/system facts used.
+
+assistant channel=final:
+The combined estimate is $195 USD: boarding $70, grooming $45 per pet, and the nightly pet fee $35. Deep-cleaning fee would only apply if triggered at checkout.
+
+user:
+Is the relief area open late?
+
+assistant channel=analysis:
+Relief area location given; no hours explicitly listed. Use services/windows to infer not restricted? System does not specify hours—this is beyond defined data; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources. The posted hours for the relief area are not listed here.
+
+user:
+Thanks! And, uh, your hotel smells nice. What is that scent?
+
+assistant channel=analysis:
+Chitchat compliment; scent brand not specified in system; keep it friendly without adding new facts.
+
+assistant channel=final:
+Thanks for the kind words! If there’s anything else your pups need, just let me know.
+

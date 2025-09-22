@@ -1,0 +1,65 @@
+"""
+Guest preparing for a meeting requests a stable mid temp and fan auto.
+
+ROLES: user (business guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_panel_status", "description": "Get panel lock status.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "set_room_temperature", "description": "Set temperature and fan.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"temperature_f":{"type":"number"},"fan":{"type":"string","enum":["auto","low","medium","high"]}},"required":["room_number","temperature_f","fan"]}, "strict": true }
+]
+```
+"""
+
+system:
+Executive Riverfront Hotel (hotel_id: erh_cincinnati)
+Address: 10 Riverside Dr, Cincinnati, OH 45202
+Timezone: America/New_York
+
+HVAC:
+- Range: 66–74°F
+- Fan: auto/low/medium/high
+Amenities: Business center 06:00–22:00
+Accessibility: High‑contrast panels
+Sustainability: Energy set‑back when unoccupied
+
+user:
+Please set 1503 to 72°F with fan auto. I’ve got a client call.
+
+assistant channel=analysis:
+Check status; apply settings.
+
+assistant channel=commentary to=tool.get_panel_status:
+{"room_number":"1503"}
+
+tool.get_panel_status channel=commentary to=assistant:
+{"room_number":"1503","locked":false}
+
+assistant channel=commentary to=tool.set_room_temperature:
+{"room_number":"1503","temperature_f":72,"fan":"auto"}
+
+tool.set_room_temperature channel=commentary to=assistant:
+{"applied":true,"temperature_f":72,"fan":"auto"}
+
+assistant channel=final:
+1503 is set to 72°F with the fan on auto.
+
+user:
+The river looks calm today.
+
+assistant channel=analysis:
+Small talk response.
+
+assistant channel=final:
+It brings a steady backdrop to the day here.
+
+user:
+Can you confirm my wake‑up call for 6 AM?
+
+assistant channel=analysis:
+Wake‑up calls not in system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check on setting a 6 AM wake‑up call.
+

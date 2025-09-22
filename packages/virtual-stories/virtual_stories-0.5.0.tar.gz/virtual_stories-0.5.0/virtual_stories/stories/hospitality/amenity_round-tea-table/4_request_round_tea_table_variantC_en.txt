@@ -1,0 +1,76 @@
+"""
+Guest asks for a 60 cm birch round tea table near the window with high priority; confirm inventory and arrange expedited setup; include chitchat and one [ATTENTION] query.
+
+ROLES: user (guest), assistant (butler service)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_furniture_inventory","description":"Check round tea table inventory.","parameters":{"type":"object","properties":{"item_code":{"type":"string","enum":["round_tea_table"]},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]}},"required":["item_code","size_cm","finish"],"additionalProperties":false},"strict":true},
+  {"name":"request_in_room_setup","description":"Request delivery and placement.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]},"placement":{"type":"string","enum":["near_window","center","sofa_side"]},"surface_protectors":{"type":"boolean"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","item_code","size_cm","finish","placement","surface_protectors","priority"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Name: Azure Promenade Hotel (hotel_id: ap_nce_04)
+Address: 21 Quai des Anglais, Nice 06000
+Service times: 09:00–21:00; expedited furniture ETA 8–12 minutes
+
+Inventory — Round Tea Tables
+60 cm birch: 5
+60 cm walnut: 2
+80 cm birch: 1
+80 cm walnut: 1
+Guidance: near_window preferred for sea-view suites
+
+Essentials
+• Check-in 14:00 | Check-out 11:00
+• Beach towels available at concierge
+• Towel return box closes 20:30
+• ADA rooms: 305, 611, 803
+• Bell cart max load: 150 kg
+• Languages: EN, FR, IT, DE
+
+user:
+Could you send a 60 cm birch round tea table near the window to 702? Rush it if possible.
+
+assistant channel=analysis:
+Verify 60/birch stock then request high-priority near_window setup with protectors to room 702.
+
+assistant channel=commentary to=tool.check_furniture_inventory:
+{"item_code":"round_tea_table","size_cm":60,"finish":"birch"}
+
+tool.check_furniture_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":5,"item_code":"round_tea_table","size_cm":60,"finish":"birch"}
+
+assistant channel=analysis:
+Submit high-priority setup.
+
+assistant channel=commentary to=tool.request_in_room_setup:
+{"room_number":"702","item_code":"round_tea_table","size_cm":60,"finish":"birch","placement":"near_window","surface_protectors":true,"priority":"high"}
+
+tool.request_in_room_setup channel=commentary to=assistant:
+{"ticket_id":"FN-702-0915","eta_minutes":9}
+
+assistant channel=final:
+On it—60 cm birch table to the window area in 702, high priority. Ticket FN-702-0915, arriving in about 9 minutes.
+
+user:
+The sea view here is stunning.
+
+assistant channel=analysis:
+Reflect briefly using guidance line.
+
+assistant channel=final:
+That spot by the window really makes the most of the sea view.
+
+user:
+Can you reserve two sun loungers for tomorrow?
+
+assistant channel=analysis:
+Lounger reservations aren’t covered in system or tools; flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking lounger reservations. Reviewing availability with the team.
+

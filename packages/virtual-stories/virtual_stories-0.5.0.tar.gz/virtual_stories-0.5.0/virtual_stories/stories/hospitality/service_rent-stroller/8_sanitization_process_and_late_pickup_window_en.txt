@@ -1,0 +1,50 @@
+"""
+Guest asks about sanitization process and a slightly late pickup window.
+
+ROLES: user (guest concerned about hygiene), assistant (guest services explaining sanitization and arranging a loan near cutoff)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"loan_with_eta","description":"Create loan and estimate ETA","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"hours":{"type":"integer"}},"required":["hotel_id","room","hours"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Marina Bay Sandside (MBS-29)
+Address: 12 Bayfront Ave, Singapore 018955
+Family Desk: 08:00–21:00 (last dispatch 20:45)
+Sanitization: Hospital-grade wipes after each return; nightly UV cycle
+Strollers: Single; 20 kg max
+Fees: Complimentary; SGD 180 replacement
+Delivery: 10–15 minutes typical
+
+user:
+What’s your sanitization process? Can you send one to 3508 for 2 hours at about 8:40 pm?
+
+assistant channel=analysis:
+Explain wipe + UV cycle; 20:40 is within 20:45 last dispatch. Create a 2-hour loan to room 3508.
+
+assistant channel=commentary to=tool.loan_with_eta:
+{"hotel_id":"MBS-29","room":"3508","hours":2}
+
+tool.loan_with_eta channel=commentary to=assistant:
+{"order_id":"STR-3508-02","status":"created","eta_minutes":9}
+
+assistant channel=final:
+We disinfect with hospital-grade wipes after each return and run a nightly UV cycle. I’ve created a 2-hour loan for room 3508; ETA is about 9 minutes, and the 8:40 pm pickup is within our dispatch window.
+
+user:
+The fountain show is lively.
+
+assistant channel=final:
+It’s a guest favorite each evening.
+
+user:
+Can you share detailed wipe brand MSDS sheets?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

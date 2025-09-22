@@ -1,0 +1,112 @@
+"""
+Guest asks for menthol-free cooling shaving gel in travel size; confirm availability and deliver.
+
+ROLES: user (guest preferring cooling sensation without menthol), assistant (spa retail attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Shinjuku City Tower Tokyo (hotel_id: sct_hnd_03)
+Address: 5-2-1 Nishi-Shinjuku, Shinjuku-ku, Tokyo 163-1105, Japan
+Timezone: Asia/Tokyo
+
+Shaving Options:
+- Cooling gel: menthol-free cooling polymer; suitable for sensitive skin
+- Travel sizes: 75 ml gels, 50 ml balms available
+- Organic line: yuzu + aloe botanical gel (light scent)
+- Luxury: Tom Ford mini cream (discreet fragrance)
+- Aftercare: alcohol-free soothing balm
+
+Service Details:
+- Express delivery 10–20 minutes from 08:00–22:30
+- Night amenity drop 22:30–01:00 (limited selection)
+- Policy: up to two travel-size items complimentary per stay for Club rooms
+- Contact: Guest Care ext 0
+- Notes: prefer hypoallergenic options for fragrance sensitivities
+
+user:
+Hi, do you have a menthol-free cooling shaving gel in a small travel size? I’m in 3214.
+
+assistant channel=analysis:
+Check shaving_gel sensitive; brand preference any; confirm travel-size availability; schedule immediate delivery.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type":"shaving_gel","skin_type":"sensitive","brand_preference":"any"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available":true,"recommended_products":["CoolingPolymer_Gel_75ml"],"features":"menthol_free","complete_kits":false}
+
+assistant channel=analysis:
+Arrange delivery to 3214; include aftercare balm if desired.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number":"3214","products":["CoolingPolymer_Gel_75ml"],"delivery_window":"immediate","include_instructions":true}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled":true,"arrival_time":"12_minutes","instructions":"cooling_gel_usage_card"}
+
+assistant channel=final:
+Yes—we carry a menthol-free cooling gel in a 75 ml travel size. It’s on the way to 3214 now and should arrive in about 12 minutes with a quick usage card.
+
+user:
+Is there a limit to complimentary travel sizes?
+
+assistant channel=analysis:
+Answer system policy: up to two travel-size items complimentary per stay for Club rooms.
+
+assistant channel=final:
+Club rooms may receive up to two complimentary travel-size items per stay.
+
+user:
+Appreciate the fast service.
+
+assistant channel=analysis:
+Chit-chat acknowledgment only.
+
+assistant channel=final:
+My pleasure—enjoy your evening.
+
+user:
+Can you recommend a late-night ramen spot?
+
+assistant channel=analysis:
+Beyond grooming scope; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up late-night ramen options and share them shortly.

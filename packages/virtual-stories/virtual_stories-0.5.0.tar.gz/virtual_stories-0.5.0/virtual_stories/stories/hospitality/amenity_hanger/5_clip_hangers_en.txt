@@ -1,0 +1,67 @@
+"""
+Guest requests clip hangers for pants/skirts; brief chitchat and info lookup.
+
+ROLES: user (guest in room 1416 requesting clip hangers), assistant (guest services scheduling amenity delivery and quoting SLAs)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check stock for amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Request amenity delivery to a room","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Venue: Ironworks Court — Foundry Wing
+Room: 1416 (Superior Double)
+Default closet set: 6 hangers (4 wooden, 2 clip)
+Amenity policy: Clip hangers available; per-night cap 8
+Hours: 07:00–23:00 standard; 23:00–00:30 urgent only
+Numbers: Desk 0; Services 7720; HK 7721
+SLA floors 12–16: 10–16 minutes normal
+Elevators: Bank A; service pantry F-15
+Stock start: clip 58; wooden 171; non-slip 144
+
+user:
+Can I have 4 clip hangers to 1416?
+
+assistant channel=analysis:
+Confirm 4 clip hangers in stock; then set normal delivery to room 1416.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"clip hanger","quantity":4}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"clip hanger","available":true,"in_stock":58}
+
+assistant channel=analysis:
+Schedule normal delivery now.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1416","amenity_name":"clip hanger","quantity":4,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HNG-1416-2219","eta_minutes":13}
+
+assistant channel=final:
+Done—4 clip hangers are scheduled for room 1416 with an ETA of about 13 minutes.
+
+user:
+Thanks! The Foundry Wing looks cool.
+
+assistant channel=final:
+It has a distinct style—enjoy your stay.
+
+user:
+What’s the normal delivery time for this floor?
+
+assistant channel=final:
+For floors 12–16, normal deliveries run about 10–16 minutes.
+
+user:
+Are the clips padded?
+
+assistant channel=final:
+[ATTENTION] Verifying the documentation.
+

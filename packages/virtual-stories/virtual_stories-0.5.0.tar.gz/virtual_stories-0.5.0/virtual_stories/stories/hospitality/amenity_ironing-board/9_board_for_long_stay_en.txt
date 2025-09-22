@@ -1,0 +1,59 @@
+"""
+Long-stay guest requests a board; asks hours and brand question.
+
+ROLES: user (guest in room 1711 requesting a board), assistant (services arranging delivery and confirming hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check amenity stock","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver amenity to room","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Orchard Gate — West Tower
+Room: 1711 (Deluxe King)
+Policy: Provide 1 ironing board per room on request
+Window: 06:30–22:30 normal; 22:30–00:30 urgent
+SLA floors 16–18: 10–16 minutes
+Staging: WT-17 pantry; S2 after 22:00
+Lines: 0 | 7970 | 7971
+
+user:
+Could I get an ironing board to 1711?
+
+assistant channel=analysis:
+Verify availability for one board; then schedule normal delivery to 1711.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board","available":true,"in_stock":18}
+
+assistant channel=analysis:
+Place normal delivery.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1711","amenity_name":"ironing board","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-1711-4401","eta_minutes":13}
+
+assistant channel=final:
+Confirmed—an ironing board is scheduled for room 1711 with an ETA of about 13 minutes.
+
+user:
+Thanks! Are you open past 10:30pm?
+
+assistant channel=final:
+Yes—normal window is until 22:30, with urgent service 22:30–00:30.
+
+user:
+Is it a fold-flat model?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

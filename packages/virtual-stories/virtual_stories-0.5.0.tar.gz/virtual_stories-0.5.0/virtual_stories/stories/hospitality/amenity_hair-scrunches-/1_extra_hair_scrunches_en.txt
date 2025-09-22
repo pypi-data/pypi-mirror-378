@@ -1,0 +1,86 @@
+"""
+Guest requests additional hair scrunchies and asks casual questions.
+
+ROLES: user (hotel guest staying in room 1824 needing extra hair scrunchies), assistant (front desk concierge coordinating in-room amenity delivery and guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "check_amenity_availability",
+    "description": "Check if a specific amenity is in stock and quantities available.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1}
+      },
+      "required": ["amenity_name", "quantity"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_amenity_delivery",
+    "description": "Create a delivery request for an amenity to a guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Sea Mist Pavilion — Ocean Tower
+Floors: 18 (Ocean Tower), your room: 1824 (Ocean View King Suite)
+Service hours: In-room delivery 07:00–23:00; urgent runs 23:00–02:00 (limited)
+Amenity policy: Hair ties/scrunchies provided on request (max 6 per night per room)
+Delivery SLA: Normal 15–25 minutes; urgent 8–12 minutes (Ocean Tower floors 10–18)
+Contact: Front Desk ext. 9; Housekeeping ops desk ext. 7722
+
+user:
+Hi, could I get 4 more hair scrunchies sent up to room 1824?
+
+assistant channel=analysis:
+Confirm availability, then place delivery request at normal priority per SLA.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"hair scrunchies","quantity":4}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"hair scrunchies","available":true,"in_stock":48}
+
+assistant channel=analysis:
+Item in stock; proceed to create a normal delivery for room 1824, quantity 4.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1824","amenity_name":"hair scrunchies","quantity":4,"priority":"normal","note":"Guest requested extra scrunchies; Ocean Tower"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"DEL-1824-HAIR-9231","eta_minutes":18}
+
+assistant channel=final:
+Thanks—confirmed. We have hair scrunchies in stock and I’ve placed a normal delivery for 4 to room 1824. Estimated arrival is about 18 minutes per our Ocean Tower SLA.
+
+user:
+By the way, the sunset looks amazing from here!
+
+assistant channel=final:
+It really does—our Ocean View King Suites on the higher floors are great for that. Enjoy your evening!
+
+user:
+What’s the brand of the lobby scent diffusers you use?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

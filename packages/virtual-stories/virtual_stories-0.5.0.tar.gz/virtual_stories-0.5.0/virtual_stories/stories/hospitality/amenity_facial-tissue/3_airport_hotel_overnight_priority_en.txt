@@ -1,0 +1,82 @@
+"""
+Guest at airport hotel requests urgent tissue delivery before red-eye.
+Provide inventory check and priority delivery.
+
+ROLES: user (transit guest), assistant (amenities dispatcher near terminals)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_tissue_inventory", "description": "Confirm extra-soft boxes for overnight comfort.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "tissue_type": { "type": "string", "enum": ["extra_soft", "standard"] }, "brand_preference": { "type": "string", "enum": ["any", "kleenex"] }, "quantity_boxes": { "type": "number" } }, "required": ["tissue_type"] }, "strict": true },
+  { "name": "deliver_tissue_amenity", "description": "Priority delivery with placement.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_products": { "type": "array", "items": { "type": "string" } }, "delivery_priority": { "type": "string", "enum": ["priority", "standard"] }, "special_placement": { "type": "string" } }, "required": ["room_number", "tissue_products"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Runway Link Hotel (hotel_id: rlh_sin_t1)
+Address: T1 Transit Ave, Changi Airport, Singapore
+Timezone: Asia/Singapore
+
+Amenity Desk:
+- Extra-soft aloe tissues for overnight comfort
+- Priority delivery 8–12 minutes to all t1/t2 wings
+- Placement options: nightstand, vanity, workstation
+- 24/7 staffing; multilingual
+- Contactless drop available
+
+Transit Features:
+- Direct skybridge to Terminal 1
+- Napping pods on level 3
+- Showers 24/7; towel desk by lifts
+- Quiet hours 23:00–6:00
+
+user:
+Hi—flight at midnight. Room 1108. Can I get 2 extra-soft tissue boxes ASAP?
+
+assistant channel=analysis:
+Check extra-soft stock; priority deliver 2 boxes; place on nightstand and workstation.
+
+assistant channel=commentary to=tool.check_tissue_inventory:
+{"tissue_type":"extra_soft","brand_preference":"any","quantity_boxes":2}
+
+tool.check_tissue_inventory channel=commentary to=assistant:
+{"available_products":["Kleenex Ultra Soft","Hotel Extra-Soft Aloe"],"stock_levels":{"kleenex_ultra":52,"hotel_aloe":41}}
+
+assistant channel=commentary to=tool.deliver_tissue_amenity:
+{"room_number":"1108","tissue_products":["2 boxes Kleenex Ultra Soft"],"delivery_priority":"priority","special_placement":"1 nightstand, 1 workstation"}
+
+tool.deliver_tissue_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"9 minutes","placement_confirmed":"nightstand + workstation","tracking_id":"SIN1108_ES2"}
+
+assistant channel=final:
+On the way—2 boxes of Kleenex Ultra Soft to 1108 in about 9 minutes: one on your nightstand, one at the workstation.
+
+user:
+Is the skybridge connected from this tower?
+
+assistant channel=analysis:
+System: direct skybridge to Terminal 1.
+
+assistant channel=final:
+Yes—there’s direct skybridge access to Terminal 1 from this building.
+
+user:
+These napping pods are cool.
+
+assistant channel=analysis:
+Small talk acknowledgement.
+
+assistant channel=final:
+They’re popular for long layovers—quiet and dimmable.
+
+user:
+Can you upgrade my seat on tonight’s flight?
+
+assistant channel=analysis:
+Airline seat upgrades are outside amenity scope; flag.
+
+assistant channel=final:
+[ATTENTION] Checking with concierge support on airline assistance options.
+"""
+

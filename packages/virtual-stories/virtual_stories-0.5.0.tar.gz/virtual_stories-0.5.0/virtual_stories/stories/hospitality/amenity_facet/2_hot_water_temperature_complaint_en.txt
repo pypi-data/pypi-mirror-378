@@ -1,0 +1,140 @@
+"""
+Guest complains about bathroom faucet hot water temperature being too hot or inconsistent, requiring temperature adjustment service.
+Provide temperature calibration and safety compliance assistance with detailed water system diagnostics.
+
+ROLES: user (guest experiencing hot water temperature issues), assistant (plumbing technician with temperature control expertise)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "measure_water_temperature",
+    "description": "Measure actual water temperature at guest room fixtures.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "fixture_type": { "type": "string", "enum": ["sink_faucet", "shower_head", "bathtub_faucet"] },
+        "measurement_type": { "type": "string", "enum": ["surface_temp", "flow_temp", "mixed_temp"] },
+        "test_duration": { "type": "number" }
+      },
+      "required": ["room_number", "fixture_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "adjust_thermostat_mixer",
+    "description": "Adjust mixing valve temperature settings for safety and comfort.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "fixture_id": { "type": "string" },
+        "target_temperature": { "type": "number", "minimum": 85, "maximum": 110 },
+        "safety_lock_enabled": { "type": "boolean" },
+        "adjustment_type": { "type": "string", "enum": ["reduce_temp", "increase_temp", "anti_scald_valve", "pressure_balancing"] }
+      },
+      "required": ["room_number", "fixture_id", "target_temperature"]
+    },
+    "strict": true
+  },
+  {
+    "name": "calibrate_system_settings",
+    "description": "Calibrate building water temperature system for consistency.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "zone_id": { "type": "string" },
+        "calibration_type": { "type": "string", "enum": ["boiler_temp", "mixing_valve", "zone_pressure", "flow_regulation"] },
+        "target_temp_range": { "type": "string" },
+        "affected_rooms": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["zone_id", "calibration_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Grand Alpine Lodge Aspen (hotel_id: gal_asp_01)
+Address: 675 E Durant Ave, Aspen, CO 81611
+Timezone: America/Denver
+
+Advanced Water Heating Systems:
+- Central boiler system: High-efficiency natural gas, 95% efficiency rating
+- Hot water temperature: Maintained at 140°F with automatic mixing valves
+- Safety features: Anti-scald valves on all fixtures, temperature locks at 110°F maximum
+- Flow control: Digital mixing valves with precise temperature regulation
+- Water quality: Mineral-rich mountain spring water, naturally softened
+- Energy efficiency: Solar-assisted preheating system reduces boiler load by 30%
+- Building zones: Temperature calibrated by floor and wing for optimal comfort
+
+Mountain Resort Amenities:
+- Altitude adjustment: Water systems compensated for 8,000ft elevation effects
+- Seasonal variations: Temperature settings adjust automatically for weather changes
+- Guest preferences: Individual room temperature profiles available
+- Emergency systems: Backup generators maintain hot water during power outages
+- Maintenance excellence: 24/7 engineering staff with 15+ years average experience
+
+Safety & Compliance Standards:
+- ADA compliant fixtures with lever handles and accessible temperature controls
+- Child safety locks prevent accidental burns in family suites
+- Water conservation: Low-flow fixtures maintain pressure while reducing usage
+- Quality assurance: Daily temperature testing ensures consistent delivery
+- Guest education: In-room guides explain optimal temperature settings for different uses
+
+user:
+Hi there! I'm staying in room 1242 and the hot water from the bathroom sink is way too hot. I can barely turn it on without scalding my hands. Is there any way to adjust this?
+
+assistant channel=analysis:
+Guest reporting excessively hot water in room 1242 bathroom sink. Need to measure current temperature and adjust mixing valve appropriately. Safety is priority with anti-scald protection.
+
+assistant channel=commentary to=tool.measure_water_temperature:
+{"room_number": "1242", "fixture_type": "sink_faucet", "measurement_type": "flow_temp", "test_duration": 30}
+
+tool.measure_water_temperature channel=commentary to=assistant:
+{"room_number": "1242", "fixture_type": "sink_faucet", "measured_temp": 125, "target_range": "95-105", "safety_valve_status": "active", "mixing_valve_reading": "140F_input"}
+
+assistant channel=analysis:
+Temperature at 125°F is 20°F above target range. Mixing valve is delivering full 140°F boiler temperature. Need to adjust thermostat mixer to reduce temperature and ensure safety lock.
+
+assistant channel=commentary to=tool.adjust_thermostat_mixer:
+{"room_number": "1242", "fixture_id": "sink_faucet_main", "target_temperature": 100, "safety_lock_enabled": true, "adjustment_type": "reduce_temp"}
+
+tool.adjust_thermostat_mixer channel=commentary to=assistant:
+{"adjustment_completed": true, "new_temperature": 98, "safety_lock_activated": true, "calibration_note": "Reduced mixing valve from 140°F to 100°F, anti-scald lock engaged", "test_verification": "temperature_stable"}
+
+assistant channel=final:
+I've successfully adjusted the temperature in room 1242. The hot water is now set to a comfortable 98°F with safety locks engaged to prevent accidental burns. Our mountain spring water and altitude-adjusted systems ensure optimal performance year-round.
+
+user:
+Thank you so much! That feels much better now. You guys really know your water systems up here in Aspen.
+
+assistant channel=analysis:
+Guest satisfied with temperature adjustment and complimenting our expertise. Good opportunity for brief educational chitchat about our unique mountain water systems.
+
+assistant channel=final:
+You're welcome! Our high-altitude location requires specialized water heating systems to handle the unique challenges of Aspen. The mineral-rich water from local springs is naturally softened, which contributes to that perfect temperature consistency.
+
+user:
+Actually, while we're talking about water—I've heard Aspen has amazing hot springs nearby. Any recommendations for day trips?
+
+assistant channel=analysis:
+Guest asking about local hot springs recommendations. This information is beyond my engineering and plumbing system knowledge scope. Need to flag for attention and refer to appropriate concierge services.
+
+assistant channel=final:
+[ATTENTION] Excellent question about Aspen's hot springs and day trip recommendations. Reviewing available information.
+
+user:
+No worries, I'll ask at the front desk. Thanks again for the quick fix on the water temperature!
+
+assistant channel=analysis:
+Guest acknowledging the attention flag and thanking for the service. Simple closing acknowledgment to maintain good guest relations.
+
+assistant channel=final:
+My pleasure! If the temperature needs any further adjustment or you have other questions about our water systems, don't hesitate to reach out. Enjoy your time at Grand Alpine Lodge.

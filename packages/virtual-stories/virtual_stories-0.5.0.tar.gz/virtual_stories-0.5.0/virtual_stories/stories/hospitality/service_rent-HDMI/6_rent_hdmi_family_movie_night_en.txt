@@ -1,0 +1,112 @@
+"""
+Family requests HDMI cable for movie night entertainment; confirm family-friendly options, discuss entertainment amenities, and arrange delivery.
+
+ROLES: user (family member organizing movie night entertainment), assistant (front desk providing family entertainment support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {
+    "name": "check_inventory",
+    "description": "Check availability of rentable items and hold stock if available.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "item": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "room": {"type": "string"}
+      },
+      "required": ["hotel_id", "item", "quantity", "room"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_rental_order",
+    "description": "Create a rental order and charge or comp to room folio as configured.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "item": {"type": "string"},
+        "duration_hours": {"type": "integer", "minimum": 1},
+        "charge_code": {"type": "string", "description": "comp or a billable code"},
+        "delivery_option": {"type": "string", "enum": ["room_drop", "pick_up_at_desk"]}
+      },
+      "required": ["hotel_id", "room", "item", "duration_hours", "charge_code", "delivery_option"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_delivery",
+    "description": "Schedule runner delivery to a room with ETA.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "order_id": {"type": "string"}
+      },
+      "required": ["hotel_id", "room", "order_id"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborview Grand Boston (HVGR-01), 1 Seaport Blvd, Boston, MA 02210.
+5-star waterfront property; 42 floors; 24/7 front desk and runners.
+Check-in 3:00 PM; check-out 12:00 PM; late check-out on availability.
+Complimentary in-room HDMI cables (10 units total); no deposit; first-come, first-served; typical delivery ETA 10–15 minutes.
+Family amenities: Family-friendly HDMI cables available; Movie night packages; Family entertainment options; Kid-friendly content access.
+Other facts: Gym 24/7 (keycard access); Business Center 7:00–22:00; In-room TVs support HDMI on input 2; Room folio comp code: COMP-IT-ACC.
+Family suites available; Kids' entertainment center; Movie theater access; Family concierge services.
+
+user:
+We're planning a family movie night and need an HDMI cable to connect our laptop to the TV. We have kids, so we need something reliable for family entertainment. Room 2809.
+
+assistant channel=analysis:
+The guest is organizing a family movie night and needs an HDMI cable for family entertainment. I should prioritize family-friendly options and discuss entertainment amenities.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"HVGR-01","item":"HDMI_cable_family","quantity":1,"room":"2809"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["HDMI-FAM-2876"],"notes":"Family-friendly; reliable for extended use; kid-safe"}
+
+assistant channel=analysis:
+Family HDMI cable is available and reserved. Now I'll create a comp order and schedule delivery for the family entertainment setup.
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"HVGR-01","room":"2809","item":"HDMI_cable_family","duration_hours":24,"charge_code":"COMP-IT-ACC","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"RNT-2809-98320","status":"created","charge":"comp","family_features":"kid-safe, reliable"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"HVGR-01","room":"2809","order_id":"RNT-2809-98320"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":12,"runner":"Lisa","order_id":"RNT-2809-98320"}
+
+assistant channel=final:
+Perfect for family movie night! Family HDMI cable HDMI-FAM-2876 is reliable and kid-safe for extended entertainment. Order RNT-2809-98320 is complimentary and Lisa will deliver it to room 2809 in about 12 minutes. You also have access to our kids' entertainment center and family concierge services.
+
+user:
+Wonderful! The family amenities here are fantastic.
+
+assistant channel=final:
+Thank you—we love hosting families and ensuring everyone has a great time together.
+
+user:
+Do you have any partnerships with family entertainment companies for special movie packages?
+
+assistant channel=final:
+[ATTENTION] Checking available family entertainment partnerships.

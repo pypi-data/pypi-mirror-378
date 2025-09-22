@@ -1,0 +1,61 @@
+"""
+Guest books an in-room massage with duration and start time.
+
+ROLES: user (guest seeking in-room spa service), assistant (spa desk arranging therapist schedule and confirming policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "book_in_room_massage",
+    "description": "Book an in-room massage with duration and start time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "duration_minutes": {"type": "integer", "enum": [60, 90]},
+        "start_time": {"type": "string"}
+      },
+      "required": ["room_number", "duration_minutes", "start_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Meridian Atrium Hotel
+In‑Room Massage:
+- Durations: 60 or 90 minutes
+- Window: 10:00–22:00; last start 20:30 for 60‑min
+- Rate: $120/60‑min; $170/90‑min; includes table and linens
+- Policy: Therapist arrival ~10 minutes early for setup
+
+user:
+Could I get a 60‑minute massage in room 1221 at 7:30 pm?
+
+assistant channel=analysis:
+Book 60 minutes at 19:30 for room 1221.
+
+assistant channel=commentary to=tool.book_in_room_massage:
+{"room_number":"1221","duration_minutes":60,"start_time":"19:30"}
+
+tool.book_in_room_massage channel=commentary to=assistant:
+{"booking_id":"spa_4316","rate":120,"currency":"USD","arrival_note":"Therapist arrives ~10 minutes early"}
+
+assistant channel=final:
+Your in‑room 60‑minute massage is booked (spa_4316) for 19:30 in room 1221 at $120 USD. The therapist will arrive about 10 minutes early for setup.
+
+user:
+Nice—your atrium greenery is relaxing.
+
+assistant channel=final:
+In‑room massage runs 10:00–22:00 if you need to adjust times.
+
+user:
+Do you offer couples’ four‑hand massages?
+
+assistant channel=final:
+[ATTENTION] Four‑hand service isn’t included in our in‑room menu. Exploring different approaches.

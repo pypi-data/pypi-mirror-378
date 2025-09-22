@@ -1,0 +1,58 @@
+"""
+Guest moves from near-elevator room to a corner; include system-answered noise note and [ATTENTION] availability tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"check_room_inventory","description":"Check corner availability","parameters":{"type":"object","properties":{"requested_type":{"type":"string","enum":["standard","deluxe"]},"zone":{"type":"string","enum":["corner"]}},"required":["requested_type","zone"]}},
+  {"name":"move_reservation","description":"Move","parameters":{"type":"object","properties":{"from_room":{"type":"string"},"to_room":{"type":"string"}},"required":["from_room","to_room"]}}
+]
+"""
+
+system:
+Hotel: Plaza East (hotel_id: plaza_east_hkg)
+Address: 8 Austin Rd, Hong Kong | Timezone: Asia/Hong_Kong
+Noise advisory: near_elevator rooms experience more foot traffic; corner rooms are quieter.
+Move policy: same-category moves free.
+Key cards: re-encode at front desk; mobile key refresh within 2 minutes.
+
+user:
+My room is right by the elevator. Can I switch to a corner room?
+
+assistant channel=analysis:
+Explain that corners are quieter per system; offer availability check.
+
+assistant channel=final:
+Corner rooms are typically quieter. I can check availability for your same category—shall I proceed?
+
+user:
+[ATTENTION] Do you have any standard corner rooms now?
+
+assistant channel=analysis:
+Call check_room_inventory standard/corner.
+
+assistant channel=commentary to=check_room_inventory:
+{"requested_type":"standard","zone":"corner"}
+
+tool.check_room_inventory:
+{"available": true, "candidate_room":"2118","ready": true}
+
+assistant channel=final:
+Yes—2118 (standard corner) is available and ready now.
+
+user:
+Please move me from 718 to 2118.
+
+assistant channel=analysis:
+Perform move.
+
+assistant channel=commentary to=move_reservation:
+{"from_room":"718","to_room":"2118"}
+
+tool.move_reservation:
+{"status":"moved","new_keys":"issued"}
+
+assistant channel=final:
+Done—room 2118 is assigned and keys are issued at the desk.
+

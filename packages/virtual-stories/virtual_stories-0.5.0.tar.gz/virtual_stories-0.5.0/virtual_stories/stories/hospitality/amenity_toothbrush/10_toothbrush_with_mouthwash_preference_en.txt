@@ -1,0 +1,77 @@
+"""
+Guest requests a soft toothbrush and asks if alcohol-free mouthwash can be included; confirm scope and deliver. Include chit-chat and one [ATTENTION] query.
+
+ROLES: user (guest requesting toothbrush and mouthwash preference), assistant (amenities support for dental items)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_toothbrush_stock","description":"Check adult soft availability","parameters":{"type":"object","properties":{"bristle":{"type":"string","enum":["soft"]},"size":{"type":"string","enum":["adult"]}},"required":["bristle","size"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_toothbrush","description":"Deliver toothbrush to room","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"bristle":{"type":"string"},"size":{"type":"string"}},"required":["room_number","bristle","size"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Aurelia Forum Hotel (hotel_id: afh_rome_18)
+Address: Via dei Serpenti 12, 00184 Roma RM, Italy
+Timezone: Europe/Rome
+
+Core Details:
+- Toothbrushes: adult soft/medium; child soft
+- Mouthwash: alcohol-free available on request
+- Delivery ETA: 10–15 minutes
+
+YAML Facility Notes:
+---
+terrace_bar: true
+spa: false
+quiet_hours: "22:00-07:00"
+---
+
+JSON Amenity:
+{"toothbrush_brand":"AureliaCare","mouthwash":"alcohol_free_30ml"}
+
+CSV Nearby (site,walk_min):
+Colosseum,9
+Monti,2
+
+user:
+Could I have an adult soft toothbrush to 612, and if possible, an alcohol-free mouthwash?
+
+assistant channel=analysis:
+Confirm adult soft availability; deliver toothbrush. The mouthwash is available per system but no tool for that—stick to toothbrush delivery and state scope factually.
+
+assistant channel=commentary to=tool.check_toothbrush_stock:
+{"bristle":"soft","size":"adult"}
+
+tool.check_toothbrush_stock channel=commentary to=assistant:
+{"available":true,"brand":"AureliaCare"}
+
+assistant channel=commentary to=tool.deliver_toothbrush:
+{"room_number":"612","bristle":"soft","size":"adult"}
+
+tool.deliver_toothbrush channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":11,"runner":"Luca"}
+
+assistant channel=final:
+Your AureliaCare adult soft toothbrush is on its way to room 612—about 11 minutes (runner: Luca). Alcohol-free mouthwash is available on request.
+
+user:
+The terrace bar looks lively tonight.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+It’s a guest favorite—nice breeze over Monti in the evenings.
+
+user:
+Could you also secure Colosseum underground tour tickets?
+
+assistant channel=analysis:
+Tour ticketing beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

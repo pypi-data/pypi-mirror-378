@@ -1,0 +1,61 @@
+"""
+Conference attendee orders fruit between sessions; includes brief chit-chat and info lookup beyond scope.
+
+ROLES: user (guest at conference, room 1907), assistant (concierge/dining liaison)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"order_room_service","description":"Order food and beverages to a guest's room.","parameters":{"type":"object","properties":{"item_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer"},"notes":{"type":"string"}},"required":["item_name","room_number","quantity"]}}
+]
+```
+"""
+
+system:
+Venue Hotel: Summit Plaza Tower
+Event Floors: 18–20
+Room Dining: 06:00–22:00
+Fruit Items: Power Berry Mix; Apple & Almond; Citrus Wake-Up
+Add: yogurt $3; granola $2
+Priority: event floors 10–14 min
+Ext: Dining 88
+
+user:
+Hi—1907. One Power Berry Mix between sessions.
+
+assistant channel=analysis:
+Order Power Berry Mix to 1907.
+
+assistant channel=commentary to=tool.order_room_service:
+{"item_name":"Power Berry Mix","room_number":"1907","quantity":1}
+
+tool.order_room_service channel=commentary to=assistant:
+{"ok":true,"eta":"12-14 min"}
+
+assistant channel=final:
+It’s on the way—ETA 12–14 minutes to 1907.
+
+user:
+Do you offer granola add-on?
+
+assistant channel=analysis:
+System lists granola $2.
+
+assistant channel=final:
+Yes—granola is available for $2.
+
+user:
+The keynote was inspiring.
+
+assistant channel=final:
+Glad to hear—enjoy the boost.
+
+user:
+Is there a shuttle to the afterparty venue?
+
+assistant channel=analysis:
+Not in system; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the afterparty shuttle details.
+

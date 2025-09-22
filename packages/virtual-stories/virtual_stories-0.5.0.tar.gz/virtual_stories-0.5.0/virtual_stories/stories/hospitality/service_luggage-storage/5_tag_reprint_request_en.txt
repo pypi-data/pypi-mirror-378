@@ -1,0 +1,44 @@
+"""
+Guest loses a claim tag and asks for reprint; include [ATTENTION] question about insurance.
+
+ROLES: user (misplaced tag), assistant (bell desk reissues tag per ID)
+CHANNELS: analysis, commentary, final
+TOOLS:
+[{"name":"reprint_tag","description":"Reprint a luggage tag for a ticket after ID check","parameters":{"type":"object","properties":{"ticket":{"type":"string"}},"required":["ticket"],"additionalProperties":false},"strict":true}]
+"""
+
+system:
+HOTEL: The Langford Exchange
+STORAGE
+- Hours 06:00–23:00; same-day only
+- ID required; lost tag can be reprinted
+- No fee
+- Desk behind revolving door, left side
+
+user:
+I misplaced my tag—ticket LX-118. Can you reprint?
+
+assistant channel=analysis:
+Use reprint tool for LX-118.
+
+assistant channel=commentary to=tool.reprint_tag:
+{"ticket":"LX-118"}
+
+tool.reprint_tag channel=commentary to=assistant:
+{"status":"reprinted","new_tag":"X220"}
+
+assistant channel=final:
+We’ve reprinted your tag for ticket LX-118—new tag X220. Please show your ID at pickup.
+
+user:
+Thanks—the revolving door is fun.
+
+assistant channel=final:
+The storage desk is just to the left after you enter.
+
+user:
+Is there insurance coverage for stored items?
+
+assistant channel=final:
+[ATTENTION] Coverage details aren’t listed in the provided storage policy.
+

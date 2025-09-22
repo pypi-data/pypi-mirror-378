@@ -1,0 +1,110 @@
+"""
+Guest asks for a compact wine chiller; verify availability, noise, and fee. Include small talk and an ATTENTION request.
+
+ROLES: user (wine enthusiast), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_chiller_stock",
+    "description": "Check compact wine chiller availability and terms.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "bottles": { "type": "integer" }
+      },
+      "required": ["room_number","bottles"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_chiller",
+    "description": "Deliver a wine chiller unit to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "model": { "type": "string" },
+        "set_temp_c": { "type": "number" }
+      },
+      "required": ["room_number","model","set_temp_c"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Riverside Arts Hotel (hotel_id: RAH_pdx_03)
+Address: 410 SE Alder St, Portland, OR 97214
+Timezone: America/Los_Angeles
+
+Amenity Overview:
+- Mini-fridge: standard program
+- Compact wine chiller: limited stock (6–12 bottle units)
+- Noise levels: fridges 33 dB, chillers 35 dB
+- Fees: wine chiller $15/night; fridge $0–$10 depending on use
+- Delivery: 10:00–22:00
+
+Gallery & Public Spaces:
+Rooftop terrace | Artist-in-residence studio | Lobby mural wall
+
+SKU List:
+RAH-WC-8 (8-bottle) | RAH-WC-12 (12-bottle)
+
+user:
+Could I get a small wine chiller for room 718? I’ve got 6 bottles.
+
+assistant channel=analysis:
+Check 8-bottle availability for 718 and then deliver with set temp.
+
+assistant channel=commentary to=tool.check_chiller_stock:
+{"room_number":"718","bottles":6}
+
+tool.check_chiller_stock channel=commentary to=assistant:
+{"available":true,"model":"RAH-WC-8","nightly_fee":15,"noise_db":35}
+
+assistant channel=analysis:
+Proceed with delivery set to 12°C.
+
+assistant channel=commentary to=tool.deliver_chiller:
+{"room_number":"718","model":"RAH-WC-8","set_temp_c":12}
+
+tool.deliver_chiller channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":18,"runner":"sam","ticket":"RAH-718-WC8"}
+
+assistant channel=final:
+Booked: RAH-WC-8 compact wine chiller to room 718, set to 12°C. ETA ~18 minutes with Sam (ticket RAH-718-WC8). Nightly fee is $15.
+
+user:
+Is it much louder than a regular mini-fridge?
+
+assistant channel=analysis:
+Answer using system noise levels.
+
+assistant channel=final:
+It’s 35 dB versus the mini-fridge at 33 dB—still very quiet.
+
+user:
+The rooftop terrace was lovely at sunset.
+
+assistant channel=analysis:
+Reply with Gallery & Public Spaces note.
+
+assistant channel=final:
+We’re glad you enjoyed it—the rooftop terrace pairs nicely with the lobby’s mural wall and our artist-in-residence studio.
+
+user:
+Could you book a sommelier-led tasting this weekend?
+
+assistant channel=analysis:
+External coordination not defined here—flag ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check sommelier tasting availability and options for you.
+

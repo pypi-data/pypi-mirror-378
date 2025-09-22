@@ -1,0 +1,64 @@
+"""
+Guest asks if the coil triggers smoke detectors and requests one device.
+
+ROLES: user (cautious guest), assistant (safety-aware concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"deliver","description":"Deliver coil device.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","item","qty"]},"strict":true},
+  {"name":"guidelines","description":"Return safety and detector note.","parameters":{"type":"object","additionalProperties":false,"properties":{"topic":{"type":"string","enum":["detector"]}},"required":["topic"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborline City Hotel (hotel_id: hch_sg_03)
+Address: 21 Anson Quay, Singapore 079912
+Amenity scope:
+- Electric mosquito coil for balcony or near balcony door use
+- House policy: balcony only when feasible; ensure airflow
+Detector note:
+- Devices do not emit smoke; standard use does not trigger detectors
+- Keep away from curtains and vents
+Service hours: 08:00–23:00; ETA 10–18 min
+
+user:
+In 1908—will the coil set off the smoke detector? I’d like one device.
+
+assistant channel=analysis:
+Answer using system detector note and dispatch one device to room 1908.
+
+assistant channel=commentary to=tool.deliver:
+{"room":"1908","item":"electric_mosquito_coil_device","qty":1}
+
+tool.deliver channel=commentary to=assistant:
+{"ticket":"HCH-1908-EMC-812","eta_minutes":12}
+
+assistant channel=commentary to=tool.guidelines:
+{"topic":"detector"}
+
+tool.guidelines channel=commentary to=assistant:
+{"note":"Standard use does not trigger detectors; keep away from curtains and vents."}
+
+assistant channel=final:
+Standard use does not trigger detectors; please keep the device away from curtains and vents and use it on the balcony when possible. Your device is on the way to 1908 (ticket HCH-1908-EMC-812), ETA about 12 minutes within 08:00–23:00.
+
+user:
+Good to know—thanks. The lobby orchids are lovely.
+
+assistant channel=analysis:
+Chitchat reply.
+
+assistant channel=final:
+They’re a popular touch in our spaces.
+
+user:
+Does it come with a timer function?
+
+assistant channel=analysis:
+Timer feature is not specified.
+
+assistant channel=final:
+[ATTENTION] I’ll verify whether a timer is included.
+

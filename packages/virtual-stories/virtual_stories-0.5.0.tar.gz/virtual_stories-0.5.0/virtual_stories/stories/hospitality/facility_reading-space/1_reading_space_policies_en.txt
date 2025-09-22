@@ -1,0 +1,60 @@
+"""
+Guest asks about the quiet reading space hours, rules, and amenities.
+
+ROLES: user (guest seeking a quiet workspace), assistant (concierge outlining reading space details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_reading_space_details",
+    "description": "Return location, hours, seating count, and amenities for the reading space.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Space: Quiet Nook (reading and focus area)
+Location: Mezzanine level, above the lobby staircase
+Rules: No phone calls; low-volume typing; clean desk on exit
+Beverage: Self-serve tea station at the entry alcove
+Lighting: Warm task lamps at desks; daylight from atrium
+
+user:
+Do you have a quiet reading space? What are the hours and what’s there?
+
+assistant channel=analysis:
+Use the tool for location, hours, seating, and amenities; add rules from system facts.
+
+assistant channel=commentary to=tool.get_reading_space_details:
+{}
+
+tool.get_reading_space_details channel=commentary to=assistant:
+{"location":"Mezzanine above the lobby staircase","hours":"07:00–23:00","seating":22,"amenities":["desk lamps","tea station","power outlets"]}
+
+assistant channel=analysis:
+Draft a concise, friendly reply.
+
+assistant channel=final:
+Yes—the Quiet Nook is on the mezzanine above the lobby staircase. It’s open 07:00–23:00 with 22 seats, desk lamps, power outlets, and a self‑serve tea station. Please keep phone calls out of the space and leave a clean desk when you head out.
+
+user:
+Love that there’s tea.
+
+assistant channel=analysis:
+Small-talk response only.
+
+assistant channel=final:
+It makes long reads a bit cozier.
+
+user:
+Could you unlock it for me after midnight?
+
+assistant channel=analysis:
+After-hours unlocking isn’t in tools/system—use the special flag.
+
+assistant channel=final:
+[ATTENTION] Noted on after‑hours access. Reviewing available resources.

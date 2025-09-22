@@ -1,0 +1,74 @@
+"""
+Guest asks for a compact 6 L lidded bin for the bathroom with standard liner; verify availability and arrange delivery; include a chit‑chat line and an [ATTENTION] query.
+
+ROLES: user (guest), assistant (front desk/housekeeping liaison)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bin_availability","description":"Check availability for rubbish bin types.","parameters":{"type":"object","properties":{"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]}},"required":["bin_type"],"additionalProperties":false},"strict":true},
+  {"name":"request_additional_bin","description":"Deliver an additional bin with placement and liner selection.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]},"placement":{"type":"string","enum":["bathroom","bedside","desk"]},"liner_type":{"type":"string","enum":["standard","compostable"]}},"required":["room_number","bin_type","placement","liner_type"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Sandstone Quay (hotel_id: sq_doh_17)
+Address: 12 Corniche Rd, Doha
+Housekeeping schedule: 08:00–21:00; delivery ETA 9–15 minutes
+
+Bins status today
+compact_6L_lid(12)
+standard_12L_open(6)
+Liners: standard, compostable
+
+Operations details
+• Check-in 15:00; Check-out 12:00
+• Lobby fragrance: cardamom & oud
+• Prayer room on level M
+• Ice requests via room service
+• Night lighting to 30% after 23:00
+• Languages: EN, AR, UR
+
+user:
+Could you send a compact 6 L lidded bin to the bathroom in 1703 with a standard liner?
+
+assistant channel=analysis:
+Verify compact_6L_lid availability; deliver to bathroom with standard liner for 1703.
+
+assistant channel=commentary to=tool.check_bin_availability:
+{"bin_type":"compact_6L_lid"}
+
+tool.check_bin_availability channel=commentary to=assistant:
+{"available":true,"bin_type":"compact_6L_lid","on_hand":12}
+
+assistant channel=analysis:
+Place delivery order.
+
+assistant channel=commentary to=tool.request_additional_bin:
+{"room_number":"1703","bin_type":"compact_6L_lid","placement":"bathroom","liner_type":"standard"}
+
+tool.request_additional_bin channel=commentary to=assistant:
+{"ticket_id":"HK-1703-5508","eta_minutes":12}
+
+assistant channel=final:
+Confirmed—a compact 6 L lidded bin with a standard liner will be placed in the bathroom of 1703. Ticket HK-1703-5508, ETA about 12 minutes.
+
+user:
+The lobby smells wonderful.
+
+assistant channel=analysis:
+Use operations details.
+
+assistant channel=final:
+It’s our cardamom & oud lobby fragrance.
+
+user:
+Can you arrange a pickup at 06:00 tomorrow?
+
+assistant channel=analysis:
+Housekeeping schedule begins 08:00; 06:00 not defined—flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking for a 06:00 pickup. Coordinating with housekeeping.
+

@@ -1,0 +1,71 @@
+"""
+Guest prints a black-and-white contract with business center pickup and asks an out-of-scope follow-up.
+
+ROLES: user (guest finalizing a contract), assistant (print desk clerk handling quotes and queueing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "queue_print",
+    "description": "Add a print job to the queue and return tracking.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "color": {"type": "boolean"},
+        "pickup": {"type": "string", "enum": ["business_center", "front_desk"]}
+      },
+      "required": ["room", "pages", "color", "pickup"],
+      "additionalProperties": false
+    }
+  }
+]
+```
+"""
+
+system:
+Property: The Meridian Arc
+Address: 77 Fleet Esplanade, London EC3N 2HQ, UK
+Print Room: Ground Floor, opposite Concierge
+Service Hours: 07:00–22:00
+Supported Files: PDF only
+Rates: B/W £0.20 per page; Color £0.60 per page
+Pickup Points: Business Center (default) or Front Desk
+Billing Method: Room folio charge at pickup
+Notes: Typical completion in under 10 minutes except peak times 08:00–09:00
+
+user:
+Please print 14 pages black and white for room 512. I’ll collect at the business center.
+
+assistant channel=analysis:
+Queue 14 B/W pages for room 512, pickup business center; include estimate from tool output only.
+
+assistant channel=commentary to=tool.queue_print:
+{"room":"512","pages":14,"color":false,"pickup":"business_center"}
+
+tool.queue_print channel=commentary to=assistant:
+{"id":"mdn_3512","estimated_cost":2.80,"currency":"GBP"}
+
+assistant channel=final:
+Queued—14 B/W pages for room 512 (mdn_3512). Estimated cost £2.80 GBP. Pick up at the Business Center; charges post to your room folio.
+
+user:
+The concierge desk looks elegant.
+
+assistant channel=analysis:
+Respond with light small talk only.
+
+assistant channel=final:
+They keep it welcoming for arrivals.
+
+user:
+Can you scan and email the signed copy to my attorney?
+
+assistant channel=analysis:
+Scanning/emailing isn’t defined in the system. Mark [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Checking options to handle scanning and email delivery.
+

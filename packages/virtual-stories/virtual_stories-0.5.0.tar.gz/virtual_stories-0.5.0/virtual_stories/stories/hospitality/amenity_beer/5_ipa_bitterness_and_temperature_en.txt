@@ -1,0 +1,80 @@
+"""
+Guest asks about IPA bitterness and best serving temperature; verify age and deliver selection chilled.
+
+ROLES: user (guest considering IPAs), assistant (beer service guide)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_drinking_age","description":"Verify legal drinking age.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"get_beer_selection","description":"Get beer options.","parameters":{"type":"object","additionalProperties":false,"properties":{"beer_type":{"type":"string","enum":["ipa","all"]},"region_preference":{"type":"string","enum":["local","domestic","imported","no_preference"]},"alcohol_content":{"type":"string","enum":["light","standard","strong","no_preference"]}},"required":["beer_type"]},"strict":true},
+  {"name":"place_beer_order","description":"Place in-room beer order.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"beer_items":{"type":"array","items":{"type":"object","properties":{"beer_sku":{"type":"string"},"quantity":{"type":"integer"},"temperature":{"type":"string","enum":["ice_cold","chilled","cellar_temp"]}},"required":["beer_sku","quantity"],"additionalProperties":false}},"delivery_instructions":{"type":"string"}},"required":["room_number","beer_items"]},"strict":true}
+]
+```
+"""
+
+system:
+Desert Springs Oasis (hotel_id: dso_phoenix)
+Address: 401 Camelback Way, Phoenix, AZ 85018
+Timezone: America/Phoenix
+
+IPA Guide:
+1) West‑coast IPAs: crisp, piney bitterness; New England IPAs: softer, hazy, juicy.
+2) Best enjoyed chilled (38–42°F) to balance hop aroma and bitterness.
+3) Local rotation includes Arizona Wilderness and Four Peaks.
+4) Delivery includes tulip or IPA glass to capture aroma.
+5) After 22:00, quiet delivery knock policy applies.
+
+user:
+I’m in 945—are your IPAs really bitter? What temp do you serve them at?
+
+assistant channel=analysis:
+Verify age; fetch IPA options; explain bitterness and chilled service.
+
+assistant channel=commentary to=tool.verify_drinking_age:
+{"room_number":"945"}
+
+tool.verify_drinking_age channel=commentary to=assistant:
+{"room_number":"945","guest_age_verified":true,"legal_drinking_age_met":true}
+
+assistant channel=commentary to=tool.get_beer_selection:
+{"beer_type":"ipa","region_preference":"local","alcohol_content":"no_preference"}
+
+tool.get_beer_selection channel=commentary to=assistant:
+{"selections":[{"sku":"AZ_WILDERNESS_WC","name":"AZ Wilderness West Coast IPA","style":"IPA","notes":"Pine, citrus, crisp"},{"sku":"AZ_FOURPEAKS_HAZY","name":"Four Peaks Hazy IPA","style":"NE IPA","notes":"Tropical, soft bitterness"}]}
+
+assistant channel=final:
+We serve IPAs chilled at about 38–42°F. Our West‑coast style is crisper and more bitter; the hazy option is softer and juicier. Would you like one of each delivered?
+
+user:
+Yes—one of each, please.
+
+assistant channel=analysis:
+Place order for two chilled IPAs with IPA glasses.
+
+assistant channel=commentary to=tool.place_beer_order:
+{"room_number":"945","beer_items":[{"beer_sku":"AZ_WILDERNESS_WC","quantity":1,"temperature":"chilled"},{"beer_sku":"AZ_FOURPEAKS_HAZY","quantity":1,"temperature":"chilled"}],"delivery_instructions":"Provide IPA glasses and quiet knock"}
+
+tool.place_beer_order channel=commentary to=assistant:
+{"order_id":"BEER-DSO-1180","estimated_delivery_minutes":17}
+
+assistant channel=final:
+Perfect—two chilled IPAs are on the way with IPA glassware, arriving in about 17 minutes.
+
+user:
+By the way, the desert air smells amazing after dark.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+Night air here can feel wonderfully refreshing.
+
+user:
+Could you also lower my room temp to 68°F?
+
+assistant channel=analysis:
+HVAC adjustment is outside this beer context; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on adjusting the room temperature to 68°F.

@@ -1,0 +1,84 @@
+"""
+Guest arrives for check‑in; confirm reservation and recap ID and deposit policy from system; include small talk and an ATTENTION follow‑up.
+
+ROLES: user (arriving guest), assistant (front desk verifying reservation and policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_in_guest",
+    "description": "Check in a guest and return room number and key ID.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reservation_code": {"type":"string"},
+        "last_name": {"type":"string"}
+      },
+      "required": ["reservation_code","last_name"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Shoreline Grand — Front Desk
+Check‑in: from 15:00; Check‑out: by 12:00
+ID: Government photo ID matching reservation
+Deposit: Credit card pre‑authorization at check‑in
+
+Parking & Transport:
+- Valet: $35/night; EV charging on P2
+- Rideshare pickup: Bay A, outside Lobby North
+
+Dining & Breakfast:
+- Breakfast buffet 06:30–10:30 at Bayview Cafe
+- In‑room dining 07:00–22:30
+
+Wellness & Pool:
+- Fitness studio 24/7 with key; pool 07:00–21:00
+- Towels at pool desk
+
+Pets & Accessibility:
+- Small pets (≤10 kg) permitted; fee $50/stay
+- Step‑free access from curb to front desk
+
+Noise & Quiet Hours:
+- Quiet hours 22:00–07:00
+- Parties not permitted in rooms
+
+user:
+Hi—code SG-22914 under Nguyen. Anything I should have ready?
+
+assistant channel=analysis:
+Use the tool to assign room; recap ID and deposit from system.
+
+assistant channel=commentary to=tool.check_in_guest:
+{"reservation_code":"SG-22914","last_name":"Nguyen"}
+
+tool.check_in_guest channel=commentary to=assistant:
+{"room":"1908","key_id":"K-552210"}
+
+assistant channel=final:
+Welcome to Shoreline Grand. You’re set for room 1908; your key is K-552210. Please present a government photo ID that matches the reservation name, and we’ll place a credit card pre‑authorization at check‑in.
+
+user:
+Lobby smells like sea breeze—nice touch.
+
+assistant channel=final:
+Thank you—enjoy the Bayview Cafe when you get a moment.
+
+user:
+What time is check‑out tomorrow?
+
+assistant channel=final:
+Standard check‑out is by 12:00.
+
+user:
+Can you waive the deposit for me this time?
+
+assistant channel=final:
+[ATTENTION] Deposit adjustments aren’t available here. Reviewing available options.

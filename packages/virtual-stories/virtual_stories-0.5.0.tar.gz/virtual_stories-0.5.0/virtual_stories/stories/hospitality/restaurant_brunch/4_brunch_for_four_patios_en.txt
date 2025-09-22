@@ -1,0 +1,69 @@
+"""
+Group of four requests patio brunch with mains preview; include small talk, confirm patio policy from system, and an out-of-scope live music schedule ask.
+
+ROLES: user (group), assistant (restaurant concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_table_availability","description":"Check availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"},"seating":{"type":"string","enum":["patio","standard"]}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"},"seating":{"type":"string"}},"required":["restaurant_id","guest_name","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Preview mains.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["mains"]}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Copper & Ivy Hotel (hotel_id: copper_ivy_hotel)
+Brunch: Ivy Terrace (restaurant_id: ivy_terrace)
+Hours: Sat–Sun 10:00–14:00; patio seating weather‑permitting
+Address: 44 Market Esplanade, Auckland 1010, NZ
+Wi‑Fi: SSID "CI-Guest" on terrace
+Seating: Heaters available; blankets by request
+Access: Step‑free via Queens St gate; lift to Level 2
+Sourcing: Free‑range eggs; local sourdough partner
+
+user:
+Table for four this Saturday at 11:00 on the patio under Parker.
+
+assistant channel=analysis:
+Check patio availability and book, then preview mains.
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"ivy_terrace","party_size":4,"datetime":"2025-09-06T11:00:00","seating":"patio"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"P03"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"ivy_terrace","guest_name":"Parker","party_size":4,"datetime":"2025-09-06T11:00:00","seating":"patio"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"IVY-BRN-4411"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"ivy_terrace","section":"mains"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"mains","items":[{"name":"Smoked Salmon Benedict"},{"name":"Harissa Shakshuka"},{"name":"Buttermilk Fried Chicken Waffle"}]}
+
+assistant channel=final:
+Confirmed—patio table for four at 11:00 under Parker (IVY-BRN-4411). Mains: Smoked Salmon Benedict, Harissa Shakshuka, Buttermilk Fried Chicken Waffle.
+
+user:
+Sounds cozy out there.
+
+assistant channel=final:
+Patio seating is weather‑permitting; heaters and blankets are available.
+
+user:
+Is patio seating only if weather allows?
+
+assistant channel=final:
+Yes—patio seating is weather‑permitting.
+
+user:
+Is there live music this weekend?
+
+assistant channel=final:
+[ATTENTION] That schedule isn’t included in these resources. Reviewing.

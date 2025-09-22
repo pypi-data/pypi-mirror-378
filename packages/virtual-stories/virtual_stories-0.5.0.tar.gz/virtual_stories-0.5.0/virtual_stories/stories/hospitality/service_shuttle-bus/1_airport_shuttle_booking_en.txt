@@ -1,0 +1,53 @@
+"""
+Guest requests airport shuttle information and seat reservation; confirm schedule, pickup location, and reserve seat.
+
+ROLES: user (guest flying out), assistant (front desk handling shuttle schedule and bookings)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"list_shuttle_timetable","description":"List shuttle times and capacity","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"reserve_shuttle_seat","description":"Reserve a seat on the shuttle","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"departure_time":{"type":"string"}},"required":["hotel_id","room","departure_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Airport Link Suites Frankfurt (ALFF-19), Thea-Rasche-Str. 6, 60549 Frankfurt, Germany.
+Airport shuttle runs hourly 05:00–23:00 from front driveway; capacity 12 seats; booking recommended.
+Travel time to Terminal 1: ~10 minutes.
+
+user:
+What times does your airport shuttle run? Can you reserve me for 9 AM? Room 1015.
+
+assistant channel=analysis:
+List timetable, then reserve the 09:00 seat for room 1015.
+
+assistant channel=commentary to=tool.list_shuttle_timetable:
+{"hotel_id":"ALFF-19"}
+
+tool.list_shuttle_timetable channel=commentary to=assistant:
+{"hours":"05:00-23:00 hourly","stops":["Hotel driveway","Terminal 1"],"capacity":12}
+
+assistant channel=commentary to=tool.reserve_shuttle_seat:
+{"hotel_id":"ALFF-19","room":"1015","departure_time":"09:00"}
+
+tool.reserve_shuttle_seat channel=commentary to=assistant:
+{"reservation_id":"SHUT-1015-909","status":"confirmed","pickup":"Hotel driveway"}
+
+assistant channel=final:
+The shuttle runs hourly from 05:00 to 23:00. I’ve reserved a seat at 09:00 under SHUT-1015-909; pickup is at the hotel driveway, about 10 minutes to Terminal 1.
+
+user:
+Thanks! That’s perfect.
+
+assistant channel=final:
+Have a smooth flight.
+
+user:
+Can you share the bus operator’s service contract?
+
+assistant channel=final:
+[ATTENTION] Verifying information.
+

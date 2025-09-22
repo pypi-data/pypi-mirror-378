@@ -1,0 +1,43 @@
+"""
+Guest asks about peak-hour queues and best departure choice.
+
+ROLES: user (guest planning around peak hours), assistant (front desk advising based on schedule policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_peak_notes","description":"Return peak hour guidance","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Terminal View Hotel (TVH-08)
+Shuttle: Hourly 05:00–23:00
+Pickup: Front driveway
+Drop‑off: Terminal A
+Capacity: 12 seats per departure
+Travel time to Terminal A: ~12 minutes
+Guidance: Peak queues around 08:00–09:00 and 17:00–18:00; advance booking advised
+Time Zone: Eastern Time (ET)
+
+user:
+What’s the best time to avoid the evening rush?
+
+assistant channel=analysis:
+Provide policy guidance: avoid 17:00–18:00; recommend alternate times.
+
+assistant channel=commentary to=tool.get_peak_notes:
+{"hotel_id":"TVH-08"}
+
+tool.get_peak_notes channel=commentary to=assistant:
+{"peak_windows":["08:00-09:00","17:00-18:00"],"advice":"Reserve outside peak windows"}
+
+assistant channel=final:
+To avoid the evening rush, book outside 17:00–18:00; departures before 17:00 or after 18:00 are typically smoother.
+
+user:
+Can you text me if the queue grows?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

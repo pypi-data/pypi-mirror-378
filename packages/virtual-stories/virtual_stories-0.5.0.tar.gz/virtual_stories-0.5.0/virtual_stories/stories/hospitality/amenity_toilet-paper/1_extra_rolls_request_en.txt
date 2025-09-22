@@ -1,0 +1,94 @@
+"""
+Guest requests additional toilet paper; verify stock, deliver rolls, include a casual remark and one background acknowledgment message.
+
+ROLES: user (guest needing more supplies), assistant (housekeeping coordinator for supply delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_paper_inventory",
+    "description": "Check inventory for toilet paper options.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preference": { "type": "string", "enum": ["ultra_soft", "eco_bamboo", "standard"] }
+      },
+      "required": ["preference"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_paper_rolls",
+    "description": "Deliver requested toilet paper rolls to the guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "preference": { "type": "string" },
+        "quantity": { "type": "integer", "minimum": 1, "maximum": 8 }
+      },
+      "required": ["room_number", "preference", "quantity"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Willow & Stone Inn (hotel_id: wsi_den_03)
+Address: 1200 Blake St, Denver, CO 80202
+Timezone: America/Denver
+
+Housekeeping Supply Options:
+- Toilet paper: ultra_soft, eco_bamboo, standard
+- Delivery window: typically 10–20 minutes
+
+Lobby Note:
+- Fresh herb planter wall near the elevators
+
+user:
+Hi there—could I get three extra rolls of toilet paper to room 614? I prefer something eco-friendly.
+
+assistant channel=analysis:
+Check eco_bamboo availability; if available, deliver three rolls.
+
+assistant channel=commentary to=tool.check_paper_inventory:
+{"preference":"eco_bamboo"}
+
+tool.check_paper_inventory channel=commentary to=assistant:
+{"available":true,"brand":"GreenLeaf","ply":"2","note":"FSC_certified"}
+
+assistant channel=analysis:
+Proceed to deliver three eco_bamboo rolls to 614.
+
+assistant channel=commentary to=tool.deliver_paper_rolls:
+{"room_number":"614","preference":"eco_bamboo","quantity":3}
+
+tool.deliver_paper_rolls channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":12,"runner":"sara"}
+
+assistant channel=final:
+Done—three eco_bamboo rolls (GreenLeaf, 2‑ply) are en route with Sara; ETA about 12 minutes to room 614.
+
+user:
+That herb wall by the elevators smells great.
+
+assistant channel=analysis:
+Offer a light acknowledgment grounded in system details.
+
+assistant channel=final:
+It’s real—our fresh herb planter wall sits right by the elevators.
+
+user:
+Could you set aside a whole case for me to take home?
+
+assistant channel=analysis:
+Not covered by tools or policy; use the background acknowledgment flag.
+
+assistant channel=final:
+[ATTENTION] Noted. Checking available options.
+

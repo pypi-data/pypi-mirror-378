@@ -1,0 +1,89 @@
+"""
+Family on winter trip requests bulk tissues and daily restock.
+Provide check, delivery, and housekeeping scheduling.
+
+ROLES: user (family guest), assistant (guest services with housekeeping link)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_tissue_inventory", "description": "Verify premium 3-ply stock for winter dryness.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "tissue_type": { "type": "string", "enum": ["premium"] }, "brand_preference": { "type": "string", "enum": ["any", "hotel_luxury_brand"] }, "quantity_boxes": { "type": "number" } }, "required": ["tissue_type"] }, "strict": true },
+  { "name": "deliver_tissue_amenity", "description": "Deliver boxes with placement in suite.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_products": { "type": "array", "items": { "type": "string" } }, "delivery_priority": { "type": "string", "enum": ["standard", "priority"] }, "special_placement": { "type": "string" } }, "required": ["room_number", "tissue_products"] }, "strict": true },
+  { "name": "update_housekeeping_notes", "description": "Schedule daily restocking and note winter use.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_preference": { "type": "string" }, "restocking_frequency": { "type": "string", "enum": ["daily"] }, "allergy_notes": { "type": "string" } }, "required": ["room_number", "tissue_preference"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Fir Ridge Ski Lodge (hotel_id: frs_jhm_01)
+Address: 300 Snowline Rd, Jackson Hole, WY 83001
+Timezone: America/Denver
+
+Tissue Support:
+- Premium 3‑ply for winter dryness
+- Delivery 10–20 minutes; suites prioritized
+- Placement: bedrooms, living room, bath vanities
+- Daily restock available
+- Allergy notes supported
+
+Lodge Notes:
+- 150 suites; fireplace; hot cocoa 16:00–18:00
+- Ski shuttle every 15 minutes
+- Breakfast 6:30–10:30
+- Quiet hours 22:00–7:00
+
+user:
+Hi—Suite 320. Can we get 5 premium boxes and daily restock?
+
+assistant channel=analysis:
+Check stock; deliver 5 boxes with default placement; set daily restock.
+
+assistant channel=commentary to=tool.check_tissue_inventory:
+{"tissue_type":"premium","brand_preference":"any","quantity_boxes":5}
+
+tool.check_tissue_inventory channel=commentary to=assistant:
+{"available_products":["Hotel Luxury 3-ply"],"stock_levels":{"hotel_lux":120}}
+
+assistant channel=commentary to=tool.deliver_tissue_amenity:
+{"room_number":"320","tissue_products":["5 boxes Hotel Luxury 3-ply"],"delivery_priority":"standard","special_placement":"bedrooms, living room, bath vanities"}
+
+tool.deliver_tissue_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"15 minutes","placement_confirmed":"suite-wide","tracking_id":"FR320_P5"}
+
+assistant channel=commentary to=tool.update_housekeeping_notes:
+{"room_number":"320","tissue_preference":"Hotel Luxury 3-ply across suite","restocking_frequency":"daily","allergy_notes":"none provided"}
+
+tool.update_housekeeping_notes channel=commentary to=assistant:
+{"profile_updated":true,"restocking_scheduled":"daily","duration":"stay_length","housekeeping_notified":true}
+
+assistant channel=final:
+All set—5 premium 3‑ply boxes to Suite 320 in ~15 minutes, placed in bedrooms, living room, and baths. Daily restocking is scheduled for your stay.
+
+user:
+Is cocoa hour at 4?
+
+assistant channel=analysis:
+From system: 16:00–18:00.
+
+assistant channel=final:
+Yes—16:00 to 18:00 in the lounge.
+
+user:
+The fireplace is cozy.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s perfect after the shuttle back—blankets are by the hearth.
+
+user:
+Could you hold ski tuning for us tonight?
+
+assistant channel=analysis:
+Outside tissue scope; flag.
+
+assistant channel=final:
+[ATTENTION] Checking with ski services about tuning slots.
+"""
+

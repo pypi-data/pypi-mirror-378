@@ -1,0 +1,65 @@
+"""
+Eco-conscious guest requests bamboo bowls; asks if they are dishwasher safe and about delivery ETA.
+
+ROLES: user (eco traveler), assistant (amenity desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_inventory","description":"Check bamboo stock","parameters":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["item_code"],"additionalProperties":false},"strict":true},
+  {"name":"request_amenity_delivery","description":"Queue delivery","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"quantity_map":{"type":"object","additionalProperties":{"type":"integer"}},"priority":{"type":"string","enum":["normal","express"]},"sanitized":{"type":"boolean"}},"required":["room_number","items"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Urban Green Hotel (hotel_id: ugh_bln_01)
+Address: Friedrichstrasse 120, 10117 Berlin, Germany
+Timezone: Europe/Berlin
+
+Sustainability Notes:
+- Bamboo bowls: not dishwasher or microwave safe
+- Delivery: 10–20 minutes
+- Re-sanitization available
+- Water refill stations on each floor
+- Rooftop garden open 09:00–19:00
+
+user:
+Hi—could I get two bamboo bowls to 715? Are they dishwasher safe, and how long is delivery?
+
+assistant channel=analysis:
+Answer safety and ETA from system; check stock; deliver.
+
+assistant channel=final:
+Bamboo bowls aren’t dishwasher or microwave safe. Delivery typically takes 10–20 minutes. I’ll send two now.
+
+assistant channel=commentary to=tool.check_amenity_inventory:
+{"item_code":"bowl_bamboo","quantity":2}
+
+tool.check_amenity_inventory channel=commentary to=assistant:
+{"item_code":"bowl_bamboo","on_hand":16,"can_fulfill":true,"notes":"hand_wash_only"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"715","items":["bowl_bamboo"],"quantity_map":{"bowl_bamboo":2},"priority":"normal","sanitized":true}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ticket_id":"UGH-715-44","estimated_minutes":12,"items":[{"code":"bowl_bamboo","qty":2}],"sanitized":"re_sanitized"}
+
+assistant channel=final:
+Two bamboo bowls are on their way under UGH-715-44, ETA ~12 minutes.
+
+user:
+Great, thanks! The rooftop garden is lovely.
+
+assistant channel=final:
+It’s a nice spot for a quiet break.
+
+user:
+Any zero-waste stores nearby?
+
+assistant channel=analysis:
+Out of scope—flag attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check nearby zero-waste shops for you.
+

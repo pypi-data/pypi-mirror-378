@@ -1,0 +1,81 @@
+"""
+Guest wants a nursing top plus a quick privacy setup in-room.
+Provide apparel and privacy screen coordination.
+
+ROLES: user (parent preferring private feeding), assistant (in-room family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_family_amenities","description":"Check availability of family and maternal support amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["nursing_tops","nursing_pillow","privacy_screen","comfortable_chair","baby_supplies"]},"size_needed":{"type":"string","enum":["XS","S","M","L","XL","XXL"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_maternal_support","description":"Coordinate maternal wellness and nursing support services.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["nursing_clothing","privacy_setup","comfort_furniture","feeding_supplies"]},"size_specifications":{"type":"string"},"delivery_urgency":{"type":"string","enum":["standard","priority","immediate"]}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeside Meadow Retreat (hotel_id: lmr_min_13)
+Address: 2000 Hennepin Ave, Minneapolis, MN 55405
+Timezone: America/Chicago
+
+Family Set:
+- Nursing tops: crossover/button-front; sizes XS–XL; colors: blush, charcoal
+- Privacy options: folding screen, door hanger “Nursing in progress”
+- Chair: supportive rocker available
+- Deliveries: 8–12 min usual
+- Wellness hours: guidance Tue/Thu 10:00–16:00
+
+user:
+Room 728 here. Could I get a nursing top and a privacy screen set up?
+
+assistant channel=analysis:
+Check nursing_tops and privacy_screen; then arrange both services.
+
+assistant channel=commentary to=tool.check_family_amenities:
+{"amenity_type":"nursing_tops"}
+
+tool.check_family_amenities channel=commentary to=assistant:
+{"available":true,"amenity_type":"nursing_tops","stock_levels":{"XS":2,"S":5,"M":5,"L":4,"XL":3},"colors":["blush","charcoal"],"styles":["crossover","button_front"]}
+
+assistant channel=final:
+We have blush or charcoal nursing tops in crossover or button‑front. What size and color work for you in room 728?
+
+user:
+Large, charcoal, crossover.
+
+assistant channel=analysis:
+Arrange clothing delivery and privacy setup.
+
+assistant channel=commentary to=tool.arrange_maternal_support:
+{"room_number":"728","service_type":"nursing_clothing","size_specifications":"L, charcoal, crossover","delivery_urgency":"priority"}
+
+tool.arrange_maternal_support channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":9,"items_included":["nursing_top_charcoal_L_crossover"],"delivery_team":"family_services"}
+
+assistant channel=commentary to=tool.arrange_maternal_support:
+{"room_number":"728","service_type":"privacy_setup","size_specifications":"folding_screen + door_hanger","delivery_urgency":"priority"}
+
+tool.arrange_maternal_support channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":10,"items_included":["folding_privacy_screen","door_hanger_sign"],"delivery_team":"family_services"}
+
+assistant channel=final:
+All set—your charcoal crossover top (L) is en route in about 9 minutes, and we’ll place a folding privacy screen with a door‑hanger sign in roughly 10 minutes.
+
+user:
+You’re so considerate. Thank you!
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+You’re welcome—comfort makes all the difference.
+
+user:
+Do you have a night nanny service here?
+
+assistant channel=analysis:
+Night nanny not specified; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Researching available details.
+

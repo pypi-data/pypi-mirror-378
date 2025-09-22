@@ -1,0 +1,59 @@
+"""
+Guest in a suite requests a board; includes chitchat and hours.
+
+ROLES: user (guest in room 3004 requesting an ironing board), assistant (concierge arranging delivery and quoting hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check if amenity available","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Complex: Skyline Pavilion — Bridge Tower
+Suite: 3004 (One-Bedroom Suite)
+Policy: 1 ironing board per room upon request
+Windows: 07:15–23:00 normal; 23:00–01:00 urgent
+SLA floors 29–31: 14–20 minutes
+Staging: BT-30 pantry; S4 service lift
+Lines: 0 | 7940 | 7941
+
+user:
+Could I get an ironing board to 3004?
+
+assistant channel=analysis:
+Check availability for 1 ironing board; then schedule normal delivery to 3004.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board","available":true,"in_stock":15}
+
+assistant channel=analysis:
+Place normal delivery now.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"3004","amenity_name":"ironing board","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-3004-6611","eta_minutes":19}
+
+assistant channel=final:
+All set—an ironing board is scheduled for suite 3004 with an ETA of about 19 minutes.
+
+user:
+Thanks! Are you still operating later tonight?
+
+assistant channel=final:
+Yes—we operate 07:15–23:00 for normal service with urgent coverage 23:00–01:00.
+
+user:
+Is it a wide board?
+
+assistant channel=final:
+[ATTENTION] Working on your request.
+

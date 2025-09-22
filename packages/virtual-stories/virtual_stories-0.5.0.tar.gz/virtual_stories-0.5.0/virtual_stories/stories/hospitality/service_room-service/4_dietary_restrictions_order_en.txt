@@ -1,0 +1,85 @@
+"""
+Guest with dietary restrictions places an order and asks about allergen information and special preparation requirements.
+
+ROLES: user (guest with dietary restrictions needing special meal preparation), assistant (in-room dining operator handling dietary requirements)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"get_room_service_menu","description":"Retrieve room service menu","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true},
+  {"name":"place_room_service_order","description":"Place an in-room dining order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"qty":{"type":"integer"}}}},"delivery_notes":{"type":"string"}},"required":["hotel_id","room","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Royal Crescent Edinburgh (RCED-16), 12 Royal Circus, Edinburgh EH3.
+Room Service 24/7. Delivery estimate 30–45 minutes.
+Menu highlights (SKUs): RS-BRG (Angus Burger), RS-CAES (Chicken Caesar Salad), RS-TEA (Assorted Teas), RS-SUP (Tomato Soup), RS-SND (Club Sandwich), RS-PST (Pasta), RS-DRT (Dessert Platter), RS-CAF (Coffee Selection).
+Dietary accommodations: All items can be prepared gluten-free; dairy-free options available; nut-free preparation possible; vegetarian modifications available; allergen information provided upon request; special preparation notes honored.
+Kitchen protocols: Separate preparation areas for allergen-free meals; dedicated utensils for special diets; chef consultation available for complex requirements; cross-contamination prevention measures in place.
+Special services: Tray pickup by request after dining; dietary consultation available; custom meal preparation for severe allergies.
+
+user:
+Hi, I have a severe nut allergy. Can you tell me which items on your menu are safe for me to order?
+
+assistant channel=analysis:
+Check menu availability and provide dietary accommodation information from system prompt.
+
+assistant channel=commentary to=tool.get_room_service_menu:
+{}
+
+tool.get_room_service_menu channel=commentary to=assistant:
+{"skus":["RS-BRG","RS-CAES","RS-TEA","RS-SUP","RS-SND","RS-PST","RS-DRT","RS-CAF"]}
+
+assistant channel=analysis:
+Provide allergen information and special preparation options for nut allergy.
+
+assistant channel=final:
+For your nut allergy, we can prepare any of our menu items with nut-free preparation. We have separate preparation areas and dedicated utensils for allergen-free meals, plus cross-contamination prevention measures. All items can be made nut-free: Angus Burger, Chicken Caesar Salad, Club Sandwich, Pasta, and more. Would you like allergen information for any specific item?
+
+user:
+That's very reassuring. Can I get the Chicken Caesar Salad with nut-free preparation to room 1205?
+
+assistant channel=analysis:
+Place the order with specific dietary requirements noted.
+
+assistant channel=commentary to=tool.place_room_service_order:
+{"hotel_id":"RCED-16","room":"1205","items":[{"sku":"RS-CAES","qty":1}],"delivery_notes":"SEVERE NUT ALLERGY - nut-free preparation required; use dedicated utensils and separate preparation area"}
+
+tool.place_room_service_order channel=commentary to=assistant:
+{"order_id":"RS-1205-667","eta_minutes":40,"status":"accepted"}
+
+assistant channel=analysis:
+Confirm the order with special dietary preparation.
+
+assistant channel=final:
+Order RS-1205-667 is confirmed: 1 Chicken Caesar Salad with nut-free preparation to room 1205. Our kitchen will use dedicated utensils and separate preparation area for your safety. Estimated delivery is about 40 minutes.
+
+user:
+Thank you for taking my allergy so seriously. The separate preparation areas give me confidence.
+
+assistant channel=analysis:
+Acknowledge their appreciation for the safety measures without adding new information.
+
+assistant channel=final:
+Your safety is our top priority. We take all dietary restrictions very seriously and have strict protocols in place.
+
+user:
+Do you have a chef I could speak with about other menu items?
+
+assistant channel=analysis:
+Provide information about chef consultation from system prompt.
+
+assistant channel=final:
+Yes! Chef consultation is available for complex dietary requirements. I can arrange for our chef to discuss other menu items and custom meal preparation options with you.
+
+user:
+Do you offer any certified organic menu options?
+
+assistant channel=analysis:
+Certified organic options aren't mentioned in system prompt, so use attention flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for your question. Reviewing available resources.

@@ -1,0 +1,51 @@
+"""
+AED standby for a conference room; confirm briefing requirement and return location; add small talk and [ATTENTION] query.
+
+ROLES: user (conference organizer), assistant (security liaison arranging AED standby per policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"rent_aed","description":"Schedule AED for supervised standby on property.","parameters":{"type":"object","additionalProperties":false,"properties":{"event_space":{"type":"string"},"start_time":{"type":"string"},"duration_hours":{"type":"integer","minimum":1,"maximum":8}},"required":["event_space","start_time","duration_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborview Center
+Policy:
+- AEDs: 2 units; Security supervised setup; pre-use briefing mandatory.
+- Scope: On-property only; rate $28/hour; max 8 hours.
+- Security Office: Level 1 corridor behind Reception; handles deployment/return.
+Spaces: Bay Conference Room, Marina Hall, Pier Boardroom.
+
+user:
+Set AED standby in Bay Conference Room from 08:30 for 2 hours.
+
+assistant channel=analysis:
+Reserve via tool; confirm terms clearly.
+
+assistant channel=commentary to=tool.rent_aed:
+{"event_space":"Bay Conference Room","start_time":"08:30","duration_hours":2}
+
+tool.rent_aed channel=commentary to=assistant:
+{"reservation_id":"aed_hv_221","hourly_rate":28,"currency":"USD","supervision":"Security placement required"}
+
+assistant channel=final:
+Reserved AED standby in Bay Conference Room 08:30 for 2 hours (aed_hv_221). Security will place and brief; the rate is $28/hour, and units remain on property.
+
+user:
+Nice view of the marina this morning.
+
+assistant channel=final:
+Return and deployment are coordinated from the Security Office behind Reception on Level 1.
+
+user:
+Can I bring the AED to a charity run off-site after the meeting?
+
+assistant channel=analysis:
+Off-site is not allowed; answer from system.
+
+assistant channel=final:
+AED units are limited to on-property use only.
+

@@ -1,0 +1,59 @@
+"""
+Guest requests standard protection with evening turndown discreet delivery.
+
+ROLES: user (anniversary couple), assistant (wellness concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_wellness_amenities","description":"Retrieve available personal wellness and health products.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["protection","personal_care","health_wellness","all_wellness"]}},"required":[]},"strict":true},
+  {"name":"verify_discreet_delivery_options","description":"Check available discreet delivery options for personal wellness items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time_preference":{"type":"string","enum":["immediate","evening","specific_time"]}},"required":["room_number"]},"strict":true},
+  {"name":"arrange_wellness_delivery","description":"Arrange discreet delivery of personal wellness amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_method":{"type":"string","enum":["room_service_tray","housekeeping_supplies","front_desk_envelope"]},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown","next_housekeeping","specific_time"]}},"required":["room_number","items","delivery_method","delivery_timing"]},"strict":true}
+]
+```
+"""
+
+system:
+Marina Promenade Hotel (hotel_id: mph_dubai)
+Address: Al Marsa St, Dubai, UAE
+Timezone: Asia/Dubai
+
+Inventory:
+- WELLNESS_PROTECTION_STANDARD: Standard protection (3-pack)
+
+user:
+Could you send up standard protection during turndown? It’s our anniversary.
+
+assistant channel=analysis:
+Confirm availability and schedule evening turndown.
+
+assistant channel=commentary to=tool.get_wellness_amenities:
+{"category":"protection"}
+
+tool.get_wellness_amenities channel=commentary to=assistant:
+{"available_products":[{"sku":"WELLNESS_PROTECTION_STANDARD","name":"Standard Protection Products","pack_size":3}]}
+
+assistant channel=commentary to=tool.verify_discreet_delivery_options:
+{"room_number":"2701","time_preference":"evening"}
+
+tool.verify_discreet_delivery_options channel=commentary to=assistant:
+{"room_number":"2701","available_methods":["room_service_tray","housekeeping_supplies"],"recommended_timing":"evening_turndown"}
+
+assistant channel=commentary to=tool.arrange_wellness_delivery:
+{"room_number":"2701","items":[{"sku":"WELLNESS_PROTECTION_STANDARD","quantity":1}],"delivery_method":"room_service_tray","delivery_timing":"evening_turndown"}
+
+tool.arrange_wellness_delivery channel=commentary to=assistant:
+{"delivery_id":"MPH-2701-AN-07","eta":"19:00-19:30"}
+
+assistant channel=final:
+Happy anniversary! Your standard protection (3‑pack) is scheduled for discreet delivery at turndown, 7:00–7:30 PM (MPH-2701-AN-07).
+
+user:
+Thank you! By the way, your lobby pianist is fantastic.
+
+assistant channel=analysis:
+Light gratitude, no new facts.
+
+assistant channel=final:
+That’s so kind—thank you for the lovely feedback.
+

@@ -1,0 +1,73 @@
+"""
+Guest requests multiple disposable nail files for a team; asks if complimentary.
+Provide disposable file availability in bulk and pickup delivery.
+
+ROLES: user (team lead requesting disposables), assistant (guest services providing group grooming disposables)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_grooming_supplies","description":"Check disposable emery board stock.","parameters":{"type":"object","properties":{"tool_type":{"type":"string","enum":["nail_file"]},"quality_level":{"type":"string","enum":["basic"]}},"required":["tool_type"]},"strict":true},
+  {"name":"deliver_grooming_tools","description":"Prepare front desk pickup for bulk disposables.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"tools_requested":{"type":"array","items":{"type":"object","properties":{"tool_name":{"type":"string"},"quality":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_priority":{"type":"string","enum":["standard"]},"method":{"type":"string","enum":["front_desk_pickup"]}},"required":["tools_requested","method"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverbend Wellness Retreat (hotel_id: rwr_pdx_75)
+Address: 700 SW Broadway, Portland, OR 97205
+Timezone: America/Los_Angeles
+
+Disposable Supplies:
+- Emery boards (180/240 grit); individual sleeves
+- Complimentary in bulk for groups
+- Recycling guidance card
+- Hand wipes included per 5 boards
+- UV‑C not required (single‑use)
+
+Pickup Logistics:
+- Labeled envelope at front desk within 6 minutes
+- Shelf "Amenities A"; alphabetized
+- 24/7 pickup window
+- Concierge text alert optional
+- Extra labels provided
+
+user:
+Hi, could I pick up 20 disposable emery boards for my team?
+
+assistant channel=analysis:
+Confirm disposable file stock; prepare front desk pickup labeled.
+
+assistant channel=commentary to=tool.check_grooming_supplies:
+{"tool_type":"nail_file","quality_level":"basic"}
+
+tool.check_grooming_supplies channel=commentary to=assistant:
+{"available_tools":["emery_board_disposable"],"stock":500,"grit":[180,240]}
+
+assistant channel=commentary to=tool.deliver_grooming_tools:
+{"room_number":"","tools_requested":[{"tool_name":"emery_board_disposable","quality":"basic","quantity":20}],"delivery_priority":"standard","method":"front_desk_pickup"}
+
+tool.deliver_grooming_tools channel=commentary to=assistant:
+{"pickup_id":"RWR-PDX-DF-20","ready_in":"6 minutes","shelf":"Amenities A","label":"Team pickup"}
+
+assistant channel=final:
+Yes—20 disposable emery boards will be ready at the front desk in about 6 minutes on shelf Amenities A, labeled “Team pickup”. They’re complimentary.
+
+user:
+Do you include hand wipes?
+
+assistant channel=analysis:
+Answer from Disposable Supplies.
+
+assistant channel=final:
+Yes—hand wipes are included for every five boards.
+
+user:
+Any food cart pods open late?
+
+assistant channel=analysis:
+Out of scope; ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Compiling available data.
+

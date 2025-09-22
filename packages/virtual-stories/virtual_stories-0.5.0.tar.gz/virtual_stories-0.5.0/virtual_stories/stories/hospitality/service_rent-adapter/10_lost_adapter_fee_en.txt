@@ -1,0 +1,57 @@
+"""
+Guest asks about lost adapter handling and fees; proceed with a standard rental and clarify policy.
+
+ROLES: user (guest verifying potential loss charge), assistant (front desk clarifying policy and creating order)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Confirm adapter availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create standard adapter rental","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Nordhaven Oslo (NHOS-14)
+Address: Karl Johans gt. 22, 0159 Oslo, Norway
+Hotel style: Contemporary Nordic
+Power: 230V/50Hz; Type F sockets
+Adapters: 16 units; NOK 35/night; no deposit; folio code RENT-ADPT; lost item fee NOK 120 (if not returned)
+Hours: Front Desk 24/7; Concierge 07:00–23:00; Sauna 16:00–22:00
+Only services listed are available.
+
+user:
+If I lose the adapter, what happens? Also, I need one now to room 814.
+
+assistant channel=analysis:
+Clarify the policy (NOK 120 lost fee), then create a 24-hour rental for 814 with room drop.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"NHOS-14","item":"universal_power_adapter","quantity":1,"room":"814"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"NHOS-14","room":"814","item":"universal_power_adapter","duration_hours":24,"charge_code":"RENT-ADPT","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"ORD-NHOS-4482","status":"created","rate":"NOK 35/night"}
+
+assistant channel=final:
+If an adapter isn’t returned, a NOK 120 lost item fee applies. I’ve created order ORD-NHOS-4482 at NOK 35 per night; we’ll deliver to 814.
+
+user:
+Is the sauna open now?
+
+assistant channel=final:
+Sauna hours are 16:00 to 22:00.
+
+user:
+Could you provide the supplier’s warranty exclusion clauses?
+
+assistant channel=final:
+[ATTENTION] Retrieving more details.
+

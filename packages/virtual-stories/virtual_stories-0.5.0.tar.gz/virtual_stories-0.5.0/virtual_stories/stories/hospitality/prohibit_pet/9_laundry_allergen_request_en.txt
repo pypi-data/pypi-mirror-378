@@ -1,0 +1,60 @@
+"""
+Guest without animals requests an allergen-prepped room and asks how rooms are prepared after prior pet violations.
+
+ROLES: user (allergy‑sensitive guest), assistant (front desk explaining prep steps)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_allergen_prep","description":"Return steps taken after pet violation cleanup.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}},
+  {"name":"flag_allergy_note","description":"Flag a housekeeping allergy note on room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]}}
+]
+```
+"""
+
+system:
+Hotel: Pinecrest Plaza (hotel_id: pc_sea)
+Address: 600 Pine St, Seattle, WA 98101
+Timezone: America/Los_Angeles
+
+Allergen Room Prep:
+- Post‑violation deep clean followed by HEPA run and hypoallergenic treatment
+- Fresh duvet insert and pillow set installed
+- Final inspection by supervisor
+
+user:
+I’m sensitive to dander—what do you do after a pet violation? Can you note my room?
+
+assistant channel=analysis:
+Explain post‑violation steps from system and flag allergy note via tool.
+
+assistant channel=commentary to=tool.get_allergen_prep:
+{"hotel_id":"pc_sea"}
+
+tool.get_allergen_prep channel=commentary to=assistant:
+{"steps":["deep_clean","HEPA_run","hypoallergenic_treatment","fresh_bedding","supervisor_inspection"]}
+
+assistant channel=commentary to=tool.flag_allergy_note:
+{"room":"1711"}
+
+tool.flag_allergy_note channel=commentary to=assistant:
+{"flagged":true}
+
+assistant channel=final:
+After any pet violation, we deep‑clean the room, run HEPA filtration, apply hypoallergenic treatment, install fresh bedding, and have a supervisor inspect. I’ve added an allergy note to room 1711.
+
+user:
+Thanks—your elevators are fast.
+
+assistant channel=final:
+Appreciate the feedback.
+
+user:
+What brand of hypoallergenic chemicals do you use?
+
+assistant channel=analysis:
+Brand specifics not provided. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Thanks for asking. Reviewing available information.
+

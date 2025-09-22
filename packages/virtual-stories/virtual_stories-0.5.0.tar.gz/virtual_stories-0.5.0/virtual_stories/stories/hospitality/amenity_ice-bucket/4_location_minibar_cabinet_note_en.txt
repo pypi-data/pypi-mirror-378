@@ -1,0 +1,62 @@
+"""
+Guest asks location and requests normal replacement with lid; include chat and [ATTENTION].
+
+ROLES: user (guest 512), assistant (guest services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"get_in_room_item_location","description":"Standard location for item.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver replacement item with note.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Garden Row Hotel (hotel_id: grh_ldn)
+Address: 21 Bloomsbury Way, London WC1A 2
+Timezone: Europe/London
+Placement Guide:
+- Ice bucket: minibar cabinet, upper right compartment
+- Lid and tongs included together
+SLA: normal 15–25 min; urgent 8–12 min
+Ice Machine: lower ground by vending
+Contact: Reception 0
+Notes list:
+1) Replace lid if missing
+2) Wrap with protective sleeve
+3) Confirm tongs in place
+
+user:
+Where is the ice bucket in 512? And ours doesn’t have a lid—can you replace it?
+
+assistant channel=analysis:
+Provide location and arrange normal replacement with note to include lid.
+
+assistant channel=commentary to=tool.get_in_room_item_location:
+{"item":"ice bucket"}
+
+tool.get_in_room_item_location channel=commentary to=assistant:
+{"item":"ice bucket","location":"minibar cabinet, upper right compartment","notes":"lid and tongs packaged together"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"512","amenity_name":"ice bucket","quantity":1,"priority":"normal","note":"include lid"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ok":true,"eta_minutes":21,"ref":"GRH-ICE-512-03"}
+
+assistant channel=final:
+You’ll find it in the minibar cabinet’s upper right compartment. I’ve arranged a replacement with the lid included for 512—ETA about 21 minutes. Ref GRH-ICE-512-03.
+
+user:
+The courtyard looks peaceful this afternoon.
+
+assistant channel=final:
+It’s a quiet spot away from the street.
+
+user:
+Do you sanitize buckets between uses with any specific method?
+
+assistant channel=final:
+[ATTENTION] I’ll check on the sanitization method.
+

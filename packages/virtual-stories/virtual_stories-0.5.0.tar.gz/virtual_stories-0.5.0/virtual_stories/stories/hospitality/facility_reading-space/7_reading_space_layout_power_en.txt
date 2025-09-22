@@ -1,0 +1,65 @@
+"""
+Guest wants the quietest seats with power; asks where to sit and outlet details.
+
+ROLES: user (remote worker), assistant (concierge citing map + tool power details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "get_seat_power_map",
+    "description": "Return seat labels, outlet count, and proximity to HVAC/doors for noise awareness.",
+    "parameters": {"type":"object","properties":{},"required":[],"additionalProperties":false},
+    "strict": true
+  }
+]
+"""
+
+system:
+Space: Study Bay (deep-focus corner)
+Location: Level 4, north bay window
+Hours: 07:30–22:00
+Capacity: 10 desks (70×140 cm) + 2 recliners
+Rules: Door closes softly; no video calls
+Amenities: Anti-glare mats, monitor risers, cable trays
+Noise: 33–37 dBA; HVAC vents near seats A1–A2
+Power: Type B & universal combo strips; USB-C 60 W at A3–A6
+Best Quiet: Seats B3–B5 (furthest from door and vents)
+View: Harbor skyline; morning glare mitigated by shades
+Cleaning: Wipe-down at 12:45 and 18:45
+
+user:
+Which seats are quiet and have strong power for my laptop?
+
+assistant channel=analysis:
+Use the tool to confirm outlets and nearby noise sources; combine with system’s best-quiet seats.
+
+assistant channel=commentary to=tool.get_seat_power_map:
+{}
+
+tool.get_seat_power_map channel=commentary to=assistant:
+{"seats":{"A1":{"outlets":2,"near":"hvac"},"A3":{"outlets":3,"usb_c":true},"B3":{"outlets":3,"usb_c":true},"B4":{"outlets":3,"usb_c":true},"B5":{"outlets":2,"usb_c":true}},"notes":"Door near A1; quietest cluster B3–B5"}
+
+assistant channel=analysis:
+Recommend B3–B5 with USB‑C and away from vents/door.
+
+assistant channel=final:
+Pick B3–B5 for the quiet zone and solid power—each has 2–3 outlets plus USB‑C, and they’re furthest from the door and HVAC vents.
+
+user:
+This view helps me focus.
+
+assistant channel=analysis:
+Light small talk.
+
+assistant channel=final:
+The bay window puts the skyline right at the edge of your notes.
+
+user:
+Can you add an external monitor to B4 for me?
+
+assistant channel=analysis:
+No monitor provisioning is defined—flag it.
+
+assistant channel=final:
+[ATTENTION] Adding a monitor to B4 is requested. I’m checking whether that can be arranged.
+

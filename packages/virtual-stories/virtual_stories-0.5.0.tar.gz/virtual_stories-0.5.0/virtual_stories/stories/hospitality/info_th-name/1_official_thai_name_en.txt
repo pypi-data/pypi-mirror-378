@@ -1,0 +1,62 @@
+"""
+Guest asks for the official Thai name; provide via tool. Include small talk and one background handoff message.
+
+ROLES: user (guest confirming Thai branding), assistant (brand desk checking multilingual naming registry)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_brand_names",
+    "description": "Return brand names in different languages.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brand_id": {"type":"string"},
+        "language": {"type":"string","enum":["en","zh","ja","th"]}
+      },
+      "required": ["brand_id","language"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Lotus Pier Hotel (brand_id: lotus_pier_hotel)
+Official names register:
+  EN: "Lotus Pier Hotel"
+  ZH: 「蓮港酒店」
+  JA: 「ロータス・ピア・ホテル」
+  TH: "โลตัส เพียร์ โฮเทล"
+Notes: Use the Thai spacing exactly as listed.
+
+user:
+What’s your official Thai name?
+
+assistant channel=analysis:
+Call naming tool with language th.
+
+assistant channel=commentary to=tool.get_brand_names:
+{"brand_id":"lotus_pier_hotel","language":"th"}
+
+tool.get_brand_names channel=commentary to=assistant:
+{"name":"โลตัส เพียร์ โฮเทล"}
+
+assistant channel=final:
+The official Thai name is "โลตัส เพียร์ โฮเทล".
+
+user:
+Nice. Hope your day is going well.
+
+assistant channel=final:
+Thank you—what else can I help with?
+
+user:
+Do you also have the Thai phonetic guide for radio ads this week?
+
+assistant channel=final:
+[ATTENTION] That item isn’t covered in the provided resources. Compiling available data.
+

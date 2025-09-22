@@ -1,0 +1,66 @@
+"""
+Guest requests basic nail clippers after hours; asks about availability timing.
+Provide basic clippers and confirm night availability.
+
+ROLES: user (late-night guest needing basic clippers), assistant (guest services night desk providing essentials)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_grooming_supplies","description":"Check basic clippers in night inventory.","parameters":{"type":"object","properties":{"tool_type":{"type":"string","enum":["nail_clippers"]},"quality_level":{"type":"string","enum":["basic"]}},"required":["tool_type"]},"strict":true},
+  {"name":"deliver_grooming_tools","description":"Night runner delivery to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"tools_requested":{"type":"array","items":{"type":"object","properties":{"tool_name":{"type":"string"},"quality":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_priority":{"type":"string","enum":["urgent","standard"]}},"required":["room_number","tools_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Tower Suites (hotel_id: sts_tor_64)
+Address: 88 Harbour St, Toronto, ON M5J 0C3, Canada
+Timezone: America/Toronto
+
+Night Essentials:
+- Basic nail clippers; compact; sealed pouch
+- Disposable emery boards
+- Night runner service 11 PM–6 AM
+- Typical ETA 7–10 minutes
+- Complimentary for guests
+
+user:
+Hi, room 3319. Do you have basic clippers now? It’s just after midnight.
+
+assistant channel=analysis:
+Check basic clipper night stock; deliver to 3319 via night runner.
+
+assistant channel=commentary to=tool.check_grooming_supplies:
+{"tool_type":"nail_clippers","quality_level":"basic"}
+
+tool.check_grooming_supplies channel=commentary to=assistant:
+{"available_tools":["basic_compact_clip"],"night_inventory":true,"sealed":true}
+
+assistant channel=commentary to=tool.deliver_grooming_tools:
+{"room_number":"3319","tools_requested":[{"tool_name":"basic_compact_clip","quality":"basic","quantity":1}],"delivery_priority":"urgent"}
+
+tool.deliver_grooming_tools channel=commentary to=assistant:
+{"service_id":"STS-TOR-NITE-04","eta":"9 minutes","runner":"Sam","items":["basic_compact_clip","emery_board"],"sealed":true}
+
+assistant channel=final:
+Yes—our night runner Sam will bring a sealed basic compact clipper and an emery board to 3319 in about 9 minutes.
+
+user:
+Is night service available every day?
+
+assistant channel=analysis:
+Answer from Night Essentials service hours.
+
+assistant channel=final:
+Yes—night runner service operates from 11 PM to 6 AM daily.
+
+user:
+Any 24/7 pharmacies nearby?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

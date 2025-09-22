@@ -1,0 +1,89 @@
+"""
+Guest requests overnight sleep mask and eco refills.
+Provide analysis, selection, and delivery with refill info.
+
+ROLES: user (eco-conscious guest), assistant (wellness ranger with refill program)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "analyze_skin_type", "description": "Gauge hydration level for overnight mask.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "guest_id": { "type": "string" }, "skin_concerns": { "type": "array", "items": { "type": "string", "enum": ["dryness", "dullness"] } }, "skin_type": { "type": "string", "enum": ["dry", "normal"] } }, "required": ["guest_id", "skin_concerns", "skin_type"] }, "strict": true },
+  { "name": "select_facial_mask", "description": "Choose hyaluronic sleep gel or squalane balm.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mask_type": { "type": "string", "enum": ["hydrating"] }, "ingredients": { "type": "array", "items": { "type": "string" } }, "application_time": { "type": "number" } }, "required": ["room_number", "mask_type"] }, "strict": true },
+  { "name": "deliver_spa_package", "description": "Deliver mask with bamboo spatula and refill bag.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "package_contents": { "type": "array", "items": { "type": "string" } }, "delivery_window": { "type": "string" }, "setup_assistance": { "type": "boolean" } }, "required": ["room_number", "package_contents"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Cedar Peak Eco Retreat (hotel_id: cper_den_02)
+Address: 910 Forest Ridge Rd, Estes Park, CO 80517
+Timezone: America/Denver
+
+Wellness & Refills:
+- Sleep masks: hyaluronic night gel; squalane balm
+- Refill program: aluminum jars + compostable refill bags
+- Delivery: 15–25 minutes; bamboo spatula provided
+- Humidifier available; turndown can apply mask
+- Tip card for overnight vs 20‑min use
+
+Property:
+- 72 cabins; fireplaces; no single-use plastics
+- Trail maps at desk; shuttle to trailheads
+- Breakfast 7:00–10:30; campfire cocoa 19:00–20:00
+- Quiet zone after 21:00; star maps in rooms
+
+user:
+Hi, cabin C4. I’d like an overnight sleep mask—eco refill if possible.
+
+assistant channel=analysis:
+Analyze for hydration; choose hyaluronic gel; deliver with refill bag and spatula.
+
+assistant channel=commentary to=tool.analyze_skin_type:
+{"guest_id":"c4","skin_concerns":["dryness"],"skin_type":"dry"}
+
+tool.analyze_skin_type channel=commentary to=assistant:
+{"profile":"dry_sleepcare","recommended_masks":["hydrating"],"key_ingredients":["hyaluronic_acid","squalane"],"application_time":120}
+
+assistant channel=commentary to=tool.select_facial_mask:
+{"room_number":"C4","mask_type":"hydrating","ingredients":["hyaluronic_acid"],"application_time":120}
+
+tool.select_facial_mask channel=commentary to=assistant:
+{"mask_selected":"Evergreen Night Gel","application_time":120,"compatibility":"excellent"}
+
+assistant channel=commentary to=tool.deliver_spa_package:
+{"room_number":"C4","package_contents":["Evergreen Night Gel","bamboo spatula","compostable refill bag","tip card"],"delivery_window":"20 minutes","setup_assistance":false}
+
+tool.deliver_spa_package channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta":"20 minutes","package_id":"CP_C4_SLEEP"}
+
+assistant channel=final:
+Great choice. I’ll deliver Evergreen Night Gel with a compostable refill bag and bamboo spatula to C4 in about 20 minutes. It’s designed for overnight use.
+
+user:
+When is campfire cocoa?
+
+assistant channel=analysis:
+From system: 19:00–20:00.
+
+assistant channel=final:
+19:00 to 20:00 by the main fire ring.
+
+user:
+The stars are incredible tonight.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Clear skies make for perfect stargazing—there’s a star map in your cabin.
+
+user:
+Could you arrange a wildlife photography guide at dawn?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] Connecting you with our activities team for a guide.
+"""
+

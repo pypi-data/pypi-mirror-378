@@ -1,0 +1,65 @@
+"""
+Guest requests ice during late hours; confirms urgent window and asks a beyond-context maker question.
+
+ROLES: user (guest in room 2007 requesting ice close to closing), assistant (night runner scheduling urgent delivery and stating window)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Deliver amenity to room",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Grand Row — Arcade Tower
+Room: 2007 (Executive King)
+Ice: One bucket per late-night urgent request
+Hours: 07:00–23:00 normal; 23:00–01:00 urgent
+SLA to floors 19–22: normal 12–18 minutes
+Dispatch: AT-20 pantry; S2 elevator after 22:00
+Numbers: 0 Front; 7850 Services; 7851 HK
+
+user:
+It’s late—could I get one bucket of ice to 2007?
+
+assistant channel=analysis:
+Since this is during urgent hours, place an urgent delivery for one bucket to room 2007.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2007","amenity_name":"ice (bucket)","quantity":1,"priority":"urgent","note":"Urgent window; AT-20 pantry via S2"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-2007-5510","eta_minutes":10}
+
+assistant channel=final:
+All set—one bucket of ice is scheduled as urgent to room 2007 with an ETA of about 10 minutes.
+
+user:
+Thanks! Do you run urgent until 1am?
+
+assistant channel=final:
+Yes—urgent ice service runs 23:00–01:00 here.
+
+user:
+Is the machine a Hoshizaki model?
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

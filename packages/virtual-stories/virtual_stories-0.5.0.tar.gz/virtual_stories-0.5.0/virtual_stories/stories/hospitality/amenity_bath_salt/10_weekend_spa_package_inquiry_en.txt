@@ -1,0 +1,73 @@
+"""
+Guest mentions a weekend spa stay and asks for multiple scents; confirm limit and deliver.
+
+ROLES: user (weekend spa guest), assistant (amenities desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "list_bath_salt_scents", "description": "List scents and stock.", "parameters": {"type":"object","additionalProperties":false,"properties":{}}, "strict": true },
+  { "name": "request_bath_salt_delivery", "description": "Deliver bath salt.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"scent":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","scent","quantity","priority"]}, "strict": true }
+]
+```
+"""
+
+system:
+Aspen Creek Spa Lodge (hotel_id: acsl_aspen)
+Address: 12 Hunter St, Aspen, CO 81611
+Timezone: America/Denver
+
+Program:
+- Scents: lavender, eucalyptus, unscented
+- Delivery: 09:00–22:00
+Limit: Up to 3 pouches per request
+Spa: Soaking tubs 10:00–20:00
+Accessibility: High‑contrast print
+Sustainability: Paper sachets
+House Rules: No medical claims
+
+user:
+I’m here for a spa weekend. Could I get 2 lavender and 1 unscented to 410?
+
+assistant channel=analysis:
+Confirm stock; quantities within limit; place order in two steps or one per scent (tool expects one scent per call—place sequential requests).
+
+assistant channel=commentary to=tool.list_bath_salt_scents:
+{}
+
+tool.list_bath_salt_scents channel=commentary to=assistant:
+{"scents":[{"name":"lavender","stock":19},{"name":"eucalyptus","stock":12},{"name":"unscented","stock":25}]}
+
+assistant channel=commentary to=tool.request_bath_salt_delivery:
+{"room_number":"410","scent":"lavender","quantity":2,"priority":"normal"}
+
+tool.request_bath_salt_delivery channel=commentary to=assistant:
+{"ticket_id":"SPA-410-2201","eta_minutes":12}
+
+assistant channel=commentary to=tool.request_bath_salt_delivery:
+{"room_number":"410","scent":"unscented","quantity":1,"priority":"normal"}
+
+tool.request_bath_salt_delivery channel=commentary to=assistant:
+{"ticket_id":"SPA-410-2202","eta_minutes":12}
+
+assistant channel=final:
+Your bath salts are queued for room 410: 2× lavender (SPA-410-2201) and 1× unscented (SPA-410-2202), both with an ETA of about 12 minutes.
+
+user:
+The soaking tubs look inviting.
+
+assistant channel=analysis:
+Small talk using system spa hours.
+
+assistant channel=final:
+They’re open 10:00–20:00—enjoy your soak.
+
+user:
+Do spa packages include facials too?
+
+assistant channel=analysis:
+Not in system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check which services are included in spa packages.
+

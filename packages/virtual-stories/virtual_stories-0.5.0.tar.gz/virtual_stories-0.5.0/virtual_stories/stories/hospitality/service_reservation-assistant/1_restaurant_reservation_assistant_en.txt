@@ -1,0 +1,53 @@
+"""
+Guest asks for restaurant reservation assistance; check availability via partner booker and confirm.
+
+ROLES: user (guest dining planner), assistant (concierge reservation assistant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"search_restaurant_availability","description":"Search partner availability","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","party_size","date","time"]},"strict":true},
+  {"name":"create_restaurant_booking","description":"Place a restaurant booking","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","guest_name","party_size","date","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Downtown Arcadia NYC (DANY-15), 123 W 44th St, New York, NY 10036.
+Concierge 8:00–22:00; Restaurant bookings via OpenDine partner (partner_id ODN-100) for nearby dining.
+Nearby picks: "Slate & Ember" (modern American), "Riviera Sora" (Italian seafood).
+
+user:
+Could you book a table for two at 7:30 PM tonight? Room 2108.
+
+assistant channel=analysis:
+Search availability for 2 at 19:30 via partner, then create the booking if available.
+
+assistant channel=commentary to=tool.search_restaurant_availability:
+{"partner_id":"ODN-100","party_size":2,"date":"2025-08-29","time":"19:30"}
+
+tool.search_restaurant_availability channel=commentary to=assistant:
+{"available":true,"options":[{"restaurant":"Slate & Ember","time":"19:30"}]}
+
+assistant channel=commentary to=tool.create_restaurant_booking:
+{"partner_id":"ODN-100","guest_name":"Guest 2108","party_size":2,"date":"2025-08-29","time":"19:30"}
+
+tool.create_restaurant_booking channel=commentary to=assistant:
+{"reservation_id":"ODN-RES-5581","restaurant":"Slate & Ember","status":"confirmed"}
+
+assistant channel=final:
+Your table for two at Slate & Ember is confirmed for 7:30 PM under reservation ODN-RES-5581.
+
+user:
+Thanks! The lobby art is cool.
+
+assistant channel=final:
+Glad you like it—have a great dinner.
+
+user:
+Can you share the restaurant’s internal contract terms?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

@@ -1,0 +1,70 @@
+"""
+Guest requests nourishing body lotion; wants to confirm if an olive-based option exists and delivery times.
+
+ROLES: user (vacationer), assistant (spa boutique host)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_skincare_inventory","description":"Body lotions (nourishing)","parameters":{"type":"object","properties":{"product_type":{"type":"string","enum":["body_lotion"]},"skin_type":{"type":"string","enum":["dry","all"]}},"required":["product_type"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_spa_amenities","description":"Arrange delivery","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"product_id":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_time":{"type":"string","enum":["immediate","evening_turndown","morning_refresh"]}},"required":["room_number","products"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Porto Mare Seaside Hotel (hotel_id: pmsh_val_01)
+Address: Passeig de Neptú 30, Valencia 46011, Spain
+Timezone: Europe/Madrid
+
+Mediterranean Touch:
+- Olive and almond lines for deep nourishment
+- Delivery: immediate or evening turndown
+- Rooftop pool with sea breeze misting
+- Citrus water available in spa foyer
+- Quiet hour: 14:00–16:00 (siesta)
+
+Products (table):
+| ID | Name |
+| OLIVA_NOURISH | Oliva Nourish Body Cream |
+| CITRUS_VEIL | Citrus Veil Light Lotion |
+
+user:
+Hola! Do you have an olive-based lotion? Can you deliver this evening to 604?
+
+assistant channel=analysis:
+Confirm delivery window and list olive-based product; schedule delivery.
+
+assistant channel=final:
+Yes—delivery can be set for evening turndown. Our olive-based option is Oliva Nourish Body Cream.
+
+assistant channel=commentary to=tool.get_skincare_inventory:
+{"product_type":"body_lotion","skin_type":"dry"}
+
+tool.get_skincare_inventory channel=commentary to=assistant:
+{"available_products":[{"id":"OLIVA_NOURISH","name":"Oliva Nourish Body Cream","description":"Olive oil enriched"}]}
+
+assistant channel=commentary to=tool.deliver_spa_amenities:
+{"room_number":"604","products":[{"product_id":"OLIVA_NOURISH","quantity":1}],"delivery_time":"evening_turndown"}
+
+tool.deliver_spa_amenities channel=commentary to=assistant:
+{"ticket_id":"PMSH-604-ET-55","scheduled":"evening_turndown","items":["Oliva Nourish x1"],"charge":"bill_to_room"}
+
+assistant channel=final:
+Confirmed—Oliva Nourish will be delivered at evening turndown (PMSH-604-ET-55).
+
+user:
+Gracias! The citrus water downstairs is refreshing.
+
+assistant channel=final:
+We keep it chilled in the spa foyer all afternoon.
+
+user:
+Any paella spots you like near the beach?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll ask the concierge about beachside paella.
+

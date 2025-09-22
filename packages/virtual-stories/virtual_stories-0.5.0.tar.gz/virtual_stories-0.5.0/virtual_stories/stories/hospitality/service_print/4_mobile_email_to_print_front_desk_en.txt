@@ -1,0 +1,70 @@
+"""
+Guest asks to print via mobile email submission; conversation includes chitchat and an unsupported follow-up.
+
+ROLES: user (guest on the go), assistant (front desk coordinating email-to-print)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "email_print_submit",
+    "description": "Register an email-submitted PDF for printing and provide job info.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room": {"type": "string"},
+        "attachment_pages": {"type": "integer", "minimum": 1},
+        "color": {"type": "boolean"},
+        "pickup": {"type": "string", "enum": ["front_desk", "business_center"]}
+      },
+      "required": ["room", "attachment_pages", "color", "pickup"],
+      "additionalProperties": false
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Pine & Stone Lodge
+Location: 235 Mill Creek Rd, Denver, CO 80206
+Print Access: Email PDF to print@pineandstone.example
+File Policy: PDF only, attachments under 20MB
+Rates: B/W $0.18; Color $0.55 per page
+Pickup: Front Desk or Business Center
+Billing: Room folio at pickup
+ETA: 5–10 minutes; rush at 07:30–08:30
+
+user:
+I emailed a 6-page PDF from my phone for room 830. Color, and I’ll pick it up at the front desk.
+
+assistant channel=analysis:
+Register an email-submitted 6-page color print for room 830, pickup front desk. Use the tool and echo only tool/system facts.
+
+assistant channel=commentary to=tool.email_print_submit:
+{"room":"830","attachment_pages":6,"color":true,"pickup":"front_desk"}
+
+tool.email_print_submit channel=commentary to=assistant:
+{"job":"psl_8830","estimated_cost":3.30,"currency":"USD"}
+
+assistant channel=final:
+Got it—6 color pages are queued for room 830 (psl_8830). Estimated cost is $3.30 USD. Pick up at the Front Desk; posting to your folio at pickup.
+
+user:
+The fireplace looks cozy tonight.
+
+assistant channel=analysis:
+Light small talk.
+
+assistant channel=final:
+It sets a calm tone for the lobby.
+
+user:
+Can you reduce margins and print two per sheet?
+
+assistant channel=analysis:
+Layout adjustments aren’t specified. Flag [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Thanks for the layout request. Verifying available print layout options.
+

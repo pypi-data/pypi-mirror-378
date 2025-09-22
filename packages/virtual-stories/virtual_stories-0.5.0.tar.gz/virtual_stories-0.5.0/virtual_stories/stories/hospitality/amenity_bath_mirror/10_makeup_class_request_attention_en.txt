@@ -1,0 +1,91 @@
+"""
+Guest requests magnifying mirror for a makeup session and asks about on-site makeup classes; deliver mirror and flag off-site class request. Include chit-chat and an in-context hours response.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"inv_mag","description":"Check magnifying mirror stock.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string"}},"required":["item_code"]},"strict":true},
+  {"name":"send_mag","description":"Send magnifying mirror to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1}} ,"required":["room_number","item_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Terrace at Beacon Row (hotel_id: tbr_ma_89)
+Address: 200 Charles St, Boston, MA 02114
+Timezone: America/New_York
+Amenity Runs: 08:00–22:00
+
+Mirror Stock:
+- bath_mirror_magnifying: 8
+- table_led_mirror: 3
+
+Spaces:
+1) Brick terrace with ivy
+2) Tea cart 06:30–12:00
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Reading salon
+
+Accessibility:
+- Step-free access; ADA rooms available
+- Portable vanity stools on request
+
+Sustainability:
+- Refillable amenities; recycling on each floor
+
+Transportation:
+- T station two blocks away; rideshare pickup on Charles St
+
+user:
+Hi—could I get a magnifying mirror to 520? I’m doing a makeup session.
+
+assistant channel=analysis:
+Check stock and send one bath_mirror_magnifying.
+
+assistant channel=commentary to=tool.inv_mag:
+{"item_code":"bath_mirror_magnifying"}
+
+tool.inv_mag channel=commentary to=assistant:
+{"item_code":"bath_mirror_magnifying","on_hand":8}
+
+assistant channel=commentary to=tool.send_mag:
+{"room_number":"520","item_code":"bath_mirror_magnifying","quantity":1}
+
+tool.send_mag channel=commentary to=assistant:
+{"ticket":"TBR-520-991","eta_minutes":12}
+
+assistant channel=final:
+One magnifying mirror is on the way to 520 (ticket TBR-520-991), ETA about 12 minutes.
+
+user:
+Is the tea cart still open?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—the tea cart operates 06:30–12:00.
+
+user:
+The ivy on the terrace is lovely.
+
+assistant channel=analysis:
+Chit-chat referencing spaces.
+
+assistant channel=final:
+The brick terrace with ivy is a quiet corner.
+
+user:
+Do you host makeup classes on property, or can you set one up nearby?
+
+assistant channel=analysis:
+Out of scope; use flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+
+user:
+Thanks!

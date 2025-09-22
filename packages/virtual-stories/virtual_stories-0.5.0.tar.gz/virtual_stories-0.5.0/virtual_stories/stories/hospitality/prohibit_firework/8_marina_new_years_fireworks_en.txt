@@ -1,0 +1,74 @@
+"""
+Guest asks about New Year’s Eve marina fireworks visibility and on-site allowance.
+
+ROLES: user (guest attending NYE countdown), assistant (front-desk concierge clarifying policy and viewing alternatives)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_policy","description":"Retrieve fireworks policy including off‑site visibility.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["fireworks"]}},"required":["category"]},"strict":true},
+  {"name":"suggest_viewing_spots","description":"Suggest safe viewing spots for off‑site public fireworks.","parameters":{"type":"object","additionalProperties":false,"properties":{"crowd_level":{"type":"string","enum":["low","medium","high"]}},"required":["crowd_level"]},"strict":true}
+]
+```
+"""
+
+system:
+HOTEL: Marina Quay Suites
+DISTRICT: Harbor North Esplanade
+IN‑HOUSE POLICY: No fireworks on property, docks, garages, or adjacent esplanade
+OFF‑SITE NOTE: City runs a public fireworks barge offshore (viewing only)
+QUIET HOURS: 23:30–06:30 (NYE exception: lobby until 00:30)
+AMENITIES:
+- Scent: “Ocean Mint + Lime Peel”
+- Welcome cocoa bar 20:00–23:00 NYE
+- Viewing deck: Level 6, capacity 80, wind cut 15 mph
+- EV bays: 12 ports, B1 deck
+- Sound environment: target 45–50 dBA on guest floors during NYE
+
+user:
+Can we light a couple of sparklers on the dock since it’s NYE?
+
+assistant channel=analysis:
+Confirm policy, then redirect to viewing alternatives.
+
+assistant channel=commentary to=tool.get_policy:
+{"category":"fireworks"}
+
+tool.get_policy channel=commentary to=assistant:
+{"allowed":false,"summary":"No fireworks or sparklers on property, docks, garages, or esplanade."}
+
+assistant channel=commentary to=tool.suggest_viewing_spots:
+{"crowd_level":"medium"}
+
+tool.suggest_viewing_spots channel=commentary to=assistant:
+{"spots":["Level 6 viewing deck","Harbor North Esplanade public zone","Skybridge window bays"]}
+
+assistant channel=final:
+Sparklers aren’t allowed on the docks or anywhere on‑site. You can watch the city’s public fireworks from Level 6, the esplanade’s public zone, or the skybridge bays.
+
+user:
+Your cocoa bar was a nice touch.
+
+assistant channel=analysis:
+Chitchat—mention timing detail.
+
+assistant channel=final:
+Thank you—it’s available 20:00–23:00 tonight.
+
+user:
+What’s the quiet‑hours window tonight?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+23:30–06:30, with the lobby open until 00:30.
+
+user:
+Which municipal event permit number covers that public barge?
+
+assistant channel=analysis:
+Not in system—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Reviewing available resources for the permit number.

@@ -1,0 +1,73 @@
+"""
+Detox citrus request with wellness notes and clarifications.
+
+ROLES: user (guest in 514), assistant (wellness concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service",
+    "description": "Order food and beverages to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "item_name": {"type": "string"},
+        "room_number": {"type": "string"},
+        "quantity": {"type": "integer"},
+        "notes": {"type": "string"}
+      },
+      "required": ["item_name", "room_number", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Retreat: Palm Courtyard Spa Hotel
+Wellness Menu: citrus medley, herbal waters, chia cups
+Service: 07:00–22:30
+Add-ons: chia +$3; mint +$1; ginger +$1
+Delivery: Floors 3–6 priority 10–15 min
+Contact: Spa line 33; Dining 41
+
+user:
+Hi—room 514. One Citrus Medley with extra mint.
+
+assistant channel=analysis:
+Order Citrus Medley to 514; note extra mint.
+
+assistant channel=commentary to=tool.order_room_service:
+{"item_name":"Citrus Medley","room_number":"514","quantity":1,"notes":"extra mint"}
+
+tool.order_room_service channel=commentary to=assistant:
+{"ok":true,"ticket":"PC-514-CIT-77","eta":"12-15 min"}
+
+assistant channel=final:
+Confirmed—Citrus Medley with extra mint heading to 514. ETA 12–15 minutes.
+
+user:
+Do you have ginger add-on?
+
+assistant channel=analysis:
+System lists ginger +$1.
+
+assistant channel=final:
+Yes—ginger is available for +$1.
+
+user:
+Lovely courtyard today.
+
+assistant channel=final:
+Enjoy the calm—perfect with citrus.
+
+user:
+Does the spa offer sunrise yoga on weekdays?
+
+assistant channel=analysis:
+Not in system.
+
+assistant channel=final:
+[ATTENTION] I’ll confirm sunrise yoga availability.
+

@@ -1,0 +1,54 @@
+"""
+Guest asks about wireless charging options; confirm wireless charger availability, discuss compatibility, and arrange delivery.
+
+ROLES: user (guest interested in wireless charging technology), assistant (front desk providing modern charging solutions)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check charger stock (USB-C/Lightning/Micro-USB)","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create charger rental order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Midtown Arc Toronto (MATO-06), 200 Front St W, Toronto, ON M5V 3J1, Canada.
+Business hotel; 32 floors; Front Desk 24/7.
+Phone chargers: USB-C (15), Lightning (10), Micro-USB (6); complimentary up to 4 hours, then CAD 3/hour; code RENT-CHGR.
+Wireless chargers: Qi-compatible wireless chargers (8 units); Compatible with iPhone 8+ and most Android devices; Fast charging capability; Modern convenience.
+Other facts: Tech-forward amenities; Modern room features; High-speed charging stations; Smart room integration.
+
+user:
+Do you have any wireless chargers available? I have an iPhone 12 and prefer wireless charging. Room 2201.
+
+assistant channel=analysis:
+The guest is interested in wireless charging technology and has a compatible iPhone 12. I should check for wireless charger availability and discuss compatibility.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"MATO-06","item":"wireless_charger","quantity":1,"room":"2201"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["WCHG-04"],"notes":"Qi-compatible; iPhone 12 compatible; fast charging"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"MATO-06","room":"2201","item":"wireless_charger","duration_hours":4,"charge_code":"RENT-CHGR","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CHG-2201-8845","status":"created","charge_policy":"0 for 4h; CAD 3/h after","wireless_features":"Qi-compatible, fast charging"}
+
+assistant channel=final:
+Perfect! Wireless charger WCHG-04 is Qi-compatible and works great with your iPhone 12. It supports fast charging too. Order CHG-2201-8845 is complimentary for 4 hours, then CAD 3/hour. We'll deliver it to room 2201.
+
+user:
+Excellent! The hotel's tech amenities are really impressive.
+
+assistant channel=final:
+Thank you—we're always updating our technology to provide the most convenient experience for our guests.
+
+user:
+Do you have any smart room features that integrate with wireless charging?
+
+assistant channel=final:
+[ATTENTION] Checking available smart room integrations.

@@ -1,0 +1,51 @@
+"""
+Guest asks to store bags before check-in; include tag details and [ATTENTION].
+
+ROLES: user (early arrival), assistant (bell desk handling tags)
+CHANNELS: analysis, commentary, final
+TOOLS:
+[{"name":"create_ticket","description":"Open luggage ticket","parameters":{"type":"object","properties":{"name":{"type":"string"},"items":{"type":"integer","minimum":1},"note":{"type":"string"}},"required":["name","items"],"additionalProperties":false},"strict":true},{"name":"storage_hours","description":"Return storage window","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"],"additionalProperties":false},"strict":true}]
+"""
+
+system:
+PROPERTY: Northern Quay Inn (hotel_id: nq_inn)
+LUGGAGE STORAGE
+- Hours: 07:00–22:00, same-day only
+- Tags: Thermal-printed claim tags; photo ID required
+- Desk: Bell alcove next to Door B
+- Fees: None for same-day
+- Oversize: Surfboards not accepted; strollers ok folded
+
+user:
+We’re early—can you hold 3 bags until later? Name: Rivera.
+
+assistant channel=analysis:
+Create a ticket for 3 items with a note indicating early arrival; provide hours.
+
+assistant channel=commentary to=tool.create_ticket:
+{"name":"Rivera","items":3,"note":"early arrival"}
+
+tool.create_ticket channel=commentary to=assistant:
+{"ticket":"NQ-4107","tags":["B112","B113","B114"],"fee":"none"}
+
+assistant channel=commentary to=tool.storage_hours:
+{"hotel_id":"nq_inn"}
+
+tool.storage_hours channel=commentary to=assistant:
+{"hours":"07:00–22:00","same_day_only":true}
+
+assistant channel=final:
+Stored 3 items under Rivera—ticket NQ-4107 with tags B112, B113, B114. Same‑day pickup runs 07:00–22:00; please bring photo ID.
+
+user:
+The bell alcove looks tidy.
+
+assistant channel=final:
+It’s right beside Door B for quick drop‑offs.
+
+user:
+Can you store a surfboard, too?
+
+assistant channel=final:
+[ATTENTION] Oversize surfboards aren’t accepted per our storage notes.
+

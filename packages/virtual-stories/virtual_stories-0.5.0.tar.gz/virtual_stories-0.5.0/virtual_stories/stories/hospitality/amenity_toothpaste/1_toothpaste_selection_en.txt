@@ -1,0 +1,93 @@
+"""
+Guest requests toothpaste and asks about options; confirm available flavors and size, deliver, include small talk, and one background acknowledgment.
+
+ROLES: user (guest needing toothpaste), assistant (amenity support handling personal care requests)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_toothpaste_options",
+    "description": "Check available toothpaste options, flavors, and fluoride content.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "flavor": { "type": "string", "enum": ["mint", "herbal", "kids_strawberry"] }
+      },
+      "required": ["flavor"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_toothpaste",
+    "description": "Deliver selected toothpaste to the room (travel size).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "flavor": { "type": "string" }
+      },
+      "required": ["room_number", "flavor"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Riverbend Conference Hotel (hotel_id: rch_stl_08)
+Address: 2 Gateway Ave, St. Louis, MO 63102
+Timezone: America/Chicago
+
+Toothpaste Program:
+- Flavors: mint, herbal, kids_strawberry
+- Size: travel size; fluoride included
+
+Public Space Detail:
+- Riverwalk terrace with arch views
+
+user:
+Hi! I forgot my toothpaste—could I get mint sent up to room 1620?
+
+assistant channel=analysis:
+Verify mint option; then deliver to 1620.
+
+assistant channel=commentary to=tool.check_toothpaste_options:
+{"flavor":"mint"}
+
+tool.check_toothpaste_options channel=commentary to=assistant:
+{"available":true,"size":"travel","fluoride":true}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_toothpaste:
+{"room_number":"1620","flavor":"mint"}
+
+tool.deliver_toothpaste channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":11,"runner":"jo"}
+
+assistant channel=final:
+Mint toothpaste (travel size, fluoride) is on the way to room 1620 with Jo—about 11 minutes.
+
+user:
+That terrace view of the arch is so cool.
+
+assistant channel=analysis:
+Provide a brief response grounded in system details.
+
+assistant channel=final:
+The riverwalk terrace was designed for that arch view—glad you enjoyed it.
+
+user:
+Do you have prescription-strength options?
+
+assistant channel=analysis:
+Beyond listed options; respond with background acknowledgment flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking. Examining available options.
+

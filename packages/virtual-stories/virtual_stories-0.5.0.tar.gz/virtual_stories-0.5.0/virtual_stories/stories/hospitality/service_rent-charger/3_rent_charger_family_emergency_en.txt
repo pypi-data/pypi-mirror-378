@@ -1,0 +1,54 @@
+"""
+Family with emergency needs multiple chargers; confirm family group availability, discuss emergency rates, and arrange bulk pickup.
+
+ROLES: user (family member dealing with emergency situation needing multiple chargers), assistant (front desk providing emergency family support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check charger stock (USB-C/Lightning/Micro-USB)","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create charger rental order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Midtown Arc Toronto (MATO-06), 200 Front St W, Toronto, ON M5V 3J1, Canada.
+Business hotel; 32 floors; Front Desk 24/7.
+Phone chargers: USB-C (15), Lightning (10), Micro-USB (6); complimentary up to 4 hours, then CAD 3/hour; code RENT-CHGR.
+Emergency policy: Emergency family rates available; Priority access for urgent situations; Bulk rentals for families; Compassionate pricing.
+Other facts: 24/7 concierge; Emergency services coordination; Family-friendly amenities; Medical concierge available.
+
+user:
+We have a family emergency and need multiple chargers immediately. My phone, my wife's phone, and our daughter's tablet all died. We're in rooms 1205 and 1206.
+
+assistant channel=analysis:
+This is an emergency family situation requiring multiple chargers immediately. I should prioritize emergency access and arrange compassionate pricing.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"MATO-06","item":"charger_mixed","quantity":3,"room":"1205"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":3,"serials":["CHG-C-12","CHG-L-05","CHG-M-03"],"notes":"Emergency family priority; compassionate pricing"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"MATO-06","room":"1205","item":"charger_mixed","duration_hours":24,"charge_code":"EMERGENCY-FAMILY","delivery_option":"pick_up_at_desk"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CHG-1205-8843","status":"created","charge_policy":"Emergency family rate: complimentary","priority":"urgent"}
+
+assistant channel=final:
+I'm so sorry about your emergency. I've immediately reserved three chargers (USB-C, Lightning, and Micro-USB) for your family. Order CHG-1205-8843 is complimentary due to the emergency situation. Please pick them up at the Front Desk right away.
+
+user:
+Thank you so much! The staff's compassion means everything right now.
+
+assistant channel=final:
+We're here to support you during this difficult time. Please don't hesitate to ask if you need anything else.
+
+user:
+Do you have any connections with local emergency services or hospitals for family support?
+
+assistant channel=final:
+[ATTENTION] Checking available emergency support resources.

@@ -1,0 +1,102 @@
+"""
+Guest asks for a round tea table to be set up in-room with specific size and finish; confirm availability and arrange in-room setup; include casual remark and one background-acknowledgment message.
+
+ROLES: user (guest requesting an in-room tea table), assistant (concierge arranging furniture delivery and placement)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_furniture_inventory",
+    "description": "Check stock for in-room furniture items by size and finish.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "enum": ["round_tea_table"] },
+        "size_cm": { "type": "integer", "enum": [60, 80] },
+        "finish": { "type": "string", "enum": ["walnut", "birch"] }
+      },
+      "required": ["item_code", "size_cm", "finish"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_in_room_setup",
+    "description": "Deliver and place a furniture item in-room with surface protectors.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "size_cm": { "type": "integer", "enum": [60, 80] },
+        "finish": { "type": "string", "enum": ["walnut", "birch"] },
+        "placement": { "type": "string", "enum": ["near_window", "center", "sofa_side"] },
+        "surface_protectors": { "type": "boolean" },
+        "priority": { "type": "string", "enum": ["normal", "high"] }
+      },
+      "required": ["room_number", "item_code", "size_cm", "finish", "placement", "surface_protectors", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Venue: Willow Court Boutique (hotel_id: wc_ldn_07)
+Location: 12 Langley Passage, London W1
+Setup window: 09:00–21:30; typical furniture ETA 15–25 minutes
+
+Round tea table catalog:
+- Sizes (diameter): 60 cm, 80 cm
+- Finishes: walnut (matte), birch (satin)
+- Stock today: 60/walnut(3), 60/birch(4), 80/walnut(2), 80/birch(2)
+- Placement guidance: near_window works best for tea service
+
+Atrium note:
+- The glass-roof conservatory has hanging ferns above the lounge.
+
+user:
+Could I get a 60 cm walnut round tea table in 504, near the window?
+
+assistant channel=analysis:
+Check 60/walnut availability, then arrange setup near_window with surface protectors.
+
+assistant channel=commentary to=tool.check_furniture_inventory:
+{"item_code":"round_tea_table","size_cm":60,"finish":"walnut"}
+
+tool.check_furniture_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":3,"item_code":"round_tea_table","size_cm":60,"finish":"walnut"}
+
+assistant channel=analysis:
+Submit the in-room setup request for room 504.
+
+assistant channel=commentary to=tool.request_in_room_setup:
+{"room_number":"504","item_code":"round_tea_table","size_cm":60,"finish":"walnut","placement":"near_window","surface_protectors":true,"priority":"normal"}
+
+tool.request_in_room_setup channel=commentary to=assistant:
+{"ticket_id":"FN-504-1182","eta_minutes":20,"placement":"near_window"}
+
+assistant channel=final:
+Done—your 60 cm walnut tea table is scheduled for room 504, ticket FN-504-1182, placed near the window with protectors. Estimated arrival is 20 minutes.
+
+user:
+I love the hanging ferns in the atrium.
+
+assistant channel=analysis:
+Offer a friendly comment tied to the atrium detail.
+
+assistant channel=final:
+They frame the glass roof beautifully in the conservatory lounge.
+
+user:
+Can I buy the same table to ship home?
+
+assistant channel=analysis:
+Retail sales aren’t covered in tools or system facts; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Let me research this for you. Working on your request.
+

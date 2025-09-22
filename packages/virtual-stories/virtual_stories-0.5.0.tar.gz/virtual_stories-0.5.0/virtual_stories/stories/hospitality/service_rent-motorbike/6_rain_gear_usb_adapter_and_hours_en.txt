@@ -1,0 +1,63 @@
+"""
+Guest requests rain gear and USB adapter; confirms concierge hours for pickup.
+
+ROLES: user (guest planning in rainy season), assistant (concierge confirming add-ons and arranging window)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"slot_check","description":"Check slot for model","parameters":{"type":"object","properties":{"partner_id":{"type":"string"},"model":{"type":"string"},"start":{"type":"string","format":"date-time"},"hours":{"type":"integer"}},"required":["partner_id","model","start","hours"],"additionalProperties":false},"strict":true},
+  {"name":"reserve","description":"Reserve with notes","parameters":{"type":"object","properties":{"partner_id":{"type":"string"},"guest":{"type":"string"},"room":{"type":"string"},"model":{"type":"string"},"hours":{"type":"integer"},"notes":{"type":"string"}},"required":["partner_id","guest","room","model","hours"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Monsoon Saigon (MSG-41)
+Address: 22 Nguyen Hue, District 1, Ho Chi Minh City, Vietnam
+Concierge: 07:00–22:00; after-hours handover via security
+Partner: SaigonScoot (partner_id SS-04)
+Models: Honda Vision 110, Yamaha Grande 125
+Requirements: Passport + license; age 20+
+Deposit: VND 2,500,000 card hold
+Add-ons: Rain poncho and USB adapter available at concierge
+Fuel: Return full; fee VND 80,000 if not
+Helmets: Two included
+Pickup: Front awning lane; security assists after 22:00
+Boundaries: District 1–3 permitted; avoid expressways
+Assistance: Hotline ext. 88
+
+user:
+Could I get a Honda Vision for 4 hours from 5 pm, with a rain poncho and USB adapter? Room 1112. Will concierge still be open at pickup?
+
+assistant channel=analysis:
+Concierge runs until 22:00; 17:00 pickup is within hours. Check slot for Vision at 17:00 four hours; reserve with notes for poncho and USB.
+
+assistant channel=commentary to=tool.slot_check:
+{"partner_id":"SS-04","model":"Honda Vision 110","start":"2025-09-08T17:00:00","hours":4}
+
+tool.slot_check channel=commentary to=assistant:
+{"available":true,"slot_id":"SSS-1402"}
+
+assistant channel=commentary to=tool.reserve:
+{"partner_id":"SS-04","guest":"Guest 1112","room":"1112","model":"Honda Vision 110","hours":4,"notes":"Rain poncho + USB adapter"}
+
+tool.reserve channel=commentary to=assistant:
+{"reservation_id":"SS-RES-1402","status":"confirmed"}
+
+assistant channel=final:
+Confirmed—SS-RES-1402 for a Honda Vision 110 from 5 pm for 4 hours. Concierge is open at pickup, and we’ve noted a rain poncho and a USB adapter. A VND 2,500,000 card hold applies.
+
+user:
+The lobby tiles shine nicely.
+
+assistant channel=final:
+Housekeeping buffs them each afternoon.
+
+user:
+Do you have the full maintenance schedule for these scooters?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

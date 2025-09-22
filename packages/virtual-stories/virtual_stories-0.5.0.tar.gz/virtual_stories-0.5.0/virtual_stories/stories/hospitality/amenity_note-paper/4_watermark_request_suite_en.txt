@@ -1,0 +1,81 @@
+"""
+Guest prefers watermark stationery for handwritten notes and asks for quick turn delivery to suite.
+Provide premium/luxury stationery selection and confirm delivery timing.
+
+ROLES: user (celebration guest writing personal notes), assistant (club lounge attendant overseeing stationery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check available stationery supplies in hotel inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_type":{"type":"string","enum":["note_paper","letterhead","envelopes","memo_pads","writing_pads","sticky_notes"]},"quality_level":{"type":"string","enum":["standard","premium","luxury"]}},"required":["item_type"]},"strict":true},
+  {"name":"deliver_stationery_supplies","description":"Arrange delivery of stationery items to guest room or business center.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center","meeting_room"]},"quantity_per_item":{"type":"number"},"special_requests":{"type":"string"}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel = Aurora Riverfront Club Tower (hotel_id: ar_chi_03)
+Addr = 210 North River Dr, Chicago, IL 60601
+TZ = America/Chicago
+Club Floor: 35–38; Lounge Printer: AR-CL-01
+
+Stationery Lines:
+• Premium: cream watermark 120gsm, grey watermark 110gsm
+• Luxury: cotton rag 160gsm deckle-edge, hand-cut folded cards
+• Envelopes: A6/C6 match sets for premium; hand-lined for luxury
+• Add-ons: wax seal stamp (loan), adhesive seals
+• Pens: rollerball loaner set upon request
+
+Delivery Window (typical): 7–12 min rooms; 5–8 min lounge tables
+
+user:
+Hi from suite 3702—can I get watermark paper with matching envelopes?
+
+assistant channel=analysis:
+User wants watermark note paper and envelopes. Check premium note_paper, then deliver to suite.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"note_paper","quality_level":"premium"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"quality_level":"premium","options":["cream_watermark_120gsm","grey_watermark_110gsm"],"matching_envelopes":["A6","C6"],"stock_count":41}
+
+assistant channel=analysis:
+Offer cream/grey options and A6/C6; then set delivery.
+
+assistant channel=final:
+Yes—cream watermark 120gsm and grey watermark 110gsm are both in stock, with A6 or C6 matching envelopes. Which combination would you like for suite 3702?
+
+user:
+Cream with A6, please. Could you send it quickly?
+
+assistant channel=analysis:
+Confirm delivery with quick window noted in system.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"3702","items":["cream_watermark_120gsm","A6_envelopes"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"club delivery"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":8,"items_included":["cream_watermark_pad_25","A6_envelopes_10"],"delivery_team":"club_lounge"}
+
+assistant channel=final:
+On it. A 25‑sheet cream watermark pad with 10 A6 envelopes will reach suite 3702 in about 8 minutes.
+
+user:
+The river looks gorgeous this evening.
+
+assistant channel=analysis:
+Chitchat acknowledgment only.
+
+assistant channel=final:
+It’s a serene view for writing.
+
+user:
+Can you monogram the envelopes right now?
+
+assistant channel=analysis:
+Monogram service not in system/tools. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

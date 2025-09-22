@@ -1,0 +1,83 @@
+"""
+Guest with sun sensitivity requests lotion-infused tissues and placement in villa.
+Provide inventory check, delivery, and note update.
+
+ROLES: user (sun-sensitive guest), assistant (guest services with spa amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_tissue_inventory", "description": "Confirm lotion-infused tissue availability.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "tissue_type": { "type": "string", "enum": ["lotion_infused", "premium"] }, "brand_preference": { "type": "string", "enum": ["any", "hotel_luxury_brand"] }, "quantity_boxes": { "type": "number" } }, "required": ["tissue_type"] }, "strict": true },
+  { "name": "deliver_tissue_amenity", "description": "Arrange villa delivery with placement.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_products": { "type": "array", "items": { "type": "string" } }, "delivery_priority": { "type": "string", "enum": ["standard", "priority"] }, "special_placement": { "type": "string" } }, "required": ["room_number", "tissue_products"] }, "strict": true },
+  { "name": "update_housekeeping_notes", "description": "Save ongoing placement and allergy notes.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_preference": { "type": "string" }, "restocking_frequency": { "type": "string", "enum": ["daily", "upon_request"] }, "allergy_notes": { "type": "string" } }, "required": ["room_number", "tissue_preference"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Azure Reef Villas (hotel_id: arv_mle_01)
+Address: Lagoon Way, South Male Atoll, Maldives
+Timezone: Indian/Maldives
+
+Tissue & Villa Service:
+- Lotion-infused 3‑ply for sun-sensitive skin
+- Delivery 15–25 minutes by buggy
+- Placement: bedroom nightstands, bath vanity, outdoor daybed caddy
+- Daily restock option
+- Allergy support: fragrance-free on request
+
+Resort Notes:
+- Overwater and beach villas; private pools
+- House reef snorkel station 8:00–17:00
+- In‑villa dining 24/7; sunset bar 17:00–23:00
+- Marine center for reef briefings
+
+user:
+Hello! Villa B12. Could I have 3 lotion-infused boxes—one by each nightstand and one in the bath?
+
+assistant channel=analysis:
+Check lotion-infused stock; deliver 3 boxes with precise placements; add restock note if requested.
+
+assistant channel=commentary to=tool.check_tissue_inventory:
+{"tissue_type":"lotion_infused","brand_preference":"any","quantity_boxes":3}
+
+tool.check_tissue_inventory channel=commentary to=assistant:
+{"available_products":["Hotel Luxury Lotion 3-ply"],"stock_levels":{"hotel_lotion":64}}
+
+assistant channel=commentary to=tool.deliver_tissue_amenity:
+{"room_number":"B12","tissue_products":["3 boxes Hotel Luxury Lotion 3-ply"],"delivery_priority":"standard","special_placement":"2 nightstands + bath vanity"}
+
+tool.deliver_tissue_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"18 minutes","placement_confirmed":"2 nightstands and bath vanity","tracking_id":"ARV_B12_L3"}
+
+assistant channel=final:
+Certainly—3 lotion‑infused 3‑ply boxes will arrive to Villa B12 in ~18 minutes: one on each nightstand and one on the bath vanity.
+
+user:
+Is the sunset bar open now?
+
+assistant channel=analysis:
+From system: 17:00–23:00.
+
+assistant channel=final:
+Yes—open 17:00 to 23:00.
+
+user:
+The reef briefing was helpful.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Our marine center team loves sharing tips for the house reef.
+
+user:
+Could you book a private sandbank picnic?
+
+assistant channel=analysis:
+Outside amenity scope; flag.
+
+assistant channel=final:
+[ATTENTION] Coordinating with experiences for a sandbank picnic.
+"""
+

@@ -1,0 +1,51 @@
+"""
+Guest wants the first shuttle of the morning; confirm timing and reserve.
+
+ROLES: user (guest catching an early flight), assistant (front desk agent booking shuttles)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_first_departure","description":"Return first shuttle time and seats","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"reserve_first_run","description":"Reserve first shuttle seat","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Airport Link Suites Frankfurt (ALFF-19)
+Shuttle: Hourly 05:00–23:00
+Pickup: Hotel driveway
+Drop‑off: Terminal 1
+Capacity: 12 seats per departure
+Travel time: ~10 minutes to Terminal 1
+Booking: Reservation recommended for the first run
+Time Zone: Central European Time (CET/CEST)
+Arrival Tip: Arrive 5 minutes before departure
+
+user:
+Can you put me on the first shuttle tomorrow? Room 201.
+
+assistant channel=analysis:
+First run is 05:00; reserve a seat for room 201.
+
+assistant channel=commentary to=tool.list_first_departure:
+{"hotel_id":"ALFF-19"}
+
+tool.list_first_departure channel=commentary to=assistant:
+{"first":"05:00","capacity":12}
+
+assistant channel=commentary to=tool.reserve_first_run:
+{"hotel_id":"ALFF-19","room":"201"}
+
+tool.reserve_first_run channel=commentary to=assistant:
+{"reservation_id":"ALFF-201-0500","status":"confirmed"}
+
+assistant channel=final:
+You’re set for the 05:00 shuttle (ALFF-201-0500) from the hotel driveway—about 10 minutes to Terminal 1.
+
+user:
+Is coffee available before that?
+
+assistant channel=final:
+[ATTENTION] Checking available options.

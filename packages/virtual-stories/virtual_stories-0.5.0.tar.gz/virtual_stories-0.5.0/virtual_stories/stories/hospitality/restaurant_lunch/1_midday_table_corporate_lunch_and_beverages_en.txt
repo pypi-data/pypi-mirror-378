@@ -1,0 +1,74 @@
+"""
+Guest arranges a corporate lunch table and asks for a beverage preview; include small talk and one out-of-scope follow-up with the special flag.
+
+ROLES: user (guest organizing a quick business lunch), assistant (restaurant concierge handling lunch reservations and previews)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List on-property restaurants with cuisine and hours.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string","enum":["breakfast","lunch","dinner","late_night"]}},"required":["hotel_id"]},"strict":true},
+  {"name":"check_table_availability","description":"Check table availability for a restaurant.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer","minimum":1,"maximum":8},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book a table when availability exists.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Fetch a menu section preview for a restaurant.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["starters","mains","desserts","beverages"]}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+[Summit Ridge Hotel | hotel_id: summit_ridge_den]
+Address: 401 Peak Avenue, Denver, CO 80202
+TZ: America/Denver
+Dining:
+  - Alpine Grill (restaurant_id: rest_alpine_grill) — Lunch 11:30–14:00; contemporary American; quick business service available.
+  - Skyline Lounge (restaurant_id: rest_skyline_lounge) — Evenings 17:00–23:00; cocktails.
+Other:
+  - Meeting floors on Level 5; elevator access.
+
+user:
+Can you secure a lunch table for 4 at 12:15 tomorrow at Alpine Grill under Chris Patel? Also, a quick look at beverages would help.
+
+assistant channel=analysis:
+List lunch venues, check Alpine Grill at 12:15 for 4, book if available, then show beverages preview.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"summit_ridge_den","meal_period":"lunch"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_alpine_grill","name":"Alpine Grill","hours":"11:30-14:00","cuisine":"american"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_alpine_grill","party_size":4,"datetime":"2025-09-03T12:15:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"C03","hold_until":"2025-09-03T12:25:00"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_alpine_grill","guest_name":"Chris Patel","contact":"","party_size":4,"datetime":"2025-09-03T12:15:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"ALG-LCH-7410"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_alpine_grill","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"House Iced Tea"},{"name":"Sparkling Water"},{"name":"Cold-Pressed Green Juice"}]}
+
+assistant channel=final:
+Your 12:15 PM lunch for 4 at Alpine Grill is confirmed (ALG-LCH-7410). Beverages preview: House Iced Tea, Sparkling Water, Cold-Pressed Green Juice.
+
+user:
+Great—appreciate the speedy help. Busy day ahead!
+
+assistant channel=final:
+Happy to help—wishing you a smooth set of meetings.
+
+user:
+Could you share the GM’s direct email?
+
+assistant channel=analysis:
+No system or tool coverage for staff contact details; respond with the neutral processing flag.
+
+assistant channel=final:
+[ATTENTION] Understood regarding contact details. Reviewing the documentation.
+

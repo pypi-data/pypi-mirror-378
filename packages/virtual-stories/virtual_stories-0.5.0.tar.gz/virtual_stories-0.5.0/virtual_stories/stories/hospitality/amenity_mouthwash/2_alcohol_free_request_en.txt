@@ -1,0 +1,70 @@
+"""
+Guest requests alcohol-free mouthwash; assistant confirms availability and dispatches; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 1811 asking for alcohol-free mouthwash), assistant (concierge coordinating amenity delivery within policy)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_availability","description":"Check amenity availability and stock","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"variant":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity to a room with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"variant":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Seabreeze Towers — Coral Wing
+Room 1811: Ocean Deluxe
+Mouthwash: Brand "ClearMint"; alcohol-free and regular variants; individual 30 ml bottles
+Flavors: Mint, mild mint
+Policy: Up to 3 extra bottles per night on request
+Delivery window: 07:00–23:00
+Contacts: Housekeeping 440; Front Desk 0
+Note: Coral Wing elevator C3 to 18th floor; ice machine near 1815
+Safety: Not for children under 6; do not swallow
+
+user:
+Hi—could I get two alcohol-free mouthwash bottles to 1811?
+
+assistant channel=analysis:
+Check stock for alcohol-free variant and send 2 bottles to 1811.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"mouthwash","variant":"alcohol-free","quantity":2}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"mouthwash","variant":"alcohol-free","available":true,"in_stock":48}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1811","amenity_name":"mouthwash","variant":"alcohol-free","quantity":2,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MW-1811-2180","eta_minutes":12}
+
+assistant channel=final:
+All set—two alcohol-free ClearMint mouthwash bottles are on the way to 1811, ETA about 12 minutes.
+
+user:
+Thanks! Are there flavors?
+
+assistant channel=final:
+We have Mint and Mild Mint flavors available.
+
+user:
+How’s your day going?
+
+assistant channel=final:
+Going well—appreciate you asking!
+
+user:
+Is it safe for my 4-year-old to use?
+
+assistant channel=final:
+Per safety guidance, mouthwash is not for children under 6.
+
+user:
+Any pharmacy nearby that’s open late?
+
+assistant channel=final:
+[ATTENTION] Off-property pharmacy details are beyond the provided system context.
+

@@ -1,0 +1,67 @@
+"""
+Guest in a group suite requests a bulk set of hangers; includes small talk and policy confirmation.
+
+ROLES: user (guest in room 3201 requesting 10 mixed hangers), assistant (concierge arranging delivery and clarifying policy limits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check stock by amenity name","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Request amenity delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Complex: Pavilion Arcade — Skybridge Suites
+Suite: 3201 (Two-Bedroom Sky Suite)
+Closet baseline: 10 hangers per closet; additional mixed hangers on request
+Policy limit: Up to 12 extra/night/room; mixed types allowed
+Hours: 07:00–23:00 normal; 23:00–01:00 urgent
+Contacts: 0 Front; 7770 Concierge; 7771 HK
+SLA floors 30–33: 14–22 minutes normal
+Routing: Skybridge service hall SB-31; use Lift S4
+Stock opening: wooden 210; non-slip 190; clip 70
+
+user:
+Could you send 10 mixed hangers to 3201?
+
+assistant channel=analysis:
+Mixed request—split into wooden and non-slip; check availability for 6 wooden + 4 non-slip; then schedule normal delivery.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"wooden hanger","quantity":6}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"wooden hanger","available":true,"in_stock":210}
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"non-slip hanger","quantity":4}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"non-slip hanger","available":true,"in_stock":190}
+
+assistant channel=analysis:
+Place a single normal delivery summarizing both types to room 3201.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"3201","amenity_name":"mixed hangers (6 wooden + 4 non-slip)","quantity":10,"priority":"normal","note":"Dispatch via SB-31; use Lift S4"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HNG-3201-7005","eta_minutes":19}
+
+assistant channel=final:
+Confirmed—10 mixed hangers (6 wooden + 4 non-slip) are scheduled for suite 3201 with an ETA of about 19 minutes.
+
+user:
+Thanks! Is 12 the nightly maximum?
+
+assistant channel=final:
+Yes—the policy allows up to 12 extra hangers per night per room.
+
+user:
+Do you know the manufacturer specs?
+
+assistant channel=final:
+[ATTENTION] Compiling available data.
+

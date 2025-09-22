@@ -1,0 +1,62 @@
+"""
+Guest requires a room with a reading desk and asks if a task lamp can be added; confirms upgrade policy and quiet hours.
+
+ROLES: user (Researcher with late-night work.), assistant (Front desk manager.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "find_available_room",
+    "description": "Finds an available room with specific features.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "feature": {"type": "string"},
+        "start_date": {"type": "string", "format": "date"},
+        "end_date": {"type": "string", "format": "date"}
+      },
+      "required": ["feature", "start_date", "end_date"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Paper Lantern Ryokan
+Workspace Features:
+- Reading desks in Study King and Library Suite
+- Dimmable warm lamp; add-on task lamp upon request
+- Ergonomic chair, adjustable height
+Upgrade: Complimentary if desk is essential for work
+Quiet Hours: 9pm–7am
+Contact: Press 0
+
+user:
+I’ll be working late. Can I get a room with a reading desk and a task lamp?
+
+assistant channel=analysis:
+We can place the guest in a Study King with desk and add a task lamp (not via tool—just promise within system policy). I’ll search rooms and then confirm we can place the task lamp per system scope.
+
+assistant channel=commentary to=tool.find_available_room:
+{"feature": "reading_desk", "start_date": "2025-09-05", "end_date": "2025-09-06"}
+
+tool.find_available_room channel=commentary to=assistant:
+{"rooms": [{"room_number": "805", "room_type": "Study King", "features": ["reading_desk"]}]}
+
+assistant channel=final:
+Study King 805 is available with a proper reading desk. The lamp is warm and dimmable, and we can add a task lamp on request. Upgrades are complimentary when the desk is essential for work.
+
+user:
+Are there quiet hours?
+
+assistant channel=final:
+Yes—quiet hours run 9pm to 7am.
+
+user:
+[ATTENTION] Could you arrange a wake-up call at 5am?
+
+assistant channel=final:
+Wake-up calls aren’t in my system for this context. I can set your room with the desk and provide the task lamp.
+

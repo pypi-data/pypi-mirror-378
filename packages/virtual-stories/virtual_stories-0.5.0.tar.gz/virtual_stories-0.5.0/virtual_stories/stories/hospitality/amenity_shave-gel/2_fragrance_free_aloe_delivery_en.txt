@@ -1,0 +1,112 @@
+"""
+Guest requests fragrance-free aloe shaving gel and balm; verify hypoallergenic stock and deliver.
+
+ROLES: user (guest preferring fragrance-free products), assistant (spa amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Summit Springs Lodge Aspen (hotel_id: ssl_ase_02)
+Address: 510 E Durant Ave, Aspen, CO 81611
+Timezone: America/Denver
+
+Grooming Program:
+- Sensitive options: fragrance-free aloe gel, glycerin-based gel, alcohol-free aftershave balm
+- Organic: tea tree + aloe botanical gel
+- Luxury: Acqua di Parma shaving cream travel size
+- Hypoallergenic line: dermatologist-tested, dye-free, essential-oil-free
+- Complete kits: gel + balm + pre-shave oil
+
+Service Windows:
+- Express delivery: 15 minutes during 07:00–22:00
+- Evening turndown caddy: 19:00–21:00 on request
+- Packaging: sealed travel tubes (100 ml gel, 60 ml balm)
+- Policy: complimentary swap for irritated skin on first request
+- Contact: Spa desk ext 72
+
+user:
+Hi—could I get a fragrance-free aloe shaving gel and a gentle aftershave? I’m in 704.
+
+assistant channel=analysis:
+Sensitive skin request; check shaving_gel with skin_type sensitive and brand_preference hypoallergenic; then schedule immediate delivery.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type":"shaving_gel","skin_type":"sensitive","brand_preference":"hypoallergenic"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available":true,"recommended_products":["FragranceFree_Aloe_Gel","AlcoholFree_Aftershave_Balm"],"notes":"dermatologist_tested,dye_free","kits":false}
+
+assistant channel=analysis:
+Arrange delivery to room 704 with instructions; use express window.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number":"704","products":["FragranceFree_Aloe_Gel_100ml","AlcoholFree_Aftershave_Balm_60ml"],"delivery_window":"immediate","include_instructions":true}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled":true,"arrival_time":"15_minutes","instructions":"sensitive_skin_application_card"}
+
+assistant channel=final:
+Absolutely—we have a fragrance-free aloe gel and an alcohol-free aftershave balm. I’ve scheduled immediate delivery to 704; they’ll arrive in about 15 minutes with a sensitive-skin guide.
+
+user:
+Do you charge for swapping from the standard cream?
+
+assistant channel=analysis:
+Policy: complimentary swap for irritated skin on first request.
+
+assistant channel=final:
+We offer a complimentary swap on the first request when the standard product causes irritation.
+
+user:
+The mountain air feels great.
+
+assistant channel=analysis:
+Chit-chat acknowledgment only.
+
+assistant channel=final:
+It’s refreshing—enjoy your stay!
+
+user:
+Can you book a skiing lesson for tomorrow morning?
+
+assistant channel=analysis:
+External activity booking beyond grooming scope; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check ski lesson availability and follow up with options.

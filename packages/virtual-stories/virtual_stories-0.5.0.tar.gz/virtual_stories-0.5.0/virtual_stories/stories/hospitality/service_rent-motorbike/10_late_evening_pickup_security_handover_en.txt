@@ -1,0 +1,62 @@
+"""
+Guest asks about late evening pickup via security handover; confirm and book.
+
+ROLES: user (guest arriving late), assistant (concierge confirming after-hours handover and completing reservation)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"after_hours_check","description":"Check after-hours pickup feasibility and availability","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"model":{"type":"string"},"start":{"type":"string","format":"date-time"},"hours":{"type":"integer"}},"required":["partner_id","model","start","hours"]},"strict":true},
+  {"name":"place_reservation","description":"Place reservation with handover note","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest":{"type":"string"},"room":{"type":"string"},"model":{"type":"string"},"hours":{"type":"integer"},"handover":{"type":"string"}},"required":["partner_id","guest","room","model","hours","handover"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Nightfall Taipei (NFT-71)
+Address: 88 Songren Rd, Xinyi District, Taipei 110, Taiwan
+Concierge: 08:00–22:00; after-hours handover by security at porte-cochère
+Partner: FormoScoot (partner_id FS-03)
+Models: Gogoro 3, Yamaha CUXI 115
+Requirements: Passport + license; age 20+
+Deposit: TWD 4,000 card hold
+Helmets: Two included
+Fuel: Electric charge for Gogoro swap; CUXI full-to-full
+Pickup: Porte-cochère; after 22:00, security handover only
+Assistance: Ext. 60
+Boundaries: City roads only
+
+user:
+Can I pick up a Gogoro at 10:30 pm for 2 hours? Room 828.
+
+assistant channel=analysis:
+Concierge closes at 22:00, but security handover supports after-hours. Check availability for Gogoro at 22:30 for 2 hours; reserve with handover note.
+
+assistant channel=commentary to=tool.after_hours_check:
+{"partner_id":"FS-03","model":"Gogoro 3","start":"2025-09-08T22:30:00","hours":2}
+
+tool.after_hours_check channel=commentary to=assistant:
+{"available":true,"handover":"security"}
+
+assistant channel=commentary to=tool.place_reservation:
+{"partner_id":"FS-03","guest":"Guest 828","room":"828","model":"Gogoro 3","hours":2,"handover":"Security at porte-cochère"}
+
+tool.place_reservation channel=commentary to=assistant:
+{"reservation_id":"FS-RES-223","status":"confirmed"}
+
+assistant channel=final:
+Yes—security can hand over the Gogoro after concierge hours. Reservation FS-RES-223 is confirmed for 10:30 pm, 2 hours. Please meet security at the porte-cochère for the handover.
+
+user:
+Thanks—love the skyline here.
+
+assistant channel=final:
+The Xinyi skyline is gorgeous at night.
+
+user:
+Can you provide the electric battery cycle warranty sheet?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

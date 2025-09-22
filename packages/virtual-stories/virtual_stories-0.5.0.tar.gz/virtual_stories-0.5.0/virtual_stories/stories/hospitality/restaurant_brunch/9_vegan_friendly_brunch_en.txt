@@ -1,0 +1,68 @@
+"""
+Guest asks for a vegan-friendly brunch table and beverage list; include small talk, confirm vegan availability from system, and an out-of-scope off-menu request.
+
+ROLES: user (guest), assistant (restaurant concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_table_availability","description":"Check availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Preview beverages.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["beverages"]}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Urban Lantern Hotel (hotel_id: urban_lantern)
+Brunch: Lantern Commons (restaurant_id: lantern_commons)
+Hours: Sat–Sun 10:30–14:30
+Dietary: Vegan and gluten‑free options available
+Address: 15 Waverly St, Boston, MA 02118, USA
+Wi‑Fi: SSID "Lantern-Guest"
+Access: Step‑free via Walnut St; accessible restroom near bar
+
+user:
+Table for 2 at 12:45 under Rina—vegan friendly, and what beverages are on?
+
+assistant channel=analysis:
+Check availability, book, then list beverages.
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"lantern_commons","party_size":2,"datetime":"2025-09-07T12:45:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"L09"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"lantern_commons","guest_name":"Rina","party_size":2,"datetime":"2025-09-07T12:45:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"LNT-BRN-9342"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"lantern_commons","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"Nitro Cold Brew"},{"name":"Matcha Latte (Oat)"},{"name":"Grapefruit Spritz"}]}
+
+assistant channel=final:
+Booked—table for 2 at 12:45 under Rina (LNT-BRN-9342). Beverages: Nitro Cold Brew, Matcha Latte (Oat), Grapefruit Spritz.
+
+user:
+Nice—glad you’ve got vegan picks.
+
+assistant channel=final:
+Vegan options are available during brunch.
+
+user:
+Are vegan options definitely available at brunch?
+
+assistant channel=final:
+Yes—vegan options are available.
+
+user:
+Could you make a custom off‑menu vegan cake?
+
+assistant channel=final:
+[ATTENTION] Off‑menu custom items aren’t listed in these resources. Reviewing.

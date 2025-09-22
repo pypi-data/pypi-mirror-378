@@ -1,0 +1,37 @@
+"""
+Guest needs to change an existing shuttle reservation to a new time.
+
+ROLES: user (guest changing shuttle time), assistant (front desk updating shuttle bookings)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"update_reservation","description":"Modify shuttle reservation time","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"new_time":{"type":"string"}},"required":["reservation_id","new_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Mountain Lodge Aspen (MLAS-13)
+Shuttle: Hourly 05:00–23:00; capacity 12; pickup front driveway
+
+user:
+Can you move my shuttle from 6 PM to 7 PM? It’s under MLAS-510-1800.
+
+assistant channel=analysis:
+Update reservation time to 19:00.
+
+assistant channel=commentary to=tool.update_reservation:
+{"reservation_id":"MLAS-510-1800","new_time":"19:00"}
+
+tool.update_reservation channel=commentary to=assistant:
+{"reservation_id":"MLAS-510-1800","new_time":"19:00","status":"updated"}
+
+assistant channel=final:
+Updated—your reservation MLAS-510-1800 now departs at 19:00 from the front driveway.
+
+user:
+Can you provide the maintenance logs for the shuttle?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

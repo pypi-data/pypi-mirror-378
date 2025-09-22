@@ -1,0 +1,55 @@
+"""
+Guest wants anti‑frizz conditioner in humid climate.
+
+ROLES: user (frizz control), assistant (amenities concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_hair_care_products","description":"Retrieve available premium hair care products including conditioners.","parameters":{"type":"object","additionalProperties":false,"properties":{"hair_type":{"type":"string","enum":["dry","oily","normal","curly","colored","damaged","all"]},"product_type":{"type":"string","enum":["conditioner","deep_treatment","leave_in","all_conditioning"]}},"required":[]},"strict":true},
+  {"name":"deliver_hair_care_amenities","description":"Arrange delivery of hair care products to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"size":{"type":"string","enum":["travel_50ml","standard_200ml","luxury_400ml"]}},"required":["sku","size"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["immediate","evening_turndown","morning_service"]}},"required":["room_number","products","delivery_preference"]},"strict":true}
+]
+```
+"""
+
+system:
+Bay Breeze Hotel (hotel_id: bbh_singapore)
+Address: 8 Marina Blvd, Singapore
+Timezone: Asia/Singapore
+
+Anti‑Frizz Line:
+- Humidity defense conditioners and leave‑ins
+
+SKUs:
+- COND_FRIZZ_SHIELD: Anti‑Frizz Defining Conditioner
+
+user:
+Humidity is killing my hair—anything for frizz?
+
+assistant channel=analysis:
+Offer frizz control conditioner and size.
+
+assistant channel=commentary to=tool.get_hair_care_products:
+{"hair_type":"curly","product_type":"conditioner"}
+
+tool.get_hair_care_products channel=commentary to=assistant:
+{"products":[{"sku":"COND_FRIZZ_SHIELD","name":"Anti-Frizz Defining Conditioner"}]}
+
+assistant channel=final:
+Our Anti‑Frizz Defining Conditioner helps in humidity. What size and room?
+
+user:
+Room 903; 200ml. Also—do you offer late checkout?
+
+assistant channel=analysis:
+Arrange delivery; late checkout beyond scope -> [ATTENTION].
+
+assistant channel=commentary to=tool.deliver_hair_care_amenities:
+{"room_number":"903","products":[{"sku":"COND_FRIZZ_SHIELD","size":"standard_200ml"}],"delivery_preference":"immediate"}
+
+tool.deliver_hair_care_amenities channel=commentary to=assistant:
+{"delivery_id":"BBH-903-FR-11","eta_minutes":13}
+
+assistant channel=final:
+[ATTENTION] Delivery BBH-903-FR-11 in ~13 minutes. I’ll check late checkout details separately.
+

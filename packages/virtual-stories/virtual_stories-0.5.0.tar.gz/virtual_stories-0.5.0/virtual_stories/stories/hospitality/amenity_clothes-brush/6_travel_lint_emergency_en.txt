@@ -1,0 +1,67 @@
+"""
+Guest wants compact option for carryout; provide travel brush and note return policy.
+
+ROLES: user (guest checking out in 30 minutes), assistant (front desk amenities)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"list_garment_care_items","description":"List travel-friendly garment-care items",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"category":{"type":"string","enum":["clothes_brush"]}},"required":["category"]},"strict":true},
+  {"name":"deliver_garment_care_item","description":"Stage pickup at front desk or deliver",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"priority":{"type":"string","enum":["normal","express"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverbank Suites (hotel_id: rbs_chicago)
+Address: 401 N Riverside Dr, Chicago, IL 60611
+Timezone: America/Chicago
+
+Quick Departures:
+- Travel lint brush available for pickup; returns optional (giveaway on checkout day)
+- Front desk staging time: 5 minutes
+
+user:
+I’m checking out in half an hour—do you have a pocket-size brush I can grab?
+
+assistant channel=analysis:
+Offer travel brush for pickup; arrange staging.
+
+assistant channel=commentary to=tool.list_garment_care_items:
+{"category":"clothes_brush"}
+
+tool.list_garment_care_items channel=commentary to=assistant:
+{"items":["travel_lint_brush","nylon_anti_static_full","boar_bristle"],"pickup":"5"}
+
+assistant channel=final:
+Yes—a compact travel lint brush is available for pickup, and on checkout day you can keep it. Shall I stage one at the front desk under your room number?
+
+user:
+That’d be perfect. Also, the river view is relaxing.
+
+assistant channel=final:
+Agreed—the suites overlook the bend, so the water stays in sight.
+
+assistant channel=commentary to=tool.deliver_garment_care_item:
+{"room_number":"CHECKOUT-FOYER","items":["travel_lint_brush"],"priority":"normal"}
+
+tool.deliver_garment_care_item channel=commentary to=assistant:
+{"request_id":"RBS-FRONT-12","eta_minutes":5}
+
+assistant channel=final:
+Ready—RBS-FRONT-12 will be staged at the front desk in about 5 minutes.
+
+user:
+Do you sell garment steamers too?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check what’s possible.
+

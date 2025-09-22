@@ -1,0 +1,54 @@
+"""
+Guest needs to rent a walking cane; confirm stock, terms, and arrange delivery to room.
+
+ROLES: user (guest recovering from injury), assistant (front desk providing accessibility items)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check accessibility item availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create rental with fee or comp","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Old Town Heritage Prague (OTHP-05), Karlova 7, 110 00 Prague 1, Czechia.
+Boutique heritage hotel; 7 floors; Front Desk 24/7.
+Walking canes: 6 units; complimentary for up to 48 hours; return at Front Desk; no deposit.
+Other facts: Elevator to all floors; Breakfast 7:00–10:30.
+
+user:
+Hello, may I borrow a walking cane? I’m in room 305.
+
+assistant channel=analysis:
+Check availability for one cane, then create a 48-hour complimentary rental for pickup or room drop.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"OTHP-05","item":"walking_cane","quantity":1,"room":"305"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["CANE-03"],"notes":"Complimentary up to 48h"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"OTHP-05","room":"305","item":"walking_cane","duration_hours":48,"charge_code":"COMP-ACCESS","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CAN-305-2217","status":"created","charge":"comp"}
+
+assistant channel=final:
+I’ve reserved a cane (CANE-03) and created order CAN-305-2217 for 48 hours, complimentary. We’ll deliver it to 305 shortly.
+
+user:
+Thanks! The lobby music is relaxing.
+
+assistant channel=final:
+I’m glad you’re comfortable—wishing you a smooth recovery.
+
+user:
+Do you have the medical device compliance certificates on file for the canes?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

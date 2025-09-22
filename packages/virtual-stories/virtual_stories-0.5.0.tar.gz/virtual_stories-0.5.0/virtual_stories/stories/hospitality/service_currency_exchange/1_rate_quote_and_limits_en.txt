@@ -1,0 +1,50 @@
+"""
+Guest asks about exchanging currency; provide a live quote via tool and restate desk details and limits. Include small talk and a background handoff for market‑timing advice.
+
+ROLES: user (guest needing currency exchange), assistant (cashier quoting rates and fees)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "quote_fx",
+    "description": "Quote a currency exchange with applied fee and total payout.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"from":{"type":"string"},"to":{"type":"string"},"amount":{"type":"number"}},"required":["from","to","amount"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Midtown Regent — Currency Desk (next to Concierge)
+Hours: 09:00–19:00 daily
+Supported: USD, EUR, GBP, JPY
+ID: Passport required for exchanges over USD 500 equivalent
+
+user:
+What’s the rate to exchange 200 USD to EUR?
+
+assistant channel=analysis:
+Provide a quote via tool; then share desk hours and ID note from system.
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"USD","to":"EUR","amount":200}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":0.89,"fee":"EUR 2.00","payout":"EUR 175.00"}
+
+assistant channel=final:
+For 200 USD to EUR, the quote is EUR 175.00 after a EUR 2.00 fee (rate 0.89). The Currency Desk is open 09:00–19:00 next to Concierge; passport is required for amounts over USD 500 equivalent.
+
+user:
+Thanks—how’s everything at the hotel today?
+
+assistant channel=final:
+Happy to help further at Midtown Regent.
+
+user:
+Should I wait until tomorrow in case the rate improves?
+
+assistant channel=final:
+[ATTENTION] Investment timing guidance isn’t available here. Reviewing the documentation.

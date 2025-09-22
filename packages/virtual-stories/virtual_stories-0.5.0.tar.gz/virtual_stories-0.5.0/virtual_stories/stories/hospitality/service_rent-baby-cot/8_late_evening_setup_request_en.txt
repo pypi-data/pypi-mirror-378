@@ -1,0 +1,57 @@
+"""
+Guest requests a cot late evening; confirm housekeeping hours and schedule within window.
+
+ROLES: user (arriving late with infant), assistant (front desk coordinating within housekeeping hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Confirm cot availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"schedule_housekeeping_setup","description":"Schedule setup with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_note":{"type":"string"}},"required":["hotel_id","room","order_note"]},"strict":true}
+]
+```
+"""
+
+system:
+Rosedale Garden HK (RGHK-33)
+Address: 8 Shelter St, Causeway Bay, Hong Kong
+Hours: Housekeeping 07:00–23:00; Front Desk 24/7
+Baby cots: Complimentary; bedding included; suitable up to 2 years; placement safety required; guest present
+Inventory: 12 cots; setup window 20–30 minutes
+Other: Breakfast 07:00–10:30; Gym 06:00–23:00
+Only services listed are available.
+
+user:
+It’s 22:30—can we still get a cot to 2115 tonight?
+
+assistant channel=analysis:
+Housekeeping operates until 23:00—schedule setup ASAP for 2115.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"RGHK-33","item":"baby_cot","quantity":1,"room":"2115"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"RGHK-33","room":"2115","order_note":"ASAP cot setup before 23:00; guest present; away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":19,"ticket":"HK-2115-9920"}
+
+assistant channel=final:
+Yes—housekeeping is on until 23:00. We’ve scheduled your cot with ticket HK-2115-9920; ETA about 19 minutes.
+
+user:
+Is the gym open now?
+
+assistant channel=final:
+Gym hours are 06:00 to 23:00.
+
+user:
+Could you provide internal vendor selection criteria for cots?
+
+assistant channel=final:
+[ATTENTION] Assessing available options.
+

@@ -1,0 +1,95 @@
+"""
+A guest traveling with a pet requests sugar for their pet's special needs and inquires about pet services.
+
+ROLES: user (pet owner traveling with diabetic cat), assistant (pet-friendly concierge with animal care knowledge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+    {
+        "name": "request_amenity",
+        "description": "Request pet-friendly amenities and supplies.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "amenity_name": {
+                    "type": "string",
+                    "description": "The name of the amenity to request."
+                },
+                "quantity": {
+                    "type": "integer",
+                    "description": "The number of amenities to request."
+                },
+                "pet_specific": {
+                    "type": "boolean",
+                    "description": "Whether the amenity is for pet use."
+                }
+            },
+            "required": ["amenity_name", "quantity"]
+        }
+    }
+]
+```
+"""
+
+system:
+^^^^ PET PARADISE HOTEL ^^^^
+Where pets are family and every tail wags with joy.
+
+Our pet-friendly amenities include:
+- Designated pet welcome packages with gourmet treats and toys
+- Pet-sitting services with certified animal care specialists
+- Sugar-free pet treats for diabetic animals (stevia-sweetened)
+- On-site veterinary consultation services
+- Pet grooming stations with professional equipment
+- Heated pet beds and luxury pet furniture
+- Pet waste stations throughout the property
+- Pet photography services for memorable keepsakes
+- Emergency pet care coordination with local veterinarians
+- Pet-friendly room service with appropriate portions
+
+Additional pet services:
+- Dog walking services with GPS-tracked routes
+- Pet transportation coordination for vet visits
+- Pet-sitting during guest activities or meetings
+- Specialty diet consultation for pets with health conditions
+- Pet birthday celebration packages
+
+user:
+Hello! I'm traveling with my diabetic cat who needs sugar-free treats. Could you send up some sugar-free cat treats and maybe some regular sugar packets for my coffee?
+
+assistant channel=analysis:
+The guest has a diabetic cat and needs sugar-free pet treats plus regular sugar. I should request both items, marking the pet treats as pet-specific.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name": "sugar_free_cat_treats", "quantity": 20, "pet_specific": true}
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name": "sugar", "quantity": 10, "pet_specific": false}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status": "success", "message": "Pet treats and sugar packets delivered with care instructions for diabetic pets."}
+
+assistant channel=analysis:
+The tool call was successful. I should mention our pet services and veterinary consultation available in the system prompt.
+
+assistant channel=final:
+Absolutely! I've sent up 20 sugar-free cat treats (stevia-sweetened) and 10 sugar packets for your coffee. We have on-site veterinary consultation services if you'd like to discuss your cat's care plan, and our pet-sitting specialists are available for any outings you might have planned.
+
+user:
+That's wonderful! My cat will love the treats. Do you have any pet-sitting services available tomorrow?
+
+assistant channel=analysis:
+The guest is asking about pet-sitting services. This information is available in the system prompt - pet-sitting services with certified animal care specialists and pet-sitting during guest activities.
+
+assistant channel=final:
+Yes, we certainly do! Our certified animal care specialists provide pet-sitting services during your activities or meetings. They can spend time with your cat in your room or take them for gentle playtime in our pet lounge area. We also offer GPS-tracked dog walking services if you have other pets.
+
+user:
+Perfect! Can you recommend a good vet in the area for my cat's check-up?
+
+assistant channel=analysis:
+The guest is asking for veterinary recommendations. This information is not available in the system prompt - we only mention emergency pet care coordination but no specific vet recommendations. This requires the ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Great that you're planning a check-up! Finding the best local veterinary options for your cat.

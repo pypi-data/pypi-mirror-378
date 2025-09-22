@@ -1,0 +1,96 @@
+"""
+Guest on spa floor requests silk hair scrunchies; includes quick policy Q&A and beyond-context flag.
+
+ROLES: user (guest in 1016), assistant (front desk concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "check_amenity_availability",
+    "description": "Check if a specific amenity is in stock and quantities available.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1}
+      },
+      "required": ["amenity_name", "quantity"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_amenity_delivery",
+    "description": "Create a delivery request for an amenity to a guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Willow Spa Residences — Spa Level (10th floor)
+Amenity: Silk hair scrunchies (black/rose/ivory)
+Limit: 6 per room per night
+Delivery SLA: 12–18 min (Spa Level)
+Service Hours: 07:00–23:00
+Contacts: Concierge x0; Housekeeping x7721
+
+user:
+Hi, room 1016—could I get 3 silk hair scrunchies?
+
+assistant channel=analysis:
+Check availability then place normal delivery to 1016 for 3 silk scrunchies.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"silk hair scrunchies","quantity":3}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"silk hair scrunchies","available":true,"in_stock":36}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1016","amenity_name":"silk hair scrunchies","quantity":3,"priority":"normal","note":"Spa Level delivery"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"WS-1016-SCR-118","eta_minutes":14}
+
+assistant channel=final:
+All set—3 silk scrunchies are on the way to 1016. ETA about 14 minutes.
+
+user:
+Is there a per-night limit?
+
+assistant channel=analysis:
+System: limit 6 per room per night.
+
+assistant channel=final:
+Yes—limit is 6 per room per night.
+
+user:
+Spa hallway smells nice.
+
+assistant channel=final:
+Enjoy your spa time.
+
+user:
+Do you sell the same scrunchies in the boutique?
+
+assistant channel=analysis:
+Not in system.
+
+assistant channel=final:
+[ATTENTION] I’ll check boutique stock for you.
+

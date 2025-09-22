@@ -1,0 +1,61 @@
+"""
+Guest asks about pet policy and quiet hours at check‑in; proceed with room assignment; include small talk and an ATTENTION ask beyond scope.
+
+ROLES: user (guest traveling with a small dog), assistant (front desk sharing pet and quiet policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_in_guest","description":"Assign room and key","parameters":{"type":"object","properties":{"reservation_code":{"type":"string"},"last_name":{"type":"string"}},"required":["reservation_code","last_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Willow Court — Front Desk
+Times: Check‑in 15:00; Check‑out 11:00
+ID & Deposit: Matching ID; card hold at check‑in
+
+Pets:
+- Dogs and cats ≤10 kg; $50 cleaning fee per stay
+- No pets in breakfast room
+
+Quiet Hours:
+- 22:00–07:00; avoid hallway noise
+
+Facilities:
+- Garden level for brief pet walks
+- Gym 24/7 on L1
+
+user:
+Code WC-91007 under Rivera. Are small dogs allowed, and what are your quiet hours?
+
+assistant channel=analysis:
+Assign room; answer pets and quiet hours from system.
+
+assistant channel=commentary to=tool.check_in_guest:
+{"reservation_code":"WC-91007","last_name":"Rivera"}
+
+tool.check_in_guest channel=commentary to=assistant:
+{"room":"605","key_id":"K-118700"}
+
+assistant channel=final:
+Welcome—room 605 is assigned with key K-118700. Small dogs up to 10 kg are permitted with a $50 cleaning fee, and quiet hours are 22:00–07:00.
+
+user:
+The courtyard looks peaceful.
+
+assistant channel=final:
+It’s handy for quick pet walks.
+
+user:
+Are pets allowed in the breakfast room?
+
+assistant channel=final:
+Pets aren’t permitted in the breakfast room.
+
+user:
+Could you waive the pet fee this time?
+
+assistant channel=final:
+[ATTENTION] Pet fee waivers aren’t available here. Reviewing available options.

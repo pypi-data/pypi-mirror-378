@@ -1,0 +1,66 @@
+"""
+Guest requests a kettle and asks about universal adapters; provide kettle and adapter info from system. Include chitchat and [ATTENTION].
+
+ROLES: user (guest requesting kettle and asking about adapters), assistant (amenities coordinator with voltage/adapter info)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_item","description":"Send an amenity item to a room","parameters":{"type":"object","properties":{"item_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["item_name","room_number","quantity"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Orion Skybridge (hotel_id: osk_tokyo_27)
+Address: 4-1-8 Nihonbashi, Chuo City, Tokyo 103-0027, Japan
+Timezone: Asia/Tokyo
+
+Details:
+- Kettle on request with 10–14 minute ETA
+- Voltage: 100V; universal adapters available at the desk
+- Ice machines: Levels 9 and 16
+
+YAML Building:
+---
+sprinklers: true
+elevators: 10
+quiet_hours: "22:00-07:00"
+---
+
+JSON Runner:
+{"primary":"Rin","backup":"Daichi"}
+
+user:
+Could I get a kettle to 1622? Also, do you have universal adapters?
+
+assistant channel=analysis:
+Arrange kettle to 1622; inform adapters are available.
+
+assistant channel=commentary to=tool.request_item:
+{"item_name":"electric_kettle","room_number":"1622","quantity":1}
+
+tool.request_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":13,"runner":"Rin"}
+
+assistant channel=final:
+Kettle delivery to 1622 is set—about 13 minutes (Rin). We have universal adapters available at the desk.
+
+user:
+Elevators here are lightning fast.
+
+assistant channel=analysis:
+Chit-chat with elevator count reference.
+
+assistant channel=final:
+Ten cars keep things moving smoothly, even at peak times.
+
+user:
+Could you also book a sushi omakase nearby?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Accessing relevant resources.
+

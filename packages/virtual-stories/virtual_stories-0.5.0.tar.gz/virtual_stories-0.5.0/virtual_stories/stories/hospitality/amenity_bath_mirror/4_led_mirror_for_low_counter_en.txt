@@ -1,0 +1,94 @@
+"""
+Guest with low counter requests an LED mirror; verify stock and deliver. Include small talk, an in-context quiet hours question, and an [ATTENTION] event-ticket request.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"stock_led","description":"Check stock for table_led_mirror.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string"}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_led","description":"Deliver LED mirror.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["room_number","item_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Canal Lantern Hotel (hotel_id: clh_la_44)
+Address: 900 S Peters St, New Orleans, LA 70130
+Timezone: America/Chicago
+Amenity Window: 08:00–22:00
+
+Mirror Inventory:
+- bath_mirror_magnifying: 6 on hand
+- table_led_mirror: 4 on hand
+
+Spaces:
+1) Courtyard lanterns after dusk
+2) Coffee counter 06:30–12:00
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Jazz poster wall in lobby
+
+Dining:
+- Coffee counter 06:30–12:00; courtyard bites 17:00–21:00
+
+Accessibility:
+- Step-free access; ADA rooms available
+- Portable bath stools on request
+
+Sustainability:
+- Water refill stations; towel reuse program
+
+Transportation:
+- Streetcar line within two blocks; rideshare pickup on Peters St
+
+user:
+Hi—room 612 here. Could I get a table-top LED mirror? The counter’s low.
+
+assistant channel=analysis:
+Check stock for table_led_mirror and deliver 1.
+
+assistant channel=commentary to=tool.stock_led:
+{"item_code":"table_led_mirror"}
+
+tool.stock_led channel=commentary to=assistant:
+{"item_code":"table_led_mirror","on_hand":4}
+
+assistant channel=commentary to=tool.deliver_led:
+{"room_number":"612","item_code":"table_led_mirror","quantity":1}
+
+tool.deliver_led channel=commentary to=assistant:
+{"ticket":"CLH-612-LED-220","eta_minutes":13}
+
+assistant channel=final:
+One LED mirror is heading to 612 (ticket CLH-612-LED-220) with an ETA of about 13 minutes.
+
+user:
+When are the quiet hours?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Quiet hours are 22:00–07:00.
+
+user:
+The courtyard lanterns looked magical.
+
+assistant channel=analysis:
+Chit-chat referencing spaces.
+
+assistant channel=final:
+The lanterns in the courtyard after dusk are lovely.
+
+user:
+Could you get me two balcony concert tickets for tonight?
+
+assistant channel=analysis:
+Out of scope; flag.
+
+assistant channel=final:
+[ATTENTION] Working on your request.
+
+user:
+Thanks.

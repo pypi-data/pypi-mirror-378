@@ -1,0 +1,80 @@
+"""
+Guest on conference floor requests sanitary bags; confirm availability and deliver; include small talk and acknowledgment; answer a system-context question.
+
+ROLES: user (guest at event), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bathroom_supplies","description":"Check availability for sanitary bags.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_bag"]}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_bathroom_supplies","description":"Deliver bathroom supplies to a room with placement.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1},"placement":{"type":"string","enum":["bathroom_counter","under_sink"]}},"required":["room_number","item_code","quantity","placement"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harborline Convention (hotel_id: hc_bal_03)
+Address: 201 Pratt St, Baltimore, MD 21202
+Bathroom supply hours: 07:00–23:00; ETA 7–12 minutes
+Conference: tech desk 07:30–18:30; VLAN for event floors
+Wi‑Fi: 500/250 Mbps; lobby speed boosted 08:00–10:00
+Scent: salt-air diffuser near escalators
+Check-in/out: 15:00 / 12:00
+Dining: market cafe 06:00–21:00
+
+Sanitary bag:
+- Stock: 220 sleeves
+- Packaging: opaque, biodegradable
+- Placement: counter/under sink
+
+user:
+Could you send three sanitary bags to 1631 and leave them under the sink?
+
+assistant channel=analysis:
+Check stock; deliver 3 under_sink.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"item_code":"sanitary_bag"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_bag","on_hand":220}
+
+assistant channel=analysis:
+Proceed with delivery to 1631.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"1631","item_code":"sanitary_bag","quantity":3,"placement":"under_sink"}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"ticket_id":"BS-1631-9099","eta_minutes":8}
+
+assistant channel=final:
+Certainly—three sanitary bag sleeves will be placed under the sink in 1631. Ticket BS-1631-9099, around 8 minutes.
+
+user:
+Is the tech desk open now?
+
+assistant channel=analysis:
+Answer using system conference hours.
+
+assistant channel=final:
+The conference tech desk operates 07:30–18:30.
+
+user:
+That sea-salt scent by the escalators is subtle.
+
+assistant channel=analysis:
+Respond based on scent detail.
+
+assistant channel=final:
+We keep a salt‑air diffuser near the escalators—thank you for noting it.
+
+user:
+Do you have sewing kits available?
+
+assistant channel=analysis:
+Not specified here; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check for sewing kits. Reviewing amenities.
+

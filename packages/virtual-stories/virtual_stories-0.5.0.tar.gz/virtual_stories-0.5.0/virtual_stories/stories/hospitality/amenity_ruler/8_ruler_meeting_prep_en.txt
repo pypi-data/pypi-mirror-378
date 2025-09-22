@@ -1,0 +1,79 @@
+"""
+Guest requests multiple rulers for meeting prep; confirm availability and deliver; include small talk and a background acknowledgment.
+
+ROLES: user (guest organizing workshop), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check rulers by length and material.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["ruler"]},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["item_code","length","material"]},"strict":true},
+  {"name":"deliver_stationery","description":"Deliver a ruler to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["room_number","item_code","length","material"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Bayview Conference Hotel (hotel_id: bc_san_02)
+Address: 901 Harbor Dr, San Diego, CA 92101
+Stationery: 07:00–22:00; ETA 7–12 minutes
+Conference level: dedicated VLAN; tech desk 07:30–18:30
+Dining: cafe 06:30–14:00; tapas bar 17:00–22:00
+Check-in/out: 15:00 / 12:00
+Scent: sea breeze diffuser along the mezzanine
+
+Ruler inventory:
+- 15cm plastic(25), metal(6)
+- 30cm plastic(14), metal(8)
+- Borrow policy: up to 3 items per room for events
+
+user:
+I need three 30 cm plastic rulers to 1502, please.
+
+assistant channel=analysis:
+We only deliver one at a time via tool; call thrice or clarify policy. The system allows up to 3—simulate three deliveries.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_code":"ruler","length":"30cm","material":"plastic"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":14,"item_code":"ruler","length":"30cm","material":"plastic"}
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"1502","item_code":"ruler","length":"30cm","material":"plastic"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-1502-3301","eta_minutes":8}
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"1502","item_code":"ruler","length":"30cm","material":"plastic"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-1502-3302","eta_minutes":8}
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"1502","item_code":"ruler","length":"30cm","material":"plastic"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-1502-3303","eta_minutes":8}
+
+assistant channel=final:
+All set—three 30 cm plastic rulers are on the way to 1502. Tickets ST-1502-3301/3302/3303, ETA about 8 minutes.
+
+user:
+The sea breeze scent upstairs is relaxing.
+
+assistant channel=analysis:
+Respond using scent detail.
+
+assistant channel=final:
+We use a light sea breeze diffuser along the mezzanine—glad it feels relaxing.
+
+user:
+Do you have laser pointers for presentations?
+
+assistant channel=analysis:
+Not listed; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on pointers. Reviewing conference equipment.
+

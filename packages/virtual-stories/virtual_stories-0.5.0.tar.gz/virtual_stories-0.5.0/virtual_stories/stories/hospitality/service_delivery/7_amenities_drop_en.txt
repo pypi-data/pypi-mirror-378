@@ -1,0 +1,46 @@
+"""
+Guest asks to send amenity set; schedule delivery and state service window and scope; include chitchat and ATTENTION for medication handling.
+
+ROLES: user (guest requesting amenity delivery), assistant (service center arranging on‑property amenity drop)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_inhouse_delivery","description":"Schedule delivery of amenities on property.","parameters":{"type":"object","additionalProperties":false,"properties":{"from_room":{"type":"string"},"to_room":{"type":"string"},"item":{"type":"string"}},"required":["from_room","to_room","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeside Atrium Hotel — Service Center
+Hours: 24/7; ETAs 10–20 minutes
+Scope: On‑property guestroom and venue deliveries
+Restrictions: No handling of medications by Service Center
+
+user:
+Please send a dental kit and slippers from 803 to 809.
+
+assistant channel=analysis:
+Schedule internal amenity delivery; confirm ETA and restriction on medications.
+
+assistant channel=commentary to=tool.schedule_inhouse_delivery:
+{"from_room":"803","to_room":"809","item":"dental kit and slippers"}
+
+tool.schedule_inhouse_delivery channel=commentary to=assistant:
+{"delivery_id":"DLV-6642","status":"scheduled","eta_minutes":11}
+
+assistant channel=final:
+Delivery DLV-6642 is set from 803 to 809 with an ETA of about 11 minutes.
+
+user:
+Thanks—nice music in the lobby.
+
+assistant channel=final:
+We’ll be right there.
+
+user:
+Could you deliver my prescription as well?
+
+assistant channel=final:
+[ATTENTION] Medication handling isn’t available via these resources. Reviewing available resources.
+

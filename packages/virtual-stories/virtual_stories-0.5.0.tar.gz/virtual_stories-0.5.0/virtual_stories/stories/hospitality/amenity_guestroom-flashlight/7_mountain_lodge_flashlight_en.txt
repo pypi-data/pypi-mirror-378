@@ -1,0 +1,60 @@
+"""
+Mountain lodge guest asks for flashlight; asks battery policy and a beyond-context question.
+
+ROLES: user (guest in 432), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"request_amenity","description":"Request a hotel amenity for a guest.","parameters":{"type":"object","properties":{"amenity_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","room_number","quantity"]}}
+]
+```
+"""
+
+system:
+Lodge: Timberline Ridge
+Flashlight Types: standard LED; headlamp (on request)
+Battery Support: AA replacements available
+Delivery: 12–18 min
+Usage: loan during stay; return at checkout
+Ext: Guide Desk x23; Front Desk x0
+
+user:
+Room 432—may I have a flashlight?
+
+assistant channel=analysis:
+Deliver standard LED flashlight to 432.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name":"LED flashlight","room_number":"432","quantity":1}
+
+tool.request_amenity channel=commentary to=assistant:
+{"ok":true,"eta":"15 min"}
+
+assistant channel=final:
+On the way—LED flashlight to 432 in about 15 minutes.
+
+user:
+Do you have headlamps too?
+
+assistant channel=analysis:
+System lists headlamp on request.
+
+assistant channel=final:
+Yes—headlamps are available on request.
+
+user:
+Fireplace smells nice.
+
+assistant channel=final:
+Enjoy the cozy evening.
+
+user:
+Any chance the northern lights are visible tonight?
+
+assistant channel=analysis:
+Beyond system context.
+
+assistant channel=final:
+[ATTENTION] I’ll check tonight’s sky forecast.
+

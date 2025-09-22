@@ -1,0 +1,112 @@
+"""
+Guest requests alcohol-free shaving set during evening turndown; verify and schedule evening delivery.
+
+ROLES: user (guest preferring alcohol-free set), assistant (evening turndown coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Bayfront Executive Hotel Vancouver (hotel_id: beh_yvr_10)
+Address: 555 Burrard St, Vancouver, BC V7X 1M8, Canada
+Timezone: America/Vancouver
+
+Evening Amenity Options:
+- Alcohol-free gel and balm available during turndown
+- Sensitive and normal skin variants
+- Delivery windows: immediate or evening_service (19:00–21:30)
+- Policy: complimentary swap for sensitivity on first request
+- Contact: Evening Services ext 19
+
+Product Specs:
+- Gel: glycerin + aloe base
+- Balm: chamomile + vitamin E
+- Sizes: 100 ml gel, 60 ml balm
+- Packaging: sealed amenity pouches
+- Instruction card on request
+
+user:
+Hi, could I get an alcohol-free gel and balm delivered during turndown? Room 2118.
+
+assistant channel=analysis:
+Check shaving_gel sensitive; schedule evening_service delivery with instruction card.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type":"shaving_gel","skin_type":"sensitive","brand_preference":"any"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available":true,"recommended_products":["AlcoholFree_Gel_100ml","ChamomileE_Balm_60ml"],"evening_ok":true}
+
+assistant channel=analysis:
+Schedule evening_service delivery to 2118 with instructions.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number":"2118","products":["AlcoholFree_Gel_100ml","ChamomileE_Balm_60ml"],"delivery_window":"evening_service","include_instructions":true}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled":true,"arrival_window":"19:00–21:30","instructions":"turndown_instruction_card"}
+
+assistant channel=final:
+Certainly—we’ll place an alcohol-free gel and balm during turndown to 2118 with an instruction card. Your window is 19:00–21:30.
+
+user:
+Is the first sensitivity swap complimentary?
+
+assistant channel=analysis:
+Answer from system policy.
+
+assistant channel=final:
+Yes—the first sensitivity-related swap is complimentary.
+
+user:
+Thanks! Great skyline views.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+They’re fantastic—enjoy your evening.
+
+user:
+Do you have recommendations for a sushi spot?
+
+assistant channel=analysis:
+Beyond system scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up nearby sushi options and share suggestions.

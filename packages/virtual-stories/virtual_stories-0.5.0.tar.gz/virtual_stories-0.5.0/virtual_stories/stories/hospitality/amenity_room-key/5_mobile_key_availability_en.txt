@@ -1,0 +1,66 @@
+"""
+Guest asks if mobile key is available and requests a spare; assistant clarifies policy and issues spare; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 1506 asking about mobile key), assistant (front desk clarifying unavailability and issuing spare)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_guest_identity","description":"Verify guest identity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"last_name":{"type":"string"},"id_last4":{"type":"string"}},"required":["room_number","last_name","id_last4"]}},
+  {"name":"issue_spare_key","description":"Issue spare key","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pickup_location":{"type":"string","enum":["front_desk"]}},"required":["room_number","pickup_location"]}}
+]
+```
+"""
+
+system:
+Hotel: Harborfront Suites — Marina Tower
+Front desk: 24/7
+Room 1506: Marina View King
+Key services:
+- Mobile key: Not available at this property
+- Spare keys: Verify last name + ID last four; pickup front_desk only; max 2 active; auto-deactivate at 00:00
+Notes: Marina Tower elevator M2 to 15th floor; café open 06:30–14:00
+Contacts: Front Desk 0
+
+user:
+Hi, Nguyen in 1506 (ID ends 2022). Do you have mobile keys? If not, I need a spare.
+
+assistant channel=analysis:
+Confirm mobile key unavailability from system; verify identity and issue spare for pickup.
+
+assistant channel=final:
+Mobile key isn’t available at this property. I’ll verify and prepare a spare for front desk pickup.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"1506","last_name":"Nguyen","id_last4":"2022"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"1506"}
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"1506","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-1506-3107","pickup_location":"front_desk"}
+
+assistant channel=final:
+Verified—your spare key (SP-1506-3107) is ready at the front desk.
+
+user:
+Thanks! Café hours again?
+
+assistant channel=final:
+The café is open from 06:30 to 14:00.
+
+user:
+How’s your day?
+
+assistant channel=final:
+Going great—thanks for asking!
+
+user:
+Could you enable mobile key for me anyway?
+
+assistant channel=final:
+[ATTENTION] Mobile key enablement isn’t available in the provided system context.
+

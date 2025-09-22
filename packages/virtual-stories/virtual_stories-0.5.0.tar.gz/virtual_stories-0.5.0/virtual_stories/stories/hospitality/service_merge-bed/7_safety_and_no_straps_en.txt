@@ -1,0 +1,60 @@
+"""
+Guest asks about safety and whether straps are used; schedule. Include small talk and [ATTENTION].
+
+ROLES: user (safety‑focused guest), assistant (housekeeping clarifying safety checks and materials, booking task)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"book_task","description":"Book merge task and note safety check","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"time":{"type":"string"},"safety_check":{"type":"boolean"}},"required":["room","time","safety_check"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Arcadia Plaza Rome (APRM-29)
+Address: Via Veneto 12, 00187 Roma
+Safety points:
+- No straps used; gap inspection after linens
+- Materials: bridge + topper + king linens
+- Window 10:00–18:00; ~25 minutes
+- Fee: included; HK-MERGE for tracking
+- Reversal on departure
+Ops info:
+- Team staging: L2 service room
+- Tools sanitized
+- FIFO scheduling
+- No mattress rotation
+- Contact via Front Desk
+
+user:
+Do you use straps to hold the beds together? Could you come at 10:45 to 614?
+
+assistant channel=analysis:
+State no straps; book 10:45 with safety check noted.
+
+assistant channel=final:
+We don’t use straps; we place a bridge and topper, then complete a gap inspection.
+
+assistant channel=commentary to=tool.book_task:
+{"room":"614","time":"10:45","safety_check":true}
+
+tool.book_task channel=commentary to=assistant:
+{"task_id":"merge_614_1045","eta_minutes":25}
+
+assistant channel=final:
+Booked—merge_614_1045 at 10:45; expect about 25 minutes.
+
+user:
+Grazie.
+
+assistant channel=final:
+Prego—Front Desk can page us if you step out.
+
+user:
+Can you add a bed rail?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

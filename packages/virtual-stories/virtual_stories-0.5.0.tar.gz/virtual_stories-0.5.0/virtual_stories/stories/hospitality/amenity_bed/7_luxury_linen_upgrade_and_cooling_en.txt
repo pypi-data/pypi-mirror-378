@@ -1,0 +1,63 @@
+"""
+Guest asks for luxury linen upgrade and cooling bedding.
+
+ROLES: user (guest requesting premium linens), assistant (bedding concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_bedding_upgrade","description":"Schedule premium bedding upgrade.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"upgrade_package":{"type":"string","enum":["luxury_linen","temperature_control"]},"service_time":{"type":"string"}},"required":["room_number","upgrade_package"]},"strict":true}
+]
+```
+"""
+
+system:
+Capitol View Residences (hotel_id: cvr_dc)
+Address: 700 D St NW, Washington, DC 20004
+Timezone: America/New_York
+
+Premium Bedding:
+1) Luxury Linen: 600TC Egyptian cotton sheets, upgraded duvet cover.
+2) Temperature Control: Phase‑change fabric duvet and cooling pillowcases.
+3) Turn‑time: 25–35 minutes depending on inventory run.
+4) Service window: 17:00–22:00; day service upon request.
+5) Combine packages for both touch and temperature benefits.
+
+user:
+Could you switch 1008 to the luxury linen and add cooling bedding too?
+
+assistant channel=analysis:
+Schedule two upgrades: luxury_linen and temperature_control.
+
+assistant channel=commentary to=tool.schedule_bedding_upgrade:
+{"room_number":"1008","upgrade_package":"luxury_linen","service_time":"19:30"}
+
+tool.schedule_bedding_upgrade channel=commentary to=assistant:
+{"scheduled":true,"package":"luxury_linen","eta_minutes":28}
+
+assistant channel=commentary to=tool.schedule_bedding_upgrade:
+{"room_number":"1008","upgrade_package":"temperature_control","service_time":"19:30"}
+
+tool.schedule_bedding_upgrade channel=commentary to=assistant:
+{"scheduled":true,"package":"temperature_control","eta_minutes":32}
+
+assistant channel=final:
+Absolutely—luxury linen and temperature‑control bedding are both scheduled for 19:30 in 1008. Expect setup within about 30 minutes.
+
+user:
+Wonderful. The monument views at dusk were breathtaking.
+
+assistant channel=analysis:
+Chit-chat reply.
+
+assistant channel=final:
+Glad the evening views were memorable.
+
+user:
+And can you leave chocolates on my pillow?
+
+assistant channel=analysis:
+Not covered; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll see if pillow chocolates can be arranged.

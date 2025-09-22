@@ -1,0 +1,67 @@
+"""
+Guest asks if a package has arrived and how to pick it up at reception.
+
+ROLES: user (guest expecting a delivery), assistant (receptionist checking package status and explaining pickup requirements)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_package_status",
+    "description": "Check if a package for the guest is at reception and return pickup requirements.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_last_name": {"type": "string"},
+        "room_number": {"type": "string"}
+      },
+      "required": ["guest_last_name", "room_number"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Reception Package Handling (mixed format)
+Desk: Lobby Front Desk | Hours: 24/7 | Storage: Back‑office shelves (A–D)
+Pickup Requirements:
+  • Matching last name + room number
+  • Photo ID or room key
+  • Sign on the digital pad
+Notes:
+  1) Fragile items stored on shelf A.
+  2) Oversize items behind the service door.
+  3) Labels printed via thermal printer.
+  4) Queue screen shows ticket numbers only (no names).
+  5) City maps (EN/ES) available on request.
+
+user:
+Has a package for Patel in 1108 arrived yet?
+
+assistant channel=analysis:
+Use the tool to check the package and then share pickup requirements from system.
+
+assistant channel=commentary to=tool.check_package_status:
+{"guest_last_name":"Patel","room_number":"1108"}
+
+tool.check_package_status channel=commentary to=assistant:
+{"found":true,"package_id":"PKG-4412","shelf":"B","note":"Standard parcel"}
+
+assistant channel=analysis:
+Confirm found and list pickup requirements.
+
+assistant channel=final:
+Yes—package PKG-4412 is here on shelf B. For pickup, please bring matching last name and room number plus photo ID or your room key; you’ll sign on the digital pad.
+
+user:
+Nice you label shelves.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Keeps the back office tidy and quick to access.
+

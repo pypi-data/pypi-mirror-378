@@ -1,0 +1,68 @@
+"""
+Sunday late checkout; assistant calls tool, returns tool output; answers a system item; includes small talk and an [ATTENTION] request beyond system.
+
+ROLES: user (skier), assistant (Pinecrest Ski Lodge desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_late_checkout",
+    "description": "Request a late checkout within policy and return approval and fee.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "requested_time": {"type": "string", "description": "24h time, e.g., 14:00"}
+      },
+      "required": ["room_number", "requested_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Pinecrest Ski Lodge — Lake Tahoe
+Checkout: 11:00
+Late Window: up to 14:00 (Sunday demand may limit)
+Fees: $30 (≤12:00), $55 (≤13:00), $75 (≤14:00)
+Ski Valet: 07:00–18:00
+Hot Tub: 08:00–22:00
+Quiet Hours: 22:00–07:00
+
+user:
+Room 318—can I check out at 12:45?
+
+assistant channel=analysis:
+Within window; quote $55 if tool approves.
+
+assistant channel=commentary to=tool.request_late_checkout:
+{"room_number":"318","requested_time":"12:45"}
+
+tool.request_late_checkout channel=commentary to=assistant:
+{"approved":true,"fee":55,"currency":"USD","note":"Sunday occupancy moderate"}
+
+assistant channel=final:
+Approved—late checkout for room 318 is set for 12:45 with a $55 USD fee.
+
+user:
+Great—fresh powder today?
+
+assistant channel=final:
+Enjoy your day at Pinecrest.
+
+user:
+When is standard checkout?
+
+assistant channel=final:
+Standard checkout is 11:00.
+
+user:
+Could you keep the hot tub open later?
+
+assistant channel=final:
+[ATTENTION] Extending hot‑tub hours isn’t covered by the provided details. Processing your request.
+

@@ -1,0 +1,51 @@
+"""
+Guest requests multiple language copies; confirm stock and pickup. Include small talk and [ATTENTION].
+
+ROLES: user (family needing EN/NL/DE copies), assistant (concierge checking language availability and setting aside maps)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_multi","description":"Check and hold maps in multiple languages","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"languages":{"type":"array","items":{"type":"string"}},"room":{"type":"string"}},"required":["hotel_id","languages","room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Canal House Amsterdam (CHAM-31)
+Address: Keizersgracht 401, 1016 EK Amsterdam
+Map center facts:
+- Languages stocked: EN/NL/DE/FR; 350 total copies
+- Pickup: Concierge canal‑side podium; Front Desk after 22:00
+- Hours: Concierge 09:00–22:00
+- Bike route insert available (paper) on request
+- No deposit for standard maps
+
+user:
+Could I get English and Dutch copies? Room 303.
+
+assistant channel=analysis:
+Hold EN and NL copies and confirm pickup location.
+
+assistant channel=commentary to=tool.check_multi:
+{"hotel_id":"CHAM-31","languages":["EN","NL"],"room":"303"}
+
+tool.check_multi channel=commentary to=assistant:
+{"held":true,"ticket":"MAP-303-EN-NL"}
+
+assistant channel=final:
+Yes—English and Dutch maps are held under ticket MAP-303-EN-NL at the Concierge canal‑side podium.
+
+user:
+Dank je!
+
+assistant channel=final:
+Graag gedaan—Concierge is open until 22:00.
+
+user:
+Do you have canal depth charts?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

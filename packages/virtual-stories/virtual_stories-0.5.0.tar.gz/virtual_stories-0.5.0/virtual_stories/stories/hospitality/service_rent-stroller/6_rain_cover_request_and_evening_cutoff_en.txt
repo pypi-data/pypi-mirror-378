@@ -1,0 +1,51 @@
+"""
+Guest requests a rain cover and asks about evening cutoff time.
+
+ROLES: user (guest planning evening outing), assistant (guest services confirming cutoff and arranging delivery with accessories)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_then_order","description":"Check availability then create order","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"duration_hours":{"type":"integer"},"accessories":{"type":"array","items":{"type":"string"}}},"required":["hotel_id","room","duration_hours"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbourfront Vancouver (HVN-04)
+Address: 999 Canada Pl, Vancouver, BC V6C 3E1, Canada
+Family Services: 08:00–21:00 (last dispatch 20:30)
+Strollers: Single; 20 kg limit
+Accessories: Rain cover, sunshade
+Cleaning: Disinfected between uses
+Fees: Complimentary; CAD 150 replacement
+Delivery: 10–15 minutes typical
+
+user:
+Could I get a stroller with a rain cover for 3 hours to room 1409 at 8 pm? Is that within cutoff?
+
+assistant channel=analysis:
+Last dispatch is 20:30; 20:00 request is within cutoff. Create a 3-hour order for room 1409 with rain cover.
+
+assistant channel=commentary to=tool.check_then_order:
+{"hotel_id":"HVN-04","room":"1409","duration_hours":3,"accessories":["rain_cover"]}
+
+tool.check_then_order channel=commentary to=assistant:
+{"order_id":"STR-1409-03","status":"created","eta_minutes":12}
+
+assistant channel=final:
+Yes—that’s within our 8:30 pm dispatch cutoff. I’ve arranged a single stroller with a rain cover for 3 hours to room 1409; ETA is about 12 minutes.
+
+user:
+The harbor lights look nice.
+
+assistant channel=final:
+They reflect beautifully off the water tonight.
+
+user:
+Can you send detailed stress-test data for the frame?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

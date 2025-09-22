@@ -1,0 +1,73 @@
+"""
+Parent requests child-safe clippers with rounded tips; asks about safety.
+Provide child-safe model and delivery timing; confirm safety features.
+
+ROLES: user (parent trimming child nails), assistant (guest services providing child-safe grooming tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_grooming_supplies","description":"Check child-safe clipper models.","parameters":{"type":"object","properties":{"tool_type":{"type":"string","enum":["nail_clippers"]},"quality_level":{"type":"string","enum":["basic","premium"]}},"required":["tool_type"]},"strict":true},
+  {"name":"deliver_grooming_tools","description":"Deliver child-safe clipper to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"tools_requested":{"type":"array","items":{"type":"object","properties":{"tool_name":{"type":"string"},"quality":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_priority":{"type":"string","enum":["standard"]}},"required":["room_number","tools_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Mountain Crest Lodge (hotel_id: mcl_zqn_78)
+Address: 10 Lake Esplanade, Queenstown 9300, New Zealand
+Timezone: Pacific/Auckland
+
+Family Grooming:
+- Child‑safe clippers; rounded tips; low spring tension
+- Optional emery boards mini size
+- Soft carry pouch; bright color for visibility
+- UV‑C sanitized; sealed pack
+- Complimentary upon request
+
+Delivery Window:
+- Typical ETA 7–11 minutes
+- Quiet knock policy for families
+- Room drop on desk if sleeping
+- Swap available if tool too firm
+- Safety card included
+
+user:
+Hi, room 415. Do you have child‑safe clippers with rounded tips?
+
+assistant channel=analysis:
+Check child‑safe model; deliver to 415.
+
+assistant channel=commentary to=tool.check_grooming_supplies:
+{"tool_type":"nail_clippers","quality_level":"basic"}
+
+tool.check_grooming_supplies channel=commentary to=assistant:
+{"available_tools":["child_safe_rounded_tips"],"sanitized":"UV-C","pouch":"soft_bright"}
+
+assistant channel=commentary to=tool.deliver_grooming_tools:
+{"room_number":"415","tools_requested":[{"tool_name":"child_safe_rounded_tips","quality":"basic","quantity":1}],"delivery_priority":"standard"}
+
+tool.deliver_grooming_tools channel=commentary to=assistant:
+{"service_id":"MCL-ZQN-CS-05","eta":"9 minutes","staff":"Luca","items":["child_safe_rounded_tips","safety_card","mini_emery_board"],"sealed":true}
+
+assistant channel=final:
+Yes—we have child‑safe clippers with rounded tips. Luca will bring a sealed set to 415 in about 9 minutes, including a mini emery board and a safety card.
+
+user:
+Is the spring tension light?
+
+assistant channel=analysis:
+Answer from Family Grooming (low spring tension).
+
+assistant channel=final:
+Yes—the child‑safe model uses a low spring tension for easier trimming.
+
+user:
+Any gondola tickets deals today?
+
+assistant channel=analysis:
+Out of scope; ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

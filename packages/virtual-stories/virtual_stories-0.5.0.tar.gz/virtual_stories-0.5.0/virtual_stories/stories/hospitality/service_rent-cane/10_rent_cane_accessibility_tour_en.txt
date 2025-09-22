@@ -1,0 +1,54 @@
+"""
+Guest with accessibility needs requests cane for guided tour participation; confirm tour-compatible features, discuss accessibility accommodations, and arrange delivery.
+
+ROLES: user (guest with accessibility needs wanting to participate in guided tours), assistant (front desk providing tour-optimized accessibility support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check accessibility item availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create rental with fee or comp","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Old Town Heritage Prague (OTHP-05), Karlova 7, 110 00 Prague 1, Czechia.
+Boutique heritage hotel; 7 floors; Front Desk 24/7.
+Walking canes: 6 units; complimentary for up to 48 hours; return at Front Desk; no deposit.
+Tour features: Tour-compatible canes available; Extended battery life for audio guides; Comfortable for long walks; Museum-friendly design; Quiet operation.
+Other facts: Elevator to all floors; Breakfast 7:00–10:30; Accessible tour recommendations; Museum accessibility partnerships.
+
+user:
+I'd like to join some guided tours of Prague but need a walking cane that's comfortable for longer walks. I'm in room 1407.
+
+assistant channel=analysis:
+The guest wants to participate in guided tours and needs a cane suitable for extended walking. I should prioritize comfort and tour-compatibility features.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"OTHP-05","item":"walking_cane","quantity":1,"room":"1407"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["CANE-10"],"notes":"Tour-compatible; comfortable for extended use","features":"Ergonomic grip, Lightweight design, Tour-friendly"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"OTHP-05","room":"1407","item":"walking_cane","duration_hours":48,"charge_code":"COMP-ACCESS","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CAN-1407-2226","status":"created","charge":"comp","tour_compatible":"yes","comfort_features":"ergonomic grip"}
+
+assistant channel=final:
+Excellent choice for tours! CANE-10 has an ergonomic grip and lightweight design perfect for extended walking. Order CAN-1407-2226 is complimentary and we'll deliver it to room 1407. We can also recommend accessible tour routes and museum partnerships.
+
+user:
+Wonderful! The hotel's concierge services are so comprehensive.
+
+assistant channel=final:
+Thank you—we believe every guest should have equal access to Prague's cultural treasures and experiences.
+
+user:
+Do you have any partnerships with accessible tour companies that specialize in mobility-friendly experiences?
+
+assistant channel=final:
+[ATTENTION] Reviewing available tour partnerships.

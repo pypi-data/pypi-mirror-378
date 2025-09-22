@@ -1,0 +1,165 @@
+"""
+Guest requests daily newspaper delivery and news publication selection for morning reading routine.
+Provide newspaper service with multiple publication options and delivery scheduling.
+
+ROLES: user (guest requesting morning newspaper delivery), assistant (concierge managing newspaper services and delivery coordination)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_newspaper_availability",
+    "description": "Check available newspapers and delivery status for the day.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publication_type": { "type": "string", "enum": ["local", "national", "international", "business", "sports", "all"] },
+        "language": { "type": "string", "enum": ["english", "spanish", "french", "german", "chinese", "all"] },
+        "delivery_date": { "type": "string", "format": "date" }
+      },
+      "required": ["publication_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "setup_newspaper_delivery",
+    "description": "Set up daily newspaper delivery service for guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "newspaper_selections": { "type": "array", "items": { "type": "string" } },
+        "delivery_time": { "type": "string", "enum": ["early_morning", "standard_morning", "with_breakfast", "custom_time"] },
+        "delivery_location": { "type": "string", "enum": ["door_delivery", "front_desk_pickup", "breakfast_table"] },
+        "duration_days": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["room_number", "newspaper_selections", "delivery_time", "duration_days"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_digital_access",
+    "description": "Provide digital newspaper access credentials for tablets or devices.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "publication": { "type": "string" },
+        "device_type": { "type": "string", "enum": ["tablet", "smartphone", "laptop", "in_room_tv"] }
+      },
+      "required": ["room_number", "publication"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: The Fairmont San Francisco (hotel_id: fms_sf_01)
+Address: 950 Mason Street, San Francisco, CA 94108
+Timezone: America/Los_Angeles
+
+Newspaper & Publication Services:
+- Daily delivery service available for all guest rooms and public areas
+- Comprehensive selection: local, national, international, business, and specialty publications
+- Multiple language options: English, Spanish, French, German, Chinese, Japanese
+- Digital access included: complimentary online subscriptions during stay
+- Weekend edition delivery: Saturday and Sunday papers with extended sections
+
+Available Publications:
+Local & Regional:
+- San Francisco Chronicle, San Francisco Examiner, Bay Area Reporter, Silicon Valley Business Journal
+
+National News:
+- USA Today, The New York Times, The Wall Street Journal, The Washington Post, Los Angeles Times
+
+Business & Finance:
+- Financial Times, Bloomberg News, Forbes, Fortune, Harvard Business Review
+
+International:
+- The Guardian (UK), Le Monde (France), Die Zeit (Germany), People's Daily (China)
+
+Sports & Entertainment:
+- Sports Illustrated, ESPN The Magazine, Variety, The Hollywood Reporter
+
+Delivery Options:
+- Early morning delivery: 5:30-6:30 AM outside door (quiet placement)
+- Standard morning: 7:00-8:00 AM with courtesy knock
+- Breakfast service: delivered with room service or at restaurant table
+- Front desk pickup: available anytime during concierge hours
+
+Digital Services:
+- In-room tablet with newspaper app access and complimentary subscriptions
+- Personal device setup with temporary login credentials for major publications
+- Smart TV newspaper reading mode with voice navigation
+- Kindle newspaper delivery to personal devices upon request
+
+Service Features:
+- Weather-protective sleeves for outdoor delivery during rain/snow
+- Recycling service: old newspapers collected daily with environmental responsibility
+- Special event coverage: election results, sports championships, breaking news editions
+- Custom clipping service: specific articles saved and delivered for business research
+
+user:
+Good morning! I'm in room 912 and I'm used to reading The Wall Street Journal and The New York Times with my coffee each morning. Do you offer newspaper delivery?
+
+assistant channel=analysis:
+Guest in room 912 wants Wall Street Journal and New York Times delivered for morning coffee routine. Check newspaper availability first, then set up delivery service.
+
+assistant channel=commentary to=tool.check_newspaper_availability:
+{"publication_type": "business", "language": "english", "delivery_date": "2024-08-29"}
+
+tool.check_newspaper_availability channel=commentary to=assistant:
+{"available_publications": ["The Wall Street Journal", "The New York Times", "Financial Times", "USA Today", "San Francisco Chronicle"], "delivery_status": "on_schedule", "print_quality": "fresh_delivery", "digital_access": "included"}
+
+assistant channel=analysis:
+Both requested newspapers available today. Guest wants morning routine, so suggest standard morning delivery or with breakfast timing.
+
+assistant channel=final:
+Good morning! Yes, we absolutely offer daily delivery of The Wall Street Journal and The New York Times. I can set up morning delivery outside your door around 7:00 AM, or deliver them with breakfast service if you prefer. How long will you be staying?
+
+user:
+I'll be here for four days. The 7:00 AM delivery sounds perfect—I like to read while having my coffee before the day gets busy. Could you set that up for room 912?
+
+assistant channel=commentary to=tool.setup_newspaper_delivery:
+{"room_number": "912", "newspaper_selections": ["The Wall Street Journal", "The New York Times"], "delivery_time": "standard_morning", "delivery_location": "door_delivery", "duration_days": 4}
+
+tool.setup_newspaper_delivery channel=commentary to=assistant:
+{"service_id": "NWS240829001", "room_number": "912", "confirmed_papers": ["The Wall Street Journal", "The New York Times"], "delivery_schedule": "7:00 AM daily for 4 days", "delivery_method": "quiet door placement", "weather_protection": "included", "total_cost": "$0.00", "digital_access": "complimentary tablet and device login"}
+
+assistant channel=final:
+Perfect! I've set up daily delivery of The Wall Street Journal and The New York Times to room 912 at 7:00 AM for your four-day stay. Papers will be placed quietly outside your door with weather protection, plus you have complimentary digital access on our in-room tablet.
+
+user:
+Excellent! There's nothing quite like reading the morning news with fresh coffee and this beautiful view of Nob Hill. It's such a classic San Francisco experience.
+
+assistant channel=analysis:
+Guest expressing satisfaction and making small talk about morning routine, coffee, and Nob Hill view. Respond warmly about the classic San Francisco hotel experience.
+
+assistant channel=final:
+Absolutely! That morning ritual with coffee, quality journalism, and the Nob Hill view from The Fairmont is quintessentially San Francisco—such a perfect way to start the day in this beautiful city.
+
+user:
+It really is! I also love staying informed about tech news since I work in the industry. Do you have any technology-focused publications available?
+
+assistant channel=commentary to=tool.check_newspaper_availability:
+{"publication_type": "business", "language": "english"}
+
+tool.check_newspaper_availability channel=commentary to=assistant:
+{"available_publications": ["The Wall Street Journal", "Financial Times", "USA Today Tech section", "San Francisco Chronicle Business", "Silicon Valley Business Journal"], "tech_coverage": "included in WSJ and Chronicle", "digital_magazines": ["Wired", "Fast Company", "MIT Technology Review"], "specialty_access": "complimentary during stay"}
+
+assistant channel=final:
+Great news! Your Wall Street Journal and San Francisco Chronicle both have excellent tech coverage, plus we provide complimentary digital access to Wired, Fast Company, and MIT Technology Review through our in-room tablet during your stay.
+
+user:
+That's fantastic! Could you also help me find a good coworking space in the city for tomorrow afternoon?
+
+assistant channel=analysis:
+Request for coworking space recommendations is outside our newspaper delivery tools and basic hotel services scope.
+
+assistant channel=final:
+[ATTENTION] I'll look into coworking options in the city for you. Analyzing the situation.

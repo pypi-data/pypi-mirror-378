@@ -1,0 +1,103 @@
+"""
+Guest has dental emergency and needs immediate toothpick assistance; involves health protocols and late-night service.
+
+ROLES: user (guest experiencing dental discomfort), assistant (health services coordinator with emergency amenity protocols)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_health_amenities",
+    "description": "Check availability of health-related amenity supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "urgency": { "type": "string", "enum": ["routine", "urgent", "emergency"] },
+        "amenity_category": { "type": "string", "enum": ["dental", "first_aid", "comfort"] }
+      },
+      "required": ["urgency", "amenity_category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "emergency_amenity_dispatch",
+    "description": "Emergency dispatch of health amenities to guest location.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "amenity_type": { "type": "string" },
+        "health_note": { "type": "string" }
+      },
+      "required": ["room_number", "amenity_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Four Seasons Medical Retreat (hotel_id: fsmr_sc_08)
+Address: 7301 Palmetto Dr, Isle of Palms, SC 29451
+Timezone: America/New_York
+
+Health & Wellness Services:
+- 24/7 health amenity emergency dispatch
+- Sterile wooden toothpicks (individually wrapped)
+- Soft-tip dental picks for sensitive gums
+- Emergency dental kit with temporary relief items
+- On-call nurse practitioner weekends 6pm-6am
+- Medical spa with holistic dental care consultation
+
+Facility Medical Details:
+- First aid stations on each floor with dental emergency supplies
+- Telemedicine consultation room with dental imaging capability
+- Medical-grade sanitation protocols for all amenity deliveries
+- Partnership with Charleston Dental Emergency Services 24/7
+- Healing garden with medicinal herb identification plaques
+- Salt water therapy pools with therapeutic mineral content
+
+user:
+Hi, I'm in room 1204 and having some dental discomfort. Something seems stuck between my teeth and I really need a toothpick urgently.
+
+assistant channel=analysis:
+Guest has urgent dental discomfort in room 1204. This qualifies as urgent health situation requiring immediate amenity dispatch.
+
+assistant channel=commentary to=tool.check_health_amenities:
+{"urgency": "urgent", "amenity_category": "dental"}
+
+tool.check_health_amenities channel=commentary to=assistant:
+{"available": true, "options": ["sterile_wrapped_wooden", "soft_tip_dental"], "emergency_kit": true, "response_time": "immediate"}
+
+assistant channel=analysis:
+Emergency dental amenities available. Dispatch sterile wrapped toothpicks immediately to room 1204.
+
+assistant channel=commentary to=tool.emergency_amenity_dispatch:
+{"room_number": "1204", "amenity_type": "sterile_wrapped_wooden_toothpicks", "health_note": "guest_dental_discomfort_urgent"}
+
+tool.emergency_amenity_dispatch channel=commentary to=assistant:
+{"dispatched": true, "eta": "3_minutes", "courier": "medical_aide_sarah", "additional": "emergency_dental_kit_included"}
+
+assistant channel=final:
+Medical aide Sarah is bringing sterile wrapped toothpicks to room 1204 in 3 minutes—she's including our emergency dental kit with soft-tip picks as well. If discomfort persists, our on-call nurse practitioner is available for consultation.
+
+user:
+Thank you so much! The response time here is incredible.
+
+assistant channel=analysis:
+Guest expressing gratitude for quick emergency response. Acknowledge and mention medical facility capabilities.
+
+assistant channel=final:
+Our medical retreat prioritizes guest health—we have first aid stations on every floor and 24/7 emergency protocols. The healing garden salt water pools can also provide therapeutic relief if you're interested.
+
+user:
+Is the nurse practitioner available right now?
+
+assistant channel=analysis:
+Guest asking about immediate nurse practitioner availability. System shows on-call coverage weekends 6pm-6am, but current day/time not specified in context.
+
+assistant channel=final:
+[ATTENTION] Let me check the current on-call schedule for you.

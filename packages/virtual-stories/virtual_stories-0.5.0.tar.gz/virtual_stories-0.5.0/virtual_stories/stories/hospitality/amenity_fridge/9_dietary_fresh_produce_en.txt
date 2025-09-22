@@ -1,0 +1,84 @@
+"""
+Guest requests a fridge for fresh produce; confirm sustainability details and deposit. Include chitchat and ATTENTION.
+
+ROLES: user (wellness-focused guest), assistant (eco amenities desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"eco_fridge_check","description":"Check eco-rated fridges, availability, and deposit terms.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"eco_fridge_deliver","description":"Deliver eco-rated fridge to room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"model":{"type":"string"}},
+     "required":["room_number","model"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Greenbridge Eco Hotel (hotel_id: GEH_sea_05)
+Address: 220 Rainier Ave S, Seattle, WA 98144 | TZ: America/Los_Angeles
+
+Eco Mini-Fridges:
+- Models: GEH-Leaf-44L (A+++), GEH-Leaf-60L (A++)
+- Deposits: $20 refundable | Fee: $0
+- Noise: 30–32 dB | Carbon-offset program enabled
+- Delivery: 07:00–23:00
+- Compost pails available on request
+
+Public Spaces:
+Rooftop garden | Rainwater wall | Tea nook in lobby
+
+user:
+Could I get an eco fridge in 735 for fruit and veggies?
+
+assistant channel=analysis:
+Check availability and deliver smaller A+++ model.
+
+assistant channel=commentary to=tool.eco_fridge_check:
+{"room_number":"735"}
+
+tool.eco_fridge_check channel=commentary to=assistant:
+{"available":true,"model":"GEH-Leaf-44L","deposit":"$20_refundable","fee":0}
+
+assistant channel=analysis:
+Deliver GEH-Leaf-44L.
+
+assistant channel=commentary to=tool.eco_fridge_deliver:
+{"room_number":"735","model":"GEH-Leaf-44L"}
+
+tool.eco_fridge_deliver channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":13,"runner":"nate","ticket":"GEH-735-44"}
+
+assistant channel=final:
+Scheduled: GEH-Leaf-44L to room 735. No nightly fee; $20 refundable deposit. ETA ~13 minutes (runner Nate, ticket GEH-735-44).
+
+user:
+Is there a compost option for scraps?
+
+assistant channel=analysis:
+Answer from Eco Mini-Fridges: compost pails available.
+
+assistant channel=final:
+Yes—compost pails are available on request; I can add one to your delivery if you like.
+
+user:
+The rainwater wall in the lobby is relaxing.
+
+assistant channel=analysis:
+Chitchat acknowledging Public Spaces.
+
+assistant channel=final:
+It’s a guest favorite—pairs nicely with the tea nook nearby.
+
+user:
+Can you arrange a private garden tour tomorrow?
+
+assistant channel=analysis:
+Not defined—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check for private rooftop garden tour availability.
+

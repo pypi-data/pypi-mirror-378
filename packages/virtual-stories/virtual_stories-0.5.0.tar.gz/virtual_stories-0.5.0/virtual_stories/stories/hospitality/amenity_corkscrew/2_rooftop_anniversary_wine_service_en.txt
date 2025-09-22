@@ -1,0 +1,110 @@
+"""
+Guest requests a corkscrew and optional assisted opening for a rooftop anniversary dinner.
+Include tools, delivery windows, and optional sommelier assistance.
+
+ROLES: user (guest planning rooftop dinner), assistant (wine amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_corkscrew_inventory",
+    "description": "Check availability of corkscrew tools and accessories.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferred_type": { "type": "string", "enum": ["waiter", "lever", "electric", "ah_so"] },
+        "include_foil_cutter": { "type": "boolean" }
+      },
+      "required": ["preferred_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_wine_service",
+    "description": "Schedule tool delivery or assisted wine opening.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_or_area": { "type": "string" },
+        "service": { "type": "string", "enum": ["tool_delivery", "assisted_opening"] },
+        "time_window": { "type": "string" }
+      },
+      "required": ["room_or_area", "service"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Skyline Terrace Hotel (hotel_id: sth_milan_02)
+Address: Via Manzoni 14, Milano, Italy 20121
+Timezone: Europe/Rome
+Rooftop Access: Private dining areas R1–R8 bookable via concierge
+
+Wine Service Program:
+- Tool Options: waiter’s corkscrew, lever opener, electric opener, Ah-So
+- Sommelier Window: 12:00–22:30 for assisted opening
+- Delivery Windows: standard 20–30 min; express 10–15 min
+- Fees: complimentary for in-house guests; deposit for vintage tools waived for suites
+- Safety: glass disposal and drip cloths included on request
+
+Guest Services:
+- Contact Point: in-room dining desk (extensions 33/34)
+- Ice Bucket: available on request with wine cradle
+- Glassware: Bordeaux, Burgundy, universal stem selections
+- Turn-down: 19:00–21:00; can align with service
+- 24/7 operator for routing requests after 22:30
+
+user:
+Hello! We have a small anniversary dinner on the rooftop tonight. Could you send up a corkscrew? A lever opener would be ideal.
+
+assistant channel=analysis:
+Confirm lever opener availability and schedule delivery to the rooftop area.
+
+assistant channel=commentary to=tool.check_corkscrew_inventory:
+{"preferred_type":"lever","include_foil_cutter":true}
+
+tool.check_corkscrew_inventory channel=commentary to=assistant:
+{"available":true,"items":["Lever opener","Foil cutter","Drip cloth"],"notes":"Two lever opener sets in stock"}
+
+assistant channel=final:
+Absolutely—we have a lever opener available with a foil cutter and drip cloth. Where on the rooftop should we deliver it (e.g., R1–R8), and what time works for you?
+
+user:
+We’re in area R3 at 7:15 PM. Is there any fee for borrowing the tool?
+
+assistant channel=analysis:
+Answer fee policy from system context and schedule delivery window.
+
+assistant channel=commentary to=tool.schedule_wine_service:
+{"room_or_area":"R3 rooftop","service":"tool_delivery","time_window":"19:15"}
+
+tool.schedule_wine_service channel=commentary to=assistant:
+{"scheduled":true,"eta":"19:10–19:20","courier":"in-room dining","items":["Lever opener","Foil cutter","Drip cloth"]}
+
+assistant channel=final:
+Perfect—delivery to R3 is set for 19:10–19:20. There’s no fee for in-house guests; the lever opener loan is complimentary. Enjoy your anniversary dinner!
+
+user:
+Thanks! By the way, what’s the sunset time tonight from the terrace?
+
+assistant channel=analysis:
+Sunset timing isn’t in system context—flag as attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check the current sunset time for Milan’s skyline view. Investigating potential answers.
+
+user:
+No worries. Also, love the quick help—are you working late tonight?
+
+assistant channel=analysis:
+Use service hours info from system to respond casually.
+
+assistant channel=final:
+Happy to help! Our sommelier window runs until 22:30, and after that our 24/7 operator can route any requests.
+

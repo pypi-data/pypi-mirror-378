@@ -1,0 +1,50 @@
+"""
+Guest clarifies whether a passport is needed for a smaller amount and asks for GBP→USD quote.
+
+ROLES: user (guest unsure about ID), assistant (cashier clarifying threshold and quoting FX)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"quote_fx","description":"Quote a currency exchange with applied fee and total payout.","parameters":{"type":"object","additionalProperties":false,"properties":{"from":{"type":"string"},"to":{"type":"string"},"amount":{"type":"number"}},"required":["from","to","amount"]},"strict":true}
+]
+```
+"""
+
+system:
+Crescent Bay Suites — Currency Window
+Hours: 10:00–18:00 daily
+Position: Concierge corridor, Window C2
+Supported: USD, EUR, GBP, JPY
+ID Threshold: Passport for ≥ USD 500 equivalent
+Fee: Flat handling fee per transaction
+Cash Only: No card payments
+Sign: CURRENCY WINDOW C2
+
+user:
+Do I need a passport to exchange 120 GBP to USD?
+
+assistant channel=analysis:
+State the passport threshold from system and provide a quote using the tool.
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"GBP","to":"USD","amount":120}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":1.30,"fee":"USD 3.00","payout":"USD 153.00"}
+
+assistant channel=final:
+Passport is only needed for exchanges of USD 500 equivalent or above. For 120 GBP, the quote is USD 153.00 after a USD 3.00 fee (rate 1.30). We’re at Window C2 in the Concierge corridor, 10:00–18:00 daily.
+
+user:
+Nice signage down that corridor.
+
+assistant channel=final:
+Look for the CURRENCY WINDOW C2 sign.
+
+user:
+Can you deliver the cash to my room after exchange?
+
+assistant channel=final:
+[ATTENTION] Cash delivery service isn’t listed. Working on your request.
+

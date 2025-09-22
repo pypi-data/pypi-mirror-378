@@ -1,0 +1,57 @@
+"""
+Guest requests tea pods and asks a program detail question; include chit-chat and an out-of-scope query.
+
+ROLES: user (guest who prefers tea), assistant (beverage support arranging tea pods and clarifying program)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"order_coffee_supplies","description":"Deliver tea or coffee pods to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_type":{"type":"string","enum":["tea_pods","coffee_pods"]},"quantity":{"type":"integer"}},"required":["item_type","quantity"],"additionalProperties":false}}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Lakeview Summit Lodge (hotel_id: lsl_tahoenorth)
+Address: 200 Alpine Way, Tahoe Vista, CA
+Tea & Coffee:
+- Machine: Vertuo Next in suites
+- Complimentary: 4 coffee + 2 tea per day; extras available
+- Tea Varieties: Earl Grey, Chamomile
+- Delivery SLA: 10–20 minutes between 07:00–22:30
+Policy: No fees for extras
+Note: Ski lockers on level P2
+
+user:
+Could I get 2 Chamomile tea pods to room 415?
+
+assistant channel=analysis:
+Place order for 2 tea pods to 415.
+
+assistant channel=commentary to=tool.order_coffee_supplies:
+{"room_number":"415","items":[{"item_type":"tea_pods","quantity":2}]}
+
+tool.order_coffee_supplies channel=commentary to=assistant:
+{"order_id":"LSL-415-T2","delivery_eta_minutes":14,"items":[{"item_type":"tea_pods","quantity":2,"varieties":["Chamomile"]}]}
+
+assistant channel=final:
+On it—2 Chamomile pods are headed to 415, ETA about 14 minutes.
+
+user:
+Is there any charge for extras?
+
+assistant channel=final:
+No, extras are complimentary under our program.
+
+user:
+The lodge fireplace smells amazing.
+
+assistant channel=final:
+Fresh pinewood this week—it sets a cozy mood.
+
+user:
+Any live music venues you recommend tonight?
+
+assistant channel=final:
+[ATTENTION] Reviewing options that fall outside our current resources.
+

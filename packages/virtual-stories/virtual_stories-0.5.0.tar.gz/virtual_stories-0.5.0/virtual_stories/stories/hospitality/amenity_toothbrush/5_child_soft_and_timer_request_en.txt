@@ -1,0 +1,71 @@
+"""
+Guest requests a child soft toothbrush and asks about a toothbrushing timer; confirm availability, deliver, include small talk, and [ATTENTION] for timer device.
+
+ROLES: user (parent requesting a child toothbrush), assistant (front desk amenities support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_toothbrush_stock","description":"Check child soft availability","parameters":{"type":"object","properties":{"size":{"type":"string","enum":["child"]},"bristle":{"type":"string","enum":["soft"]}},"required":["size","bristle"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_toothbrush","description":"Deliver toothbrush","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"size":{"type":"string"},"bristle":{"type":"string"}},"required":["room_number","size","bristle"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Willow Court (hotel_id: twc_edb_03)
+Address: 19 Royal Terrace, Edinburgh EH7 5AB, United Kingdom
+Timezone: Europe/London
+
+Core Amenity Details:
+- Toothbrushes: child soft available; adult soft/medium available
+- Delivery timeframe: 10–15 minutes
+- Family note: Children’s amenities are complimentary
+
+YAML Building:
+---
+heritage: Category B listed
+elevators: 2
+sprinklers: true
+quiet_hours: "22:00-07:00"
+---
+
+JSON Parents’ Kit:
+{"rinse_cups": true, "non_slip_stools": true, "bed_rails": true}
+
+CSV Distances (place,walk_min):
+Calton_Hill,6
+Princes_St,9
+
+user:
+Could I get a child soft toothbrush to room 221? Also, do you have a kids’ toothbrushing timer I could borrow?
+
+assistant channel=analysis:
+Confirm child soft availability and deliver to 221; timer device likely out of scope—use ATTENTION after delivery.
+
+assistant channel=commentary to=tool.check_toothbrush_stock:
+{"size":"child","bristle":"soft"}
+
+tool.check_toothbrush_stock channel=commentary to=assistant:
+{"available":true,"brand":"WillowKidz","rinse_cup":true}
+
+assistant channel=commentary to=tool.deliver_toothbrush:
+{"room_number":"221","size":"child","bristle":"soft"}
+
+tool.deliver_toothbrush channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":11,"runner":"Moira"}
+
+assistant channel=final:
+On the way: a WillowKidz child soft toothbrush with a rinse cup to room 221, arriving in about 11 minutes. 
+Regarding a kids’ toothbrushing timer: 
+[ATTENTION] I’m looking into this.
+
+user:
+The heritage details around the stairwell are lovely.
+
+assistant channel=analysis:
+Friendly acknowledgment about listed status.
+
+assistant channel=final:
+It’s a Category B listed property—those original details stand out.
+

@@ -1,0 +1,46 @@
+"""
+Guest asks where to drop bags and requests storage; include small talk and [ATTENTION].
+
+ROLES: user (first-time guest), assistant (gives desk location and stores items)
+CHANNELS: analysis, commentary, final
+TOOLS:
+[{"name":"issue","description":"Issue storage ticket","parameters":{"type":"object","properties":{"name":{"type":"string"},"items":{"type":"integer"}},"required":["name","items"],"additionalProperties":false},"strict":true}]
+"""
+
+system:
+HOTEL: Lantern Court
+STORAGE LOCATION: Bell desk in the west alcove (signposted)
+POLICY:
+- Hours: 07:30–22:00
+- Same-day only; complimentary
+- ID + claim tag required
+- No perishables
+AMENITIES: Citrus water dispenser by the alcove; seating nearby
+
+user:
+Where do I drop my bags, and can you store two under Diaz?
+
+assistant channel=analysis:
+Describe the location from system, then issue a ticket for 2 items.
+
+assistant channel=commentary to=tool.issue:
+{"name":"Diaz","items":2}
+
+tool.issue channel=commentary to=assistant:
+{"ticket":"LC-330","tags":["L551","L552"]}
+
+assistant channel=final:
+Please drop them at the bell desk in the west alcove (signposted). Stored 2 items under Diaz—ticket LC-330 with tags L551 and L552. Pickup runs 07:30–22:00 with ID.
+
+user:
+The citrus water is refreshing.
+
+assistant channel=final:
+It’s right by the alcove seating for quick pit stops.
+
+user:
+Could you keep perishables if sealed?
+
+assistant channel=final:
+[ATTENTION] Perishable storage isn’t available per the policy.
+

@@ -1,0 +1,78 @@
+"""
+Guest requests the official website; include small talk, tool usage, and an [ATTENTION] query.
+
+ROLES: user (guest confirming official links), assistant (concierge providing verified URL only)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+PROPERTY CARD
+- Name: The Caldera Overlook
+- hotel_id: caldera_overlook
+- Brand tier: Independent luxury coastal lodge
+- Street: 77 Cliffside Promenade, Thassos Bay
+- Timezone: UTC+2; Check-in 15:00; Check-out 12:00
+- Web security: HSTS enabled; TLS 1.3; DNSSEC signed
+CONTACT MATRIX
+  website: https://www.calderaoverlook.com
+  email: hello@calderaoverlook.com
+  phone: +30 210 555 0920
+HIGHLIGHTS
+  • 48 rooms (32 sea view, 16 garden)
+  • Rooftop saltwater pool; bar: "Aegean Sky"
+  • EV chargers (6x 22 kW AC), parking on P2
+  • Fiber Wi‑Fi: 500/500 Mbps; guest VLAN isolation
+  • Sustainability: greywater irrigation; solar thermal DHW
+
+user:
+What’s your official website?
+
+assistant channel=analysis:
+Reply using the contact tool for the website. Keep it concise.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"caldera_overlook","channel":"website"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"website":"https://www.calderaoverlook.com"}
+
+assistant channel=final:
+Our official site is https://www.calderaoverlook.com.
+
+user:
+Nice. Your rooftop bar name is poetic.
+
+assistant channel=analysis:
+Light chitchat referencing system highlight; no tools.
+
+assistant channel=final:
+Thank you—Aegean Sky pairs well with sunset views.
+
+user:
+Can you give me the CDN provider for your site?
+
+assistant channel=analysis:
+Beyond system context; flag as attention.
+
+assistant channel=final:
+[ATTENTION] Not in the provided context. Retrieving details.
+

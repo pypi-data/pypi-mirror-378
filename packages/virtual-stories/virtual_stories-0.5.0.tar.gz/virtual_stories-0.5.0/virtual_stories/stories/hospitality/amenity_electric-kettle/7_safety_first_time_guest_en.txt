@@ -1,0 +1,77 @@
+"""
+First-time guest requests kettle and explicit safety guidance; include polite chat and an [ATTENTION] request beyond scope.
+
+ROLES: user (first-time guest requesting kettle + safety tips), assistant (amenities coordinator with guidance tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_item","description":"Send an amenity item to a room","parameters":{"type":"object","properties":{"item_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["item_name","room_number","quantity"],"additionalProperties":false},"strict":true},
+  {"name":"provide_appliance_guide","description":"Return quick guidance for an appliance","parameters":{"type":"object","properties":{"appliance":{"type":"string","enum":["kettle"]},"mode":{"type":"string","enum":["safety"]}},"required":["appliance","mode"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Orchard Beacon (hotel_id: tob_sfo_19)
+Address: 111 Pine St, San Francisco, CA 94111, USA
+Timezone: America/Los_Angeles
+
+Essentials:
+- Voltage: 120V North American
+- Kettle delivery: 10–15 minutes
+- Safety: Keep cord/base dry; never overfill
+
+YAML Building:
+---
+sprinklers: true
+evacuation_diagrams: all_floors
+ice_machines: [7, 12]
+---
+
+JSON Runner:
+{"primary":"Jess","backup":"Marco"}
+
+CSV Nearby (place,walk_min):
+Embarcadero,7
+Ferry_Building,9
+
+user:
+Hi, first time using a kettle—could I get one to 1204 and some safety tips?
+
+assistant channel=analysis:
+Arrange kettle and return safety guidance.
+
+assistant channel=commentary to=tool.request_item:
+{"item_name":"electric_kettle","room_number":"1204","quantity":1}
+
+tool.request_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":11,"runner":"Jess"}
+
+assistant channel=commentary to=tool.provide_appliance_guide:
+{"appliance":"kettle","mode":"safety"}
+
+tool.provide_appliance_guide channel=commentary to=assistant:
+{"appliance":"kettle","mode":"safety","tips":["Do not overfill; use MAX line.","Ensure base and cord are dry.","Unplug after boiling and before moving kettle."]}
+
+assistant channel=final:
+Absolutely—kettle is heading to 1204 in about 11 minutes (Jess). Safety tips: Do not overfill (use the MAX line), ensure base and cord are dry, and unplug after boiling before moving the kettle.
+
+user:
+This neighborhood seems calm.
+
+assistant channel=analysis:
+Chit-chat referencing nearby spots.
+
+assistant channel=final:
+The Embarcadero is an easy 7‑minute walk from here.
+
+user:
+Could you also order takeout from the Ferry Building for me?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Verifying information.
+

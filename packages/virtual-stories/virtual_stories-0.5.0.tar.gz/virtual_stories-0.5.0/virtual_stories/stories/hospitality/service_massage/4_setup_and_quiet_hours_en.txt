@@ -1,0 +1,54 @@
+"""
+In-room massage booking with emphasis on setup time and quiet hours; include small talk and an [ATTENTION] item.
+
+ROLES: user (guest coordinating around quiet hours), assistant (spa desk confirming booking and setup timing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"book_in_room_massage","description":"Book in-room massage.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"duration_minutes":{"type":"integer","enum":[60,90]},"start_time":{"type":"string"}},"required":["room_number","duration_minutes","start_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Baystone Suites
+In‑Room Massage Details:
+- Times: 10:00–22:00 service; last start 20:30 for 60‑min
+- Rates: $118 (60‑min), $168 (90‑min)
+- Arrival: ~10 minutes early for setup; equipment includes table and linens
+- Quiet hours: 22:00–07:00
+Location & Services:
+- Address: 91 Shoreline Blvd; Wi‑Fi: Baystone-Guest; Elevators A/B
+- E‑receipts available by email
+
+user:
+Book 60 minutes at 18:00 in room 1107.
+
+assistant channel=analysis:
+Proceed to book and restate setup timing and quiet hours.
+
+assistant channel=commentary to=tool.book_in_room_massage:
+{"room_number":"1107","duration_minutes":60,"start_time":"18:00"}
+
+tool.book_in_room_massage channel=commentary to=assistant:
+{"booking_id":"spa_bs_607","rate":118,"currency":"USD","arrival_note":"Therapist arrives ~10 minutes early"}
+
+assistant channel=final:
+Booked: 60‑minute in‑room massage at 18:00 in room 1107 (spa_bs_607) at $118 USD. The therapist will arrive about 10 minutes early; quiet hours begin at 22:00.
+
+user:
+Thanks—nice elevators.
+
+assistant channel=final:
+Elevators A and B serve all guest floors.
+
+user:
+Do you provide prenatal massage?
+
+assistant channel=analysis:
+Not listed; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Checking available options regarding prenatal service.
+

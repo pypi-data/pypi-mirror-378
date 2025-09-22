@@ -1,0 +1,56 @@
+"""
+Guest asks for a 48-hour wheelchair loan; confirm policy and schedule delivery.
+
+ROLES: user (guest needing extended loan), assistant (front desk accessibility coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stock","description":"Check wheelchair stock","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","item","room"]},"strict":true},
+  {"name":"create_order","description":"Create 48h loan order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","delivery_option"]},"strict":true},
+  {"name":"schedule_drop","description":"Schedule room delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Mountain Lodge Aspen (MLAS-13)
+Wheelchairs: 4 standard units
+Policy: Complimentary for on‑property use up to 48 hours
+Delivery: 10–20 minutes
+Pickup: Front Desk also available
+Front Desk: 24/7; Bell/Runner: 07:00–23:00
+Time Zone: Mountain Time (MT)
+
+user:
+Could I borrow one for 48 hours to room 305?
+
+assistant channel=analysis:
+Policy allows up to 48 hours; create order and schedule delivery.
+
+assistant channel=commentary to=tool.check_stock:
+{"hotel_id":"MLAS-13","item":"wheelchair_standard","room":"305"}
+
+tool.check_stock channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.create_order:
+{"hotel_id":"MLAS-13","room":"305","item":"wheelchair_standard","duration_hours":48,"delivery_option":"room_drop"}
+
+tool.create_order channel=commentary to=assistant:
+{"order_id":"WHL-305-480","status":"created","charge":"comp"}
+
+assistant channel=commentary to=tool.schedule_drop:
+{"hotel_id":"MLAS-13","room":"305","order_id":"WHL-305-480"}
+
+tool.schedule_drop channel=commentary to=assistant:
+{"eta_minutes":18,"runner":"Kai"}
+
+assistant channel=final:
+Confirmed—order WHL-305-480. Kai will deliver to 305 in about 18 minutes; the 48‑hour loan is complimentary on property.
+
+user:
+Is it okay to take it off property?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

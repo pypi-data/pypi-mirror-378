@@ -1,0 +1,42 @@
+"""
+Guest requests to pick up a printed folio in person; confirm ID/room verification and provide pickup location.
+
+ROLES: user (guest requesting in-person folio), assistant (front desk agent handling verification and print)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"prepare_print_pickup","description":"Prepare folio print for ID-verified pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeside Convention Hotel
+Front Desk: 24/7
+Folio Delivery Options: Email PDF or Front Desk print
+Verification: In-person ID and room number verification required for print pickup
+Printer: PRN-LK-10
+Time: Usually 5–10 minutes to prepare
+Retention: Reprints available for 30 days after checkout
+
+user:
+I’m downstairs—can I pick up my folio for room 1203?
+
+assistant channel=analysis:
+Prepare a print for pickup at Front Desk and mention verification.
+
+assistant channel=commentary to=tool.prepare_print_pickup:
+{"room":"1203"}
+
+tool.prepare_print_pickup channel=commentary to=assistant:
+{"print_job_id":"LK-1203-PK1","status":"prepared","pickup":"Front Desk"}
+
+assistant channel=final:
+Prepared—job LK-1203-PK1. Please stop by the Front Desk with your ID for pickup.
+
+user:
+Thanks. Do you have a stapler there?
+
+assistant channel=final:
+[ATTENTION] Checking available options.

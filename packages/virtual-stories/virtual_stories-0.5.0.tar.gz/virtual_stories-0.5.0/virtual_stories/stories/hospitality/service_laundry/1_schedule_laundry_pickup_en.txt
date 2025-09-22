@@ -1,0 +1,60 @@
+"""
+Guest schedules laundry pickup with same-day return window.
+
+ROLES: user (guest requesting laundry), assistant (guest services scheduling pickup and billing per bag/item)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "schedule_laundry",
+    "description": "Arrange laundry pickup and estimate return time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "pickup_time": {"type": "string"},
+        "service_speed": {"type": "string", "enum": ["standard", "express"]}
+      },
+      "required": ["room_number", "pickup_time", "service_speed"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Midtown Artisan Hotel
+Laundry Service:
+- Pickup window: 07:00–21:00
+- Standard: return by next day 18:00; Express: return same day by 20:00 (20% surcharge)
+- Billing: by item list in closet bag; charged to room
+
+user:
+Can you pick up laundry at 6 pm from 912? I need it back tonight.
+
+assistant channel=analysis:
+Express same-day is required; schedule for 18:00 pickup.
+
+assistant channel=commentary to=tool.schedule_laundry:
+{"room_number":"912","pickup_time":"18:00","service_speed":"express"}
+
+tool.schedule_laundry channel=commentary to=assistant:
+{"order_id":"lau_3127","estimated_return":"20:00","speed":"express"}
+
+assistant channel=final:
+Express pickup is set for 18:00 (order lau_3127) from room 912 with same‑day return by 20:00. Express carries a 20% surcharge; charges post to your room by item.
+
+user:
+Appreciate it. The hallway orchids are a nice touch.
+
+assistant channel=final:
+Laundry pickup runs 07:00–21:00 if you need another round later.
+
+user:
+Do you offer leather jacket restoration?
+
+assistant channel=final:
+[ATTENTION] Leather restoration isn’t in our listed laundry services. Checking available options.

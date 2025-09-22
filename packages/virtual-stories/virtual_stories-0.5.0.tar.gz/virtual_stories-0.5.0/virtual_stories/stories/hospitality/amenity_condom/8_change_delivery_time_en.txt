@@ -1,0 +1,42 @@
+"""
+Guest changes delivery timing from immediate to evening.
+
+ROLES: user (schedule change), assistant (wellness concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"arrange_wellness_delivery","description":"Arrange discreet delivery of personal wellness amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_method":{"type":"string","enum":["room_service_tray","housekeeping_supplies","front_desk_envelope"]},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown","next_housekeeping","specific_time"]}},"required":["room_number","items","delivery_method","delivery_timing"]},"strict":true}
+]
+```
+"""
+
+system:
+Crescent Bay Hotel (hotel_id: cbh_hong_kong)
+Address: 2 Harbour Way, Hong Kong
+Timezone: Asia/Hong_Kong
+
+Inventory:
+- WELLNESS_PROTECTION_STANDARD
+
+user:
+Could we switch my standard pack delivery to evening turndown?
+
+assistant channel=analysis:
+Re‑schedule as requested.
+
+assistant channel=commentary to=tool.arrange_wellness_delivery:
+{"room_number":"2216","items":[{"sku":"WELLNESS_PROTECTION_STANDARD","quantity":1}],"delivery_method":"room_service_tray","delivery_timing":"evening_turndown"}
+
+tool.arrange_wellness_delivery channel=commentary to=assistant:
+{"delivery_id":"CBH-2216-RS-04","eta":"19:30-20:00"}
+
+assistant channel=final:
+Updated—CBH-2216-RS-04 scheduled for turndown between 7:30–8:00 PM.
+
+user:
+Awesome, thanks! The skyline looks amazing tonight.
+
+assistant channel=final:
+Enjoy the view—have a wonderful evening!
+

@@ -1,0 +1,59 @@
+"""
+Short errand across town; include in-context pickup policy and [ATTENTION] ETA tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"get_taxi_eta","description":"ETA","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"vehicle_type":{"type":"string","enum":["sedan"]}},"required":["pickup_point","vehicle_type"]}},
+  {"name":"request_taxi","description":"Dispatch","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"destination":{"type":"string"},"passengers":{"type":"integer"},"vehicle_type":{"type":"string","enum":["sedan"]}},"required":["pickup_point","destination","passengers","vehicle_type"]}}
+]
+"""
+
+system:
+Hotel: Old Town Court (hotel_id: otc_prg)
+Address: Celetná 7, 110 00 Prague | Timezone: Europe/Prague
+Taxi hours: concierge 06:00–24:00; night guard can hail street taxis.
+Pickups: "Arcade Gate" (sedan), "Coach Corner" (van), "Old Square Rank" (overflow).
+Payment: cards OK; no room-billed taxi.
+Note: construction near Old Square can reroute vehicles.
+
+user:
+Can a taxi pick me up at Arcade Gate?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—sedans pick up at the Arcade Gate.
+
+user:
+[ATTENTION] What’s the live ETA for a sedan now?
+
+assistant channel=analysis:
+Call get_taxi_eta.
+
+assistant channel=commentary to=get_taxi_eta:
+{"pickup_point":"Arcade Gate","vehicle_type":"sedan"}
+
+tool.get_taxi_eta:
+{"eta_minutes": 3, "provider":"Prague City Taxi","vehicle":"Black Octavia 5AZ 2291"}
+
+assistant channel=final:
+It’s about 3 minutes (Black Octavia 5AZ 2291) via Prague City Taxi.
+
+user:
+Please book to Charles Bridge.
+
+assistant channel=analysis:
+Dispatch sedan.
+
+assistant channel=commentary to=request_taxi:
+{"pickup_point":"Arcade Gate","destination":"Charles Bridge","passengers":1,"vehicle_type":"sedan"}
+
+tool.request_taxi:
+{"status":"confirmed","dispatch_id":"OT-1183","eta_minutes":3}
+
+assistant channel=final:
+Confirmed—Dispatch OT-1183, sedan to Charles Bridge, ETA 3 minutes. Enjoy your stroll!
+

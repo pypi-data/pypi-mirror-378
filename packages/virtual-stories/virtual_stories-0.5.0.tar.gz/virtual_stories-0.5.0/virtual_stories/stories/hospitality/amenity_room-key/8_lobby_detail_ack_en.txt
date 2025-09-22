@@ -1,0 +1,62 @@
+"""
+Guest appreciates a lobby detail and requests a spare; assistant acknowledges and issues spare; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 1710 commenting on lobby and needing a spare), assistant (front desk verifying identity and issuing key)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_guest_identity","description":"Verify identity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"last_name":{"type":"string"},"id_last4":{"type":"string"}},"required":["room_number","last_name","id_last4"]}},
+  {"name":"issue_spare_key","description":"Issue spare for pickup","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"pickup_location":{"type":"string","enum":["front_desk"]}},"required":["room_number","pickup_location"]}}
+]
+```
+"""
+
+system:
+Hotel: ArtHouse Hotel — Gallery Tower
+Front desk: 24/7
+Room 1710: Studio King
+Spare key policy: Verify last name + ID last four; pickup front_desk only; max 2 active spares; auto-deactivate at 00:00
+Lobby detail: Rotating sculpture exhibit in the atrium
+Notes: Gallery Tower lift G1 to 17th floor; bar 17:00–00:00
+Contacts: Front Desk 0
+
+user:
+The atrium sculpture is stunning! I’m Chen in 1710 (ID 9051). Could I get a spare key?
+
+assistant channel=analysis:
+Verify identity, issue spare, acknowledge the sculpture detail in a later turn.
+
+assistant channel=commentary to=tool.verify_guest_identity:
+{"room_number":"1710","last_name":"Chen","id_last4":"9051"}
+
+tool.verify_guest_identity channel=commentary to=assistant:
+{"verified":true,"room_number":"1710"}
+
+assistant channel=commentary to=tool.issue_spare_key:
+{"room_number":"1710","pickup_location":"front_desk"}
+
+tool.issue_spare_key channel=commentary to=assistant:
+{"issued":true,"spare_id":"SP-1710-8842","pickup_location":"front_desk"}
+
+assistant channel=final:
+Verified—your spare (SP-1710-8842) is ready at the front desk.
+
+user:
+That sculpture really makes the lobby.
+
+assistant channel=final:
+It’s part of our rotating atrium exhibit—glad you enjoyed it.
+
+user:
+Is the bar open now?
+
+assistant channel=final:
+The bar operates 17:00–00:00.
+
+user:
+Could you drop the key at the bar for me?
+
+assistant channel=final:
+[ATTENTION] Pickup must be at the front desk per the provided policy.
+

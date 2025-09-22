@@ -1,0 +1,49 @@
+"""
+Guest requests an in‑house delivery to another room; schedule via tool and provide service window. Include small talk and a background handoff for off‑property courier.
+
+ROLES: user (guest sending an item to another room), assistant (service center arranging on‑property delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "schedule_inhouse_delivery",
+    "description": "Arrange an on‑property delivery between rooms.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"from_room":{"type":"string"},"to_room":{"type":"string"},"item":{"type":"string"}},"required":["from_room","to_room","item"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Garden Court Hotel — Service Center
+In‑house delivery window: 24/7, typical ETA 10–20 minutes
+Scope: On‑property only (guestrooms and meeting spaces)
+
+user:
+Can you send a phone charger from 1125 to 930?
+
+assistant channel=analysis:
+Schedule an on‑property delivery between rooms; then confirm typical ETA from system.
+
+assistant channel=commentary to=tool.schedule_inhouse_delivery:
+{"from_room":"1125","to_room":"930","item":"phone charger"}
+
+tool.schedule_inhouse_delivery channel=commentary to=assistant:
+{"delivery_id":"DLV-9092","status":"scheduled","eta_minutes":15}
+
+assistant channel=final:
+Delivery DLV-9092 is scheduled with an ETA of about 15 minutes from 1125 to 930. In‑house deliveries run 24/7 with a typical 10–20 minute window.
+
+user:
+Thanks! You folks staying busy tonight?
+
+assistant channel=final:
+Thanks for your patience—enjoy your evening.
+
+user:
+Could you courier something to my office downtown?
+
+assistant channel=final:
+[ATTENTION] Off‑property courier isn’t available through these resources. Gathering relevant data.

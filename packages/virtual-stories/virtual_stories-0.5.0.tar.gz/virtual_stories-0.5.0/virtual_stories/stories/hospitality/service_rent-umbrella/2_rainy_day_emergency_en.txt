@@ -1,0 +1,71 @@
+"""
+Guest urgently needs umbrella during sudden downpour while checking out.
+
+ROLES: user (guest caught in unexpected rain during checkout), assistant (concierge providing emergency umbrella service)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_weather_conditions","description":"Get current weather status and forecast","parameters":{"type":"object","additionalProperties":false,"properties":{"location":{"type":"string"},"timeframe":{"type":"string","enum":["current","next_hour","next_3_hours"]}},"required":["location","timeframe"]},"strict":true},
+  {"name":"reserve_umbrella","description":"Reserve umbrella for guest","parameters":{"type":"object","additionalProperties":false,"properties":{"guest_id":{"type":"string"},"room_number":{"type":"string"},"priority_level":{"type":"string","enum":["standard","urgent","emergency"]},"return_time":{"type":"string"}},"required":["guest_id","room_number","priority_level","return_time"]},"strict":true},
+  {"name":"arrange_concierge_delivery","description":"Arrange concierge to deliver umbrella to guest location","parameters":{"type":"object","additionalProperties":false,"properties":{"guest_id":{"type":"string"},"delivery_location":{"type":"string"},"estimated_time":{"type":"string"}},"required":["guest_id","delivery_location","estimated_time"]},"strict":true}
+]
+```
+"""
+
+system:
+The Grand Palace Hotel Bangkok (GPH-BKK-001), 123 Rajdamri Road, Pathumwan, Bangkok 10330, Thailand.
+Luxury 5-star hotel with 450 rooms, featuring traditional Thai architecture and modern amenities.
+Concierge Services: 24/7 multilingual support (Thai, English, Mandarin, Japanese).
+Umbrella Service: Premium branded umbrellas available for guests; same-day complimentary, extended rental 200 THB/day.
+Weather Policy: Monsoon season (May-October) with frequent afternoon showers; emergency umbrella protocol activated during heavy rainfall.
+Hotel Features: Rooftop infinity pool, 3 Michelin-starred restaurants, traditional Thai spa, business center with meeting rooms.
+Guest Services: Airport transfer, city tour arrangements, currency exchange, laundry service, room service 24/7.
+Local Attractions: 5-minute walk to Siam Paragon, 10-minute drive to Grand Palace, 15-minute walk to MBK Center.
+Special Amenities: Traditional Thai welcome ceremony, complimentary fruit basket, turndown service with local treats.
+
+user:
+Oh no! It's pouring outside and I'm about to check out! Do you have umbrellas I can use right now?
+
+assistant channel=analysis:
+The guest is in an urgent situation - caught in rain during checkout. I should check current weather conditions first, then quickly reserve an umbrella and arrange immediate delivery to their location.
+
+assistant channel=commentary to=tool.check_weather_conditions:
+{"location": "Bangkok, Thailand", "timeframe": "current"}
+
+tool.check_weather_conditions channel=commentary to=assistant:
+{"condition": "heavy_rain", "intensity": "high", "duration_estimate": "2-3_hours", "visibility": "poor"}
+
+assistant channel=commentary to=tool.reserve_umbrella:
+{"guest_id": "GPH-456", "room_number": "1205", "priority_level": "emergency", "return_time": "checkout"}
+
+tool.reserve_umbrella channel=commentary to=assistant:
+{"reservation_id": "UMB-EMG-1205", "status": "confirmed", "umbrella_type": "premium_large", "charge": "complimentary"}
+
+assistant channel=commentary to=tool.arrange_concierge_delivery:
+{"guest_id": "GPH-456", "delivery_location": "lobby_checkout_area", "estimated_time": "2_minutes"}
+
+tool.arrange_concierge_delivery channel=commentary to=assistant:
+{"delivery_confirmed": true, "concierge_name": "Khun Somchai", "tracking": "UMB-EMG-1205"}
+
+assistant channel=analysis:
+Perfect! I've confirmed heavy rain conditions and arranged emergency umbrella delivery. The guest will receive a premium umbrella within 2 minutes at the checkout area.
+
+assistant channel=final:
+Absolutely! I can see it's raining heavily outside. I've arranged an emergency umbrella delivery to the lobby checkout area - our concierge Khun Somchai will bring it to you within 2 minutes. It's complimentary for your checkout today.
+
+user:
+Thank you so much! This hotel really takes care of its guests.
+
+assistant channel=final:
+We're delighted to help! At The Grand Palace Hotel, we believe in providing exceptional service, especially during unexpected weather. Have a safe journey home!
+
+user:
+By the way, what's the best way to get to the airport in this weather?
+
+assistant channel=analysis:
+The guest is asking about airport transportation during heavy rain. This information is beyond my system context about umbrella services and hotel amenities. I should use the ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Let me check the available transportation options for you.

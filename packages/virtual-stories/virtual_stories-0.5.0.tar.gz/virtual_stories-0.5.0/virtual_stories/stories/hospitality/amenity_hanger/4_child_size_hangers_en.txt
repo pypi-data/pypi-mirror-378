@@ -1,0 +1,67 @@
+"""
+Guest requests child-size hangers; engages in brief chitchat and asks about hours.
+
+ROLES: user (guest in room 1902 requesting child-size hangers), assistant (concierge orchestrating amenity delivery and providing service hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Stock check for requested amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Schedule room delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel Name: Seabright Gallery — West Tower
+Floor Band: 17–22 served by Elevator C; service closet at W-20-SC
+Room: 1902 (Executive King + Sofa Bed)
+Amenity: Child-size hangers available on request; nightly cap 8
+Windows: Normal 07:30–22:30; Urgent 22:30–00:30
+Hotline: Front 0; Concierge 7701; HK 7710
+SLA: To floors 17–22 normal 12–18 min
+Safety: Knock-announce-enter; install only on closet lower rail
+Counts @shift-start: child 44; wooden 150; clip 63
+
+user:
+Can I get 6 child-size hangers to 1902?
+
+assistant channel=analysis:
+Check for 6 child hangers, then submit normal delivery to room 1902 with install note.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"child-size hanger","quantity":6}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"child-size hanger","available":true,"in_stock":44}
+
+assistant channel=analysis:
+Place normal delivery with install-on-lower-rail note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1902","amenity_name":"child-size hanger","quantity":6,"priority":"normal","note":"Install on lower rail only"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HNG-1902-3302","eta_minutes":15}
+
+assistant channel=final:
+All set—6 child-size hangers are on the way to room 1902 with an ETA of about 15 minutes.
+
+user:
+Thanks! Nice people at the desk today.
+
+assistant channel=final:
+They do a great job—glad they made a good impression.
+
+user:
+What are your normal delivery hours?
+
+assistant channel=final:
+Normal window is 07:30–22:30, with an urgent window 22:30–00:30.
+
+user:
+Do they come in different colors?
+
+assistant channel=final:
+[ATTENTION] Analyzing the question.
+

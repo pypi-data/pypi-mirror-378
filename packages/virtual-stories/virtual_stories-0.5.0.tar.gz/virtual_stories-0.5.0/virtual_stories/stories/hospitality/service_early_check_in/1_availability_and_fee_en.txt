@@ -1,0 +1,49 @@
+"""
+Guest requests early check‑in; verify availability via tool and clarify fee window from system. Include small talk and a background handoff for a permanent fee waiver request.
+
+ROLES: user (early arrival), assistant (front desk confirming early check‑in status and fees)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_early_check_in",
+    "description": "Attempt early check‑in for a reservation and return status and fee if approved.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_code":{"type":"string"},"desired_time":{"type":"string"}},"required":["reservation_code","desired_time"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Canopy Bay Hotel — Front Desk
+Standard check‑in: 15:00
+Early check‑in window: from 10:00, subject to availability; fee may apply depending on time
+
+user:
+I’ll arrive around 11:30—can I check in early for CB-55102?
+
+assistant channel=analysis:
+Use the early check‑in tool to verify approval and fee; reiterate the policy window.
+
+assistant channel=commentary to=tool.request_early_check_in:
+{"reservation_code":"CB-55102","desired_time":"11:30"}
+
+tool.request_early_check_in channel=commentary to=assistant:
+{"status":"approved","fee":"USD 30"}
+
+assistant channel=final:
+Early check‑in is approved for 11:30 with a USD 30 fee. Standard check‑in is 15:00; our early window starts at 10:00, subject to availability.
+
+user:
+Great—thank you. How’s your morning?
+
+assistant channel=final:
+Welcome in advance to Canopy Bay.
+
+user:
+Could you waive the early check‑in fee for all my future stays?
+
+assistant channel=final:
+[ATTENTION] Long‑term fee waivers aren’t available here. Assessing the available data.

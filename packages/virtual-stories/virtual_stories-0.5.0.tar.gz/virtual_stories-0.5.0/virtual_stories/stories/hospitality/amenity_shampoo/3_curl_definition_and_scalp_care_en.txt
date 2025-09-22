@@ -1,0 +1,77 @@
+"""
+Guest with curly hair and sensitive scalp asks for gentle curl-defining shampoo; deliver with conditioner. Include chit-chat and [ATTENTION].
+
+ROLES: user (guest with curly hair, sensitive scalp), assistant (spa amenities concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hair_care_inventory","description":"Check inventory by hair type and scalp condition","parameters":{"type":"object","properties":{"hair_type":{"type":"string","enum":["curly","wavy","coily","fine","thick"]},"scalp_condition":{"type":"string","enum":["sensitive","normal","dry"]},"product_preference":{"type":"string","enum":["hypoallergenic","sulfate_free","organic","luxury_brand"]}},"required":["hair_type","scalp_condition"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_hair_care_amenity","description":"Deliver hair care set","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"product_selection":{"type":"string"},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown"]},"include_conditioner":{"type":"boolean"}},"required":["room_number","product_selection","delivery_timing"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Crescent Bay Sanctuary (hotel_id: cbs_la_13)
+Address: 1011 Ocean Ave, Santa Monica, CA 90401, USA
+Timezone: America/Los_Angeles
+
+Hair Care Highlights:
+- Curl-definition lines with hypoallergenic options
+- Scent profiles: light botanical or fragrance-free
+- Delivery window: 10–18 minutes
+
+YAML Facility:
+---
+ocean_terrace: true
+spa_level: 2
+quiet_hours: "22:00-07:00"
+---
+
+JSON Curly Picks:
+{"hypoallergenic": ["Briogeo_Be_Gentle_Curl","DevaCare_Sensitive"]}
+
+CSV Nearby (spot,walk_min):
+Pier,6
+Third_Street_Promenade,7
+
+user:
+My hair is curly and my scalp is sensitive. Do you have a gentle curl-defining shampoo? I’m in 716 and would love the matching conditioner.
+
+assistant channel=analysis:
+Search inventory for curly + sensitive, hypoallergenic preferred; deliver to 716 with conditioner.
+
+assistant channel=commentary to=tool.check_hair_care_inventory:
+{"hair_type":"curly","scalp_condition":"sensitive","product_preference":"hypoallergenic"}
+
+tool.check_hair_care_inventory channel=commentary to=assistant:
+{"available_products":["Briogeo_Be_Gentle_Curl","DevaCare_Sensitive"],"recommended":"Briogeo_Be_Gentle_Curl"}
+
+assistant channel=commentary to=tool.deliver_hair_care_amenity:
+{"room_number":"716","product_selection":"Briogeo_Be_Gentle_Curl","delivery_timing":"immediate","include_conditioner":true}
+
+tool.deliver_hair_care_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"14_minutes","products_included":["Briogeo_Curl_Shampoo_236ml","Briogeo_Curl_Conditioner_236ml"]}
+
+assistant channel=final:
+Yes—our hypoallergenic curl line is a great fit. I’ve scheduled Briogeo Be Gentle Curl shampoo and conditioner to room 716, arriving in about 14 minutes.
+
+user:
+The ocean terrace looks peaceful.
+
+assistant channel=analysis:
+Chit-chat referencing terrace.
+
+assistant channel=final:
+It’s a relaxing spot in the evenings—quiet hours start at 10 PM.
+
+user:
+Could you also book surf lessons for tomorrow?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Investigating potential answers.
+

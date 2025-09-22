@@ -1,0 +1,51 @@
+"""
+Guest requests checkout and wants to verify split charges; include small talk, restate policy from system, and an out-of-scope tax ID edit for past invoice.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"calculate_folio","description":"Return current folio summary for a reservation before checkout.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Oakview Hotel — Front Desk
+Address: 33 Oak Ave, Atlanta, GA 30308, USA
+Standard checkout: 12:00
+Express checkout: Key drop box by Concierge
+Late checkout: Subject to availability and fees
+Wi‑Fi: SSID "Oakview-Guest"
+Parking: Valet lane on Peachtree St
+Dining: Oak Bar 16:00–23:00
+Payment: USD; major cards accepted
+Accessibility: Elevators to all guest floors
+
+user:
+Please check out OV-12008; we split some charges—what’s the total?
+
+assistant channel=analysis:
+Return folio summary and mention checkout options.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"OV-12008"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 480","taxes":"USD 43.20","incidentals":"USD 36","total":"USD 559.20"}
+
+assistant channel=final:
+Total is USD 559.20 (room USD 480, taxes USD 43.20, incidentals USD 36). Standard checkout is 12:00; express key drop is by Concierge.
+
+user:
+Thanks—appreciate the help.
+
+assistant channel=final:
+You’re welcome.
+
+user:
+Can you edit the tax ID on last quarter’s invoice?
+
+assistant channel=final:
+[ATTENTION] Changes to prior invoices aren’t included in these resources. Reviewing.

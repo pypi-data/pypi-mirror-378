@@ -1,0 +1,70 @@
+"""
+Guest on a high floor requests a kettle and asks about voltage compatibility; provide appliance and voltage info from system. Include small talk and one [ATTENTION] query.
+
+ROLES: user (guest requesting kettle, asking voltage), assistant (amenities coordinator with appliance/voltage info)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_item","description":"Send an amenity item to a room","parameters":{"type":"object","properties":{"item_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["item_name","room_number","quantity"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Silver Peak Tower (hotel_id: spt_dubai_21)
+Address: 215 Sheikh Zayed Rd, Dubai, UAE
+Timezone: Asia/Dubai
+
+Essentials:
+- Kettle delivery: 10–15 minutes
+- Voltage: 220–240V; universal sockets at desk areas
+- Ice machines on 11 and 18
+
+YAML Floors:
+---
+high_floors: [32,33,34,35]
+sprinklers: true
+elevators: 8
+---
+
+JSON Runner:
+{"primary":"Hiba","backup":"Khaled"}
+
+CSV Nearby (spot,walk_min):
+Metro,3
+Mall,6
+
+user:
+I’m on 34F—could I get a kettle to 3419? Also, what voltage do the sockets support?
+
+assistant channel=analysis:
+Send kettle to 3419; state 220–240V from system.
+
+assistant channel=commentary to=tool.request_item:
+{"item_name":"electric_kettle","room_number":"3419","quantity":1}
+
+tool.request_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":13,"runner":"Hiba"}
+
+assistant channel=final:
+Kettle delivery scheduled to 3419—about 13 minutes (Hiba). Sockets support 220–240V; there are universal outlets at the desk area.
+
+user:
+These elevators are impressively fast.
+
+assistant channel=analysis:
+Chit-chat referencing elevator detail.
+
+assistant channel=final:
+Eight cars handle the high floors smoothly, even at peak times.
+
+user:
+Could you change some currency to USD for me?
+
+assistant channel=analysis:
+Currency exchange not defined here; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

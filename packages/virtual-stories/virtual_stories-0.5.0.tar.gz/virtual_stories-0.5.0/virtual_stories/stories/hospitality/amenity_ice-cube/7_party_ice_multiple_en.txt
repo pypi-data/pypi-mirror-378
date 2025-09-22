@@ -1,0 +1,65 @@
+"""
+Guest requests multiple buckets for a small gathering; asks hours and chats briefly.
+
+ROLES: user (guest in room 1119 requesting 4 buckets), assistant (services coordinating staged delivery and quoting policy/hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Create amenity delivery",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Laurel Steps — Port Tower
+Room: 1119 (Deluxe Queen)
+Ice policy: Up to 4 buckets per hour; large orders staged in two trips
+Hours: 07:00–23:00; Urgent 23:00–00:30
+SLA floors 10–12: 10–16 minutes
+Dispatch: PT-11 pantry; S1 service lift
+Lines: 0 | 7860 | 7861
+
+user:
+Could I get 4 buckets of ice to 1119?
+
+assistant channel=analysis:
+Place normal delivery for 4 buckets to room 1119; no special note needed.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1119","amenity_name":"ice (bucket)","quantity":4,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-1119-9934","eta_minutes":13}
+
+assistant channel=final:
+Confirmed—4 buckets of ice are scheduled for room 1119 with an ETA of about 13 minutes.
+
+user:
+Thanks! Are you still open later tonight?
+
+assistant channel=final:
+Our ice service runs 07:00–23:00 with an urgent window 23:00–00:30.
+
+user:
+Are the buckets lined with plastic?
+
+assistant channel=final:
+[ATTENTION] Gathering relevant data.
+

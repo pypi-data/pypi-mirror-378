@@ -1,0 +1,72 @@
+"""
+Guest inquires about using a high chair during in-room breakfast and later in a banquet room; confirm policy and coordinate.
+
+ROLES: user (guest attending on-site event), assistant (guest services coordinating cross-location loan)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"create_multi_location_loan","description":"Create a loan usable in guest room and designated banquet hall","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"event_space":{"type":"string"},"quantity":{"type":"integer"},"duration_hours":{"type":"integer"}},"required":["hotel_id","room","event_space","quantity","duration_hours"]},"strict":true},
+  {"name":"note_event_coordination","description":"Notify events desk of equipment timing","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"event_space":{"type":"string"},"window":{"type":"string"}},"required":["hotel_id","event_space","window"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cascada Sevilla (CSVL-07)
+Address: Calle de Zaragoza 18, 41001 Sevilla, Spain
+Kids’ High Chairs: 9 units; complimentary; compatible with banquet halls when reserved; straps inspected weekly.
+Event Policy: High chairs can be used in event spaces if coordinated with the Events Desk; maximum 2 per table; return to bell desk after use.
+Delivery/Transfer: Room delivery 10–15 minutes; events team can relocate between spaces with 20–30 minutes’ notice.
+Safety: Max weight 14 kg; no use on stage platforms; keep aisles clear to 90 cm.
+Other: Booster seats available (4 units); request separately.
+
+user:
+Can I use a high chair at breakfast in 512, then bring it to the Alhambra Ballroom at noon?
+
+assistant channel=analysis:
+Create a multi-location loan and notify the events desk of the timing window.
+
+assistant channel=commentary to=tool.create_multi_location_loan:
+{"hotel_id":"CSVL-07","room":"512","event_space":"Alhambra Ballroom","quantity":1,"duration_hours":6}
+
+tool.create_multi_location_loan channel=commentary to=assistant:
+{"order_id":"CSVL-512-ALH-991","status":"created"}
+
+assistant channel=commentary to=tool.note_event_coordination:
+{"hotel_id":"CSVL-07","event_space":"Alhambra Ballroom","window":"12:00–14:00"}
+
+tool.note_event_coordination channel=commentary to=assistant:
+{"notified":true,"ref":"EVT-ALH-204"}
+
+assistant channel=final:
+Yes—your loan is set (CSVL-512-ALH-991). Use it in 512 for breakfast, then the Alhambra Ballroom at noon; events has been notified (EVT-ALH-204).
+
+user:
+How many can I have at a table in the ballroom?
+
+assistant channel=analysis:
+Answer from system event policy: max 2 per table.
+
+assistant channel=final:
+Up to two high chairs per table are permitted in event spaces.
+
+user:
+The courtyard fountain sounds soothing.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+It gives the lobby a calm rhythm—enjoy your day.
+
+user:
+Can you share the ballroom floor plan PDF?
+
+assistant channel=analysis:
+Out of scope; reply with ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Retrieving available resources.
+

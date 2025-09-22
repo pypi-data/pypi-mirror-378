@@ -1,0 +1,111 @@
+"""
+Guest requests hem tape and needle for skirt; confirm kit and provide safety guidance.
+
+ROLES: user (guest with skirt hem issue), assistant (housekeeping coordinator with amenity access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Riviera Bayfront Hotel Miami (hotel_id: rbh_mia_05)
+Address: 400 Biscayne Blvd, Miami, FL 33132
+Timezone: America/New_York
+
+Repair Amenities:
+- Basic kits with hem tape on all guest floors
+- Executive kits include fabric chalk, extra buttons, fine needles
+- Emergency kit dispatch: 10 minutes or less to suites
+- On-site assistance hours: 09:00–22:00
+- Colors: black, white, beige, navy
+
+Service SLAs:
+- Delivery: 10–25 minutes depending on tower and time of day
+- Complimentary: first kit per room per day
+- Contact: Housekeeping ext 55
+- Safety: hem tape not recommended on silk > 6 hours
+- Note: pool tower floors 10–18 have separate pantry
+
+user:
+Hi! My skirt hem is coming down. I’m in 1210—could I get hem tape and a needle?
+
+assistant channel=analysis:
+Check basic kit availability for floor 12; then arrange kit delivery; include safety reminder per system.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type":"basic","floor_level":"12"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available":true,"kit_contents":["hem_tape","white_thread","black_thread","needle","safety_pins"],"eta_minutes":14}
+
+assistant channel=analysis:
+Arrange delivery and communicate safety advisory about hem tape on silk.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number":"1210","service_type":"kit_delivery","urgency":"urgent","garment_type":"skirt"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged":true,"delivery_time":"14_minutes","assistance_offered":true}
+
+assistant channel=final:
+Absolutely—I’ll send a kit with hem tape, needle, and thread to 1210; it should arrive in about 14 minutes. If your skirt is silk, avoid keeping hem tape on for more than 6 hours.
+
+user:
+Thanks! Are you available to help if I struggle with it?
+
+assistant channel=analysis:
+Yes, on-site assistance 09:00–22:00.
+
+assistant channel=final:
+Yes—we can assist on-site from 09:00 to 22:00 today.
+
+user:
+The lobby music is nice today!
+
+assistant channel=analysis:
+Chit-chat acknowledgment only.
+
+assistant channel=final:
+Thank you for noticing—have a lovely evening!
+
+user:
+Also, where can I buy a beach hat nearby?
+
+assistant channel=analysis:
+External shopping guidance beyond system; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look up nearby beachwear shops and share options.

@@ -1,0 +1,105 @@
+"""
+Guest requests extra pods and asks about cleaning; include small talk and an out-of-scope question.
+
+ROLES: user (guest seeking refills and cleaning guidance), assistant (in-room beverage support coordinating supplies and tips)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_coffee_machine_status",
+    "description": "Check the operational status and model of in-room coffee machine.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"room_number": {"type": "string"}},
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "order_coffee_supplies",
+    "description": "Order coffee pods, tea pods, or cleaning tablets for the room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item_type": {"type": "string", "enum": ["coffee_pods", "tea_pods", "cleaning_tablets"]},
+              "quantity": {"type": "integer"}
+            },
+            "required": ["item_type", "quantity"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["room_number", "items"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Harborline Boutique Hotel (hotel_id: hbh_chs_riv)
+Address: 29 Concord St, Charleston, SC 29401
+Timezone: America/New_York
+In-Room Beverage Program:
+- Machines: Nespresso Vertuo Next in all river-view rooms
+- Daily allocation: 4 coffee pods + 2 tea pods complimentary; extras on request
+- Varieties: Dark Roast Bold, House Medium, Decaf Peru, Jasmine Green Tea, Peppermint Herbal
+- Cleaning tablets: available on request; routine descaling every 14 days by housekeeping
+- Support hours: Beverage support 24/7; deliveries 06:00–23:30 typical ETA 10–20 minutes
+Policies:
+- Replacement machines available if status shows fault
+- No charges for standard refills or cleaning tablets
+Contact: Dial 0 and request “Beverage Support”
+
+user:
+Hi there—could I get two more dark roast pods sent up to room 512?
+
+assistant channel=analysis:
+Confirm room and arrange pod delivery; no machine issue yet. Small talk can follow.
+
+assistant channel=commentary to=tool.order_coffee_supplies:
+{"room_number":"512","items":[{"item_type":"coffee_pods","quantity":2}]}
+
+tool.order_coffee_supplies channel=commentary to=assistant:
+{"order_id":"HBH-512-P2","delivery_eta_minutes":12,"items":[{"item_type":"coffee_pods","quantity":2,"varieties":["Dark Roast Bold"]}]}
+
+assistant channel=final:
+All set—2 Dark Roast Bold pods are on the way to 512, ETA about 12 minutes.
+
+user:
+Thanks! By the way, the view is gorgeous tonight.
+
+assistant channel=analysis:
+Respond with a light comment; no tools.
+
+assistant channel=final:
+It’s one of our favorite riverfront sunsets—glad you’re enjoying it.
+
+user:
+Do I need to do anything special to clean the machine myself?
+
+assistant channel=analysis:
+Answer from system: cleaning tablets are available; routine descaling schedule noted.
+
+assistant channel=final:
+You can run a quick rinse and, if you’d like, we can send cleaning tablets—housekeeping also descales every 14 days, so no charge either way.
+
+user:
+Any recommendations for historic coffee houses around here?
+
+assistant channel=analysis:
+Out of scope for hotel amenity tools/knowledge.
+
+assistant channel=final:
+[ATTENTION] Looking up options beyond current resources.
+

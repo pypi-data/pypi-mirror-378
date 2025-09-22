@@ -1,0 +1,82 @@
+"""
+Team event requests multiple toothpaste units; confirm bulk support and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (team lead), assistant (event amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"bulk_toothpaste_check","description":"Check bulk amenity allowance and available variants.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"count":{"type":"integer"},"variant":{"type":"string","enum":["mint","herbal"]}},
+     "required":["count","variant"]},"strict":true},
+  {"name":"bulk_toothpaste_deliver","description":"Deliver multiple toothpaste units to a suite or room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"count":{"type":"integer"},"variant":{"type":"string"}},
+     "required":["room_number","count","variant"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cityline Expo Hotel (hotel_id: CEH_lv_21)
+Address: 100 Expo Blvd, Las Vegas, NV 89109 | TZ: America/Los_Angeles
+
+Bulk Amenity Policy:
+- Up to 20 toothpaste units complimentary per event block
+- Variants: mint, herbal
+- Delivery: Ballroom service corridor 08:00–22:00 or to suite by request
+- Tracking via event code
+- Lobby feature: LED art tunnel
+
+user:
+Can I get 12 mint toothpaste tubes to suite 2402 for our team?
+
+assistant channel=analysis:
+Check bulk allowance for 12 mint units, then deliver to suite 2402.
+
+assistant channel=commentary to=tool.bulk_toothpaste_check:
+{"count":12,"variant":"mint"}
+
+tool.bulk_toothpaste_check channel=commentary to=assistant:
+{"allowed":true,"max_complimentary":20,"variant":"mint"}
+
+assistant channel=analysis:
+Deliver 12 mint units.
+
+assistant channel=commentary to=tool.bulk_toothpaste_deliver:
+{"room_number":"2402","count":12,"variant":"mint"}
+
+tool.bulk_toothpaste_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":18,"runner":"expo-amenities","ticket":"CEH-2402-12M"}
+
+assistant channel=final:
+Confirmed—12 mint toothpaste tubes are on their way to suite 2402. Complimentary under your event block. ETA ~18 minutes (expo-amenities, ticket CEH-2402-12M).
+
+user:
+Is herbal also available in bulk?
+
+assistant channel=analysis:
+Answer from Bulk Amenity Policy: variants mint, herbal.
+
+assistant channel=final:
+Yes—mint and herbal are both available in bulk.
+
+user:
+That LED art tunnel in the lobby is fun.
+
+assistant channel=analysis:
+Chitchat referencing Lobby feature.
+
+assistant channel=final:
+It’s a crowd-pleaser during expos.
+
+user:
+Can you add branded stickers on each tube?
+
+assistant channel=analysis:
+Customization not in system—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for branded tube stickers.
+

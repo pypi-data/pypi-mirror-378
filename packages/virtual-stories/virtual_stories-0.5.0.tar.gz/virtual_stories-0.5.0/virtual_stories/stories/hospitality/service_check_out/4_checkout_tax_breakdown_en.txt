@@ -1,0 +1,51 @@
+"""
+Guest wants a checkout with a tax breakdown; include small talk, remind express checkout from system, and an out-of-scope currency conversion request.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"calculate_folio","description":"Return current folio summary for a reservation before checkout.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Pine Harbor Inn — Front Office
+Address: 75 Marina Park, Annapolis, MD 21401, USA
+Standard checkout: 12:00
+Express checkout: Key drop box next to Front Desk
+Late checkout: On request, subject to fees
+Wi‑Fi: SSID "PineHarbor-Guest"; vouchers at check‑in
+Parking: Surface lot; trailer bay behind Annex
+Dining: Harbor Café 06:30–22:00
+Payment: USD; major cards accepted
+Accessibility: Elevator to all guest floors
+
+user:
+Please check out PH-22019 and show taxes.
+
+assistant channel=analysis:
+Return folio with tax line and mention express checkout.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"PH-22019"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 300","taxes":"USD 27.00","incidentals":"USD 12","total":"USD 339.00"}
+
+assistant channel=final:
+Total is USD 339.00 (room USD 300, taxes USD 27.00, incidentals USD 12). You may also use the key drop box next to the Front Desk.
+
+user:
+Thanks—nice and easy.
+
+assistant channel=final:
+Glad to hear it.
+
+user:
+Can you convert that to EUR right now?
+
+assistant channel=final:
+[ATTENTION] Live currency conversion isn’t included in these resources. Reviewing.

@@ -1,0 +1,61 @@
+"""
+A consultant asks for an executive-floor room with a reading desk; confirms lamp and chair specs; includes small talk and an out-of-scope request.
+
+ROLES: user (Consultant on a tight schedule.), assistant (Efficient front desk.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "find_available_room",
+    "description": "Finds an available room with specific features.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "feature": {"type": "string"},
+        "start_date": {"type": "string", "format": "date"},
+        "end_date": {"type": "string", "format": "date"}
+      },
+      "required": ["feature", "start_date", "end_date"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Pinnacle Executive
+Desk Coverage: Executive floors include reading desks as standard
+Lighting: Warm 2700K dimmable; task lamp on request
+Chair: Adjustable ergonomic chair
+Upgrade: Complimentary when desk is critical for work
+Quiet Hours: 10pm–7am
+Contact: 0
+
+user:
+Executive floor with a real reading desk for two nights—possible?
+
+assistant channel=analysis:
+Use the tool to find a reading_desk room in the requested window; then confirm features and policy.
+
+assistant channel=commentary to=tool.find_available_room:
+{"feature": "reading_desk", "start_date": "2025-09-07", "end_date": "2025-09-09"}
+
+tool.find_available_room channel=commentary to=assistant:
+{"rooms": [{"room_number": "1906", "room_type": "Executive King", "features": ["reading_desk"]}]}
+
+assistant channel=final:
+Yes—Executive King 1906 is open and includes a reading desk, a warm dimmable lamp, and an ergonomic adjustable chair. If the desk is essential, the upgrade is complimentary. Quiet hours are 10pm–7am.
+
+user:
+Thanks—how are things tonight?
+
+assistant channel=final:
+Comfortably busy—we’ll get you set swiftly.
+
+user:
+[ATTENTION] Can you arrange an external print service?
+
+assistant channel=final:
+External print services aren’t in my system. I can secure the executive room with the desk and lighting.
+

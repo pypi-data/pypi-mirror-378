@@ -1,0 +1,108 @@
+"""
+Family requests multiple tooth mugs for their suite, includes chitchat about local attractions and an ATTENTION case for special dietary needs.
+
+ROLES: user (family guest requesting multiple tooth mugs), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_tooth_mug_options",
+    "description": "Check available tooth mug materials and stock.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "material": { "type": "string", "enum": ["ceramic", "glass"] }
+      },
+      "required": ["material"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_tooth_mug",
+    "description": "Deliver a tooth mug to the specified room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "material": { "type": "string" }
+      },
+      "required": ["room_number", "material"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Family Fun Resort (hotel_id: ffr_orl_04)
+Address: 5678 Theme Park Boulevard, Orlando, FL 32819
+Timezone: America/New_York
+
+Bathroom Amenity Notes:
+- Tooth mugs: ceramic (colorful family-friendly designs) and glass (shatterproof safety glass)
+- Family suites receive extra amenities automatically
+- Child-safe bathroom accessories available upon request
+
+Design Details:
+- Bright, colorful bathroom tiles with cartoon character themes
+- Non-slip bathroom flooring throughout family accommodations
+- Step stools and child-friendly fixtures in family suites
+- Interactive bathroom mirrors with built-in games for children
+
+user:
+Hi! We're in the Family Suite 888 and need three tooth mugs - two ceramic ones for the adults and one glass one for our teenager. The kids are excited about the bathroom games!
+
+assistant channel=analysis:
+Family in suite 888 requesting multiple tooth mugs - 2 ceramic for adults, 1 glass for teenager. Check both materials and deliver to room.
+
+assistant channel=commentary to=tool.check_tooth_mug_options:
+{"material":"ceramic"}
+
+tool.check_tooth_mug_options channel=commentary to=assistant:
+{"available":true,"finish":"colorful family-friendly designs","stock":20}
+
+assistant channel=commentary to=tool.check_tooth_mug_options:
+{"material":"glass"}
+
+tool.check_tooth_mug_options channel=commentary to=assistant:
+{"available":true,"finish":"shatterproof safety glass","stock":18}
+
+assistant channel=analysis:
+Both materials available. Deliver 2 ceramic mugs and 1 glass mug to family suite 888.
+
+assistant channel=commentary to=tool.deliver_tooth_mug:
+{"room_number":"888","material":"ceramic"}
+
+tool.deliver_tooth_mug channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":8,"runner":"family_services","quantity":2}
+
+assistant channel=commentary to=tool.deliver_tooth_mug:
+{"room_number":"888","material":"glass"}
+
+tool.deliver_tooth_mug channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":8,"runner":"family_services","quantity":1}
+
+assistant channel=final:
+Perfect! Two colorful ceramic tooth mugs for the adults and one shatterproof glass mug for your teenager are being delivered to Family Suite 888. They should arrive in about 8 minutes.
+
+user:
+The kids love the interactive bathroom mirrors! Do you have any recommendations for family-friendly attractions nearby?
+
+assistant channel=analysis:
+Guest asking about local family attractions. This is chitchat not requiring tool calling, but I don't have specific attraction information in system prompt.
+
+assistant channel=final:
+I'm glad the kids are enjoying the interactive mirrors! We're located right on Theme Park Boulevard, so there are plenty of family-friendly attractions within walking distance. The concierge desk can provide detailed recommendations and help with tickets.
+
+user:
+Our teenager has a severe latex allergy. Could you ensure the tooth mugs are completely latex-free and check if any bathroom amenities contain latex?
+
+assistant channel=analysis:
+Guest asking about latex content in tooth mugs and bathroom amenities for allergy safety. This detailed allergy information goes beyond available system knowledge.
+
+assistant channel=final:
+[ATTENTION] I understand your latex allergy concerns. Reviewing available resources.

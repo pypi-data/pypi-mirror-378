@@ -1,0 +1,66 @@
+"""
+Guest asks about current crowd levels and cardio machines; include chitchat and an ATTENTION request.
+
+ROLES: user (cardio-focused guest), assistant (staff reporting typical patterns and machines available)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_cardio_list","description":"List cardio machines available.","parameters":{"type":"object","properties":{}},"strict":true},
+  {"name":"get_crowd_pattern","description":"Typical busy and quiet patterns.","parameters":{"type":"object","properties":{}},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Alder & Stone
+Fitness Center: The Forge Gym (L3)
+Open: 24/7
+
+Machines:
+- Treadmills (5), ellipticals (3), upright bikes (2)
+- Assault bike (1)
+- Row erg (1)
+
+Patterns:
+• Busy: pre‑work 06:00–08:00, post‑work 17:30–19:00
+• Quieter: late morning and mid‑afternoon
+
+user:
+What cardio machines do you have, and when is it less crowded?
+
+assistant channel=analysis:
+Use tools to enumerate machines and patterns.
+
+assistant channel=commentary to=tool.get_cardio_list:
+{}
+
+tool.get_cardio_list channel=commentary to=assistant:
+{"machines":["treadmills","ellipticals","upright bikes","assault bike","row erg"]}
+
+assistant channel=commentary to=tool.get_crowd_pattern:
+{}
+
+tool.get_crowd_pattern channel=commentary to=assistant:
+{"busy":["06:00–08:00","17:30–19:00"],"quiet":["late morning","mid‑afternoon"]}
+
+assistant channel=final:
+We have treadmills, ellipticals, upright bikes, an assault bike, and a row erg. It’s typically busy 06:00–08:00 and 17:30–19:00, and quieter in late morning and mid‑afternoon.
+
+user:
+Thanks! Great view from level 3.
+
+assistant channel=final:
+It makes cardio go by quicker.
+
+user:
+Is the gym open 24/7?
+
+assistant channel=final:
+Yes—it’s open 24/7.
+
+user:
+Can you play news on a TV near the treadmills?
+
+assistant channel=final:
+[ATTENTION] TV channel changes aren’t managed here. Reviewing available resources.

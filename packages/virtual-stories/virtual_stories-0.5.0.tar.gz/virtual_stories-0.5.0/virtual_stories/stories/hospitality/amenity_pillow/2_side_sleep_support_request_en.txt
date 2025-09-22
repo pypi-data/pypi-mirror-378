@@ -1,0 +1,126 @@
+"""
+Guest requests side-sleeper support pillow and bedding adjustments.
+Provide pillow menu guidance, availability check, delivery, and optional consultation.
+
+ROLES: user (guest seeking firmer side-sleeper support), assistant (sleep concierge optimizing pillow selection)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_pillow_inventory",
+    "description": "Check pillow availability and specs by type/firmness/size.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pillow_type": {"type": "string", "enum": ["memory_foam", "latex", "down_alternative", "buckwheat", "cooling_gel", "body"]},
+        "firmness": {"type": "string", "enum": ["soft", "medium", "firm", "extra_firm"]},
+        "size": {"type": "string", "enum": ["standard", "queen", "king", "body"]}
+      },
+      "required": ["pillow_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_sleep_amenities",
+    "description": "Deliver selected pillows and adjust bedding in-room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "pillows": {"type": "array", "items": {"type": "string"}},
+        "extras": {"type": "array", "items": {"type": "string"}},
+        "timing": {"type": "string", "enum": ["immediate", "during_turndown", "before_sleep"]}
+      },
+      "required": ["room_number", "pillows"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_sleep_consult",
+    "description": "Schedule a brief sleep posture consultation.",
+    "parameters": {"type": "object", "properties": {"room_number": {"type": "string"}, "window": {"type": "string"}}, "required": ["room_number"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Aurora Sky Lodge (hotel_id: asl_fai_02)
+Address: 1800 Aurora View Rd, Fairbanks, AK 99701
+Timezone: America/Anchorage
+
+Pillow Menu (side-sleeper focused):
+- Firm latex contour (queen, king); elevated shoulder cutout for alignment
+- Buckwheat hull pillow with breathable organic cotton case; adjustable fill
+- High-density memory foam wedge; lateral support for reading + side sleep
+- Cooling gel memory foam (medium/firm) with phase-change cover
+- Body pillow (54") for hip-spine neutrality; hypoallergenic fill
+
+Extras & Setup:
+- Pillowcase choices: percale, sateen, bamboo-viscose; cool-touch available
+- Allergy care: down-alternative cores; dust-mite barrier protectors
+- Turndown timing: 6:30–9:30 PM; in-room setup upon request
+- Sanitization: covers washed 165°F; UV-C chamber for cores after each use
+- Sustainability: OEKO-TEX fabrics; refillable buckwheat sourced in-state
+
+user:
+Hi, I'm in 417. I’m a side sleeper and the current pillows are too soft. Do you have something firmer with better shoulder support?
+
+assistant channel=analysis:
+Side sleeper needs firmer support; check latex contour and buckwheat options in queen size.
+
+assistant channel=commentary to=tool.check_pillow_inventory:
+{"pillow_type":"latex","firmness":"firm","size":"queen"}
+
+tool.check_pillow_inventory channel=commentary to=assistant:
+{"available":true,"models":["firm_latex_contour_queen","firm_latex_high_profile_queen"],"stock":12,"hypoallergenic":true,"case_options":["percale","bamboo"],"cooling":false}
+
+assistant channel=analysis:
+Latex contour queen available; also offer buckwheat adjustable as alternative; propose delivery now with bamboo case.
+
+assistant channel=final:
+Yes—our firm latex contour in queen is available (hypoallergenic) and designed for shoulder alignment. Want me to send it now with a cool bamboo pillowcase, or would you prefer the adjustable buckwheat option instead?
+
+user:
+Let’s do the latex contour with bamboo. Could you bring a body pillow too?
+
+assistant channel=analysis:
+Confirm body pillow availability and arrange immediate delivery with extras.
+
+assistant channel=commentary to=tool.check_pillow_inventory:
+{"pillow_type":"body","size":"body"}
+
+tool.check_pillow_inventory channel=commentary to=assistant:
+{"available":true,"models":["body_pillow_54_hypoallergenic"],"stock":8,"hypoallergenic":true}
+
+assistant channel=commentary to=tool.deliver_sleep_amenities:
+{"room_number":"417","pillows":["firm_latex_contour_queen","body_pillow_54_hypoallergenic"],"extras":["bamboo_case","dust_mite_barrier"],"timing":"immediate"}
+
+tool.deliver_sleep_amenities channel=commentary to=assistant:
+{"dispatched":true,"eta_minutes":12,"attendant":"Noah","items":["firm_latex_contour_queen+bamboo_case","body_pillow_54_hypoallergenic+protector"],"turndown_alignment_check":true}
+
+assistant channel=final:
+All set—Noah is on the way in about 12 minutes with the firm latex contour (bamboo case) and a 54" body pillow with protector. We’ll also do a quick alignment check during setup.
+
+user:
+Thanks! Also, do you offer UV sanitization for the pillows?
+
+assistant channel=analysis:
+Answer from system sanitization section.
+
+assistant channel=final:
+Yes—covers are laundered at 165°F and cores are cycled through a UV‑C sanitization chamber after each use.
+
+user:
+Could you recommend a local spot to watch the aurora tonight?
+
+assistant channel=analysis:
+Beyond system context and tools—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

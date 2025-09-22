@@ -1,0 +1,68 @@
+"""
+Guest on quiet floor requests small clips, asks about delivery hours policy.
+
+ROLES: user (light sleeper), assistant (front desk night shift)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supplies","description":"Check small clips","parameters":{"type":"object","properties":{"category":{"type":"string","enum":["clips_fasteners"]}},"required":["category"],"additionalProperties":false},"strict":true},
+  {"name":"request_supply_delivery","description":"Night delivery request","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_preference":{"type":"string","enum":["room_delivery","business_center_pickup"]},"urgency":{"type":"string","enum":["standard","priority","urgent"]}},"required":["room_number","items","delivery_preference"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Broadway Venture Hotel (hotel_id: bvh_nyc_01)
+Address: 135 W 44th St, New York, NY 10036
+Timezone: America/New_York
+
+Policies & Services:
+- Quiet floors: 10–12; deliveries paused 22:00–06:00 (urgent only)
+- Standard SLA: 25–35 minutes
+- Clips: 19/32/51mm; small in black or silver
+- Night shift coordinator available via ext. 72
+- Business center: Level B1, 24/7 staffed
+
+user:
+Hi, I’m on 1103 (quiet floor). Do you have small clips and what are delivery hours to quiet floors?
+
+assistant channel=analysis:
+Answer policy from system, then check small clips and place order.
+
+assistant channel=final:
+Yes—deliveries to quiet floors pause 22:00–06:00 except for urgent requests. I’ll verify small clip stock now.
+
+assistant channel=commentary to=tool.check_office_supplies:
+{"category":"clips_fasteners"}
+
+tool.check_office_supplies channel=commentary to=assistant:
+{"available_items":[{"code":"BINDER_SMALL","name":"Small 19mm (black/silver)","quantity_available":75}]}
+
+assistant channel=final:
+Small clips are available—75 on hand. What quantity should we send to 1103? If it’s after 22:00, I can mark it urgent.
+
+user:
+Just 8 is fine. And thanks for being so quiet tonight!
+
+assistant channel=final:
+Happy to help—keeping the halls calm is the goal.
+
+assistant channel=commentary to=tool.request_supply_delivery:
+{"room_number":"1103","items":[{"item_code":"BINDER_SMALL","quantity":8}],"delivery_preference":"room_delivery","urgency":"standard"}
+
+tool.request_supply_delivery channel=commentary to=assistant:
+{"delivery_id":"BVH-1103-882","estimated_delivery_minutes":27,"items_confirmed":["8x Small 19mm"],"charge":"complimentary"}
+
+assistant channel=final:
+Order BVH-1103-882 confirmed—ETA about 27 minutes.
+
+user:
+Any Broadway shows you’d recommend?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check current show listings for you.
+

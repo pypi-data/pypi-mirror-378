@@ -1,0 +1,58 @@
+"""
+Guest requests a mid‑stay refresh with a specific window and towel replacement.
+
+ROLES: user (guest requesting refresh service), assistant (housekeeping coordinator scheduling service)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_housekeeping",
+    "description": "Schedule housekeeping service for a room.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["full_clean","refresh","turn_down"]},"preferred_window":{"type":"string"}},"required":["room_number","service_type"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Riverside City Hotel
+Housekeeping Hours: 08:00–20:00
+Service Types:
+- full_clean: linen change, bathroom deep clean, vacuum, trash removal
+- refresh: towels, trash, wipe‑down, amenities top‑up
+- turn_down: evening setup with water and curtain close
+Notes:
+- DND respected
+- 60‑minute preferred windows accepted
+- Extra towels available on request
+Location Detail: Tower East, serviced by elevators 3–4
+
+user:
+Could you do a refresh for room 824 between 11 and 12? Extra towels please.
+
+assistant channel=analysis:
+Schedule a refresh with a preferred window; no separate tool for towels, but the refresh includes top‑ups per system.
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"824","service_type":"refresh","preferred_window":"11:00-12:00"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_5824","status":"scheduled","window":"11:00-12:00"}
+
+assistant channel=final:
+Refresh is scheduled for room 824 (hk_5824) in the 11:00–12:00 window. We’ll replace towels and top up amenities during the visit.
+
+user:
+Thanks—those elevators are quick.
+
+assistant channel=final:
+Housekeeping runs 08:00–20:00 and observes DND.
+
+user:
+Do you offer carpet shampoo today?
+
+assistant channel=final:
+[ATTENTION] That service isn’t listed in our menu. Reviewing available resources.
+

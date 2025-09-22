@@ -1,0 +1,79 @@
+"""
+Guest asks about TSA-compliant size and requests mint; confirm size and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (traveler), assistant (amenities desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"size_check","description":"Confirm toothpaste size in mL and ounces.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"variant":{"type":"string","enum":["mint"]}},
+     "required":["variant"]},"strict":true},
+  {"name":"size_deliver","description":"Deliver the mint toothpaste to room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"variant":{"type":"string"}},
+     "required":["room_number","variant"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Gateway Airport Hotel (hotel_id: GAH_sfo_18)
+Address: 1 Runway Blvd, South San Francisco, CA 94080 | TZ: America/Los_Angeles
+
+Toothpaste Sizes:
+- Mint: 30 mL (~1.0 fl oz)
+- Herbal: 30 mL
+- Kids strawberry: 25 mL
+- Delivery: 24/7 | Fee: none
+- Skybridge to Terminal B
+
+user:
+Is your mint toothpaste TSA-friendly? I’m in 908 and flying out tomorrow.
+
+assistant channel=analysis:
+Confirm size for mint, then deliver to 908 if desired.
+
+assistant channel=commentary to=tool.size_check:
+{"variant":"mint"}
+
+tool.size_check channel=commentary to=assistant:
+{"size_ml":30,"fluid_ounces":1.0}
+
+assistant channel=final:
+Our mint toothpaste is 30 mL (about 1.0 fl oz), which fits typical TSA liquid limits. Would you like one sent to room 908?
+
+user:
+Yes please.
+
+assistant channel=analysis:
+Deliver mint to 908.
+
+assistant channel=commentary to=tool.size_deliver:
+{"room_number":"908","variant":"mint"}
+
+tool.size_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":8,"runner":"gate-ops","ticket":"GAH-908-TSA"}
+
+assistant channel=final:
+On the way—mint toothpaste to room 908 in about 8 minutes (runner gate-ops, ticket GAH-908-TSA). Complimentary.
+
+user:
+The skybridge is super convenient.
+
+assistant channel=analysis:
+Chitchat grounded in system.
+
+assistant channel=final:
+It makes early flights a lot smoother.
+
+user:
+Can you check me in for my flight too?
+
+assistant channel=analysis:
+Out of scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll look into flight check-in options.
+

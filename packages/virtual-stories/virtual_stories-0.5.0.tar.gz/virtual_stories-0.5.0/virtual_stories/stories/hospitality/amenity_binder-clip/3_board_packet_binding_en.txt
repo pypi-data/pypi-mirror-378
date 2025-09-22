@@ -1,0 +1,89 @@
+"""
+Executive guest requests binder clips and binding assistance for board packets.
+
+ROLES: user (board member), assistant (executive floor business services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supplies","description":"List clips and fasteners availability","parameters":{"type":"object","properties":{"category":{"type":"string","enum":["clips_fasteners","all"]}},"required":["category"],"additionalProperties":false},"strict":true},
+  {"name":"request_supply_delivery","description":"Deliver office supplies to room","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["item_code","quantity"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["room_delivery","business_center_pickup"]},
+  "urgency":{"type":"string","enum":["standard","priority","urgent"]}},"required":["room_number","items","delivery_preference"],"additionalProperties":false},"strict":true},
+  {"name":"schedule_presentation_setup","description":"Book binding or collation session","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["document_binding","materials_organization"]},"scheduled_time":{"type":"string"},"duration_minutes":{"type":"integer"}},"required":["room_number","service_type","scheduled_time"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Harborview Financial Plaza Hotel (hotel_id: hfph_sf_02)
+Address: 99 Mission St, San Francisco, CA 94105
+Timezone: America/Los_Angeles
+Segment: Executive lodging steps from the Embarcadero
+
+Executive Services (bullet list):
+- Executive floors: 25–33, same-corridor delivery
+- SLA windows: standard 25–40 min; priority 15–20 min
+- Clips: small 19mm, medium 32mm, large 51mm; black and silver
+- Binding: comb and wire options available with clear covers
+- Collation: staffed 07:00–21:00 daily
+
+Quick Facts (key: value):
+Lobby Wi‑Fi: enterprise mesh
+Printer types: A3 color laser
+Max complimentary clips: 15 per room/day
+Contact: Exec Desk ext. 88
+
+user:
+Good evening—do you have large binder clips and could you bind 10 board packets later?
+
+assistant channel=analysis:
+Check clips availability, then offer to schedule binding.
+
+assistant channel=commentary to=tool.check_office_supplies:
+{"category":"clips_fasteners"}
+
+tool.check_office_supplies channel=commentary to=assistant:
+{"available_items":[{"code":"BINDER_SMALL","name":"Small 19mm","quantity_available":70},{"code":"BINDER_MEDIUM","name":"Medium 32mm","quantity_available":40},{"code":"BINDER_LARGE","name":"Large 51mm","quantity_available":22}]}
+
+assistant channel=final:
+Large clips are available—22 on hand. Would you like me to schedule binding for 10 packets as well?
+
+user:
+Yes, please. I'm in 2718. Also, what's the standard delivery time to 2718?
+
+assistant channel=analysis:
+Answer SLA from system and place delivery.
+
+assistant channel=final:
+Standard delivery runs 25–40 minutes. I’ll arrange the clips now and book binding.
+
+assistant channel=commentary to=tool.request_supply_delivery:
+{"room_number":"2718","items":[{"item_code":"BINDER_LARGE","quantity":10}],"delivery_preference":"room_delivery","urgency":"standard"}
+
+tool.request_supply_delivery channel=commentary to=assistant:
+{"delivery_id":"HV-2718-9912","estimated_delivery_minutes":28,"items_confirmed":["10x Large 51mm"],"charge":"complimentary_up_to_15"}
+
+assistant channel=commentary to=tool.schedule_presentation_setup:
+{"room_number":"2718","service_type":"document_binding","scheduled_time":"tomorrow 08:00","duration_minutes":60}
+
+tool.schedule_presentation_setup channel=commentary to=assistant:
+{"appointment_id":"BIND-2718-08A","scheduled_time":"08:00","duration_minutes":60,"assigned_staff":"I. Navarro","location":"Exec Center L25"}
+
+assistant channel=final:
+Confirmed. Order HV-2718-9912: ten large clips arriving in ~28 minutes (complimentary up to 15). Binding is booked for 08:00 at the Executive Center (I. Navarro, 60 minutes).
+
+user:
+By the way, your lobby Wi‑Fi has been rock solid today!
+
+assistant channel=final:
+Thank you—we rely on enterprise mesh to keep it stable.
+
+user:
+Any favorite seafood restaurants at the Embarcadero?
+
+assistant channel=analysis:
+Outside system scope—flag attention.
+
+assistant channel=final:
+[ATTENTION] Noted—checking nearby options with the concierge.
+

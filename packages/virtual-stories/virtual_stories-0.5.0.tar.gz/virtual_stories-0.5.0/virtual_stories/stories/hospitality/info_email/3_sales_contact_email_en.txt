@@ -1,0 +1,67 @@
+"""
+Guest asks for the sales team email; include a web link confirmation, small talk, and an out-of-scope press inbox request.
+
+ROLES: user (corporate client), assistant (sales liaison sharing official contact)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_contact_channel",
+    "description": "Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "channel": {"type":"string","enum":["email","phone","fax","line","wechat","website"]}
+      },
+      "required": ["hotel_id","channel"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborline Convention Hotel (hotel_id: harborline_convention_sfo)
+Contacts:
+  - Sales Email: sales@harborlineconvention.com
+  - General Email: hello@harborlineconvention.com
+  - Phone: +1 415-220-7700
+  - Website: https://www.harborlineconvention.com
+Address: 200 Pierfront Blvd, San Francisco, CA 94123
+Business Center: 06:30–22:00; Meeting floors 3–5
+Rooms: 512; Suites: 38; Elevators: 6
+Wi‑Fi: Fiber-backed; SSID "Harborline-Event" for meeting spaces
+Awards: GBAC STAR accredited; Green Key Gold
+Payment: USD; accepts major cards
+
+user:
+I need the sales contact email, please.
+
+assistant channel=analysis:
+Use tool to return the sales email.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"harborline_convention_sfo","channel":"email"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"email":"sales@harborlineconvention.com"}
+
+assistant channel=final:
+sales@harborlineconvention.com.
+
+user:
+Cheers—site link the same as on your cards?
+
+assistant channel=final:
+Website: https://www.harborlineconvention.com
+
+user:
+Could you share your embargoed media press inbox?
+
+assistant channel=final:
+[ATTENTION] That address isn’t provided in these resources. Checking.
+

@@ -1,0 +1,54 @@
+"""
+Guest wants a slice from a midnight pizza window and asks about cashless policy.
+
+ROLES: user (guest craving quick pizza), assistant (concierge guiding to takeaway window)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_takeaway_window","description":"Get hours and items for pizza window.","parameters":{"type":"object","additionalProperties":false,"properties":{"venue_id":{"type":"string"}},"required":["venue_id"]}},
+  {"name":"check_payment_methods","description":"Return accepted payment types for the venue.","parameters":{"type":"object","additionalProperties":false,"properties":{"venue_id":{"type":"string"}},"required":["venue_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Harborline Seattle (hotel_id: hls_sea)
+Address: 1301 Alaskan Way, Seattle, WA 98101
+Timezone: America/Los_Angeles
+
+Late-Night Options:
+- "Slice @ Midnight" pizza window (venue_id: v_slice) — 23:45–01:45
+- Items: cheese slice, pepperoni slice, veggie slice, garlic knots
+- Policy: Cashless; tap to pay only
+
+user:
+Do you have pizza by the slice right now? And do you take cash?
+
+assistant channel=analysis:
+Use tools to confirm window hours/items and accepted payments. Answer cash question from system: cashless.
+
+assistant channel=commentary to=tool.get_takeaway_window:
+{"venue_id":"v_slice"}
+
+tool.get_takeaway_window channel=commentary to=assistant:
+{"hours":"23:45-01:45","items":["cheese slice","pepperoni slice","veggie slice","garlic knots"]}
+
+assistant channel=commentary to=tool.check_payment_methods:
+{"venue_id":"v_slice"}
+
+tool.check_payment_methods channel=commentary to=assistant:
+{"accepted":["visa","mastercard","amex","apple_pay","google_pay"],"cash":false}
+
+assistant channel=final:
+Yes—our "Slice @ Midnight" window runs 23:45–01:45 with cheese, pepperoni, veggie, and garlic knots. It’s cashless; tap‑to‑pay only.
+
+user:
+Cool. Can you mail me a printed menu?
+
+assistant channel=analysis:
+Mailing printed menus isn’t defined. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Checking available options.
+

@@ -1,0 +1,52 @@
+"""
+Candidate asks for the recruitment email; include website confirmation, small talk, and out-of-scope internal HR alias.
+
+ROLES: user (candidate), assistant (front desk sharing public contact)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Cedar Vale Mountain Lodge (hotel_id: cedar_vale_mtn)
+Public Contacts:
+  - Recruitment Email: careers@cedarvale.lodge
+  - Website: https://www.cedarvale.lodge
+  - Phone: +1 303-555-0440
+Address: 77 Switchback Rd, Estes Park, CO 80517, USA
+Check-in/out: 16:00 / 11:00
+Terrain: Elevation 2,300 m; heated drive in winter
+Wi‑Fi: Mesh coverage; SSID "CedarVale-Guest"
+Amenities: Trail maps; gear lockers; fireplace lounge
+
+user:
+What’s the recruitment email?
+
+assistant channel=analysis:
+Return via tool; keep it brief.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"cedar_vale_mtn","channel":"email"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"email":"careers@cedarvale.lodge"}
+
+assistant channel=final:
+careers@cedarvale.lodge.
+
+user:
+Thanks—site also has job listings?
+
+assistant channel=final:
+Website: https://www.cedarvale.lodge
+
+user:
+Do you have the internal HR alias too?
+
+assistant channel=final:
+[ATTENTION] That alias isn’t available within these resources. Reviewing.
+

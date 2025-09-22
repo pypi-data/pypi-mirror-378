@@ -1,0 +1,93 @@
+"""
+Guest needs help pairing to in-room Bluetooth speaker and asks for AUX as backup.
+
+ROLES: user (guest with phone), assistant (tech concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_room_audio_status","description":"Check speaker online status and pairing mode.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"pair_bluetooth","description":"Initiate pairing to the room speaker with a device nickname.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"device_name":{"type":"string"}},"required":["room_number","device_name"]},"strict":true},
+  {"name":"deliver_aux_cable","description":"Deliver a 3.5mm AUX cable to the room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true}
+]
+```
+"""
+
+system:
+Harbor District Hotel (hotel_id: hdh_bal_03)
+Address: 1000 Aliceanna St, Baltimore, MD 21202
+Timezone: America/New_York
+
+In-Room Audio:
+- Speaker: HarborTune Mini; Bluetooth name pattern "HDH-ROOM-<room>"
+- Pairing mode: hold power 3s; blue LED blinks; timeout 120s
+- AUX input supported; cables on request
+- Quiet hours: 22:00–07:00
+- Tech hotline: x55
+
+Lobby Ambience:
+- Morning playlist: "Harbor Dawn"; Evening: "Night Harbor"
+
+user:
+My phone can’t find the speaker in 718. Can you help pair?
+
+assistant channel=analysis:
+Check audio status; prompt pairing; pair to the provided device name.
+
+assistant channel=commentary to=tool.check_room_audio_status:
+{"room_number":"718"}
+
+tool.check_room_audio_status channel=commentary to=assistant:
+{"room_number":"718","speaker_online":true,"pairing_mode":false,"display_name":"HDH-ROOM-718"}
+
+assistant channel=final:
+Your speaker shows as “HDH-ROOM-718.” Please press and hold the power button for ~3 seconds until the blue LED blinks to enter pairing mode, then select “HDH-ROOM-718” on your phone.
+
+user:
+Okay, it’s blinking. Pair it to “Sam Galaxy S24”.
+
+assistant channel=analysis:
+Proceed to pair with given device name.
+
+assistant channel=commentary to=tool.pair_bluetooth:
+{"room_number":"718","device_name":"Sam Galaxy S24"}
+
+tool.pair_bluetooth channel=commentary to=assistant:
+{"paired":true,"room_number":"718","device_name":"Sam Galaxy S24"}
+
+assistant channel=final:
+Done—“Sam Galaxy S24” is paired to HDH-ROOM-718 and ready.
+
+user:
+If it drops, could you send an AUX cable?
+
+assistant channel=analysis:
+Arrange AUX cable delivery.
+
+assistant channel=commentary to=tool.deliver_aux_cable:
+{"room_number":"718"}
+
+tool.deliver_aux_cable channel=commentary to=assistant:
+{"delivery_id":"AUX-718-3341","room_number":"718","eta_minutes":12}
+
+assistant channel=final:
+Absolutely—AUX cable scheduled for 718 (AUX-718-3341), ETA about 12 minutes.
+
+user:
+What’s the evening lobby playlist called?
+
+assistant channel=analysis:
+Answer from system ambience.
+
+assistant channel=final:
+Evenings feature “Night Harbor.”
+
+user:
+Also, can you tune the room’s speaker EQ for jazz?
+
+assistant channel=analysis:
+Speaker EQ tuning isn’t in tools/system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your EQ tuning request. Considering approaches.
+

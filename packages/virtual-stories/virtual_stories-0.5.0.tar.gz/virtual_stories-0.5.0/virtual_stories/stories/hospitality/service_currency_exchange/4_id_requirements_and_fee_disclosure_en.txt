@@ -1,0 +1,56 @@
+"""
+Guest asks about ID and fees, then requests a EUR→USD quote; include small talk and an [ATTENTION] timing question.
+
+ROLES: user (guest clarifying ID/fees), assistant (cashier disclosing policies and quoting FX)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "quote_fx",
+    "description": "Quote a currency exchange with applied fee and total payout.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"from":{"type":"string"},"to":{"type":"string"},"amount":{"type":"number"}},"required":["from","to","amount"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Skyline Atrium Hotel — Financial Services Counter
+Hours: 09:00–19:00 daily
+Location: Atrium level, under the glass skylight
+Supported Currencies: USD, EUR, GBP, JPY
+ID Rule: Passport for ≥ USD 500 equivalent
+Fee: Flat per transaction
+Cash Handling: Cash only; receipts printed and stamped
+Security Note: Dual‑count verification for payouts
+Accessibility: Counter height 86 cm; priority lane available
+
+user:
+Do I need my passport and what’s the fee? Also, how much USD do I get for 400 EUR?
+
+assistant channel=analysis:
+Confirm ID and fee policy from system; then quote EUR→USD with the tool.
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"EUR","to":"USD","amount":400}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":1.11,"fee":"USD 3.00","payout":"USD 441.00"}
+
+assistant channel=final:
+Passport is only required for exchanges of USD 500 equivalent or above, and we apply a flat handling fee. For 400 EUR, the quote is USD 441.00 after a USD 3.00 fee (rate 1.11). We’re open 09:00–19:00 under the glass skylight.
+
+user:
+The skylight is stunning.
+
+assistant channel=final:
+The counter is on the atrium level beneath that glass skylight.
+
+user:
+Will the fee be lower if I wait until evening?
+
+assistant channel=final:
+[ATTENTION] Fee timing adjustments aren’t documented. Analyzing the situation.
+

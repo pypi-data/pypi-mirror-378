@@ -1,0 +1,83 @@
+"""
+Guest requests backlit bathroom mirror with anti-fog demister.
+Provide options and installation.
+
+ROLES: user (guest needing anti-fog), assistant (amenity/engineering coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_mirror_options", "description": "Check backlit anti-fog bathroom mirrors.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "mirror_type": { "type": "string", "enum": ["backlit"] }, "lighting_needed": { "type": "boolean" } }, "required": ["mirror_type"] }, "strict": true },
+  { "name": "install_mirror_setup", "description": "Install backlit anti-fog mirror in bathroom.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mirror_type": { "type": "string", "enum": ["backlit"] }, "lighting_type": { "type": "string", "enum": ["adjustable_led"] }, "placement_location": { "type": "string", "enum": ["bathroom"] }, "power_source": { "type": "string", "enum": ["plug_in", "hardwired"] } }, "required": ["room_number", "mirror_type", "placement_location"] }, "strict": true },
+  { "name": "adjust_mirror_lighting", "description": "Set brightness and color temp.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "brightness_level": { "type": "integer", "minimum": 1, "maximum": 10 }, "color_temp": { "type": "string", "enum": ["neutral_4000k", "daylight_5000k"] } }, "required": ["room_number", "brightness_level", "color_temp"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: City Harbor Hotel (hotel_id: chh_syd_02)
+Address: 88 Sussex St, Sydney NSW 2000, Australia
+Timezone: Australia/Sydney
+
+Mirror Upgrades:
+- Backlit demister mirrors
+- Installation window 10:00–18:00
+- Adjustable LED brightness and neutral/daylight temps
+- Hardwired or plug‑in depending on room
+- Removal at checkout
+
+user:
+Room 1914—can I get a backlit bathroom mirror that won’t fog up?
+
+assistant channel=analysis:
+Check backlit anti‑fog availability; install in bathroom; set neutral 4000K.
+
+assistant channel=commentary to=tool.check_mirror_options:
+{"mirror_type":"backlit","lighting_needed":true}
+
+tool.check_mirror_options channel=commentary to=assistant:
+{"available_types":["backlit_demister"],"lighting_options":["adjustable_led"],"inventory_status":"5 units available"}
+
+assistant channel=commentary to=tool.install_mirror_setup:
+{"room_number":"1914","mirror_type":"backlit","lighting_type":"adjustable_led","placement_location":"bathroom","power_source":"plug_in"}
+
+tool.install_mirror_setup channel=commentary to=assistant:
+{"service_id":"MIR_SYD1914","installation_time":"within 60 minutes","placement":"bath vanity","notes":"demister pad enabled"}
+
+assistant channel=commentary to=tool.adjust_mirror_lighting:
+{"room_number":"1914","brightness_level":7,"color_temp":"neutral_4000k"}
+
+tool.adjust_mirror_lighting channel=commentary to=assistant:
+{"adjustment_completed":true,"brightness":7,"color_temp":"neutral_4000k"}
+
+assistant channel=final:
+We’ll install a backlit demister mirror at your bath vanity within ~60 minutes and set lighting to neutral 4000K at level 7.
+
+user:
+Thanks! Is installation only during the day?
+
+assistant channel=analysis:
+From system: 10:00–18:00.
+
+assistant channel=final:
+Yes—our installation window runs 10:00 to 18:00.
+
+user:
+Harbor view looks great.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It pairs well with the clean backlit look.
+
+user:
+Could you extend late checkout?
+
+assistant channel=analysis:
+Outside mirror scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with the front desk regarding late checkout options.
+"""
+

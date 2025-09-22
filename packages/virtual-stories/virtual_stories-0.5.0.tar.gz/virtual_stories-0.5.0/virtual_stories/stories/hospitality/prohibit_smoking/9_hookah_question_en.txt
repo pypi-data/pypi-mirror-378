@@ -1,0 +1,59 @@
+"""
+Guest asks if hookah is allowed; clarify outdoor-only policy and hours; include chit‑chat and an out‑of‑scope vendor list request.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```
+[
+  {"name":"get_policy","description":"Retrieve policy details for a given category.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["smoking"]}},"required":["category"]},"strict":true},
+  {"name":"get_location","description":"Get details for a named on-site area.","parameters":{"type":"object","additionalProperties":false,"properties":{"area":{"type":"string","enum":["terrace_smoking_zone"]}},"required":["area"]},"strict":true}
+]
+```
+"""
+
+system:
+PROPERTY: The Sunstone Gallery Hotel
+RULES: No indoor smoking; outdoor Terrace Smoking Zone only; hours 07:00–22:00
+NOTE: Hookah permitted only in the Terrace Smoking Zone during posted hours
+SCENE: Gallery talks 18:30; Rooftop garden 17:00–21:00.
+
+user:
+Is hookah allowed here?
+
+assistant channel=analysis:
+Answer policy: allowed only in the outdoor zone; provide area details.
+
+assistant channel=commentary to=tool.get_policy:
+{"category":"smoking"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"smoking","allowed":false,"summary":"No indoor smoking; Terrace Smoking Zone only."}
+
+assistant channel=commentary to=tool.get_location:
+{"area":"terrace_smoking_zone"}
+
+tool.get_location channel=commentary to=assistant:
+{"name":"Terrace Smoking Zone","hours":"07:00–22:00","notes":"Hookah permitted during posted hours"}
+
+assistant channel=final:
+Hookah is permitted only in the Terrace Smoking Zone, 07:00–22:00.
+
+user:
+The rooftop garden was relaxing.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+We’re glad—open 17:00–21:00 with sunset views.
+
+user:
+Do you have a preferred vendor list for hookah?
+
+assistant channel=analysis:
+Out of scope—no vendor list.
+
+assistant channel=final:
+[ATTENTION] We don’t have vendor lists within the provided resources.
+

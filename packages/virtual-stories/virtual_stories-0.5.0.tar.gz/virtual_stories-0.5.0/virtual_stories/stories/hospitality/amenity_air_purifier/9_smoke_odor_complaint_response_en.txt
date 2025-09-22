@@ -1,0 +1,66 @@
+"""
+Guest reports faint smoke odor and requests maximum purification for a short period.
+
+ROLES: user (guest sensitive to odors), assistant (guest services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_air_purifier_status", "description": "Get status.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "set_air_purifier_mode", "description": "Set turbo then revert.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"mode":{"type":"string","enum":["auto","sleep","turbo"]},"timer_minutes":{"type":"integer"}},"required":["room_number","mode"]}, "strict": true }
+]
+```
+"""
+
+system:
+Harbor Cliffs Hotel (hotel_id: hch_san_diego)
+Address: 50 Seacliff Way, San Diego, CA 92101
+Timezone: America/Los_Angeles
+
+Policies:
+- Non‑smoking property; report odors to security
+- Purifier modes: auto/sleep/turbo; ionizer disabled
+Guest Services: 24/7; Security 24/7
+Dining: Cliffside café 06:30–14:30
+Sustainability: Filter recycling program
+Accessibility: High‑contrast device labels
+
+user:
+I’m catching a faint smoke smell in 832. Can you run the purifier on max for 15 minutes, then switch back?
+
+assistant channel=analysis:
+Apply turbo 15 minutes; returns automatically.
+
+assistant channel=commentary to=tool.get_air_purifier_status:
+{"room_number":"832"}
+
+tool.get_air_purifier_status channel=commentary to=assistant:
+{"room_number":"832","mode":"auto","filter_status":"good"}
+
+assistant channel=commentary to=tool.set_air_purifier_mode:
+{"room_number":"832","mode":"turbo","timer_minutes":15}
+
+tool.set_air_purifier_mode channel=commentary to=assistant:
+{"applied":true,"mode":"turbo","timer_minutes":15}
+
+assistant channel=final:
+Turbo is on in 832 for 15 minutes, after which it will return to auto. I’ve noted your odor report for monitoring.
+
+user:
+The café breakfast was great this morning.
+
+assistant channel=analysis:
+Small talk based on system.
+
+assistant channel=final:
+Glad you enjoyed Cliffside café—open 06:30 to 14:30.
+
+user:
+Can you waive any cleaning fees if the smell persists?
+
+assistant channel=analysis:
+Fee policies beyond system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can review fee policies with our team if needed.
+

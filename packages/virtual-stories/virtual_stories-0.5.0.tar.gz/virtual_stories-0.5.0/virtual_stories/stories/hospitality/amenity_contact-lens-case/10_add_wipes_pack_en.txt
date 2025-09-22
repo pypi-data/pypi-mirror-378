@@ -1,0 +1,49 @@
+"""
+Guest adds lens cleaning wipes to an existing order.
+
+ROLES: user (add-on request), assistant (guest services coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_amenities","description":"Check availability of personal care and optical amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["contact_lens_case","lens_solution","eye_drops","complete_kit","travel_size"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_amenity_delivery","description":"Arrange delivery or pickup of personal care amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["room_delivery","front_desk_pickup","concierge_hand_delivery"]},"timing":{"type":"string","enum":["immediate","within_hour","specific_time"]}},"required":["room_number","items","delivery_method"]},"strict":true}
+]
+```
+"""
+
+system:
+Pacific Skyline Hotel (hotel_id: psh_seattle)
+Address: 700 Pine St, Seattle, WA
+Timezone: America/Los_Angeles
+
+Inventory:
+- Lens cleaning wipes (10‑pack)
+
+user:
+Could you add a 10‑pack of lens wipes to my order?
+
+assistant channel=analysis:
+Confirm wipes and append to delivery.
+
+assistant channel=commentary to=tool.check_personal_care_amenities:
+{"amenity_type":"complete_kit"}
+
+tool.check_personal_care_amenities channel=commentary to=assistant:
+{"available_items":[{"type":"Lens cleaning wipes (10-pack)","availability":"in_stock"}]}
+
+assistant channel=commentary to=tool.arrange_amenity_delivery:
+{"room_number":"1214","items":["Lens cleaning wipes (10-pack)"],"delivery_method":"room_delivery","timing":"within_hour"}
+
+tool.arrange_amenity_delivery channel=commentary to=assistant:
+{"delivery_id":"PSH-1214-WP-09","estimated_delivery":"35 minutes","combined_with_previous_order":true}
+
+assistant channel=final:
+Added—wipes will arrive with your order in ~35 minutes (PSH-1214-WP-09).
+
+user:
+Thank you! Also, loving the skyline view.
+
+assistant channel=final:
+Wonderful to hear—enjoy your stay!
+

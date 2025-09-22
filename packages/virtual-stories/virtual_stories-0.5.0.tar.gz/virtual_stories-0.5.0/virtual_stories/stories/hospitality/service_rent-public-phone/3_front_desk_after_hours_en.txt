@@ -1,0 +1,58 @@
+"""
+Guest requests a prepaid handset after Concierge hours; confirm Front Desk pickup and terms, include small talk and an [ATTENTION] case.
+
+ROLES: user (late-arriving guest), assistant (front desk assisting with handset rentals after hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"hold_handset","description":"Hold a handset at Front Desk after hours","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"hold_until":{"type":"string"}},"required":["hotel_id","room","hold_until"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Tower Singapore (SKYS-02)
+Address: 88 Marina Blvd, Singapore 018984
+Hours: Concierge 08:00–21:00; Front Desk 24/7 handles after‑hours handset pickup/return
+Handset rental:
+- Day rate: SGD 22/day with SGD 10 credit; charge code RENT-PHONE
+- Deposit: SGD 60; photo ID required; SIM: nano; local calls only
+- Pickup: Concierge by day; Front Desk after 21:00 (Counter A)
+- Accessories: USB‑C charger + Type‑G plug
+- Wipe policy: device reset on return
+Extra info:
+- Inventory: 9 units; tracked by ID SKS-PHN-01 … 09
+- Languages on UI: EN/ZH/JA
+- Location tips: MRT Downtown line entry is 2 min from lobby
+- Support: quick‑start card in pouch
+- Overage: top‑up vouchers available at Concierge only
+
+user:
+I arrive at 23:15. Can I still rent a phone? Room 4311.
+
+assistant channel=analysis:
+Confirm after‑hours pickup at Front Desk and hold until midnight.
+
+assistant channel=commentary to=tool.hold_handset:
+{"hotel_id":"SKYS-02","room":"4311","hold_until":"00:00"}
+
+tool.hold_handset channel=commentary to=assistant:
+{"held":true,"serial":"SKS-PHN-05","counter":"Front Desk Counter A"}
+
+assistant channel=final:
+Yes—Front Desk handles handset pickup after 21:00. I’ve held SKS-PHN-05 for room 4311 at Counter A until 00:00. The rate is SGD 22/day with SGD 10 credit; SGD 60 deposit applies.
+
+user:
+Nice—love the skyline view here.
+
+assistant channel=final:
+Welcome aboard—Front Desk is open 24/7 for returns as well.
+
+user:
+Can it share hotspot for my tablet?
+
+assistant channel=final:
+[ATTENTION] Hotspot use isn’t described here. Checking available options.
+

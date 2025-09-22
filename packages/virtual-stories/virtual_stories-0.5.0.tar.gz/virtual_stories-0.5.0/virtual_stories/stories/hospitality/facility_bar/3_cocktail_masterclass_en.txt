@@ -1,0 +1,131 @@
+"""
+Guest wants to learn cocktail making and requests hands-on masterclass; check instructor availability and book session.
+
+ROLES: user (cocktail enthusiast), assistant (beverage education coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_mixology_classes",
+    "description": "Check availability for cocktail masterclass sessions with certified instructors.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "skill_level": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
+        "class_type": { "type": "string", "enum": ["classics", "molecular", "tropical", "whiskey_focused", "gin_focused"] },
+        "group_size": { "type": "integer", "minimum": 1, "maximum": 12 }
+      },
+      "required": ["skill_level", "group_size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "book_mixology_session",
+    "description": "Book hands-on cocktail masterclass with equipment and ingredients.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "class_date": { "type": "string" },
+        "instructor": { "type": "string" },
+        "cocktail_focus": { "type": "string" },
+        "participant_names": { "type": "array", "items": { "type": "string" } },
+        "take_home_kit": { "type": "boolean" }
+      },
+      "required": ["class_date", "instructor", "cocktail_focus"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Artisan Spirits Resort & Academy (hotel_id: asra_edi_01)
+Address: 1 Princes Street, Edinburgh, Scotland EH2 2EQ
+Timezone: Europe/London
+
+Mixology Education Center:
+- Lead instructor: James MacLeod, winner of World Class Bartender Competition 2019, 20 years experience
+- Teaching philosophy: Historical cocktail evolution combined with modern molecular techniques
+- Equipment: Professional-grade shakers, jiggers, muddlers, smoking devices, liquid nitrogen systems
+- Ingredient library: 200+ spirits, 150+ liqueurs, house-made bitters, fresh herbs from rooftop garden
+- Masterclass themes: Classic prohibition era, Scottish whisky journey, molecular mixology, botanical gin exploration
+
+Scottish Heritage Integration:
+- Founded 1785 as coaching inn, converted to luxury resort 1995 maintaining historic character
+- Whisky collection: 800+ bottles including rare single malts from closed distilleries
+- Partnership with Scotch Whisky Association for authentic education and certification programs
+- Traditional Scottish hospitality customs integrated into modern luxury service standards
+- Historic bar dates to 1823, features original mahogany and brass fittings preserved through restorations
+
+Academy Credentials:
+- Accredited by International Bartenders Association for professional certification courses
+- Guest instructors include renowned bartenders from London, New York, Tokyo, and Sydney
+- Academic partnerships with Edinburgh's Heriot-Watt University's International Centre for Brewing & Distilling
+- Annual symposium attracts distillers, bartenders, and spirits writers from around the world
+- Research laboratory develops new cocktail techniques and flavor extraction methods
+
+Cultural Immersion:
+- Burns Night celebrations featuring traditional Scottish toasts and whisky ceremonies
+- Highland games events with traditional music and Highland dancing performances
+- Storytelling evenings in library featuring Scottish folklore and distillery legends
+- Clan heritage research services for guests with Scottish ancestry connections
+- Traditional clothing rental: Kilts, tartan accessories for formal Scottish events
+
+Accommodation Features:
+- Castle-view suites overlook Edinburgh Castle and Royal Mile historic district
+- Library rooms feature floor-to-ceiling bookshelves and whisky writing collections
+- Whisky-themed amenities: Glencairn glasses, water dropper sets, tasting journals
+- Private bar setups in premium suites with curated spirit selections
+- Fireplace lounges perfect for intimate whisky tasting and conversation
+
+user:
+Good evening! I'm fascinated by cocktail history and would love to learn hands-on mixology. I'm a beginner but very eager to learn about the classics. Do you offer any masterclasses?
+
+assistant channel=analysis:
+Beginner interested in cocktail history and classics. Check availability for classic-focused masterclass with hands-on learning.
+
+assistant channel=commentary to=tool.check_mixology_classes:
+{"skill_level":"beginner","class_type":"classics","group_size":1}
+
+tool.check_mixology_classes channel=commentary to=assistant:
+{"available_classes":[{"instructor":"james_macleod","theme":"prohibition_era_classics","duration":"3_hours","next_session":"tomorrow_afternoon"}],"beginner_friendly":true,"equipment_provided":"professional_grade","take_home_options":"starter_kit_available"}
+
+assistant channel=final:
+Perfect timing! James MacLeod, our World Class Bartender Competition winner, offers a 3-hour Prohibition Era Classics masterclass tomorrow afternoon. It's designed for beginners and covers historical cocktail evolution with hands-on practice using professional equipment. You'll learn the stories behind classics like Old Fashioned, Manhattan, and Sidecar. Interested?
+
+user:
+That sounds absolutely perfect! James MacLeod—I've heard of him! Yes, please book me for tomorrow afternoon.
+
+assistant channel=analysis:
+Guest recognizes James's reputation. Book the prohibition classics session and mention the take-home kit option.
+
+assistant channel=commentary to=tool.book_mixology_session:
+{"class_date":"tomorrow_afternoon","instructor":"james_macleod","cocktail_focus":"prohibition_era_classics","participant_names":["guest"],"take_home_kit":true}
+
+tool.book_mixology_session channel=commentary to=assistant:
+{"booking_id":"MIX-EDI-2025-887","instructor_confirmed":"james_macleod","session_time":"14:00_tomorrow","cocktails_covered":"old_fashioned_manhattan_sidecar_mint_julep","equipment":"professional_shaker_jigger_set","take_home":"starter_mixology_kit_included"}
+
+assistant channel=final:
+Booked! Session MIX-EDI-2025-887 with James MacLeod tomorrow at 14:00. You'll master Old Fashioned, Manhattan, Sidecar, and Mint Julep with their historical origins. Includes professional shaker and jigger set plus a starter mixology kit to take home for practice.
+
+user:
+Excellent! This resort has such authentic Scottish character. I love the historic atmosphere.
+
+assistant channel=analysis:
+Guest appreciates Scottish heritage. Share our coaching inn history and preserved elements as casual conversation.
+
+assistant channel=final:
+Thank you! We've been welcoming travelers since 1785 as a coaching inn. Our bar still features the original 1823 mahogany and brass fittings—James loves teaching cocktail history surrounded by authentic period elements that witnessed the evolution of Scottish hospitality.
+
+user:
+Could you also arrange a private tour of the whisky collection I've heard about?
+
+assistant channel=analysis:
+Whisky collection tours go beyond mixology class booking tools—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Great interest in our whisky collection. Reviewing tour availability options.

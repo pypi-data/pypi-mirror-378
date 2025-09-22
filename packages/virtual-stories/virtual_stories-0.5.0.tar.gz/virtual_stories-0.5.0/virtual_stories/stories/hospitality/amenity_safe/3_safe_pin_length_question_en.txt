@@ -1,0 +1,57 @@
+"""
+Guest asks about PIN length and requests a reset; include small talk and an out-of-scope ask.
+
+ROLES: user (guest unsure of PIN requirements), assistant (front desk providing policy and reset help)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_safe_status","description":"Verify safe status.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"reset_safe_pin","description":"Reset the safe to a temporary PIN.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Highline East Market (hotel_id: hem_nyc)
+Address: 507 W 28th St, New York, NY
+Safe Standards:
+- Model: CityVault C320
+- PIN length: 4–6 digits; lockout after 3 failed tries (5 minutes)
+Support: Front desk 24/7
+Policy: Temporary PINs issued upon ID verification
+Amenity Note: Rooftop terrace is open 10:00–22:00
+
+user:
+What PIN length does the safe accept in 1915? I might need a reset.
+
+assistant channel=analysis:
+Provide PIN length from system; then proceed to reset with a temp PIN.
+
+assistant channel=commentary to=tool.verify_safe_status:
+{"room_number":"1915"}
+
+tool.verify_safe_status channel=commentary to=assistant:
+{"status":"locked","error_code":null}
+
+assistant channel=commentary to=tool.reset_safe_pin:
+{"room_number":"1915"}
+
+tool.reset_safe_pin channel=commentary to=assistant:
+{"temporary_pin":"8604","instructions":"enter temp PIN, open, then set new 4–6 digit PIN"}
+
+assistant channel=final:
+The CityVault C320 accepts 4–6 digit PINs. Use temporary PIN 8604 to open, then set your new 4–6 digit code when prompted.
+
+user:
+Love the terrace greenery.
+
+assistant channel=final:
+It’s open daily from 10:00 to 22:00—great views.
+
+user:
+Can you store my jewelry overnight in a back-office vault?
+
+assistant channel=final:
+[ATTENTION] Checking this request as it’s beyond the current resources.
+

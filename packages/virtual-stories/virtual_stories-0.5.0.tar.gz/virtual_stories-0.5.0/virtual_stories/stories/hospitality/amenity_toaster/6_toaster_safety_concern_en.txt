@@ -1,0 +1,146 @@
+"""
+Guest expresses safety concerns about toaster usage; provide safety guidance, address concerns, include small talk, and one background acknowledgment.
+
+ROLES: user (guest concerned about toaster safety), assistant (guest services providing safety information)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_appliance_availability",
+    "description": "Check availability of portable kitchen appliances for loan.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "appliance_type": { "type": "string", "enum": ["toaster", "hot_plate", "rice_cooker"] }
+      },
+      "required": ["appliance_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_appliance",
+    "description": "Deliver an available appliance to the guest room with safety card.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "appliance_type": { "type": "string" }
+      },
+      "required": ["room_number", "appliance_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Residence: Garden Court Suites (hotel_id: gc_sfo_21)
+Address: 600 Pine Street, San Francisco, CA 94108
+Timezone: America/Los_Angeles
+
+Kitchenette Policy:
+- Portable toaster loan available on request
+- Safety: Use on the countertop only; keep 6 inches clearance
+- Supply: Limited units; first-come, first-served
+- Models: Dualit Mini Classic (2-slice), Cuisinart Compact (4-slice)
+- Loan duration: Up to 24 hours per request
+- Safety features: Auto-shutoff, cool-touch exterior, crumb tray
+
+Lobby Feature:
+- Morning bakery cart with fresh sourdough slices and croissants
+- Gluten-free bread options available upon request
+- Organic butter and artisanal jams from local suppliers
+
+Room Service:
+- Continental breakfast available 6:00 AM - 11:00 AM
+- Special dietary accommodations: vegan, gluten-free, keto-friendly
+- Fresh fruit platters and yogurt parfaits
+
+Local Attractions:
+- Ferry Building Marketplace (0.3 miles) - artisanal food vendors
+- Union Square (0.4 miles) - shopping and dining district
+- Chinatown (0.6 miles) - authentic Asian cuisine and markets
+
+Hotel Amenities:
+- 24-hour fitness center with cardio equipment
+- Business center with printing and scanning services
+- Concierge desk for local recommendations and reservations
+
+Safety Protocols:
+- All appliances inspected before delivery
+- Safety cards included with each loan
+- Emergency contact: Front desk extension 0
+- Fire safety: Smoke detectors in all rooms
+
+user:
+Hi, I'm in room 445 and I'd like to request a toaster, but I'm a bit concerned about safety. I've heard stories about toasters causing fires.
+
+assistant channel=analysis:
+Guest in room 445 wants a toaster but has safety concerns about fire risks. Need to address their concerns and provide safety information.
+
+assistant channel=final:
+I completely understand your safety concerns, and I'm glad you're asking about this. Our toasters are regularly inspected and have several safety features including auto-shutoff and cool-touch exteriors. They're designed for countertop use only with 6 inches of clearance, and we provide detailed safety cards with each loan. Would you like me to deliver one with the safety information?
+
+user:
+That sounds reassuring. Yes, please send one up with the safety card.
+
+assistant channel=analysis:
+Guest is reassured and wants to proceed with toaster delivery. Check availability and deliver with safety information.
+
+assistant channel=commentary to=tool.check_appliance_availability:
+{"appliance_type":"toaster"}
+
+tool.check_appliance_availability channel=commentary to=assistant:
+{"available":true,"models":["Dualit_Mini_Classic","Cuisinart_Compact"],"notes":"loan_only_countertop_use"}
+
+assistant channel=analysis:
+Toaster is available. Deliver to room 445 with safety card.
+
+assistant channel=commentary to=tool.deliver_appliance:
+{"room_number":"445","appliance_type":"toaster"}
+
+tool.deliver_appliance channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":8,"model":"Dualit_Mini_Classic","safety_card_included":true}
+
+assistant channel=final:
+Perfect! I'm sending a Dualit Mini Classic toaster to room 445 with a comprehensive safety card. It should arrive in about 8 minutes. The safety card covers proper usage, maintenance, and emergency procedures. Remember, never leave the toaster unattended while in use.
+
+user:
+Thank you! I feel much better about it now. The safety information will be very helpful.
+
+assistant channel=analysis:
+Guest is expressing gratitude and feeling more comfortable with the safety information provided.
+
+assistant channel=final:
+You're very welcome! Safety is our top priority, and we want all our guests to feel comfortable using our amenities. The Dualit Mini Classic is a reliable model with excellent safety ratings. If you have any questions while using it, just give us a call.
+
+user:
+I'm really looking forward to having fresh toast in the morning. The view from my room is beautiful too.
+
+assistant channel=analysis:
+Guest is making small talk about looking forward to fresh toast and enjoying their room view.
+
+assistant channel=final:
+That's wonderful! There's nothing quite like fresh, warm toast to start the day, especially with a beautiful view. Room 445 has a lovely perspective of the city. The morning light in San Francisco can be quite spectacular.
+
+user:
+Do you have any recommendations for the best type of bread to toast? I want to make sure I'm using the toaster correctly.
+
+assistant channel=analysis:
+Guest is asking about bread recommendations for toasting, which goes beyond our system knowledge of basic toaster safety.
+
+assistant channel=final:
+[ATTENTION] I'll look into the best bread types for toasting. Reviewing available resources.
+
+user:
+Actually, I think I'll just use the bread from your bakery cart. The sourdough sounds perfect for toasting.
+
+assistant channel=analysis:
+Guest is referencing our bakery cart sourdough bread, which is mentioned in the system prompt.
+
+assistant channel=final:
+Excellent choice! Our morning bakery cart has fresh sourdough slices that are perfect for toasting. Sourdough toasts beautifully and has that wonderful San Francisco flavor. The toaster will bring out the best in it!

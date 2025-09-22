@@ -1,0 +1,47 @@
+"""
+Guest asks pickup from restaurant to room; schedule via tool and cite scope, ETA, and fragile handling; include chitchat and ATTENTION for off‑property.
+
+ROLES: user (guest requesting pickup), assistant (service dispatcher for on‑property delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_inhouse_delivery","description":"Arrange an on‑property item pickup and delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"from_location":{"type":"string"},"to_room":{"type":"string"},"item":{"type":"string"}},"required":["from_location","to_room","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Harborview Grand — Service Center Dispatch
+Scope: On‑property only (restaurants, meeting spaces, guestrooms)
+Hours: 24/7; typical ETA 10–20 minutes
+Fragile: Mark “fragile” and staff will hand‑carry
+Contact: Ext. 2211
+
+user:
+Could you pick up a cake box from Seabreeze Restaurant to room 714?
+
+assistant channel=analysis:
+Arrange pickup from on‑property restaurant to room; confirm ETA.
+
+assistant channel=commentary to=tool.schedule_inhouse_delivery:
+{"from_location":"Seabreeze Restaurant","to_room":"714","item":"cake box (fragile)"}
+
+tool.schedule_inhouse_delivery channel=commentary to=assistant:
+{"delivery_id":"DLV-6207","status":"scheduled","eta_minutes":12}
+
+assistant channel=final:
+We’ve scheduled DLV-6207 to bring the cake box from Seabreeze to 714 with an ETA of about 12 minutes. We’ll hand‑carry as fragile.
+
+user:
+Thanks—love the harbor view.
+
+assistant channel=final:
+Dispatch is underway.
+
+user:
+Could you also stop by my office across the street?
+
+assistant channel=final:
+[ATTENTION] Off‑property collection isn’t supported here. Reviewing available resources.
+

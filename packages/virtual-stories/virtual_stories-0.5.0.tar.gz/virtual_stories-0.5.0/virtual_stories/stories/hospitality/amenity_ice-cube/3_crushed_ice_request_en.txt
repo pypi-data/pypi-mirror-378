@@ -1,0 +1,70 @@
+"""
+Guest requests crushed ice; quick small talk and asks SLA.
+
+ROLES: user (guest in room 405 requesting crushed ice), assistant (concierge arranging delivery and quoting SLA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Request an amenity delivery to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Lumen Arcade — Atrium Tower
+Room: 405 (Superior Queen)
+Ice: Cubed or crushed on request; default 1 bucket; cap 2 per hour
+Hours: 06:45–22:45 normal; 22:45–00:30 urgent limited
+SLA floors 1–6: 8–14 minutes
+Staging: AT-4 pantry; use Service Lift S1
+Lines: Front 0; Services 7820; HK 7821
+
+user:
+Could you send one bucket of crushed ice to 405?
+
+assistant channel=analysis:
+Place a normal delivery for one bucket of crushed ice to room 405 with staging note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"405","amenity_name":"crushed ice (bucket)","quantity":1,"priority":"normal","note":"Dispatch from AT-4 pantry via S1"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-405-4412","eta_minutes":9}
+
+assistant channel=final:
+All set—one bucket of crushed ice is on the way to room 405 with an ETA of about 9 minutes.
+
+user:
+Thank you. Busy afternoon?
+
+assistant channel=final:
+A steady pace—just let me know what you need.
+
+user:
+What’s your usual timeframe for this floor?
+
+assistant channel=final:
+For floors 1–6, normal deliveries are about 8–14 minutes.
+
+user:
+Is the crusher brand Scotsman?
+
+assistant channel=final:
+[ATTENTION] Compiling available data.

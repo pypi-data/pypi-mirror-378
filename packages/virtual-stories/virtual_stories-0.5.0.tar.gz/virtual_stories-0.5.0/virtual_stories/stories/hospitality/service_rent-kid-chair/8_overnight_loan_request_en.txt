@@ -1,0 +1,62 @@
+"""
+Guest requests overnight use of a high chair; confirm allowable duration and arrange delivery.
+
+ROLES: user (guest planning late dinner and early breakfast), assistant (guest services approving extended duration loan)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"create_extended_loan","description":"Create extended-duration complimentary loan","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"duration_hours":{"type":"integer"}},"required":["hotel_id","room","duration_hours"]},"strict":true},
+  {"name":"schedule_delivery","description":"Schedule delivery with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Fjord Light Oslo (FLOS-04)
+Address: Nedre Slottsgate 7, 0157 Oslo, Norway
+Kids’ High Chairs: 13 units; complimentary; no deposit; standard loan 8 hours, extendable up to 24 hours on request.
+Delivery: ETA 8–14 minutes; quiet wheels used during night hours.
+Safety: Max weight 15 kg; use only on level floor; keep clear of heaters.
+Extras: Bottle drying rack available; child cutlery on request.
+
+user:
+Can we keep a high chair overnight in 1011?
+
+assistant channel=analysis:
+Approve extended loan for up to 24 hours; create order and schedule delivery.
+
+assistant channel=commentary to=tool.create_extended_loan:
+{"hotel_id":"FLOS-04","room":"1011","duration_hours":24}
+
+tool.create_extended_loan channel=commentary to=assistant:
+{"order_id":"FL-1011-240","status":"approved"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"FLOS-04","room":"1011","order_id":"FL-1011-240"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":9}
+
+assistant channel=final:
+Yes—an overnight loan is approved for up to 24 hours (FL-1011-240). Delivery should arrive in about 9 minutes.
+
+user:
+Is there any deposit required?
+
+assistant channel=analysis:
+Answer using system: no deposit.
+
+assistant channel=final:
+No deposit—the loan is complimentary.
+
+user:
+Could you provide the chair’s assembly manual?
+
+assistant channel=analysis:
+Not included—respond with ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Accessing relevant resources.
+

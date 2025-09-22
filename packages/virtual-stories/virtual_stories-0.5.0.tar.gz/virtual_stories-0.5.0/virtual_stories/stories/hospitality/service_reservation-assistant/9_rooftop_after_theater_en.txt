@@ -1,0 +1,55 @@
+"""
+Guest returning from a show asks for a rooftop or scenic spot around 9:15 PM; confirm nearby option via partner and book.
+
+ROLES: user (theater-goer), assistant (concierge booking a scenic venue through partner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"search_restaurant_availability","description":"Search availability","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","party_size","date","time"]},"strict":true},
+  {"name":"create_restaurant_booking","description":"Create booking","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","guest_name","party_size","date","time"]},"strict":true}
+]
+```
+"""
+
+system:
+The Tides New Orleans (TDNO-52)
+Address: 444 Canal St, New Orleans, LA 70130
+Concierge: 08:00–22:00; Partner: TableLink (partner_id TBL-770)
+Scenic nearby: "Bayou Vista Rooftop" (views), "Vieux Carré Brass" (Creole)
+Only services listed are available.
+
+user:
+After the show, can you get a scenic spot for two around 9:15 PM? Room 1908.
+
+assistant channel=analysis:
+Search 21:15 via TBL-770 for party of 2; book if available.
+
+assistant channel=commentary to=tool.search_restaurant_availability:
+{"partner_id":"TBL-770","party_size":2,"date":"2025-08-29","time":"21:15"}
+
+tool.search_restaurant_availability channel=commentary to=assistant:
+{"available":true,"options":[{"restaurant":"Bayou Vista Rooftop","time":"21:15"}]}
+
+assistant channel=commentary to=tool.create_restaurant_booking:
+{"partner_id":"TBL-770","guest_name":"Guest 1908","party_size":2,"date":"2025-08-29","time":"21:15"}
+
+tool.create_restaurant_booking channel=commentary to=assistant:
+{"reservation_id":"TBL-RES-9916","restaurant":"Bayou Vista Rooftop","status":"confirmed"}
+
+assistant channel=final:
+Confirmed—Bayou Vista Rooftop at 9:15 PM for two under TBL-RES-9916.
+
+user:
+The lobby band sounds great!
+
+assistant channel=final:
+Glad you’re enjoying the vibe.
+
+user:
+Can you share the venue’s private entertainment contracts?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

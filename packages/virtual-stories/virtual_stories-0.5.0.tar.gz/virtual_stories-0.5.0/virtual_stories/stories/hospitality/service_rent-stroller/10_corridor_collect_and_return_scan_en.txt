@@ -1,0 +1,49 @@
+"""
+Guest asks for corridor collection after use and how returns are scanned.
+
+ROLES: user (guest finishing a loan), assistant (guest services explaining barcode scan return and scheduling collection)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"schedule_collection","description":"Schedule corridor collection","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","room"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Opera House Sydney (OHS-61)
+Address: 2 Macquarie St, Sydney NSW 2000, Australia
+Family Desk: 07:00–21:00
+Returns: Barcode scan at door; runner confirms condition and closes loan
+Strollers: Single; 20 kg limit
+Accessories: Sunshade on request
+
+user:
+Can you collect the stroller from outside 723 when we’re done and scan it back in?
+
+assistant channel=analysis:
+Explain return barcode scan; schedule a corridor collection for room 723.
+
+assistant channel=commentary to=tool.schedule_collection:
+{"hotel_id":"OHS-61","room":"723"}
+
+tool.schedule_collection channel=commentary to=assistant:
+{"collection_eta_minutes":11,"runner":"Tara"}
+
+assistant channel=final:
+Yes—returns are closed by scanning the stroller’s barcode at your door. I’ve scheduled a corridor collection for room 723; Tara will arrive in about 11 minutes.
+
+user:
+The sails look beautiful tonight.
+
+assistant channel=final:
+They’re especially striking under the lights.
+
+user:
+Could you provide internal runner schedules?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

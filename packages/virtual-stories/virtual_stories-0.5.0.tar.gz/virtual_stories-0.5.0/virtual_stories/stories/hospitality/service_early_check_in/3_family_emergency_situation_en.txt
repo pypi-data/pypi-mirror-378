@@ -1,0 +1,73 @@
+"""
+Family with medical emergency requests early check-in for immediate rest. Includes compassionate small talk and handles special accommodation request.
+
+ROLES: user (family member with medical emergency), assistant (compassionate front desk agent)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_early_check_in",
+    "description": "Attempt early check-in for a reservation and return status and fee if approved.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_code":{"type":"string"},"desired_time":{"type":"string"}},"required":["reservation_code","desired_time"]},
+    "strict": true
+  },
+  {
+    "name": "check_medical_services",
+    "description": "Check available medical services and emergency contacts.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"service_type":{"type":"string","enum":["doctor","pharmacy","hospital","emergency"]}},"required":["service_type"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Canopy Bay Hotel — Front Desk
+Standard check-in: 15:00
+Early check-in window: from 10:00, subject to availability; fee may apply depending on time
+Medical emergency policy: Priority early check-in for medical situations, fee waivers considered case-by-case
+Hotel features: Oceanfront location with private beach access, 3 award-winning restaurants, full-service spa, 24-hour fitness center, business center, concierge services
+Room amenities: Premium bedding, marble bathrooms, smart TV, minibar, complimentary WiFi, room service, medical alert system
+Special services: Valet parking, airport shuttle, pet-friendly rooms, wheelchair accessible accommodations, 24-hour medical assistance
+Loyalty program: Gold tier (25+ nights/year), Platinum tier (50+ nights/year), Diamond tier (100+ nights/year)
+Dining: The Oceanview Restaurant (fine dining), The Breeze Café (casual), The Sunset Bar (cocktails and light bites)
+Recreation: Private beach with cabanas, infinity pool, tennis courts, golf course access, water sports equipment rental
+Wellness: Full-service spa with 12 treatment rooms, sauna, steam room, yoga classes, personal training sessions
+Medical services: On-site doctor available 24/7, pharmacy delivery service, hospital partnerships, emergency medical equipment
+
+user:
+Hello, I need urgent help. My elderly mother had a medical emergency and we need to check in immediately for reservation CB-44567. She needs to rest right away.
+
+assistant channel=analysis:
+This is a medical emergency situation requiring immediate attention. Request early check-in and check medical services availability for additional support.
+
+assistant channel=commentary to=tool.request_early_check_in:
+{"reservation_code":"CB-44567","desired_time":"08:00"}
+
+tool.request_early_check_in channel=commentary to=assistant:
+{"status":"approved","fee":"USD 0","note":"Medical emergency - fee waived"}
+
+assistant channel=commentary to=tool.check_medical_services:
+{"service_type":"doctor"}
+
+tool.check_medical_services channel=commentary to=assistant:
+{"available":true,"response_time":"15 minutes","services":["general_consultation","prescription","emergency_care"]}
+
+assistant channel=analysis:
+Early check-in approved with fee waived due to medical emergency. Medical services are available. Provide compassionate response and medical support information.
+
+assistant channel=final:
+I'm so sorry to hear about your mother's emergency. We've approved immediate early check-in at 8:00 AM with no fee. Our on-site doctor is available within 15 minutes if needed. Your room will be ready right away.
+
+user:
+Thank you so much. This has been such a stressful morning. Is there a pharmacy nearby?
+
+assistant channel=final:
+I understand this must be very difficult for you. We have pharmacy delivery service available, and there's also a 24-hour pharmacy just 5 minutes away. Would you like me to arrange delivery?
+
+user:
+Can you also arrange for a wheelchair to be ready at the entrance when we arrive?
+
+assistant channel=final:
+[ATTENTION] Wheelchair arrangements require coordination with our accessibility team. Checking available options.

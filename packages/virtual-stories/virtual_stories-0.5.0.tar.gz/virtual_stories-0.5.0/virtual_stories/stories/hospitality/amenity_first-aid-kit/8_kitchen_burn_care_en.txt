@@ -1,0 +1,78 @@
+"""
+Guest reports a minor kitchen burn in suite; requests burn gel and gauze; confirm inventory and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (suite guest), assistant (amenities & safety)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"burn_supply_check","description":"Check burn gel and sterile gauze availability.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"location":{"type":"string","enum":["front_desk","kitchenette_store"]},
+                  "item_type":{"type":"string","enum":["burn_gel","gauze"]}},
+     "required":["location","item_type"]},"strict":true},
+  {"name":"burn_supply_deliver","description":"Deliver burn care items to suite.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},
+                  "priority":{"type":"string","enum":["standard","urgent"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Artisan Lofts Hotel (hotel_id: ALH_den_23)
+Address: 310 Walnut St, Denver, CO 80205 | TZ: America/Denver
+
+In-Room Kitchen Safety:
+- Burn gel packets at front desk
+- Sterile gauze and wrap
+- Ice not recommended directly on burns
+- Delivery: 24/7 for medical supplies
+- Gallery floors with local art
+
+user:
+I touched a hot pan—could I get burn gel and gauze to suite 1502?
+
+assistant channel=analysis:
+Check front desk supplies then deliver urgently.
+
+assistant channel=commentary to=tool.burn_supply_check:
+{"location":"front_desk","item_type":"burn_gel"}
+
+tool.burn_supply_check channel=commentary to=assistant:
+{"available":true,"item":"burn_gel"}
+
+assistant channel=commentary to=tool.burn_supply_check:
+{"location":"front_desk","item_type":"gauze"}
+
+tool.burn_supply_check channel=commentary to=assistant:
+{"available":true,"item":"gauze"}
+
+assistant channel=commentary to=tool.burn_supply_deliver:
+{"room_number":"1502","items":["burn_gel","gauze"],"priority":"urgent"}
+
+tool.burn_supply_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":6,"runner":"loft-ops","ticket":"ALH-1502-BURN"}
+
+assistant channel=final:
+We’ll bring burn gel and sterile gauze to suite 1502—about 6 minutes (loft-ops, ticket ALH-1502-BURN). Avoid placing ice directly on the burn.
+
+user:
+Are the gallery floors open late?
+
+assistant channel=analysis:
+System mentions gallery floors but not hours—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check the gallery floor hours for you.
+
+user:
+The Walnut Street neighborhood is cool.
+
+assistant channel=analysis:
+Chitchat anchored to address.
+
+assistant channel=final:
+It’s a lively arts district—enjoy the murals nearby.
+

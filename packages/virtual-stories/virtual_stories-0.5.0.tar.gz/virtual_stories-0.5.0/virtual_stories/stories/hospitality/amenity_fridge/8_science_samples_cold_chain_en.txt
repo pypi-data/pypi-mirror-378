@@ -1,0 +1,85 @@
+"""
+Research guest requests precise cold-chain storage; confirm compliance, temp, and logging. Include chitchat and ATTENTION.
+
+ROLES: user (research fellow), assistant (amenities logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"cold_chain_check","description":"Check scientific storage support, including temp range and log availability.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"target_celsius":{"type":"number"}},
+     "required":["room_number","target_celsius"]},"strict":true},
+  {"name":"cold_chain_deliver","description":"Deliver fridge with temperature logging enabled.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"model":{"type":"string"}},
+     "required":["room_number","model"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Researcher’s Stay Aparthotel (hotel_id: RSA_sdv_02)
+Address: 901 Innovation Way, San Diego, CA 92121 | TZ: America/Los_Angeles
+
+Cold-Chain Support:
+- Medical/scientific fridges with 2–6°C control
+- USB temperature logger included (15-min intervals)
+- Chain-of-custody seals on request
+- Fee: Waived for research stays
+- Delivery: 24/7
+
+Amenities Snapshot:
+Kitchenettes in all rooms | Lab district shuttle | Quiet floors 10–12
+
+user:
+I need 5°C storage with logging in room 1012. Is that possible?
+
+assistant channel=analysis:
+Verify cold-chain support at 5°C and then deliver a unit with logger.
+
+assistant channel=commentary to=tool.cold_chain_check:
+{"room_number":"1012","target_celsius":5}
+
+tool.cold_chain_check channel=commentary to=assistant:
+{"supported":true,"model":"RSA-Lab-52L","logger":"included_15min","fee_waived":true}
+
+assistant channel=analysis:
+Proceed to deliver RSA-Lab-52L with logger.
+
+assistant channel=commentary to=tool.cold_chain_deliver:
+{"room_number":"1012","model":"RSA-Lab-52L"}
+
+tool.cold_chain_deliver channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":12,"runner":"fern","ticket":"RSA-1012-LAB"}
+
+assistant channel=final:
+Yes—RSA-Lab-52L with a 15‑minute interval USB logger is on its way to room 1012. Fee is waived for research, ETA ~12 minutes (runner Fern, ticket RSA-1012-LAB).
+
+user:
+Is there a quiet floor policy?
+
+assistant channel=analysis:
+Answer from Amenities Snapshot: quiet floors 10–12.
+
+assistant channel=final:
+Yes—floors 10–12 are designated quiet floors.
+
+user:
+Nice location—lots of labs around.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+We’re right in the lab district and run a shuttle for nearby campuses.
+
+user:
+Can you certify my storage logs for a grant submission?
+
+assistant channel=analysis:
+Certification process is outside defined scope—flag ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll look into log certification steps for your submission.
+

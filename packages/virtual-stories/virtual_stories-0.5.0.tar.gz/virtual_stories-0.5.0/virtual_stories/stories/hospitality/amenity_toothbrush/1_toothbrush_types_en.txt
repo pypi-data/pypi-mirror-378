@@ -1,0 +1,95 @@
+"""
+Guest requests a toothbrush with specific bristle preference; check options and deliver, include small talk, and one background acknowledgment.
+
+ROLES: user (guest requesting a toothbrush), assistant (amenities desk handling personal care items)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_toothbrush_stock",
+    "description": "Check available toothbrush types and sizes.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bristle": { "type": "string", "enum": ["soft", "medium"] },
+        "size": { "type": "string", "enum": ["adult", "child"] }
+      },
+      "required": ["bristle", "size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_toothbrush",
+    "description": "Deliver toothbrush to the guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "bristle": { "type": "string" },
+        "size": { "type": "string" }
+      },
+      "required": ["room_number", "bristle", "size"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: North River Park Hotel (hotel_id: nrp_pdx_12)
+Address: 44 NE River Pkwy, Portland, OR 97232
+Timezone: America/Los_Angeles
+
+Toothbrush Options:
+- Adult: soft, medium
+- Child: soft
+
+Lobby Detail:
+- Living wall with local ferns in the atrium
+
+user:
+Hi! Could I get a soft adult toothbrush to room 512?
+
+assistant channel=analysis:
+Check soft adult availability; then deliver to 512.
+
+assistant channel=commentary to=tool.check_toothbrush_stock:
+{"bristle":"soft","size":"adult"}
+
+tool.check_toothbrush_stock channel=commentary to=assistant:
+{"available":true,"brand":"EverClean","travel_cap":true}
+
+assistant channel=analysis:
+Deliver the soft adult toothbrush.
+
+assistant channel=commentary to=tool.deliver_toothbrush:
+{"room_number":"512","bristle":"soft","size":"adult"}
+
+tool.deliver_toothbrush channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":7,"runner":"cam"}
+
+assistant channel=final:
+On it—an EverClean soft adult toothbrush with a travel cap will reach room 512 in about 7 minutes.
+
+user:
+The plant wall in the atrium looks amazing.
+
+assistant channel=analysis:
+Reply with a brief acknowledgment tied to the lobby detail.
+
+assistant channel=final:
+It’s a living wall—local ferns make that atrium pop.
+
+user:
+Could you provide an electric toothbrush instead?
+
+assistant channel=analysis:
+Not covered by tools or system inventory; use background acknowledgment.
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available resources.
+

@@ -1,0 +1,71 @@
+"""
+Guest requests sanitary bags and asks about quiet hours; confirm availability and deliver; include small talk and acknowledgment.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bathroom_supplies","description":"Check availability for sanitary bags.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_bag"]}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_bathroom_supplies","description":"Deliver bathroom supplies to a room with placement.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1},"placement":{"type":"string","enum":["bathroom_counter","under_sink"]}},"required":["room_number","item_code","quantity","placement"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Maple Row Hotel (hotel_id: mr_tor_05)
+Address: 55 Front St W, Toronto, ON M5J 1E6
+Bathroom supply runs: 07:00–23:00; ETA 9–14 minutes
+Quiet hours: floors 20–28 after 22:00
+Wi‑Fi: 400/400 Mbps; CDN boost for video
+Dining: bakery counter 06:30–12:00; bistro 17:00–22:00
+Scent: light maple-wood note near elevators
+Check-in/out: 15:00 / 12:00
+
+Sanitary bag stock:
+- 200 sleeves available
+- Opaque, compostable
+- Placement: counter or under sink
+
+user:
+Could I have two sanitary bags to 2003 and leave them under the sink?
+
+assistant channel=analysis:
+Check stock then deliver 2 under_sink to 2003.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"item_code":"sanitary_bag"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_bag","on_hand":200}
+
+assistant channel=analysis:
+Proceed with delivery.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"2003","item_code":"sanitary_bag","quantity":2,"placement":"under_sink"}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"ticket_id":"BS-2003-1122","eta_minutes":10}
+
+assistant channel=final:
+Certainly—two sanitary bag sleeves will be placed under the sink in 2003. Ticket BS-2003-1122, about 10 minutes.
+
+user:
+Is 20th floor under quiet hours tonight?
+
+assistant channel=analysis:
+Answer from system quiet hours.
+
+assistant channel=final:
+Yes—floors 20–28 observe quiet hours after 22:00.
+
+user:
+Do you offer scented sanitary bag options?
+
+assistant channel=analysis:
+Not specified; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll verify if scented options exist. Reviewing procurement notes.
+

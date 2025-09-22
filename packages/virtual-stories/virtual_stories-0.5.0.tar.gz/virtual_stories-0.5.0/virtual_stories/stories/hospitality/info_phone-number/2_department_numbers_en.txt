@@ -1,0 +1,69 @@
+"""
+Guest asks for specific department phone numbers; provide main and housekeeping. Include small talk and one out-of-scope KPI request.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true},
+  {"name":"get_department_phone","description":"Return a department-specific phone number.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"department":{"type":"string","enum":["housekeeping","concierge","spa","restaurant","front_desk"]}},"required":["hotel_id","department"]},"strict":true}
+]
+```
+"""
+
+system:
+Marigold Quarters (hotel_id: marigold_quarters)
+Contacts: Main +1 646 555 2200 | Email hello@marigoldqtrs.com | Web https://marigoldqtrs.com
+Dept phones: Housekeeping +1 646 555 2202 | Concierge +1 646 555 2203
+Hours: Front desk 24/7; Housekeeping 06:00–23:00 local
+Highlights: Rooftop greenhouse; Vinyl listening nook; Tea cart 16:00–18:00.
+
+user:
+Can I get the housekeeping phone number?
+
+assistant channel=analysis:
+Fetch housekeeping phone via department tool.
+
+assistant channel=commentary to=tool.get_department_phone:
+{"hotel_id":"marigold_quarters","department":"housekeeping"}
+
+tool.get_department_phone channel=commentary to=assistant:
+{"department":"housekeeping","phone":"+1 646 555 2202"}
+
+assistant channel=final:
+Housekeeping: +1 646 555 2202.
+
+user:
+And what’s the main line?
+
+assistant channel=analysis:
+Use contact tool for main phone.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"marigold_quarters","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+1 646 555 2200"}
+
+assistant channel=final:
+Our main line is +1 646 555 2200.
+
+user:
+The vinyl nook is cool.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+Glad you like it—feel free to spin a record.
+
+user:
+What’s your average call handle time this week?
+
+assistant channel=analysis:
+Out of scope—no KPI data in system/tools.
+
+assistant channel=final:
+[ATTENTION] Call handling metrics aren’t available within the provided resources.
+

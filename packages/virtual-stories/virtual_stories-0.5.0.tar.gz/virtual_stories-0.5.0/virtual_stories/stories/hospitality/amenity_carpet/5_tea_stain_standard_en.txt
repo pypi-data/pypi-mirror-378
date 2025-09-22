@@ -1,0 +1,80 @@
+"""
+Guest reports a tea spill and asks about standard response time and method; provide details and schedule.
+
+ROLES: user (guest), assistant (operations desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"slot_lookup","description":"Return standard response window for spot clean.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"create_spot_ticket","description":"Create a spot clean ticket with method.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","method":"string"},"required":["room","method"]}}
+]
+```
+"""
+
+system:
+Birch & Stone Downtown (hotel_id: bsd_por_08)
+Address: 900 SW Alder St, Portland, OR 97205
+Timezone: America/Los_Angeles
+
+Methods:
+- Tea/coffee: low oxidizer + blot
+- Food oils: enzymatic pre-treat
+
+Response Windows:
+- Standard: 30–60 minutes
+- Expedite: 10–20 minutes (subject to availability)
+
+Noise:
+- Portable units under 55 dB; brief usage only
+
+Service Hours:
+- 08:00–21:30 daily
+
+Contact:
+- Housekeeping ext. 23
+
+user:
+Hello—small tea spill in room 714. What’s the standard response time, and can you schedule it?
+
+assistant channel=analysis:
+Answer from system: 30–60 min; method low oxidizer. Then create ticket.
+
+assistant channel=commentary to=tool.slot_lookup:
+{}
+
+tool.slot_lookup channel=commentary to=assistant:
+{"standard_window":"30-60_min","expedite":"10-20_min"}
+
+assistant channel=final:
+Standard response is 30–60 minutes. We treat tea with a low oxidizer and blot—shall I queue this for room 714?
+
+user:
+Yes, please.
+
+assistant channel=commentary to=tool.create_spot_ticket:
+{"room":"714","method":"oxidizer_low"}
+
+tool.create_spot_ticket channel=commentary to=assistant:
+{"ticket":"BSD-714-212","eta_minutes":38}
+
+assistant channel=final:
+Queued—ticket BSD-714-212 with ETA about 38 minutes.
+
+user:
+Your lobby has great plants.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+Thanks—we rotate local greenery to keep it fresh.
+
+user:
+Could you recommend a late-night tea café nearby?
+
+assistant channel=analysis:
+Outside system scope; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check for late-night tea cafés beyond our in-house services.

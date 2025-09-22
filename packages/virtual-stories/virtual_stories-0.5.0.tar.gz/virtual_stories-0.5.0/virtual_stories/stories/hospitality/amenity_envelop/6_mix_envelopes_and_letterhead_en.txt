@@ -1,0 +1,64 @@
+"""
+Guest requests a mix of standard and large envelopes plus letterhead; include chit-chat and [ATTENTION].
+
+ROLES: user (guest 733), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_stationery_item","description":"Deliver stationery items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_name":{"type":"string","enum":["envelope_standard","envelope_large","letterhead"]},"quantity":{"type":"integer","minimum":1}},"required":["room_number","item_name","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Capital View Hotel (hotel_id: cvh_dc)
+Address: 1776 Constitution Ave NW, Washington, DC 20006
+Timezone: America/New_York
+Stationery Inventory:
+- Standard envelopes: available
+- Large envelopes: available
+- Letterhead: available
+- Delivery window: 07:00–21:30; ETA 10–15 min
+- Concierge mail assistance on request
+Key JSON: {"std_env":true,"lg_env":true,"letterhead":true}
+
+user:
+Could I get three standard envelopes, one large envelope, and two letterhead sheets to 733?
+
+assistant channel=analysis:
+Place three deliveries to bundle items.
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"733","item_name":"envelope_standard","quantity":3}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"ok":true,"eta_minutes":12}
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"733","item_name":"envelope_large","quantity":1}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"ok":true,"eta_minutes":12}
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"733","item_name":"letterhead","quantity":2}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"ok":true,"eta_minutes":12}
+
+assistant channel=final:
+All set—envelopes (3 standard, 1 large) and 2 sheets of letterhead are on their way to 733 in about 12 minutes.
+
+user:
+The monument views are impressive at dusk.
+
+assistant channel=final:
+They look especially striking as the lights come on.
+
+user:
+Do you provide international mailing forms?
+
+assistant channel=final:
+[ATTENTION] I’ll check on international forms.
+

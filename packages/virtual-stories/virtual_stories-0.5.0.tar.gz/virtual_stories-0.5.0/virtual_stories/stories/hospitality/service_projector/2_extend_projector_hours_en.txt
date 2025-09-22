@@ -1,0 +1,66 @@
+"""
+Guest asks to extend an existing projector rental by two hours; confirm updated timing and fees.
+
+ROLES: user (guest hosting an extended workshop), assistant (AV coordinator handling projector schedule and billing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "extend_projector",
+    "description": "Extend an active projector reservation and return updated billing.
+    ",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reservation_id": {"type": "string"},
+        "additional_hours": {"type": "integer", "minimum": 1, "maximum": 5}
+      },
+      "required": ["reservation_id", "additional_hours"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Venue: Baygate Waterfront Hotel (BWH-SEA-12)
+Address: 88 Pierline Ave, Seattle, WA 98101
+Contact: Events Desk x7700 | av@baygatewaterfront.com
+Projector Package: LCD 4500 lumens, 1080p, HDMI, mini-HDMI, table stand
+Rate: USD 38/hour (first hour), USD 30/hour (each additional); tax 10.1%
+Delivery windows: 07:00–22:00 (AV tech), 22:00–01:00 (Front Desk basic delivery)
+Screen rental: optional 80" tripod screen, USD 15/hour
+Power: 120V, max draw 3.5A; surge strip included on request
+Inventory note: Units BG-PJ-11 through BG-PJ-18 in service; cleaning cycle nightly 01:00–03:00
+Policy: Extensions subject to availability; maximum total per booking 8 hours
+
+user:
+Hi—can you extend projector reservation pj_7129 by 2 hours?
+
+assistant channel=analysis:
+We should extend reservation pj_7129 by 2 hours via the tool, then report updated bill based on the tool output only.
+
+assistant channel=commentary to=tool.extend_projector:
+{"reservation_id":"pj_7129","additional_hours":2}
+
+tool.extend_projector channel=commentary to=assistant:
+{"reservation_id":"pj_7129","status":"extended","new_total_hours":5,"hourly_rate_first":38,"hourly_rate_additional":30,"currency":"USD","estimated_subtotal":158}
+
+assistant channel=final:
+Extension confirmed for pj_7129: now 5 total hours. Estimated subtotal USD 158 (rates per tool output). Anything else for the setup today?
+
+user:
+Thanks—by the way, the lobby smells like fresh coffee.
+
+assistant channel=final:
+We keep fresh brews by the waterfront café—enjoy your break.
+
+user:
+Can you also add a 120" screen with skirt?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

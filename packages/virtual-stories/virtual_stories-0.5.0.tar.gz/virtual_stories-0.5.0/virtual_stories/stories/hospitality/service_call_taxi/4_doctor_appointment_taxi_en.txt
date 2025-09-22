@@ -1,0 +1,70 @@
+"""
+Guest requests taxi for a clinic appointment; include in-context answer and [ATTENTION] handled via tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {"name":"get_taxi_eta","description":"Live ETA","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"vehicle_type":{"type":"string","enum":["sedan","van","luxury","eco"]}},"required":["pickup_point","vehicle_type"]}},
+  {"name":"request_taxi","description":"Dispatch taxi","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"destination":{"type":"string"},"passengers":{"type":"integer"},"vehicle_type":{"type":"string","enum":["sedan","van","luxury","eco"]}},"required":["pickup_point","destination","passengers","vehicle_type"]}}
+]
+"""
+
+system:
+Hotel: Pacific Garden Hotel (hotel_id: pacific_garden_sfo)
+Address: 500 Pine St, San Francisco, CA 94108 | Timezone: America/Los_Angeles
+Check-in 3 PM | Check-out 12 PM | Phone: +1-415-555-2121
+Taxi desk: 24/7 coverage via concierge rota; luxury cars available 07:00–21:00 only.
+Pickups: "Pine Street Bay" (sedan/eco), "Stockton Ramp" (van/luxury).
+Accessibility: request van for non-foldable wheelchair.
+Payments: most taxis accept major cards; hotel cannot charge taxi fare to room.
+Traffic note: rush hour 16:00–18:30 may add 10–15 minutes to ETA.
+
+user:
+Can you get me a taxi to UCSF Medical Center?
+
+assistant channel=analysis:
+Confirm we can and where pickup points are; offer ETA.
+
+assistant channel=final:
+Yes—we can dispatch a sedan from Pine Street Bay or a van from Stockton Ramp. Want me to check the live ETA?
+
+user:
+Do you have luxury cars at midnight?
+
+assistant channel=analysis:
+Answer from system: luxury only 07:00–21:00.
+
+assistant channel=final:
+Luxury cars run 07:00–21:00; at midnight we can arrange a sedan or van instead.
+
+user:
+[ATTENTION] What's the current ETA for a sedan at Pine Street Bay?
+
+assistant channel=analysis:
+Use get_taxi_eta with Pine Street Bay and sedan.
+
+assistant channel=commentary to=get_taxi_eta:
+{"pickup_point":"Pine Street Bay","vehicle_type":"sedan"}
+
+tool.get_taxi_eta:
+{"eta_minutes": 4, "provider":"Union Square Cabs","vehicle":"Silver Camry 8JKR291"}
+
+assistant channel=final:
+Live ETA is 4 minutes for a sedan at Pine Street Bay (Silver Camry 8JKR291) via Union Square Cabs.
+
+user:
+Please book for 1 passenger.
+
+assistant channel=analysis:
+Dispatch via request_taxi.
+
+assistant channel=commentary to=request_taxi:
+{"pickup_point":"Pine Street Bay","destination":"UCSF Medical Center","passengers":1,"vehicle_type":"sedan"}
+
+tool.request_taxi:
+{"status":"confirmed","dispatch_id":"PG-5512","eta_minutes":4}
+
+assistant channel=final:
+Booked—Dispatch PG-5512, sedan to UCSF, ETA 4 minutes at Pine Street Bay. Anything else today?
+

@@ -1,0 +1,50 @@
+"""
+Guest asks about a kids’ set and seating duration; we answer with a quick availability check and confirm timing, include small talk, and flag an out‑of‑scope entertainer request.
+
+ROLES: user (guest with a child), assistant (lounge concierge clarifying offerings and timing)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_table_availability","description":"Check availability for a party and time.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]}}
+]
+```
+"""
+
+system:
+Orchid Lounge — Afternoon Tea
+Details:
+- Hours 13:00–17:00; typical seating duration ~90 minutes
+- Kids’ set available on request
+- Location Level 2; step‑free access; cloakroom next door
+
+user:
+Do you have a kids’ set, and how long is the seating if I come at 14:00 with 3 people?
+
+assistant channel=analysis:
+Check availability for 3 at 14:00 and confirm kids’ set and duration from system.
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_orchid_lounge","party_size":3,"datetime":"2025-09-05T14:00:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=final:
+We do offer a kids’ set. Seating is typically around 90 minutes; there’s availability for 3 at 14:00.
+
+user:
+Great—Level 2 is easy for us.
+
+assistant channel=final:
+Glad the access works for you.
+
+user:
+Could you arrange a magician to perform at our table?
+
+assistant channel=analysis:
+Entertainment arrangements aren’t described; use special flag.
+
+assistant channel=final:
+[ATTENTION] Table entertainment isn’t covered in these resources. Reviewing available resources.
+

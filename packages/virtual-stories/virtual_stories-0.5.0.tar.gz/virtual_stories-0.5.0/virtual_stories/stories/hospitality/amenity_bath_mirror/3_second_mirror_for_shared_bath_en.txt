@@ -1,0 +1,93 @@
+"""
+Two guests sharing a bath request an additional magnifying mirror; verify stock and deliver. Include small talk, an in-context amenity run hours question, and an [ATTENTION] request.
+
+ROLES: user (two guests), assistant (concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_mirror_stock","description":"Check stock for mirror item.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string"}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_mirror","description":"Deliver mirror to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1}} ,"required":["room_number","item_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Willow Arcade (hotel_id: twa_or_21)
+Address: 100 Alder St, Portland, OR 97204
+Timezone: America/Los_Angeles
+Amenity Runs: 08:00–22:00
+
+Mirror Options:
+- bath_mirror_magnifying: stock 10
+- table_led_mirror: stock 2
+
+Spaces:
+1) Arcade courtyard with string lights
+2) Tea bar 06:30–12:30
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Local maker wall
+
+Dining:
+- Tea bar 06:30–12:30; evening snacks 17:00–20:00
+
+Accessibility:
+- Step-free access to courtyard; ADA rooms available
+
+Sustainability:
+- Recycling program; refillable amenities
+
+Transportation:
+- Streetcar stop one block away
+
+user:
+Could we get another magnifying mirror to 1005? We’re sharing the bathroom.
+
+assistant channel=analysis:
+Check stock and deliver 1 bath_mirror_magnifying.
+
+assistant channel=commentary to=tool.check_mirror_stock:
+{"item_code":"bath_mirror_magnifying"}
+
+tool.check_mirror_stock channel=commentary to=assistant:
+{"item_code":"bath_mirror_magnifying","on_hand":10}
+
+assistant channel=commentary to=tool.deliver_mirror:
+{"room_number":"1005","item_code":"bath_mirror_magnifying","quantity":1}
+
+tool.deliver_mirror channel=commentary to=assistant:
+{"ticket":"TWA-1005-775","eta_minutes":12}
+
+assistant channel=final:
+I’ve arranged one magnifying mirror for 1005 under ticket TWA-1005-775. ETA is about 12 minutes.
+
+user:
+Is amenity delivery available this evening?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—amenity runs operate 08:00–22:00.
+
+user:
+The courtyard lights look great after sunset.
+
+assistant channel=analysis:
+Chit-chat referencing spaces.
+
+assistant channel=final:
+The string-lit arcade courtyard is a cozy spot at night.
+
+user:
+Could you arrange a last-minute haircut nearby?
+
+assistant channel=analysis:
+Out of scope; use flag.
+
+assistant channel=final:
+[ATTENTION] Processing your request.
+
+user:
+Thanks!

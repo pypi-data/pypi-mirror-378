@@ -1,0 +1,59 @@
+"""
+Guest asks for two ironing boards; assistant follows policy to deliver one and clarifies the limit.
+
+ROLES: user (guest in room 1215 requesting two ironing boards), assistant (concierge applying the one-per-room policy and arranging delivery of one board)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check stock level","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Schedule delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Lakeside Promenade — North Tower
+Room: 1215 (Premier Twin)
+Policy: Ironing boards provided on request; 1 per room maximum
+Service window: 07:00–23:00 (normal); 23:00–01:00 (urgent limited)
+SLA to floors 12–14: normal 10–16 minutes
+Staging: NT-12 pantry; S1 elevator
+Contacts: 0; 7980; 7981
+
+user:
+Could I get two ironing boards to 1215?
+
+assistant channel=analysis:
+Per policy, only 1 board per room can be provided; confirm availability and arrange delivery of 1, then clarify policy.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board","available":true,"in_stock":13}
+
+assistant channel=analysis:
+Place normal delivery for 1 board to 1215 and state the one-per-room policy.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1215","amenity_name":"ironing board","quantity":1,"priority":"normal","note":"Policy limit reached: 1 per room"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-1215-9911","eta_minutes":12}
+
+assistant channel=final:
+I’ve scheduled one ironing board for room 1215 (ETA about 12 minutes). Our policy allows 1 board per room; if you need it moved between rooms, I can help coordinate during the service window.
+
+user:
+Thanks! Until when is the window open?
+
+assistant channel=final:
+Normal service runs 07:00–23:00, with urgent coverage 23:00–01:00.
+
+user:
+Do you know the exact board dimensions?
+
+assistant channel=final:
+[ATTENTION] Evaluating potential solutions.
+

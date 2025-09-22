@@ -1,0 +1,117 @@
+"""
+Guest requests a bathroom scale with a preferred unit; confirm availability, deliver, and calibrate; include small talk and one background-acknowledgment message.
+
+ROLES: user (guest requesting a bathroom scale), assistant (front desk arranging appliance loan and calibration)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_appliance_inventory",
+    "description": "Check availability of bathroom scales by type.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "enum": ["bathroom_scale"] },
+        "type": { "type": "string", "enum": ["digital", "analog"] }
+      },
+      "required": ["item_code", "type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_appliance",
+    "description": "Deliver a bathroom scale to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "type": { "type": "string", "enum": ["digital", "analog"] }
+      },
+      "required": ["room_number", "item_code", "type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "calibrate_scale",
+    "description": "Calibrate a bathroom scale and set units.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "type": { "type": "string", "enum": ["digital", "analog"] },
+        "unit": { "type": "string", "enum": ["kg", "lb"] }
+      },
+      "required": ["room_number", "type", "unit"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Skyline Vista Hotel (hotel_id: sv_den_12)
+Address: 2900 Colfax Ridge, Denver, CO 80206
+Appliance lending: 06:00–22:00; typical delivery ETA 10–18 minutes
+
+Bathroom scales:
+- Types: digital (kg/lb switch), analog
+- Batteries: digital uses AAA
+- Inventory snapshot: digital(11), analog(4)
+
+Art detail:
+- The sky lobby features a wraparound skyline mural.
+
+user:
+Could I get a digital bathroom scale sent to room 2605, set to pounds?
+
+assistant channel=analysis:
+Check digital availability, deliver to 2605, then calibrate to lb.
+
+assistant channel=commentary to=tool.check_appliance_inventory:
+{"item_code":"bathroom_scale","type":"digital"}
+
+tool.check_appliance_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"bathroom_scale","type":"digital","on_hand":11}
+
+assistant channel=analysis:
+Proceed with delivery, then calibration to lb.
+
+assistant channel=commentary to=tool.deliver_appliance:
+{"room_number":"2605","item_code":"bathroom_scale","type":"digital"}
+
+tool.deliver_appliance channel=commentary to=assistant:
+{"ticket_id":"AP-2605-5581","eta_minutes":15}
+
+assistant channel=commentary to=tool.calibrate_scale:
+{"room_number":"2605","type":"digital","unit":"lb"}
+
+tool.calibrate_scale channel=commentary to=assistant:
+{"calibrated":true,"unit":"lb"}
+
+assistant channel=final:
+Done—a digital bathroom scale is en route to 2605, set to pounds. Ticket AP-2605-5581, arriving in about 15 minutes.
+
+user:
+I noticed the skyline mural in the lobby—very striking.
+
+assistant channel=analysis:
+Reply with a brief acknowledgment tied to the art detail.
+
+assistant channel=final:
+It wraps the entire sky lobby—one of our favorite details.
+
+user:
+Does it also measure body fat percentage?
+
+assistant channel=analysis:
+Body composition features aren’t listed in tools or system; use the flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check device capabilities. Looking up the latest information.
+

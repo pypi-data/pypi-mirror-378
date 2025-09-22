@@ -1,0 +1,64 @@
+"""
+Guest asks about temperature and air quality, and whether it can be made cooler.
+
+ROLES: user (temperature-sensitive guest), assistant (concierge referencing climate targets + tool metrics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "get_environment_metrics",
+    "description": "Return current temperature, humidity, and CO₂ within the reading space.",
+    "parameters": {"type":"object","properties":{},"required":[],"additionalProperties":false},
+    "strict": true
+  }
+]
+"""
+
+system:
+Space: Ink & Air Nook (ventilated reading pod)
+Location: Level 5, central spine near skylight
+Hours: 24/7 (badge access after 23:00)
+Seats: 8 pods with acoustic felt and footrests
+Climate Targets: 21–22 °C; humidity 45–55%; CO₂ < 900 ppm
+HVAC: Quiet mode 22:00–06:00; filters MERV 13
+Amenities: Throw blankets, citrus water, headset hangers
+Rules: Keep pods tidy; no food; whispered conversation ok
+Sensors: Live dashboard updates every 2 minutes
+Lighting: 350–420 lux; circadian tune 17:30
+
+user:
+What’s the temperature and air quality like right now?
+
+assistant channel=analysis:
+Use the environment tool to report current values; don’t exceed targets in claims.
+
+assistant channel=commentary to=tool.get_environment_metrics:
+{}
+
+tool.get_environment_metrics channel=commentary to=assistant:
+{"temperature_c":21.8,"humidity_pct":48,"co2_ppm":640}
+
+assistant channel=analysis:
+State the current metrics and relate to targets.
+
+assistant channel=final:
+Currently about 21.8 °C, 48% humidity, and ~640 ppm CO₂—right within the 21–22 °C, 45–55%, and <900 ppm targets.
+
+user:
+Nice. It feels comfy.
+
+assistant channel=analysis:
+Short positive response.
+
+assistant channel=final:
+Glad it hits your comfort range.
+
+user:
+Could you lower it to 19 °C for me tonight?
+
+assistant channel=analysis:
+Adjusting below targets isn’t defined—flag attention.
+
+assistant channel=final:
+[ATTENTION] You’re asking to cool the nook to 19 °C. I’ll check if that’s possible.
+

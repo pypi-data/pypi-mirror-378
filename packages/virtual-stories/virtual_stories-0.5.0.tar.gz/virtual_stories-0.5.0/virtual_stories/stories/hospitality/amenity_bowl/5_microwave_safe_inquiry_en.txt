@@ -1,0 +1,65 @@
+"""
+Guest asks specifically for microwave-safe bowls and whether they can be re-sanitized before delivery.
+
+ROLES: user (long-stay guest), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_inventory","description":"Check porcelain bowls (microwave-safe)","parameters":{"type":"object","properties":{"item_code":{"type":"string"},"quantity":{"type":"integer"}},"required":["item_code"],"additionalProperties":false},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver with re-sanitization","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"quantity_map":{"type":"object","additionalProperties":{"type":"integer"}},"priority":{"type":"string","enum":["normal","express"]},"sanitized":{"type":"boolean"}},"required":["room_number","items"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Harbor Quay Extended Stay (hotel_id: hqes_sea_01)
+Address: 1200 Alaskan Way, Seattle, WA 98101
+Timezone: America/Los_Angeles
+
+Kitchenette Support:
+- Porcelain bowls: microwave-safe, 16 oz
+- Stainless bowls: 18 oz (no microwave)
+- Re-sanitization available on request
+- Standard delivery: 12–18 minutes
+- Borrowable microwaves for studios on request
+
+user:
+Hello—can I get three microwave-safe bowls to 804, re-sanitized? What’s the typical delivery time?
+
+assistant channel=analysis:
+Answer timing; check stock; schedule delivery with sanitized=true.
+
+assistant channel=final:
+Standard delivery runs 12–18 minutes. I’ll queue three porcelain bowls now and have them re-sanitized.
+
+assistant channel=commentary to=tool.check_amenity_inventory:
+{"item_code":"bowl_porcelain","quantity":3}
+
+tool.check_amenity_inventory channel=commentary to=assistant:
+{"item_code":"bowl_porcelain","on_hand":28,"can_fulfill":true,"notes":"microwave_safe"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"804","items":["bowl_porcelain"],"quantity_map":{"bowl_porcelain":3},"priority":"normal","sanitized":true}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ticket_id":"HQES-804-SEA-330","estimated_minutes":15,"items":[{"code":"bowl_porcelain","qty":3}],"sanitized":"re_sanitized"}
+
+assistant channel=final:
+Confirmed—ticket HQES-804-SEA-330, three porcelain bowls in ~15 minutes.
+
+user:
+Thanks! I like the waterfront view from the lobby.
+
+assistant channel=final:
+It’s a guest favorite—especially around sunset.
+
+user:
+Any seafood markets within walking distance?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check nearby seafood markets and walking routes.
+

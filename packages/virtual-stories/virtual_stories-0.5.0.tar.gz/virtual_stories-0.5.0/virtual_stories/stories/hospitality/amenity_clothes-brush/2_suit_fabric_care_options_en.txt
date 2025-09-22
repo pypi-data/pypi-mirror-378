@@ -1,0 +1,102 @@
+"""
+Guest compares brush options for different fabrics; arrange delivery and include small talk.
+
+ROLES: user (guest in room 1206 preparing for a reception), assistant (guest services for garment care)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "list_garment_care_items",
+    "description": "List available garment care items and recommended fabric compatibility.
+Supports category clothes_brush and returns codes, descriptions, and best_for.",
+    "parameters": {"type":"object","additionalProperties":false,
+      "properties":{"category":{"type":"string","enum":["clothes_brush"]}},
+      "required":["category"]},
+    "strict": true
+  },
+  {
+    "name": "deliver_garment_care_item",
+    "description": "Deliver selected garment care items to a room with priority.",
+    "parameters": {"type":"object","additionalProperties":false,
+      "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"priority":{"type":"string","enum":["normal","express"]}},
+      "required":["room_number","items","priority"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Cedar & Slate Urban Lodge (hotel_id: csul_portland)
+Address: 317 NW Alder St, Portland, OR 97209
+Timezone: America/Los_Angeles
+
+Service Windows:
+- Garment-care dispatch: 07:00–23:00 (express until 00:30)
+- Typical ETA floors 10–15: 10–18 minutes
+
+Brush Inventory & Guidance:
+- boar_bristle_oak: Boar‑bristle brush with oiled oak handle — ideal for wool and tweed
+- horsehair_beech: Fine horsehair with beechwood — suitable for cashmere and delicate weaves
+- nylon_anti_static_travel: Compact nylon anti‑static — best for synthetics and blends
+- lint_roller_refill: Paper lint roller refill — for quick lint removal only
+
+Loan Terms:
+- Complimentary use; one brush per room, return at checkout or turndown
+- Sanitized after every use; replacement available upon request if bristles deform
+
+House Etiquette Quick Notes:
+- Always brush with the grain from shoulders downward
+- For cashmere, short gentle strokes with horsehair_beech
+
+Property Profile:
+"Cedar & Slate" emphasizes natural materials and clean lines. Rooms feature wool throws from Pendleton, locally fired ceramic mugs, and low‑VOC finishes. A mezzanine library looks into a double‑height lobby where cedar beams frame a slate fireplace. The hotel partners with neighborhood tailors for formalwear emergencies (coordination via concierge only during business hours). Guests on event floors receive garment steaming mats and reinforced hangers.
+
+Sustainability Snapshot:
+- On‑site laundry uses ozone‑assisted cold‑water cycles reducing energy by 35%
+- Brush handles sourced from FSC‑certified woods; nylon heads are replaceable
+- Microfiber capture filters installed on laundry discharge lines
+
+user:
+Hello! I’ve got a wool blazer and a silk dress to prep in room 1206. Which clothes brush should I use for each?
+
+assistant channel=analysis:
+List brush options; map wool to boar_bristle_oak and silk (delicate weave) to horsehair_beech per guidance; then offer delivery.
+
+assistant channel=commentary to=tool.list_garment_care_items:
+{"category":"clothes_brush"}
+
+tool.list_garment_care_items channel=commentary to=assistant:
+{"items":[{"code":"boar_bristle_oak","best_for":["wool","tweed"]},{"code":"horsehair_beech","best_for":["cashmere","silk","delicate_weaves"]},{"code":"nylon_anti_static_travel","best_for":["synthetics","blends"]},{"code":"lint_roller_refill","best_for":["lint_only"]}],"eta_minutes_range":"10-18"}
+
+assistant channel=final:
+For the wool blazer, choose the boar‑bristle brush (boar_bristle_oak). For the silk dress, a gentle horsehair brush (horsehair_beech) is best for delicate weaves. Would you like both sent to room 1206?
+
+user:
+Yes please. And the lobby smells amazing—what is that?
+
+assistant channel=analysis:
+Small talk reply using property profile detail.
+
+assistant channel=final:
+That’s our cedar framing near the slate fireplace—warm wood notes carry through the lobby.
+
+assistant channel=commentary to=tool.deliver_garment_care_item:
+{"room_number":"1206","items":["boar_bristle_oak","horsehair_beech"],"priority":"express"}
+
+tool.deliver_garment_care_item channel=commentary to=assistant:
+{"request_id":"GC-1206-2204","eta_minutes":12,"items":["boar_bristle_oak","horsehair_beech"]}
+
+assistant channel=final:
+All set—request GC-1206-2204 is scheduled. The two brushes will arrive in about 12 minutes.
+
+user:
+Do you offer after-hours tailoring if something rips later tonight?
+
+assistant channel=analysis:
+After-hours tailoring is not covered; flag attention.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking about after-hours tailoring. Assessing available options.
+

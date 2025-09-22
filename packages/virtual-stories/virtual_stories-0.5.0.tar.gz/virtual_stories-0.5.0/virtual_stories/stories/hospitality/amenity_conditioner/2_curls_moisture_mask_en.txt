@@ -1,0 +1,145 @@
+"""
+Guest needs curl-friendly moisturizing conditioners and masks.
+Include sulfate-free options, delivery sizing, and allergy checks.
+
+ROLES: user (guest requesting curl-care conditioners), assistant (spa amenities concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_hair_care_products",
+    "description": "Retrieve available premium hair care products including conditioners.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hair_type": { "type": "string", "enum": ["dry", "oily", "normal", "curly", "colored", "damaged", "all"] },
+        "product_type": { "type": "string", "enum": ["conditioner", "deep_treatment", "leave_in", "all_conditioning"] }
+      },
+      "required": []
+    },
+    "strict": true
+  },
+  {
+    "name": "check_ingredient_allergies",
+    "description": "Check if products contain specific ingredients for allergy-sensitive guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_sku": { "type": "string" },
+        "allergens_to_avoid": { 
+          "type": "array",
+          "items": { "type": "string", "enum": ["sulfates", "parabens", "fragrance", "coconut", "tree_nuts", "gluten"] }
+        }
+      },
+      "required": ["product_sku", "allergens_to_avoid"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_hair_care_amenities",
+    "description": "Arrange delivery of hair care products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": {
+          "type": "array",
+          "items": { 
+            "type": "object", 
+            "properties": { 
+              "sku": { "type": "string" },
+              "size": { "type": "string", "enum": ["travel_50ml", "standard_200ml", "luxury_400ml"] }
+            }, 
+            "required": ["sku", "size"], 
+            "additionalProperties": false 
+          }
+        },
+        "delivery_preference": { "type": "string", "enum": ["immediate", "evening_turndown", "morning_service"] }
+      },
+      "required": ["room_number", "products", "delivery_preference"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Aurora Cove Spa Hotel (hotel_id: acs_barcelona)
+Address: Passeig Marítim 200, 08005 Barcelona, Spain
+Timezone: Europe/Madrid
+
+Signature Curl Care Collection:
+- Curly-hair focused, moisture-rich formulas
+- Sulfate- and paraben-free standards across core line
+- Three conditioning tiers: daily conditioner, leave-in, deep mask
+- Sizes: 50ml travel, 200ml standard, 400ml luxury
+- Same-floor spa runner for swift deliveries
+
+Highlighted Products and SKUs:
+- COND_CURL_QUENCH: Curl Quench Hydrating Conditioner
+- COND_CURL_MASK: Deep Curl Renewal Mask
+- COND_LEAVEIN_CURL: Lightweight Leave-In Curl Milk
+- COND_FRIZZ_SHIELD: Anti-Frizz Defining Conditioner
+
+Delivery Windows:
+- Immediate (15–20 min), Evening turndown, Morning service
+
+user:
+Hi there! I’ve got tight curls and the in-room conditioner isn’t cutting it. Do you have something more moisturizing and curl-friendly?
+
+assistant channel=analysis:
+Identify curl-focused conditioners and masks; present sulfate-free options.
+
+assistant channel=commentary to=tool.get_hair_care_products:
+{"hair_type": "curly", "product_type": "all_conditioning"}
+
+tool.get_hair_care_products channel=commentary to=assistant:
+{"products":[{"sku":"COND_CURL_QUENCH","name":"Curl Quench Hydrating Conditioner","treatment_type":"daily_conditioner"},{"sku":"COND_CURL_MASK","name":"Deep Curl Renewal Mask","treatment_type":"deep_treatment"},{"sku":"COND_LEAVEIN_CURL","name":"Lightweight Leave-In Curl Milk","treatment_type":"leave_in"}],"sulfate_free":true}
+
+assistant channel=final:
+Absolutely—our Curl Quench Hydrating Conditioner (daily), Deep Curl Renewal Mask (weekly), and Leave-In Curl Milk are all curl-friendly and sulfate-free. Which would you like?
+
+user:
+That deep mask sounds great. I’m sensitive to parabens and heavy fragrance—does it have either?
+
+assistant channel=analysis:
+Run allergy check for parabens and fragrance.
+
+assistant channel=commentary to=tool.check_ingredient_allergies:
+{"product_sku":"COND_CURL_MASK","allergens_to_avoid":["parabens","fragrance"]}
+
+tool.check_ingredient_allergies channel=commentary to=assistant:
+{"product_sku":"COND_CURL_MASK","safe_for_allergies":true,"ingredient_check":{"parabens":false,"fragrance":"light_natural_essential_oils_only"}}
+
+assistant channel=final:
+Good news—the Deep Curl Renewal Mask is paraben-free with only light natural essential oils. What’s your room number and preferred size: 50ml, 200ml, or 400ml?
+
+user:
+Room 718. Let’s do the 200ml. Also, random question—what’s the best tapas bar nearby?
+
+assistant channel=analysis:
+Arrange delivery; tapas query is beyond scope -> mark [ATTENTION].
+
+assistant channel=commentary to=tool.deliver_hair_care_amenities:
+{"room_number":"718","products":[{"sku":"COND_CURL_MASK","size":"standard_200ml"}],"delivery_preference":"immediate"}
+
+tool.deliver_hair_care_amenities channel=commentary to=assistant:
+{"delivery_id":"SPA-718-ACB-12","eta_minutes":18,"delivered_by":"spa_runner_floor7","products":[{"sku":"COND_CURL_MASK","size":"standard_200ml","use":"Apply mid-lengths to ends; 10 minutes; rinse"}]}
+
+assistant channel=final:
+[ATTENTION] Your Deep Curl Renewal Mask (200ml) is on the way under delivery SPA-718-ACB-12, arriving in about 18 minutes via our spa runner. For tapas recommendations, checking available options.
+
+user:
+Thanks! And by the way, the lobby smells amazing—what scent is that?
+
+assistant channel=analysis:
+This detail isn’t in system context; avoid new facts. Keep light chitchat without adding facts.
+
+assistant channel=final:
+Glad you’re enjoying the ambiance! If you’d like, I can note your preference so we align in-room amenities accordingly.
+

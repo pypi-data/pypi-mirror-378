@@ -1,0 +1,68 @@
+"""
+Beach resort guest requests waterproof hair ties; includes add-on Q&A and an [ATTENTION] item.
+
+ROLES: user (guest in 524), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check amenity stock.","parameters":{"type":"object","properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string"},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Resort: Azure Strand
+Amenities: waterproof hair ties (surf-safe); scrunchies (cotton)
+Delivery: 10–16 min (Block B floors 5–8)
+Hours: 07:00–22:00
+Limit: 8/day
+Add-on: beach pouch $2
+Ext: Concierge 0; Beach Desk 77
+
+user:
+Hi—room 524. Could I have 4 waterproof hair ties?
+
+assistant channel=analysis:
+Check availability; deliver 4 to 524 with normal priority.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"waterproof hair ties","quantity":4}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"available":true,"in_stock":43}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"524","amenity_name":"waterproof hair ties","quantity":4,"priority":"normal","note":"Block B"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"AZ-524-WT-44","eta_minutes":12}
+
+assistant channel=final:
+Done—4 waterproof hair ties heading to 524. ETA ~12 minutes.
+
+user:
+Do you have beach pouches?
+
+assistant channel=analysis:
+System add-on beach pouch $2.
+
+assistant channel=final:
+Yes—beach pouches are available for $2.
+
+user:
+Waves sound relaxing.
+
+assistant channel=final:
+Enjoy the shoreline.
+
+user:
+Can you reserve surf lessons for me?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I’ll check surf lesson availability.
+

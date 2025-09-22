@@ -1,0 +1,84 @@
+"""
+Parent asks about age policy for teen and books one spot.
+
+ROLES: user (parent verifying teen access and wanting a slot), assistant (spa receptionist confirming policy and scheduling)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_hours_today","description":"Return today’s hours and maintenance blocks.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"find_slot","description":"Find a slot near a target time.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"target_time":{"type":"string","format":"date-time"}},"required":["hotel_id","target_time"]},"strict":true},
+  {"name":"reserve_slot","description":"Reserve a slot for one guest.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"slot_id":{"type":"string"}},"required":["hotel_id","slot_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Sterling Quay Hotel (hotel_id: sterling_quay_chi)
+Address: 300 Riverbend Dr, Chicago, IL 60601 | Timezone: America/Chicago
+Steam Room “Riverstone”
+  Location: Spa Level 2; glass door past cold plunge
+  Hours: 09:00–21:00; last entry 20:40; UV sanitation at :20/:50 (5 min)
+  Capacity: 2; 20-minute windows
+  Amenities: Eucalyptus steam; citrus-infused water; plush grey towels
+  Attire: Swimwear; quiet voices; no phones
+  Age Policy: 16+ with guardian present in facility; under 16 not permitted
+  Payment: Room charge or card
+
+user:
+Is my 16-year-old allowed? Also, can I get something around 6:30 PM for one?
+
+assistant channel=analysis:
+Confirm hours; answer age policy from system; find a slot near 18:30 and reserve it.
+
+assistant channel=commentary to=tool.get_hours_today:
+{"hotel_id":"sterling_quay_chi"}
+
+tool.get_hours_today channel=commentary to=assistant:
+{"hours":"09:00-21:00","last_entry":"20:40","maintenance":"20,50"}
+
+assistant channel=final:
+We’re open 9:00 AM–9:00 PM (last entry 8:40 PM). Guests aged 16+ may use the steam with a guardian present in the facility.
+
+assistant channel=commentary to=tool.find_slot:
+{"hotel_id":"sterling_quay_chi","target_time":"2025-09-02T18:30:00"}
+
+tool.find_slot channel=commentary to=assistant:
+{"slot_id":"RS-1830-1850"}
+
+assistant channel=commentary to=tool.reserve_slot:
+{"hotel_id":"sterling_quay_chi","slot_id":"RS-1830-1850"}
+
+tool.reserve_slot channel=commentary to=assistant:
+{"status":"reserved","slot_id":"RS-1830-1850"}
+
+assistant channel=final:
+I’ve reserved your 6:30–6:50 PM window (RS-1830-1850) for one. Swimwear required; citrus water and towels are ready.
+
+user:
+The cold plunge looks intense.
+
+assistant channel=analysis:
+Light small talk response.
+
+assistant channel=final:
+Many guests enjoy alternating—steam, cool rinse, then relax.
+
+user:
+Can we pay with room charge?
+
+assistant channel=analysis:
+Answer from system payment options.
+
+assistant channel=final:
+Yes—room charge or a card both work.
+
+user:
+Do you use menthol crystals in the steam?
+
+assistant channel=analysis:
+Not specified; use the attention flag.
+
+assistant channel=final:
+[ATTENTION] Appreciate the menthol question. Verifying details.
+

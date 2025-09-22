@@ -1,0 +1,111 @@
+"""
+A wellness guest requests aromatherapy room fresheners for relaxation. The hotel specializes in aromatherapy and essential oil experiences. The dialogue includes chitchat about essential oils, a question about aromatherapy benefits from system knowledge, and an inquiry about external essential oil suppliers.
+
+ROLES: user (A wellness enthusiast seeking aromatherapy.), assistant (A wellness concierge providing therapeutic scents.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "check_aromatherapy_supplies",
+    "description": "Check availability of aromatherapy freshener variants and essential oil blends.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "item_code": { "type": "string", "enum": ["aromatherapy_freshener"] },
+        "variant": { "type": "string", "enum": ["diffuser", "reed_diffuser", "spray_mist"] },
+        "blend": { "type": "string", "enum": ["lavender_relax", "eucalyptus_clarity", "bergamot_balance", "chamomile_calm"] }
+      },
+      "required": ["item_code", "variant", "blend"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_aromatherapy_delivery",
+    "description": "Arrange delivery and setup of aromatherapy freshener.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "variant": { "type": "string", "enum": ["diffuser", "reed_diffuser", "spray_mist"] },
+        "blend": { "type": "string", "enum": ["lavender_relax", "eucalyptus_clarity", "bergamot_balance", "chamomile_calm"] },
+        "placement_location": { "type": "string", "enum": ["bedside", "meditation_corner", "bathroom"] },
+        "duration_hours": { "type": "integer", "enum": [2, 4, 6] },
+        "priority": { "type": "string", "enum": ["normal", "high"] }
+      },
+      "required": ["room_number", "item_code", "variant", "blend", "placement_location", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Tranquil Essence Wellness Resort (hotel_id: te_wellness_07)
+Address: 155 Serenity Lane, Sedona, AZ 86336
+Aromatherapy service window: 06:00–22:00; wellness delivery ETA 8–12 minutes
+
+Aromatherapy program:
+- Variants: diffuser, reed_diffuser, spray_mist (diffuser timers: 2h/4h/6h)
+- Blends: lavender_relax, eucalyptus_clarity, bergamot_balance, chamomile_calm
+- On-hand (approx.): diffuser(lavender_relax: 15), reed_diffuser(eucalyptus_clarity: 10), spray_mist(bergamot_balance: 20), spray_mist(chamomile_calm: 12)
+- Therapeutic focus: essential oil blends designed for stress reduction, mental clarity, and emotional balance
+
+Wellness features:
+- Crystal therapy rooms with natural light
+- Sound healing chambers with Tibetan bowls
+- Guided meditation gardens with aromatic pathways
+- Essential oil blending station in the wellness center
+
+user:
+Hi! I'm in room 728 and I'm interested in aromatherapy. Could you set up a lavender relax diffuser by my bedside with a 4-hour duration?
+
+assistant channel=analysis:
+The wellness guest wants a lavender relax diffuser for aromatherapy. I need to check availability and arrange delivery with bedside placement and 4-hour duration.
+
+assistant channel=commentary to=tool.check_aromatherapy_supplies:
+{"item_code":"aromatherapy_freshener","variant":"diffuser","blend":"lavender_relax"}
+
+tool.check_aromatherapy_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"aromatherapy_freshener","variant":"diffuser","blend":"lavender_relax","on_hand":15}
+
+assistant channel=analysis:
+Availability confirmed. I should arrange delivery with bedside placement and normal priority.
+
+assistant channel=commentary to=tool.arrange_aromatherapy_delivery:
+{"room_number":"728","item_code":"aromatherapy_freshener","variant":"diffuser","blend":"lavender_relax","placement_location":"bedside","duration_hours":4,"priority":"normal"}
+
+tool.arrange_aromatherapy_delivery channel=commentary to=assistant:
+{"ticket_id":"AT-728-4521","eta_minutes":10,"placed":"bedside","duration_hours":4}
+
+assistant channel=final:
+Perfect! Your lavender relax diffuser is scheduled for room 728 with bedside placement, ticket AT-728-4521, arriving in about 10 minutes with a 4-hour duration.
+
+user:
+That sounds wonderful! I love how aromatherapy can enhance meditation. What are the benefits of your lavender blend?
+
+assistant channel=analysis:
+The guest is asking about lavender blend benefits. This is within my system knowledge about aromatherapy and therapeutic essential oils.
+
+assistant channel=final:
+Our lavender relax blend promotes deep relaxation, reduces stress, and supports restful sleep. It's particularly effective in our meditation gardens and sound healing chambers for enhanced wellness experiences.
+
+user:
+Very soothing! I enjoy exploring different essential oils. What's your most popular aromatherapy experience?
+
+assistant channel=analysis:
+The guest is asking about popular aromatherapy experiences. This is chitchat/small talk about wellness that I can answer from our resort's aromatherapy offerings.
+
+assistant channel=final:
+Our guided meditation sessions with live essential oil diffusion are incredibly popular. Guests love the combination of aromatic pathways in our meditation gardens and crystal therapy rooms.
+
+user:
+That sounds transformative! Are there any essential oil suppliers or aromatherapy shops nearby that you recommend?
+
+assistant channel=analysis:
+The guest is asking about external essential oil suppliers and aromatherapy shops. This goes beyond our resort's aromatherapy amenities and requires information about external suppliers.
+
+assistant channel=final:
+[ATTENTION] I'm exploring essential oil suppliers and aromatherapy shops nearby.

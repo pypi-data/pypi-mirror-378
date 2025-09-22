@@ -1,0 +1,75 @@
+"""
+Guest requests a nursing-friendly wrap dress for an evening event.
+Provide apparel options and coordinate delivery timing.
+
+ROLES: user (mother attending event), assistant (family concierge with apparel access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_family_amenities","description":"Check availability of family and maternal support amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["nursing_tops","nursing_pillow","privacy_screen","comfortable_chair","baby_supplies"]},"size_needed":{"type":"string","enum":["XS","S","M","L","XL","XXL"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_maternal_support","description":"Coordinate maternal wellness and nursing support services.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["nursing_clothing","privacy_setup","comfort_furniture","feeding_supplies"]},"size_specifications":{"type":"string"},"delivery_urgency":{"type":"string","enum":["standard","priority","immediate"]}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Garden Court Family Suites (hotel_id: gc_bos_17)
+Address: 99 Arlington St, Boston, MA 02116
+Timezone: America/New_York
+
+Apparel Notes:
+- Nursing wrap dresses: navy, plum, black; sizes S–XL
+- Tops: crossover tees; bras: wire‑free
+- Accessories: nursing cover, privacy scarf
+- Delivery: rooms 10–14 min; lounge 6–9
+- Tailoring: simple hem tape available at desk
+
+user:
+Hi—room 342. Do you have a nursing-friendly wrap dress, maybe in plum?
+
+assistant channel=analysis:
+Check nursing_tops inventory covers wrap dresses; confirm color and size availability; request size.
+
+assistant channel=commentary to=tool.check_family_amenities:
+{"amenity_type":"nursing_tops"}
+
+tool.check_family_amenities channel=commentary to=assistant:
+{"available":true,"amenity_type":"nursing_tops","stock_levels":{"S":4,"M":6,"L":4,"XL":2},"styles":["wrap_dress","crossover_top"],"colors":["navy","plum","black"]}
+
+assistant channel=final:
+Yes—wrap dresses are available in plum. What size would you like for room 342?
+
+user:
+Medium, please.
+
+assistant channel=analysis:
+Arrange delivery medium plum wrap dress.
+
+assistant channel=commentary to=tool.arrange_maternal_support:
+{"room_number":"342","service_type":"nursing_clothing","size_specifications":"wrap_dress, plum, M","delivery_urgency":"priority"}
+
+tool.arrange_maternal_support channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":11,"items_included":["wrap_dress_plum_M","privacy_scarf"],"delivery_team":"family_concierge"}
+
+assistant channel=final:
+Got it—one plum wrap dress in size M with a privacy scarf will arrive at room 342 in about 11 minutes.
+
+user:
+You’re a lifesaver!
+
+assistant channel=analysis:
+Chitchat thank-you; acknowledge.
+
+assistant channel=final:
+Happy to help—enjoy your evening.
+
+user:
+Do you also rent jewelry for events?
+
+assistant channel=analysis:
+Jewelry rental not in system/tools. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

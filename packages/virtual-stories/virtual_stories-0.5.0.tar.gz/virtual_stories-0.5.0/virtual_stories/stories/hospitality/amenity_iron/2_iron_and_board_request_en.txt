@@ -1,0 +1,73 @@
+"""
+Guest requests iron and board; include policy clarification, small talk, and out-of-scope query.
+
+ROLES: user (guest in need of iron/board), assistant (service agent arranging amenity delivery and clarifying limits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "check_amenity_availability",
+    "description": "Check if an amenity is available and quantity.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},
+    "strict": true
+  },
+  {
+    "name": "request_amenity_delivery",
+    "description": "Dispatch amenity to a room.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Marina City Tower (hotel_id: mct_chi)
+Address: 300 N State St, Chicago, IL
+Loaner Policy:
+- Irons and boards available on request; limit 1 set per room
+- Service hours: 07:00–23:00 standard
+- Typical ETA: 10–20 minutes floors 20–40
+Safety: Use on provided ironing mat only
+Lobby Note: Riverwalk patio opens at 16:00
+
+user:
+Can I get an iron and board to room 3724?
+
+assistant channel=analysis:
+Check availability for 1 set and dispatch with normal priority.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"iron","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"iron","available":true,"in_stock":5}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"3724","amenity_name":"iron","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MCT-IRON-3724","eta_minutes":16}
+
+assistant channel=final:
+Confirmed—one iron and board are on the way to 3724, ETA about 16 minutes.
+
+user:
+Is there a limit per room?
+
+assistant channel=final:
+Yes—one set per room under our loaner policy.
+
+user:
+The riverwalk patio sounds nice.
+
+assistant channel=final:
+It opens at 16:00—great spot by the water.
+
+user:
+Can you suggest a tailor nearby?
+
+assistant channel=final:
+[ATTENTION] Looking into this beyond our current resources.
+

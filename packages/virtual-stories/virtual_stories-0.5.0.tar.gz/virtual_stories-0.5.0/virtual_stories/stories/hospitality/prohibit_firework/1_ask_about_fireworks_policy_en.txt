@@ -1,0 +1,102 @@
+"""
+Guest asks about setting off fireworks on property.
+
+ROLES: user (guest planning a small fireworks display), assistant (concierge clarifying safety policy and permissible celebration options)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_policy",
+    "description": "Retrieve policy details for a given category.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["fire", "fireworks", "pets", "smoking", "drugs"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "offer_celebration_alternatives",
+    "description": "Suggest hotel-approved celebration alternatives (non-pyrotechnic).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "occasion": { "type": "string" }
+      },
+      "required": ["occasion"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+PROPERTY: Aurora Dunes Resort & Spa
+LOCATION BLOCKS:
+  - NORTH COURTYARD: herb garden, quiet seating.
+  - SOUTH PROMENADE: retail arcade; no exterior ignition sources.
+  - BEACH ACCESS: sunrise yoga only; no open flames or pyrotechnics.
+POLICY SNAPSHOT — FIREWORKS:
+  • Absolutely prohibited anywhere on resort grounds, façades, rooftops, balconies, parking areas, beach approach, or adjacent public walkways.
+  • Includes sparklers, fountains, firecrackers, smoke bombs, roman candles, and any pyrotechnic or explosive device.
+  • Violations may trigger alarm response and property ejection in accordance with resort rules.
+APPROVED CELEBRATION OPTIONS:
+  • LED wristbands and confetti poppers (paper, spring-loaded, no explosive).
+  • Drone photo session coordination with on-site vendor (line-of-sight, quiet mode) — visual effects only.
+GUEST TOUCHES:
+  • Lobby scent: “Citrus Driftwood”.
+  • Welcome tea: lemongrass-ginger, served 15:00–18:00 at Sol Atrium.
+
+user:
+We’re celebrating a proposal. Are small sparklers okay if we use them on the balcony?
+
+assistant channel=analysis:
+Use policy tool for fireworks; then present approved alternatives via the second tool.
+
+assistant channel=commentary to=tool.get_policy:
+{"category": "fireworks"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"fireworks","allowed":false,"summary":"All fireworks, including sparklers, are prohibited on all resort property and adjacent areas."}
+
+assistant channel=commentary to=tool.offer_celebration_alternatives:
+{"occasion": "proposal"}
+
+tool.offer_celebration_alternatives channel=commentary to=assistant:
+{"options":["LED wristbands synchronized to music","Paper confetti poppers (spring-loaded, no explosive)","Drone photo session in quiet mode"]}
+
+assistant channel=final:
+Fireworks and sparklers aren’t permitted anywhere on the property, including balconies. Approved options include synchronized LED wristbands, paper confetti poppers, or arranging a quiet-mode drone photo session.
+
+user:
+Could we set them off on the public walkway just outside your gate then?
+
+assistant channel=analysis:
+The system explicitly says adjacent public walkways are included; restate prohibition.
+
+assistant channel=final:
+Adjacent public walkways are included in our no-fireworks policy, so that wouldn’t be allowed.
+
+user:
+Nice aroma in the lobby, by the way.
+
+assistant channel=analysis:
+Offer brief chitchat using system info about scent and tea hours.
+
+assistant channel=final:
+Thank you—our “Citrus Driftwood” scent pairs well with the lemongrass-ginger welcome tea at the Sol Atrium from 15:00 to 18:00.
+
+user:
+What’s the municipal permit code you follow for pyrotechnics?
+
+assistant channel=analysis:
+No legal code references available via tools or system. Use special flag.
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Checking available options to identify the specific permit code.

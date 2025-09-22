@@ -1,0 +1,51 @@
+"""
+Late‑arriving guest asks if a brief window is available near closing and requests a USD→EUR quote.
+
+ROLES: user (guest arriving near closing), assistant (cashier clarifying hours and quoting FX)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"quote_fx","description":"Quote a currency exchange with applied fee and total payout.","parameters":{"type":"object","additionalProperties":false,"properties":{"from":{"type":"string"},"to":{"type":"string"},"amount":{"type":"number"}},"required":["from","to","amount"]},"strict":true}
+]
+```
+"""
+
+system:
+Old Town Heritage Hotel — Cashier’s Cage
+Hours: 09:00–19:00 daily
+Location: Heritage arcade, between Gift Shop and Tea Room
+Supported: USD, EUR, GBP
+Fee: Flat per transaction, cash only
+ID: Passport for ≥ USD 500 equivalent
+Queue: Last ticket issued at 18:45
+Security: Two‑person verification for high‑value payouts
+Accessibility: Counter bell available for assistance
+
+user:
+I’ll arrive around 18:50. Could you still exchange 150 USD to EUR for me?
+
+assistant channel=analysis:
+Note last ticket time from system and still quote the 150 USD→EUR if within that window.
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"USD","to":"EUR","amount":150}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":0.89,"fee":"EUR 2.00","payout":"EUR 131.50"}
+
+assistant channel=final:
+We issue the last ticket at 18:45, then close at 19:00 in the heritage arcade. If you’re served today, 150 USD would pay out EUR 131.50 after a EUR 2.00 fee (rate 0.89).
+
+user:
+Love the tea room scent.
+
+assistant channel=final:
+You’ll find us between the Gift Shop and Tea Room.
+
+user:
+Do you hold the same rate for tomorrow if I can’t make it?
+
+assistant channel=final:
+[ATTENTION] Rate holds across days aren’t documented. Checking available options.
+

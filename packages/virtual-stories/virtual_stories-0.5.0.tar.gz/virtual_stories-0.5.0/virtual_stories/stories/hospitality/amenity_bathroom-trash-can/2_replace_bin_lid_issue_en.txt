@@ -1,0 +1,98 @@
+"""
+Guest reports bathroom trash can lid malfunction and requests replacement.
+Coordinate housekeeping dispatch and sanitation, with sustainability guidance.
+
+ROLES: user (guest with broken bathroom trash can lid), assistant (housekeeping coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_housekeeping_queue","description":"Check current housekeeping queue and nearest runner.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"dispatch_replacement_bin","description":"Dispatch replacement bathroom bin with specified attributes.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"size":{"type":"string","enum":["small","standard","large"]},"finish":{"type":"string","enum":["matte_black","brushed_steel","white"]},"liner_type":{"type":"string","enum":["biodegradable","standard"]}},"required":["room_number","size","finish"]},"strict":true},
+  {"name":"get_waste_policy","description":"Retrieve waste separation guidance for guest rooms.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["general","recyclable","organic"]}},"required":["category"]},"strict":true}
+]
+```
+"""
+
+system:
+Aurora Midtown Hotel (hotel_id: amh_nyc_mid_04)
+Address: 210 E 45th St, New York, NY 10017
+Timezone: America/New_York
+
+Service Windows:
+- Housekeeping runners: 07:00–23:00; night shift on-call for essentials.
+- Standard bathroom bins: 8L capacity, soft‑close lid with foot pedal.
+- Finishes: matte black in king rooms, brushed steel in doubles; biodegradable liners on request.
+
+Article 1 — Design & Hygiene:
+Bathroom bins use damped hinges for quiet operation and soft‑close to reduce splash aerosols. The foot‑pedal mechanism keeps hands free, and the inner caddy allows liner changes without exposing surfaces longer than necessary. Materials are fingerprint‑resistant to maintain a neat appearance between cleanings.
+
+Article 2 — Sustainability Initiative:
+Floor captains carry caddies with biodegradable liners labeled by size, and rooms can opt into separate blue mini‑recycling bins upon request. Metrics on waste diversion are reviewed monthly to improve messaging and reduce contamination in recycling streams through clearer guidance.
+
+Article 3 — Maintenance & Spares:
+Each floor stores two spare bathroom bins per wing. Runners swap the full unit, sanitize the floor area, and remove the defective bin to the back‑of‑house workshop for inspection and hinge replacement. Typical swap time is under 10 minutes once the runner arrives.
+
+Article 4 — Guest Comfort:
+Soft‑close lids reduce nighttime noise, and the non‑slip base prevents movement on tile. For sensitive sleepers, runners can remove lids entirely on request and fit a liner with overhang ties for easy handling.
+
+Article 5 — Neighborhood:
+The hotel sits a block from Grand Central, with quick access to Bryant Park. Evenings are lively yet the property enforces quiet hours after 10 PM, which pairs well with our soft‑close fixtures.
+
+user:
+Hello—my bathroom bin’s lid in room 1712 won’t close properly. Can I get a replacement?
+
+assistant channel=analysis:
+Check runner availability and dispatch a standard 8L replacement in the correct finish.
+
+assistant channel=commentary to=tool.check_housekeeping_queue:
+{"room_number":"1712"}
+
+tool.check_housekeeping_queue channel=commentary to=assistant:
+{"room_number":"1712","nearest_runner":"Luis","eta_minutes":18,"floor_spares_available":true}
+
+assistant channel=commentary to=tool.dispatch_replacement_bin:
+{"room_number":"1712","size":"standard","finish":"matte_black","liner_type":"biodegradable"}
+
+tool.dispatch_replacement_bin channel=commentary to=assistant:
+{"dispatch_id":"HK-BIN-6120","assigned":"Luis","eta_minutes":18,"includes_sanitization":true}
+
+assistant channel=final:
+Absolutely. I’ve arranged a standard replacement bin in matte black with a biodegradable liner—dispatch HK‑BIN‑6120. Luis will arrive in about 18 minutes and will sanitize the area during the swap.
+
+user:
+Thanks! The soft‑close lids are nice when they work.
+
+assistant channel=analysis:
+Light chitchat acknowledging design.
+
+assistant channel=final:
+They are—our damped hinges keep things quiet, especially at night.
+
+user:
+Do you have a separate bin for recycling if I need one?
+
+assistant channel=analysis:
+Answer from system/articles and policy tool.
+
+assistant channel=commentary to=tool.get_waste_policy:
+{"category":"recyclable"}
+
+tool.get_waste_policy channel=commentary to=assistant:
+{"category":"recyclable","guest_option":"blue_mini_bin_on_request","accepted":"paper, plastic bottles, cans","note":"rinse items if soiled"}
+
+assistant channel=final:
+Yes—we can deliver a blue mini recycling bin on request that accepts paper, plastic bottles, and cans. If anything’s soiled, a quick rinse helps keep the stream clean.
+
+user:
+By the way, what time does the rooftop bar’s DJ start tonight?
+
+assistant channel=analysis:
+Out of scope—no nightlife schedule tools. Use special flag.
+
+assistant channel=final:
+[ATTENTION] Noted. Reviewing available resources.
+
+user:
+No worries—thanks for the quick help.
+

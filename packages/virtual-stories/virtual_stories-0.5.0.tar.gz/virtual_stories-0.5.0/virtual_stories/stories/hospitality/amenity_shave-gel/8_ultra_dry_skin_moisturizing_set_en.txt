@@ -1,0 +1,112 @@
+"""
+Guest with very dry skin requests moisturizing shaving cream and balm; verify products and deliver.
+
+ROLES: user (guest with dry skin), assistant (spa front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Marina Bay Retreat Singapore (hotel_id: mbr_sin_08)
+Address: 10 Bayfront Ave, Singapore 018956
+Timezone: Asia/Singapore
+
+Moisturizing Line:
+- Cream: shea butter + glycerin rich lather
+- Balm: ceramide + aloe repair
+- Optional oil: squalane pre-shave
+- Sizes: 150 ml cream, 100 ml balm
+- Hypoallergenic option available on request
+
+Service & Policy:
+- Delivery: 10–20 minutes, 08:00–22:00
+- Evening drop: 21:00–23:00 (limited)
+- Complimentary: one substitution for dryness concerns per stay
+- Contact: Spa Connect ext 88
+- Storage: climate-controlled amenity vault
+
+user:
+Hi, I have very dry skin. Could I get your moisturizing shaving cream and the ceramide balm to room 4211?
+
+assistant channel=analysis:
+Check shaving_cream for dry; then deliver cream + balm to 4211 immediately with instructions.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type":"shaving_cream","skin_type":"dry","brand_preference":"any"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available":true,"recommended_products":["MoistureRich_Cream_150ml","Ceramide_Aloe_Balm_100ml"],"hypo_option":true}
+
+assistant channel=analysis:
+Schedule immediate delivery.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number":"4211","products":["MoistureRich_Cream_150ml","Ceramide_Aloe_Balm_100ml"],"delivery_window":"immediate","include_instructions":true}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled":true,"arrival_time":"13_minutes","instructions":"hydrating_routine_card"}
+
+assistant channel=final:
+Yes—we have a shea + glycerin moisturizing cream and a ceramide + aloe balm. They’ll reach 4211 in about 13 minutes with a hydrating routine card.
+
+user:
+Do you offer a complimentary substitution for dryness?
+
+assistant channel=analysis:
+System policy: one substitution for dryness concerns per stay.
+
+assistant channel=final:
+Yes—one complimentary substitution is available per stay for dryness concerns.
+
+user:
+Lovely view from the pool.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+It’s a guest favorite—enjoy!
+
+user:
+Any chance to book a Gardens by the Bay ticket?
+
+assistant channel=analysis:
+Beyond grooming scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can look into ticket options and timing and report back.

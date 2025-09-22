@@ -1,0 +1,59 @@
+"""
+Guest requests a board and asks about child safety; includes small talk and SLA.
+
+ROLES: user (guest in room 904 requesting an ironing board), assistant (services arranging delivery and stating SLA, avoiding details beyond system)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check stock","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Request delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Bayview Promenade — Garden Tower
+Room: 904 (Family Deluxe)
+Policy: 1 ironing board per room; supervise children around hot irons
+Window: 06:30–22:30 normal; 22:30–00:15 urgent
+SLA floors 9–12: 10–16 minutes
+Staging: GT-9 pantry; use S1
+Ext: 0; 7950; 7951
+
+user:
+Could I get an ironing board to 904?
+
+assistant channel=analysis:
+Check availability for one board, then schedule normal delivery to 904.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board","available":true,"in_stock":14}
+
+assistant channel=analysis:
+Queue normal delivery now.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"904","amenity_name":"ironing board","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-904-7710","eta_minutes":12}
+
+assistant channel=final:
+Confirmed—an ironing board is scheduled for room 904 with an ETA of about 12 minutes.
+
+user:
+Thanks! What’s your usual time for 9–12?
+
+assistant channel=final:
+For floors 9–12, normal deliveries are about 10–16 minutes.
+
+user:
+Is there a child lock on the legs?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

@@ -1,0 +1,132 @@
+"""
+Guest asks for higher-grade note paper and matching envelopes for executive correspondence.
+Provide stationery curation and in-room delivery using inventory and print coordination tools.
+
+ROLES: user (executive guest composing formal notes), assistant (business center concierge managing stationery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_stationery_inventory",
+    "description": "Check available stationery supplies in hotel inventory.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_type": { "type": "string", "enum": ["note_paper", "letterhead", "envelopes", "memo_pads", "writing_pads", "sticky_notes"] },
+        "quality_level": { "type": "string", "enum": ["standard", "premium", "luxury"] }
+      },
+      "required": ["item_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_stationery_supplies",
+    "description": "Arrange delivery of stationery items to guest room or business center.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "string" } },
+        "delivery_location": { "type": "string", "enum": ["guest_room", "business_center", "meeting_room"] },
+        "quantity_per_item": { "type": "number" },
+        "special_requests": { "type": "string" }
+      },
+      "required": ["room_number", "items", "delivery_location"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_printing_services",
+    "description": "Coordinate printing and document services for guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": { "type": "string", "enum": ["letterhead_printing", "custom_notepad", "business_cards", "document_binding"] },
+        "guest_room": { "type": "string" },
+        "specifications": { "type": "string" },
+        "rush_order": { "type": "boolean" }
+      },
+      "required": ["service_type", "guest_room"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel Name: Regent Court on the Park (hotel_id: rc_ldn_11)
+Location: 11 Park Lane, London W1K 7AA, UK
+Timezone: Europe/London
+Business Center Hours: 24/7 (staffed 07:00–22:00)
+
+Stationery Profile (curated):
+- Standard: 80gsm hotel letter sheets; 75gsm lined memo pads; 76x76 sticky notes
+- Premium: 120gsm cream watermark note paper; 28 lb linen pad; bevel-cut folded cards
+- Luxury: 160gsm cotton rag note cards; deckle-edge stationery; wax-seal kits
+
+Policies & Extras:
+1) Same-floor delivery: 6–12 minutes typical
+2) Envelope sizes: C6, DL, A5 matching sets
+3) Complimentary: 10 matching envelopes with any premium set
+4) Sustainability: FSC-certified, chlorine-free pulps used in Premium line
+5) Writing implements (upon request): fine rollerball, felt-tip; loan set return by checkout
+
+Contact Codes:
+BC Desk ext: 2211 | Internal tag: STN-PREM | Printer queue: REG-BC-02
+
+user:
+Hi there—room 804. Do you have anything nicer than the basic notepad? I’d like crisp paper and matching envelopes.
+
+assistant channel=analysis:
+User wants premium or luxury paper with envelopes. Check inventory for premium note_paper and matching envelopes.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"note_paper","quality_level":"premium"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"item_type":"note_paper","quality_level":"premium","options":["120gsm_cream_watermark","linen_28lb_pad","folded_bevel_card"],"matching_envelopes":["C6","DL","A5"],"stock_count":34}
+
+assistant channel=analysis:
+Offer premium options and include envelope sizes from tool output. Then arrange delivery to room 804 after user picks.
+
+assistant channel=final:
+Yes—our premium line includes 120gsm cream watermark sheets, a linen 28 lb pad, and folded bevel-cut cards. Matching envelopes come in C6, DL, or A5. Which set would you like for room 804?
+
+user:
+The 120gsm cream with A5 envelopes, please. And could you include a felt-tip pen?
+
+assistant channel=analysis:
+Proceed with delivery for 120gsm cream and A5 envelopes; include felt-tip per policy line.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"804","items":["120gsm_cream_watermark","A5_envelopes","felt_tip_pen"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"complimentary 10 envelopes with premium set"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":9,"items_included":["120gsm_cream_watermark_pad_25","A5_envelopes_10","felt_tip_pen_loan"],"delivery_team":"business_center"}
+
+assistant channel=final:
+All set. We’ll deliver a 25-sheet 120gsm cream watermark pad, 10 A5 envelopes, and a felt‑tip pen to room 804 in about 9 minutes.
+
+user:
+Nice—Park views are stunning today!
+
+assistant channel=analysis:
+Light chitchat; acknowledge without adding new facts beyond system.
+
+assistant channel=final:
+They do make writing feel inspired here.
+
+user:
+Could you also emboss my initials on the envelopes right now?
+
+assistant channel=analysis:
+Embossing not described in system or tools. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Reviewing available options.
+

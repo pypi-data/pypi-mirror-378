@@ -1,0 +1,122 @@
+"""
+Guest urgently needs contact lens case and care supplies after forgetting travel kit at home. 
+Provide contact lens care amenities, check availability, and arrange delivery or pickup options.
+
+ROLES: user (guest who forgot contact lens travel kit), assistant (guest services coordinator providing lens care amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_personal_care_amenities",
+    "description": "Check availability of personal care and optical amenities.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amenity_type": { "type": "string", "enum": ["contact_lens_case", "lens_solution", "eye_drops", "complete_kit", "travel_size"] },
+        "brand_preference": { "type": "string", "enum": ["any", "specific_brand", "hypoallergenic"] }
+      },
+      "required": ["amenity_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_amenity_delivery",
+    "description": "Arrange delivery or pickup of personal care amenities.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "delivery_method": { "type": "string", "enum": ["room_delivery", "front_desk_pickup", "concierge_hand_delivery"] },
+        "timing": { "type": "string", "enum": ["immediate", "within_hour", "specific_time"] }
+      },
+      "required": ["room_number", "items", "delivery_method"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_nearby_pharmacy",
+    "description": "Check nearby pharmacy locations and contact lens product availability.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["daily_disposables", "lens_solution", "lens_case", "complete_care_kit"] },
+        "emergency_hours": { "type": "boolean" }
+      },
+      "required": ["product_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Oceanview Grand Resort (hotel_id: ogr_santa_monica_01)
+Location: 1717 Ocean Avenue, Santa Monica, CA 90401
+Timezone: America/Los_Angeles
+Setting: Modern beachfront luxury resort with comprehensive guest amenity program
+
+Personal Care Services:
+- Extensive forgotten toiletry program with high-end branded amenities
+- Contact lens emergency kits available 24/7 through guest services
+- Partnership with local CVS pharmacy for extended hours needs
+- Complimentary delivery to all guest rooms within 30 minutes
+
+Contact Lens Care Amenities:
+- Basic kit: sterile contact lens case, travel-size solution, eye drops
+- Premium kit: branded case, premium solution, comfort drops, lens wipes
+- Emergency kit: disposable lenses (limited prescriptions), complete care set
+- Hypoallergenic options available for sensitive eyes
+
+Guest Services Standards:
+- All personal care amenities provided at no charge for guests staying 2+ nights
+- Same-day delivery available for any forgotten essential items
+- 24/7 concierge assistance for emergency pharmacy runs
+- Guest satisfaction guaranteed with immediate replacement if needed
+
+user:
+Oh no! I just realized I forgot my contact lens case and solution at home. I'm wearing daily contacts but I brought some monthly ones as backup. Do you have anything that could help me out?
+
+assistant channel=analysis:
+Guest forgot their contact lens case and solution, has daily contacts currently but brought monthly lenses as backup. They need a lens case and care solution. I'll check what contact lens amenities are available and arrange delivery.
+
+assistant channel=commentary to=tool.check_personal_care_amenities:
+{"amenity_type":"complete_kit"}
+
+tool.check_personal_care_amenities channel=commentary to=assistant:
+{"available_items":[{"type":"Basic Contact Lens Kit","contents":"Sterile lens case, 60ml saline solution, lubricating eye drops","availability":"in_stock"},{"type":"Premium Contact Lens Kit","contents":"Designer lens case, 120ml multi-purpose solution, comfort drops, lens wipes","availability":"in_stock"},{"type":"Emergency Disposable Kit","contents":"3-day disposable lenses (limited prescriptions), travel solution, case","availability":"limited_prescriptions"}],"delivery_options":["room_service","front_desk_pickup"],"cost":"complimentary_for_2_night_guests"}
+
+assistant channel=final:
+No worries at all! We have contact lens emergency kits available. I can offer you a Basic Kit with sterile case, saline solution, and eye drops, or our Premium Kit with a designer case, multi-purpose solution, comfort drops, and lens wipes. Both are complimentary for your stay. What's your room number, and which kit would work better for you?
+
+user:
+I'm in room 1247. The premium kit sounds great! Could you have it sent up? Also, just curious - what's the weather supposed to be like tomorrow?
+
+assistant channel=analysis:
+Guest in room 1247 wants the premium contact lens kit delivered to their room. They also ask about weather, which isn't part of my contact lens amenity services. I'll arrange the kit delivery first, then use the special flag for the weather question.
+
+assistant channel=commentary to=tool.arrange_amenity_delivery:
+{"room_number":"1247","items":["Premium Contact Lens Kit"],"delivery_method":"room_delivery","timing":"immediate"}
+
+tool.arrange_amenity_delivery channel=commentary to=assistant:
+{"delivery_id":"AMENITY-1247-3429","estimated_delivery":"25 minutes","items_confirmed":["Designer contact lens case (blue/silver)","120ml Biotrue multi-purpose solution","Systane comfort eye drops","Individual lens cleaning wipes (pack of 10)"],"delivery_note":"Guest services will call before delivery","complimentary":"confirmed"}
+
+assistant channel=final:
+[ATTENTION] Perfect! I've arranged delivery AMENITY-1247-3429 with your Premium Contact Lens Kit: designer case, Biotrue solution, Systane drops, and cleaning wipes. Our guest services team will call before delivering in about 25 minutes, completely complimentary. For weather information tomorrow, looking into available resources.
+
+user:
+That's perfectly fine about the weather - I can check my phone later. Thank you so much for the quick help with the lens kit!
+
+assistant channel=analysis:
+Guest is satisfied with the contact lens amenity service and is ending the conversation positively. Simple acknowledgment and well-wishes.
+
+assistant channel=final:
+You're very welcome! Hope the premium kit works perfectly for your monthly lenses. Enjoy your stay at Oceanview Grand Resort!

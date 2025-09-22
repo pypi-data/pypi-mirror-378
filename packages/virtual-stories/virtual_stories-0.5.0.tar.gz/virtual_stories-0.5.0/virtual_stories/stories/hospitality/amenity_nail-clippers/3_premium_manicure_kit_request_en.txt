@@ -1,0 +1,77 @@
+"""
+Guest requests a premium manicure kit and asks about in-room service.
+Provide premium kit availability, delivery, and optional service scheduling.
+
+ROLES: user (guest preparing for formal event), assistant (guest services coordinating premium grooming amenities and services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_grooming_supplies","description":"Check premium manicure kit availability.","parameters":{"type":"object","properties":{"tool_type":{"type":"string","enum":["grooming_kit"]},"quality_level":{"type":"string","enum":["premium","professional"]}},"required":["tool_type"]},"strict":true},
+  {"name":"deliver_grooming_tools","description":"Deliver grooming kit to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"tools_requested":{"type":"array","items":{"type":"object","properties":{"tool_name":{"type":"string"},"quality":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_priority":{"type":"string","enum":["standard","urgent"]}},"required":["room_number","tools_requested"]},"strict":true},
+  {"name":"schedule_grooming_service","description":"Schedule in-room manicure.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["manicure"]},"preferred_time":{"type":"string"},"location":{"type":"string","enum":["in_room"]}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Capital City Business Hotel (hotel_id: ccb_was_53)
+Address: 999 9th St NW, Washington, DC 20001
+Timezone: America/New_York
+
+Premium Kits:
+- Leather 7‑piece manicure set (stainless): clippers, nippers, file, scissors, tweezers
+- UV‑C sanitized; tamper seal
+- Complimentary loaner; purchase option available
+- Cuticle oil mini (unscented) on request
+- Microfiber towel included
+
+In‑Room Service:
+- Professional manicure, 45 minutes
+- Appointment windows every afternoon/evening
+- Sanitized tray setup; disposable liners
+- Contactless payment available
+- Quiet service etiquette for calls
+
+user:
+Hi, room 1512. Could I get a premium manicure kit sent up? I might need an in‑room manicure later.
+
+assistant channel=analysis:
+Check premium kit; deliver to 1512; then present manicure windows.
+
+assistant channel=commentary to=tool.check_grooming_supplies:
+{"tool_type":"grooming_kit","quality_level":"premium"}
+
+tool.check_grooming_supplies channel=commentary to=assistant:
+{"available_tools":["leather_7pc_steel_set"],"sanitized":"UV-C","purchase_option":true}
+
+assistant channel=commentary to=tool.deliver_grooming_tools:
+{"room_number":"1512","tools_requested":[{"tool_name":"leather_7pc_steel_set","quality":"premium","quantity":1}],"delivery_priority":"standard"}
+
+tool.deliver_grooming_tools channel=commentary to=assistant:
+{"service_id":"CCB-WAS-GK-15","eta":"12 minutes","staff":"Maya","items":["leather_7pc_steel_set","microfiber_towel","tamper_seal"],"loaner":true}
+
+assistant channel=final:
+Certainly—a premium 7‑piece leather manicure set is on its way to 1512 in about 12 minutes. If you’d like an in‑room manicure later, I can check available times.
+
+user:
+What times are available this evening?
+
+assistant channel=commentary to=tool.schedule_grooming_service:
+{"room_number":"1512","service_type":"manicure","preferred_time":"evening","location":"in_room"}
+
+tool.schedule_grooming_service channel=commentary to=assistant:
+{"service_id":"CCB-WAS-MAN-04","available_times":["6:00 PM","7:30 PM","9:00 PM"],"duration":"45 minutes","price":"$85"}
+
+assistant channel=final:
+This evening we have 6:00 PM, 7:30 PM, or 9:00 PM for a 45‑minute in‑room manicure at $85. Which do you prefer?
+
+user:
+Any good late‑night diners close by?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Working on your request.
+

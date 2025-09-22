@@ -1,0 +1,71 @@
+"""
+Guest prints a color presentation; includes casual chat and an unsupported follow-up request.
+
+ROLES: user (conference presenter), assistant (front desk coordinating prints)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "create_print_ticket",
+    "description": "Create a print ticket and return id and cost.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "color": {"type": "boolean"},
+        "pickup": {"type": "string", "enum": ["front_desk", "business_center"]}
+      },
+      "required": ["room", "pages", "color", "pickup"],
+      "additionalProperties": false
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Redwood Convention Suites
+Address: 1200 Expo Loop, San Jose, CA 95110
+Print Hub: Lobby West, near conference elevators
+Hours: 06:00–23:00
+Files: PDF only; jobs up to 60 pages
+Rates: B/W $0.16; Color $0.50 per page
+Pickup: Front Desk or Business Center
+Billing: Room folio on pickup
+Throughput: 6–9 minutes per job; busiest 07:45–08:45
+
+user:
+I need 16 color pages for room 714. I’ll pick them up at the front desk.
+
+assistant channel=analysis:
+Create a print ticket for 16 color pages, room 714, pickup front desk. Use tool output for id and estimate.
+
+assistant channel=commentary to=tool.create_print_ticket:
+{"room":"714","pages":16,"color":true,"pickup":"front_desk"}
+
+tool.create_print_ticket channel=commentary to=assistant:
+{"ticket":"rws_714c16","estimated_cost":8.00,"currency":"USD"}
+
+assistant channel=final:
+Ticket created—16 color pages for room 714 (rws_714c16). Estimated cost $8.00 USD. Pick up at the Front Desk; the charge will post to your folio.
+
+user:
+The carpet patterns are neat.
+
+assistant channel=analysis:
+Respond with casual acknowledgment.
+
+assistant channel=final:
+They mirror the redwood rings motif.
+
+user:
+Can you spiral-bind the printout?
+
+assistant channel=analysis:
+Binding isn’t listed; mark [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] I’ll check on binding options for you.
+

@@ -1,0 +1,59 @@
+"""
+Guest asks about current wait time at the midnight snack bar and whether walk-ins are okay.
+
+ROLES: user (guest considering a quick bite), assistant (concierge providing queue estimate)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_live_queue","description":"Return current queue length and ETA.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"}},"required":["restaurant_id"]}},
+  {"name":"get_walkin_policy","description":"Return whether walk-ins are accepted now.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"}},"required":["restaurant_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Riverbend Austin (hotel_id: rba_aus)
+Address: 111 E Cesar Chavez St, Austin, TX 78701
+Timezone: America/Chicago
+
+Venue: Night Bite (restaurant_id: r_night_bite)
+- Hours: 23:00–02:00
+- Walk-ins: Accepted until capacity
+
+user:
+How long is the wait at Night Bite right now? Do you take walk-ins?
+
+assistant channel=analysis:
+Use tools to return live queue and walk-in policy.
+
+assistant channel=commentary to=tool.get_live_queue:
+{"restaurant_id":"r_night_bite"}
+
+tool.get_live_queue channel=commentary to=assistant:
+{"parties_waiting":3,"est_wait_minutes":12}
+
+assistant channel=commentary to=tool.get_walkin_policy:
+{"restaurant_id":"r_night_bite"}
+
+tool.get_walkin_policy channel=commentary to=assistant:
+{"walkins":true}
+
+assistant channel=final:
+The current wait is about 12 minutes with 3 parties ahead, and Night Bite is accepting walk‑ins right now.
+
+user:
+I like the mural by the elevators.
+
+assistant channel=final:
+It’s a guest favorite—enjoy your night bite.
+
+user:
+Do you validate parking after midnight?
+
+assistant channel=analysis:
+Parking validation not specified. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Thanks for asking. Checking available options.
+

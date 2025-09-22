@@ -1,0 +1,62 @@
+"""
+Express checkout with key drop and digital receipt; include small talk and one out-of-scope request using the special flag.
+
+ROLES: user (guest departing early seeking express checkout), assistant (front office agent enabling express checkout and reiterating procedures)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"initiate_express_checkout","description":"Start express checkout and email a digital receipt.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"email":{"type":"string"}},"required":["reservation_id","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seabrook Marina Hotel (Harbor Tower + Garden Wing)
+Address: 12 Tidefall Esplanade, Seabrook Quay, 3rd District
+Checkout Options:
+- Express checkout available 24/7 via lobby key drop labeled "Express Checkout" beside Concierge Desk.
+- Digital receipts: emailed after folio closes; folio closes once housekeeping verifies minibar and incidentals.
+- Standard checkout time: 12:00 noon; Quiet hours: 22:00–07:00.
+Connectivity & Services:
+- Wi‑Fi SSID: Seabrook-Guest (open captive portal); Business Center: Level 2, printers A2/A3.
+- Parking: P2–P4 self‑park; ticket validation at Reception; EV chargers (8) on P3.
+Accessibility & Notes:
+- Step‑free lobby ramp; elevators A/B to all guest floors; stroller-friendly width.
+- Front Office extension: "0" from room phones; Bell assistance on request.
+Sustainability:
+- E‑receipts by default; paper receipts available on demand at Reception.
+
+user:
+Can you do express checkout for SB-88412 and email the receipt to ivy@sample.com?
+
+assistant channel=analysis:
+Use the tool with the reservation ID and email, then restate key drop and receipt policy from system.
+
+assistant channel=commentary to=tool.initiate_express_checkout:
+{"reservation_id":"SB-88412","email":"ivy@sample.com"}
+
+tool.initiate_express_checkout channel=commentary to=assistant:
+{"status":"initiated","receipt":"queued"}
+
+assistant channel=final:
+Express checkout is initiated. Please return your keys to the lobby drop labeled "Express Checkout" beside the Concierge Desk. Your digital receipt will be emailed after the folio closes.
+
+user:
+The harbor view was lovely this morning.
+
+assistant channel=analysis:
+Offer light chitchat acknowledging without adding new facts beyond system context.
+
+assistant channel=final:
+Glad to hear it—Front Office is reachable at extension 0 if you need anything on your way out.
+
+user:
+Can you waive any minibar charges if there’s a mismatch?
+
+assistant channel=analysis:
+Out of scope—no adjustment authority in system or tools. Use the special flag per guideline.
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Reviewing available resources regarding charge adjustments.
+

@@ -1,0 +1,94 @@
+"""
+Guest requests express duvet cover swap and asks about hypoallergenic options; include small talk and an out-of-scope query.
+
+ROLES: user (guest in room 2312), assistant (housekeeping dispatcher)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_linen_delivery",
+    "description": "Deliver specific linen items to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "linen_type": { "type": "string", "enum": ["duvet_cover", "pillowcase", "flat_sheet", "fitted_sheet"] },
+        "size": { "type": "string", "enum": ["twin", "queen", "king"] },
+        "quantity": { "type": "integer", "minimum": 1 },
+        "priority": { "type": "string", "enum": ["normal", "express"] }
+      },
+      "required": ["room_number", "linen_type", "size", "quantity", "priority"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_housekeeping_window",
+    "description": "Return standard housekeeping windows and express coverage for the property.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harbor Quay Residences (hotel_id: hqr_bos_07)
+Address: 140 Seaport Blvd, Boston, MA 02210, USA
+Timezone: America/New_York
+Linen Program (duvet covers):
+- Fabric: 350-thread-count long-staple cotton sateen
+- Sizes: twin | queen | king
+- Turnover: daily 09:00–16:00; on-demand express 16:00–23:00
+- Packaging: sealed poly sleeve with color tag per size
+- Sanitation: ozone tunnel pre-wash, 160°F thermal cycle
+Reference Formats:
+1) Sizes JSON: {"twin":68x86, "queen":90x90, "king":104x90}
+2) SLA (minutes): normal: 25–40; express: 10–20
+3) Contact: Housekeeping Desk ext. 55
+4) Stock snapshot: duvet_cover: { queen: 24, king: 18 }
+5) Note: Hypoallergenic option available on request
+
+user:
+Hi, room 2312 here. Can I get a fresh king duvet cover on express?
+
+assistant channel=analysis:
+Place an express delivery for one king duvet cover to 2312.
+
+assistant channel=commentary to=tool.request_linen_delivery:
+{"room_number":"2312","linen_type":"duvet_cover","size":"king","quantity":1,"priority":"express"}
+
+tool.request_linen_delivery channel=commentary to=assistant:
+{"status":"ok","ticket":"LIN-HQR-9021","eta_minutes":12}
+
+assistant channel=final:
+Confirmed. One king duvet cover is on the way to 2312. ETA about 12 minutes. Reference LIN-HQR-9021.
+
+user:
+Do you have hypoallergenic covers?
+
+assistant channel=analysis:
+Answer from system note that hypoallergenic option is available.
+
+assistant channel=final:
+Yes—hypoallergenic duvet covers are available on request. I can send that as the replacement for 2312.
+
+user:
+The view over the harbor is lovely tonight.
+
+assistant channel=analysis:
+Provide small talk acknowledgment only.
+
+assistant channel=final:
+It’s a calm scene when the harbor lights come on.
+
+user:
+What detergent brand do you use in the laundry?
+
+assistant channel=analysis:
+Brand details are not in system/tools; flag with attention.
+
+assistant channel=final:
+[ATTENTION] Noted. Checking the available documentation.
+

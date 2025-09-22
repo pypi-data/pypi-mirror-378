@@ -1,0 +1,62 @@
+"""
+Arrange an in-room spa pair of scented soaps for a couple.
+
+ROLES: user (guest requesting two scents), assistant (spa liaison coordinating a paired amenity drop)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"pair_options","description":"Check two-scent pairing availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"scents":{"type":"array","items":{"type":"string"}}},"required":[]},"strict":true},
+  {"name":"deliver_pair","description":"Deliver pair to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"scents":{"type":"array","items":{"type":"string"}}},"required":["room","scents"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Lakeshore Retreat (hotel_id: lsr_msp_09)
+Address: 600 Nicollet Mall, Minneapolis, MN 55402
+Timezone: America/Chicago
+Spa Services: 09:00–20:00; delivery 12–18 min
+Available Scents: lavender, green_tea, citrus
+Note: paraben-free, essential-oil based
+Ext: x9021
+
+user:
+Could we get lavender and green tea soaps sent to 1620?
+
+assistant channel=analysis:
+Check pair availability; deliver both scents to 1620.
+
+assistant channel=commentary to=tool.pair_options:
+{"scents":["lavender","green_tea"]}
+
+tool.pair_options channel=commentary to=assistant:
+{"available":true,"scents":["lavender","green_tea"]}
+
+assistant channel=commentary to=tool.deliver_pair:
+{"room":"1620","scents":["lavender","green_tea"]}
+
+tool.deliver_pair channel=commentary to=assistant:
+{"dispatched":true,"eta":16}
+
+assistant channel=final:
+Yes—lavender and green tea soaps are dispatched to 1620, arriving in about 16 minutes.
+
+user:
+Downtown is lively tonight.
+
+assistant channel=analysis:
+Chitchat grounded in area.
+
+assistant channel=final:
+Lakeshore Retreat’s Nicollet Mall address puts you right in the heart of it.
+
+user:
+Can you arrange ice fishing tomorrow morning?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

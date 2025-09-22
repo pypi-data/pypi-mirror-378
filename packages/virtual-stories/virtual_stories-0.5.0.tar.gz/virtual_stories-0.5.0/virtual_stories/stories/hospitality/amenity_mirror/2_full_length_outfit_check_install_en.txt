@@ -1,0 +1,81 @@
+"""
+Guest requests a full-length mirror installed near closet for outfit checks before dinner.
+Provide options, installation, and quick confirmation.
+
+ROLES: user (guest needing full-length mirror), assistant (guest services + engineering coordination)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_mirror_options", "description": "List full-length mirror availability and placement options.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "mirror_type": { "type": "string", "enum": ["full_length"] }, "lighting_needed": { "type": "boolean" } }, "required": ["mirror_type"] }, "strict": true },
+  { "name": "install_mirror_setup", "description": "Install full-length mirror at chosen location.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mirror_type": { "type": "string", "enum": ["full_length"] }, "lighting_type": { "type": "string", "enum": ["adjustable_led", "warm_white", "natural_daylight"] }, "placement_location": { "type": "string", "enum": ["closet", "bedroom", "near_window"] }, "power_source": { "type": "string", "enum": ["plug_in", "battery"] } }, "required": ["room_number", "mirror_type", "placement_location"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Avenue House Boutique (hotel_id: ahb_par_02)
+Address: 21 Rue de l’Arcade, 75008 Paris, France
+Timezone: Europe/Paris
+
+Mirror Services:
+- Full-length mirrors with optional LED edge lighting
+- Installations 10:00–20:00; portable units immediate
+- Placement: closet wall, bedroom corner, near window
+- Power: plug‑in or battery LED edge strips
+- Removal at checkout on request
+
+House Notes:
+- 72 rooms; fashion district access
+- Breakfast 7:00–10:30; tea 16:00–18:00
+- Quiet hours 22:00–7:00
+
+user:
+Hi—room 605. Could I get a full-length mirror near the closet before dinner?
+
+assistant channel=analysis:
+Check full-length availability; schedule install near closet; no special lighting requested unless needed.
+
+assistant channel=commentary to=tool.check_mirror_options:
+{"mirror_type":"full_length","lighting_needed":false}
+
+tool.check_mirror_options channel=commentary to=assistant:
+{"available_types":["full_length"],"lighting_options":["adjustable_led","warm_white"],"inventory_status":"8 units available"}
+
+assistant channel=commentary to=tool.install_mirror_setup:
+{"room_number":"605","mirror_type":"full_length","placement_location":"closet","lighting_type":"warm_white","power_source":"plug_in"}
+
+tool.install_mirror_setup channel=commentary to=assistant:
+{"service_id":"MIR_PAR605","installation_time":"within 40 minutes","placement":"closet wall","notes":"stud-mounted; warm white edge optional off by default"}
+
+assistant channel=final:
+We’ll mount a full‑length mirror on the closet wall in 605 within ~40 minutes; warm‑white edge lighting is installed but off by default.
+
+user:
+Tea is at 4, right?
+
+assistant channel=analysis:
+From system: tea 16:00–18:00.
+
+assistant channel=final:
+Yes—16:00 to 18:00 in the lounge.
+
+user:
+The fashion boutiques nearby are tempting.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+You’re in a great spot for a pre‑dinner outfit check.
+
+user:
+Could you book a last‑minute tailor?
+
+assistant channel=analysis:
+Outside mirror scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll ask concierge about a same‑day tailoring service.
+"""
+

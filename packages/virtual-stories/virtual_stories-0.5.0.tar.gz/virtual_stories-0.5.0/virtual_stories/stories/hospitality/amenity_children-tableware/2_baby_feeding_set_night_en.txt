@@ -1,0 +1,99 @@
+"""
+Parent requests a baby feeding set late evening and asks about sterilization and delivery window; arrange priority delivery.
+
+ROLES: user (parent with infant), assistant (family amenities coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"list_feeding_sets","description":"List infant feeding sets and sterilization options.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"deliver_feeding_set","description":"Deliver selected set to room with sterilization.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","set":"string","sterilize":{"type":"boolean"}},"required":["room","set"]}},
+  {"name":"family_policy","description":"Return delivery windows and priority rules.","parameters":{"type":"object","additionalProperties":false}}
+]
+```
+"""
+
+system:
+Coral Key Family Resort (hotel_id: ckf_mia_23)
+Address: 200 Biscayne Blvd, Miami, FL 33131
+Timezone: America/New_York
+Setting: Family-focused resort with lagoon pool
+
+Infant Sets:
+- Silicone suction bowl + soft spoon
+- PP BPA-free small bottle + handles
+- Bib with crumb catcher
+
+Sterilization:
+- Steam cabinet; items sealed in sterile pouch
+
+Delivery Windows:
+- Priority families: 10–20 minutes until 22:00
+- Standard: 20–35 minutes
+
+Policy:
+- Loaned items collected at turndown; no deposit
+
+Contact:
+- Family line ext. 88
+
+Reference (YAML):
+```yaml
+priority_delivery_until: "22:00"
+windows:
+  priority: "10-20_min"
+  standard: "20-35_min"
+sterilization: steam_cabinet
+sets:
+  - silicone_suction_bowl_soft_spoon
+  - pp_bottle_handles
+  - crumb_catcher_bib
+```
+
+user:
+Hi—could we get a silicone suction bowl and soft spoon to room 510 tonight? Can you sterilize them, and how fast can they arrive?
+
+assistant channel=analysis:
+Confirm sterilization and priority window; list sets; deliver sterilized set.
+
+assistant channel=commentary to=tool.family_policy:
+{}
+
+tool.family_policy channel=commentary to=assistant:
+{"priority_window":"10-20_min_until_22:00","standard":"20-35_min"}
+
+assistant channel=commentary to=tool.list_feeding_sets:
+{}
+
+tool.list_feeding_sets channel=commentary to=assistant:
+{"sets":["silicone_suction_bowl_soft_spoon","pp_bottle_handles","crumb_catcher_bib"],"sterilization":"steam_cabinet"}
+
+assistant channel=final:
+Yes—we can steam-sterilize and seal the silicone suction bowl with a soft spoon. Priority family delivery is 10–20 minutes until 22:00. I’ll arrange delivery to 510 now.
+
+assistant channel=commentary to=tool.deliver_feeding_set:
+{"room":"510","set":"silicone_suction_bowl_soft_spoon","sterilize":true}
+
+tool.deliver_feeding_set channel=commentary to=assistant:
+{"ticket":"CKF-510-882","eta_minutes":14}
+
+assistant channel=final:
+Confirmed—ticket CKF-510-882. Arrival in about 14 minutes, steam-sterilized and sealed.
+
+user:
+Thanks! The lagoon pool looks magical at night.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s beautifully lit for calm evening swims—enjoy.
+
+user:
+Do you offer a babysitting service?
+
+assistant channel=analysis:
+Beyond tableware scope; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on babysitting options beyond the family amenity program.

@@ -1,0 +1,71 @@
+"""
+Guest prints a short color notice and asks about size options that aren’t defined.
+
+ROLES: user (guest preparing a meeting notice), assistant (business center representative)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "place_print_order",
+    "description": "Place a standard PDF print order and return cost and job id.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "color": {"type": "boolean"},
+        "pickup": {"type": "string", "enum": ["business_center", "front_desk"]}
+      },
+      "required": ["room", "pages", "color", "pickup"],
+      "additionalProperties": false
+    }
+  }
+]
+```
+"""
+
+system:
+Resort: Azure Promenade
+Address: 901 Marina Vista, Miami Beach, FL 33139
+Print Desk: Tower B Lobby Annex
+Service Window: 06:30–22:30 daily
+Supported: PDF only; max 50 pages per job
+Rates: B/W $0.20; Color $0.50
+Pickup: Business Center or Front Desk
+Billing: Room folio on collection
+Notes: Typical 5–8 minutes completion; busiest 18:00–19:00
+
+user:
+Could you print 4 color pages for room 1103? I’ll pick them up at the business center.
+
+assistant channel=analysis:
+Queue 4 color pages for room 1103, business center pickup. Use tool for job id and estimate.
+
+assistant channel=commentary to=tool.place_print_order:
+{"room":"1103","pages":4,"color":true,"pickup":"business_center"}
+
+tool.place_print_order channel=commentary to=assistant:
+{"job_id":"azp_1103c","estimated_cost":2.00,"currency":"USD"}
+
+assistant channel=final:
+Done—4 color pages queued for room 1103 (azp_1103c). Estimated cost $2.00 USD. Collect at the Business Center; charges post to your room.
+
+user:
+By the way, do you offer A3 size?
+
+assistant channel=analysis:
+Size options are not listed; flag attention.
+
+assistant channel=final:
+[ATTENTION] Noted. I’m checking available paper sizes for you.
+
+user:
+Love the ocean breeze here.
+
+assistant channel=analysis:
+Provide brief small talk.
+
+assistant channel=final:
+It pairs well with evening meetings.
+

@@ -1,0 +1,99 @@
+"""
+Guest asks about cabana availability, pricing, and pool safety rules.
+
+ROLES: user (guest planning a pool day), assistant (pool concierge handling bookings and safety)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_cabana_availability","description":"List available cabanas and daybeds with pricing for the requested date.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"date":{"type":"string","description":"YYYY-MM-DD"}},"required":["hotel_id","date"]},"strict":true},
+  {"name":"reserve_cabana","description":"Reserve a cabana or daybed for a guest.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"unit_id":{"type":"string"},"guest_name":{"type":"string"}},"required":["hotel_id","unit_id","guest_name"]},"strict":true},
+  {"name":"get_pool_safety_policy","description":"Return summarized safety and lifeguard policy.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Pacific Dunes Resort (hotel_id: pacific_dunes_sd)
+Address: 455 Ocean Walk, San Diego, CA 92101
+Timezone: America/Los_Angeles
+Pool Complex Overview:
+  - Main Pool: 32 m freeform; depth 0.9–1.6 m; heated 82°F year-round
+  - Kids Wading Pool: 0.3 m max; shade sails; splash fountains
+  - Lifeguards: On duty 10:00–18:00 daily; emergency phone by towel hut
+  - ADA: Pool lift at Main Pool; zero-entry ramp at Kids Pool
+  - Capacity: Main 120 guests; Wading 40; fire code enforced
+  - Towel Desk: 08:00–19:00; 1 towel per wristband; extras by ID hold
+  - Music Policy: Low-volume ambient; no personal speakers
+  - Food & Beverage: Pool Bar 11:30–19:00; last call 18:45; no glassware on deck
+Cabana Inventory & Pricing (tax not included):
+  1) CAB-A1..A6 (shade curtains, mini-fridge) — $180 weekday / $240 weekend
+  2) DAY-B1..B8 (two loungers + umbrella) — $60 weekday / $80 weekend
+  3) FAMILY-C1..C2 (extra fan, safe, USB hubs) — $220 weekday / $300 weekend
+Noise & Courtesy:
+  • Quiet hours at pool 18:00–08:00;
+  • No amplified music; children supervised at all times;
+  • Cabanas released if no-show after 30 minutes past start time.
+
+user:
+Is there a cabana free this Saturday? Also, what are the safety rules?
+
+assistant channel=analysis:
+Check cabana inventory for the date; then summarize lifeguard/safety policy.
+
+assistant channel=commentary to=tool.check_cabana_availability:
+{"hotel_id":"pacific_dunes_sd","date":"2025-09-06"}
+
+tool.check_cabana_availability channel=commentary to=assistant:
+{"date":"2025-09-06","available":[{"unit_id":"CAB-A2","type":"cabana","price":240},{"unit_id":"DAY-B3","type":"daybed","price":80},{"unit_id":"FAMILY-C1","type":"family_cabana","price":300}],"sold_out":["CAB-A1","CAB-A5","DAY-B1","DAY-B2"]}
+
+assistant channel=commentary to=tool.get_pool_safety_policy:
+{"hotel_id":"pacific_dunes_sd"}
+
+tool.get_pool_safety_policy channel=commentary to=assistant:
+{"policy":"Lifeguards 10:00-18:00; no glass; shallow kids pool 0.3 m; children supervised; ADA lift available; emergency phone at towel hut."}
+
+assistant channel=final:
+Availability for Sat 2025-09-06: Cabana CAB-A2 ($240), Family Cabana FAMILY-C1 ($300), Daybed DAY-B3 ($80). Safety: Lifeguards 10:00–18:00, no glass, kids pool 0.3 m with supervision, ADA lift at main pool, emergency phone by towel hut.
+
+user:
+Please book CAB-A2 under Taylor Reed.
+
+assistant channel=analysis:
+Reserve requested unit via tool.
+
+assistant channel=commentary to=tool.reserve_cabana:
+{"hotel_id":"pacific_dunes_sd","unit_id":"CAB-A2","guest_name":"Taylor Reed"}
+
+tool.reserve_cabana channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"CAB-A2-0906-TR","start":"10:00","end":"18:00"}
+
+assistant channel=final:
+Booked: CAB-A2, 10:00–18:00, confirmation CAB-A2-0906-TR. Please check in at the towel desk.
+
+user:
+Nice! Do you allow small Bluetooth speakers inside the cabana?
+
+assistant channel=analysis:
+Music policy states no personal speakers; answer from system context.
+
+assistant channel=final:
+No, personal speakers aren’t allowed; we keep only low-volume ambient music.
+
+user:
+Can I bring my own grill to cook?
+
+assistant channel=analysis:
+No grill policy isn’t defined in the system or tools—flag attention.
+
+assistant channel=final:
+[ATTENTION] Thanks for checking on grills. Reviewing the available policy documents.
+
+user:
+By the way, love the ocean breeze here.
+
+assistant channel=analysis:
+Offer light chitchat response.
+
+assistant channel=final:
+It’s the best part of the deck—glad you’re enjoying it.

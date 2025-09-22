@@ -1,0 +1,60 @@
+"""
+Guest asks for the main number and whether calls can be transferred to the spa; include an out-of-scope IVR map request.
+
+ROLES: user (guest), assistant (operator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true},
+  {"name":"get_department_phone","description":"Return a department-specific phone number.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"department":{"type":"string","enum":["housekeeping","concierge","spa","restaurant","front_desk"]}},"required":["hotel_id","department"]},"strict":true}
+]
+```
+"""
+
+system:
+Ivory Row House (hotel_id: ivory_row)
+Main phone: +1 202 555 1400 | Email hello@ivoryrow.us | Web https://ivoryrow.us
+Dept phones: Spa +1 202 555 1404; Restaurant +1 202 555 1405
+Hours: Operator 24/7; Spa lines 09:00–21:00 local
+Extras: Reading parlor 2F; Garden courtyard 10:00–18:00.
+
+user:
+What’s your main number? Can calls be transferred to the spa?
+
+assistant channel=analysis:
+Provide main via tool; confirm spa line exists.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"ivory_row","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+1 202 555 1400"}
+
+assistant channel=commentary to=tool.get_department_phone:
+{"hotel_id":"ivory_row","department":"spa"}
+
+tool.get_department_phone channel=commentary to=assistant:
+{"department":"spa","phone":"+1 202 555 1404"}
+
+assistant channel=final:
+Main: +1 202 555 1400. We can transfer you to the spa at +1 202 555 1404 during 09:00–21:00.
+
+user:
+The garden is peaceful.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+It’s open 10:00–18:00—perfect for a quiet break.
+
+user:
+Can you share your full IVR menu map?
+
+assistant channel=analysis:
+Out of scope—no IVR map provided.
+
+assistant channel=final:
+[ATTENTION] IVR menu details aren’t available within the provided resources.
+

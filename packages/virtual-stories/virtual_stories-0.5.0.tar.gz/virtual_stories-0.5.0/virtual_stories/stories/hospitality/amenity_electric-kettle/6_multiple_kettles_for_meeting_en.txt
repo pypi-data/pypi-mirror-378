@@ -1,0 +1,77 @@
+"""
+Guest requests multiple kettles for an in-room meeting; arrange multiples and provide quick guidance. Include chitchat and [ATTENTION].
+
+ROLES: user (guest hosting small meeting), assistant (amenities coordinator handling multiple items with guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_item","description":"Send an amenity item to a room","parameters":{"type":"object","properties":{"item_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["item_name","room_number","quantity"],"additionalProperties":false},"strict":true},
+  {"name":"provide_appliance_guide","description":"Return quick guidance for an appliance","parameters":{"type":"object","properties":{"appliance":{"type":"string","enum":["kettle"]},"mode":{"type":"string","enum":["quick_start"]}},"required":["appliance","mode"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seaview Promontory (hotel_id: svp_cape_07)
+Address: 3 Beach Vista Rd, Cape Town 8001, South Africa
+Timezone: Africa/Johannesburg
+
+Key Points:
+- Multiple kettles can be provided for meetings (subject to availability)
+- Voltage: 230V; universal outlets at desk
+- Typical ETA: 12–18 minutes
+
+YAML Facilities:
+---
+pool_level: 5
+gym_level: 4
+sprinklers: true
+---
+
+JSON Runner:
+{"primary":"Naledi","backup":"Kai"}
+
+CSV Nearby (place,walk_min):
+Sea_Point_Promenade,3
+V_and_A_Waterfront,15
+
+user:
+Could I have two kettles sent to 1006 for a small meeting?
+
+assistant channel=analysis:
+Arrange two kettles to 1006; provide quick start guidance.
+
+assistant channel=commentary to=tool.request_item:
+{"item_name":"electric_kettle","room_number":"1006","quantity":2}
+
+tool.request_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":16,"runner":"Naledi"}
+
+assistant channel=commentary to=tool.provide_appliance_guide:
+{"appliance":"kettle","mode":"quick_start"}
+
+tool.provide_appliance_guide channel=commentary to=assistant:
+{"appliance":"kettle","mode":"quick_start","steps":["Fill to MAX line.","Set on base.","Press switch; auto-off after boil."]}
+
+assistant channel=final:
+Confirmed—two kettles are heading to 1006 in about 16 minutes (Naledi). Quick start: Fill to the MAX line, set on the base, press the switch; it turns off after boiling.
+
+user:
+The Sea Point Promenade is so close.
+
+assistant channel=analysis:
+Chit-chat acknowledgment using CSV info.
+
+assistant channel=final:
+It’s a 3‑minute walk—great for a quick break.
+
+user:
+Can you set up a projector as well?
+
+assistant channel=analysis:
+Projector setup not in tools; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Working on your request.
+

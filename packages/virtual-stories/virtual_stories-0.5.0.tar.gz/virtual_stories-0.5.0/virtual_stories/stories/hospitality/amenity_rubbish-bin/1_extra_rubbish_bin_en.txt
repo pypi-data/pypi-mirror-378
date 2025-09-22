@@ -1,0 +1,96 @@
+"""
+Guest requests an extra rubbish bin with type and placement; confirm availability and arrange delivery; include small talk and one background-acknowledgment message.
+
+ROLES: user (guest requesting an additional waste bin), assistant (front desk coordinating housekeeping delivery and pickups)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_bin_availability",
+    "description": "Check availability for rubbish bin types.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bin_type": { "type": "string", "enum": ["compact_6L_lid", "standard_12L_open"] }
+      },
+      "required": ["bin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "request_additional_bin",
+    "description": "Deliver an additional bin with placement and liner selection.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "bin_type": { "type": "string", "enum": ["compact_6L_lid", "standard_12L_open"] },
+        "placement": { "type": "string", "enum": ["bathroom", "bedside", "desk"] },
+        "liner_type": { "type": "string", "enum": ["standard", "compostable"] }
+      },
+      "required": ["room_number", "bin_type", "placement", "liner_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Property: Highland Crest Hotel (hotel_id: hc_edi_02)
+Address: 19 Regent Terrace, Edinburgh EH7
+Housekeeping rounds: approx. pickups at 08:00 and 14:00 daily
+
+Bin catalog:
+- Types: compact_6L_lid, standard_12L_open
+- Today’s availability: compact_6L_lid(8), standard_12L_open(5)
+- Liners: standard (default) or compostable
+
+Design detail:
+- The lobby carpet weaves a modern tartan motif.
+
+user:
+Could I have an extra standard bin by the desk in room 715, with a compostable liner?
+
+assistant channel=analysis:
+Check standard_12L_open availability, then deliver to desk with compostable liner.
+
+assistant channel=commentary to=tool.check_bin_availability:
+{"bin_type":"standard_12L_open"}
+
+tool.check_bin_availability channel=commentary to=assistant:
+{"available":true,"bin_type":"standard_12L_open","on_hand":5}
+
+assistant channel=analysis:
+Place the delivery request for room 715.
+
+assistant channel=commentary to=tool.request_additional_bin:
+{"room_number":"715","bin_type":"standard_12L_open","placement":"desk","liner_type":"compostable"}
+
+tool.request_additional_bin channel=commentary to=assistant:
+{"ticket_id":"HK-715-3329","eta_minutes":16}
+
+assistant channel=final:
+Added—one standard 12 L open bin will be placed by the desk in 715 with a compostable liner. Ticket HK-715-3329, ETA about 16 minutes.
+
+user:
+I noticed the tartan pattern in the lobby—very cool.
+
+assistant channel=analysis:
+Reply with a friendly nod to the lobby design.
+
+assistant channel=final:
+Thanks—our modern tartan weave is a nod to the city’s heritage.
+
+user:
+Could you arrange a recycling pickup at 10 PM tonight?
+
+assistant channel=analysis:
+Pickups are listed as 08:00 and 14:00; no tool to schedule at 22:00. Use the flag.
+
+assistant channel=final:
+[ATTENTION] I’m checking if late pickups are possible. Reviewing available resources.
+

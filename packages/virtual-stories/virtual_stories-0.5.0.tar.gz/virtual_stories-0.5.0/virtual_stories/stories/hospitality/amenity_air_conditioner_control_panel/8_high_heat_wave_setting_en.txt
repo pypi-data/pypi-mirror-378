@@ -1,0 +1,66 @@
+"""
+Guest requests the coolest permissible setting during a heat wave; confirm range and apply.
+
+ROLES: user (guest during heat), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_panel_status", "description": "Get panel lock status.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "set_room_temperature", "description": "Set temperature and fan.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"temperature_f":{"type":"number"},"fan":{"type":"string","enum":["auto","low","medium","high"]}},"required":["room_number","temperature_f","fan"]}, "strict": true }
+]
+```
+"""
+
+system:
+Desert Sun Hotel (hotel_id: dsh_phoenix)
+Address: 400 Camelback Rd, Phoenix, AZ 85018
+Timezone: America/Phoenix
+
+HVAC Policy:
+- Guest set range: 66–74°F
+- Fan modes: auto/low/medium/high
+Engineering: 07:00–22:00
+Amenities: Shaded courtyard 07:00–20:00
+Accessibility: High‑contrast panels
+Sustainability: Unoccupied set‑back
+
+user:
+It’s scorching out. Please set room 241 to the coolest allowed setting with fan high.
+
+assistant channel=analysis:
+Coolest allowed is 66°F per system; apply with fan high.
+
+assistant channel=commentary to=tool.get_panel_status:
+{"room_number":"241"}
+
+tool.get_panel_status channel=commentary to=assistant:
+{"room_number":"241","locked":false}
+
+assistant channel=commentary to=tool.set_room_temperature:
+{"room_number":"241","temperature_f":66,"fan":"high"}
+
+tool.set_room_temperature channel=commentary to=assistant:
+{"applied":true,"temperature_f":66,"fan":"high"}
+
+assistant channel=final:
+241 is set to 66°F with the fan on high.
+
+user:
+The shaded courtyard helps a lot.
+
+assistant channel=analysis:
+Small talk reference.
+
+assistant channel=final:
+It’s open 07:00–20:00 if you want a cooler spot.
+
+user:
+Can you arrange late checkout too?
+
+assistant channel=analysis:
+Outside HVAC scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check availability for a late checkout.
+

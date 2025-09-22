@@ -1,0 +1,80 @@
+"""
+Guest requests child cutlery sizes and asks if forks are blunted; arrange delivery of safe utensils.
+
+ROLES: user (caregiver), assistant (amenities desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"list_cutlery","description":"List children’s cutlery with sizes and safety.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"deliver_cutlery","description":"Deliver selected cutlery pieces.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","pieces":{"type":"array","items":{"type":"string"}}},"required":["room","pieces"]}}
+]
+```
+"""
+
+system:
+Seashell Family Hotel (hotel_id: sfh_sdn_02)
+Address: 50 Harbor Way, San Diego, CA 92101
+Timezone: America/Los_Angeles
+
+Cutlery Options:
+- Training spoon (soft tip)
+- Small fork (blunted tines)
+- Toddler knife: not provided
+
+Safety:
+- Soft edges; BPA-free materials
+
+Delivery Window:
+- 10–18 minutes typical
+
+Policy:
+- Loan; collected at turndown
+
+Contact:
+- Amenities ext. 33; Family line ext. 88
+
+user:
+Hi—do you have small forks with blunted tines and a soft-tip spoon for room 427?
+
+assistant channel=analysis:
+List cutlery and deliver; confirm safety.
+
+assistant channel=commentary to=tool.list_cutlery:
+{}
+
+tool.list_cutlery channel=commentary to=assistant:
+{"options":["training_spoon_soft","small_fork_blunted"],"safety":"soft_edges_bpa_free"}
+
+assistant channel=final:
+Yes—training spoon (soft tip) and a small fork with blunted tines are available. I’ll send them to 427—ETA 10–18 minutes. Does that work?
+
+user:
+That’s perfect, thanks.
+
+assistant channel=commentary to=tool.deliver_cutlery:
+{"room":"427","pieces":["training_spoon_soft","small_fork_blunted"]}
+
+tool.deliver_cutlery channel=commentary to=assistant:
+{"ticket":"SFH-427-119","eta_minutes":12}
+
+assistant channel=final:
+Confirmed—ticket SFH-427-119. Arrival in about 12 minutes.
+
+user:
+The harbor boats are fun to watch.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+They make a great backdrop for family time.
+
+user:
+Do you lend beach toys too?
+
+assistant channel=analysis:
+Not included; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on beach toy lending beyond tableware amenities.

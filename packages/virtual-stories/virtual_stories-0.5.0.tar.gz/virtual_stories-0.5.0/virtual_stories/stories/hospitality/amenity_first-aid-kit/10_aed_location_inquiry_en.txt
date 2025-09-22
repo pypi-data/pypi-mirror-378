@@ -1,0 +1,73 @@
+"""
+Guest inquires about AED location and requests complete first aid kit to room; confirm availability and answer AED from system. Include chitchat and ATTENTION.
+
+ROLES: user (safety-conscious guest), assistant (concierge with medical supply access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"complete_kit_check","description":"Check availability of a complete first aid kit for delivery.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"location":{"type":"string","enum":["front_desk"]}},
+     "required":["location"]},"strict":true},
+  {"name":"complete_kit_deliver","description":"Deliver a complete first aid kit to a room.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"priority":{"type":"string","enum":["standard","urgent"]}},
+     "required":["room_number","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbor Quay Hotel (hotel_id: HQH_bos_05)
+Address: 90 Seaport Blvd, Boston, MA 02210 | TZ: America/New_York
+
+Emergency Resources:
+- AED location: lobby near concierge desk
+- First aid kits: front desk and security office
+- Delivery: 24/7 for medical supplies
+- Protocol: call 911 for emergencies
+- Harbor promenade just outside
+
+user:
+Where’s your AED located? Also, can I get a complete first aid kit to room 1003?
+
+assistant channel=analysis:
+Answer AED location from system; check complete kit availability and deliver to 1003.
+
+assistant channel=final:
+Our AED is in the lobby near the concierge desk. I’ll also arrange a complete first aid kit to room 1003 now.
+
+assistant channel=commentary to=tool.complete_kit_check:
+{"location":"front_desk"}
+
+tool.complete_kit_check channel=commentary to=assistant:
+{"available":true,"kit_id":"fd_kit_010"}
+
+assistant channel=commentary to=tool.complete_kit_deliver:
+{"room_number":"1003","priority":"urgent"}
+
+tool.complete_kit_deliver channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":7,"runner":"hq-ops","ticket":"HQH-1003-FAK"}
+
+assistant channel=final:
+The complete kit is en route to room 1003—about 7 minutes (hq-ops, ticket HQH-1003-FAK). For any emergency, please call 911.
+
+user:
+It’s nice having the harbor promenade right outside.
+
+assistant channel=analysis:
+Chitchat tied to system.
+
+assistant channel=final:
+It’s perfect for a fresh-air break by the water.
+
+user:
+Can you schedule a safety training session for our group?
+
+assistant channel=analysis:
+Not defined—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for group safety training sessions.
+

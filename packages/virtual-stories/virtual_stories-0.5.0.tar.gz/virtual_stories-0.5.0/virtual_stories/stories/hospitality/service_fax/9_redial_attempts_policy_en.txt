@@ -1,0 +1,46 @@
+"""
+Guest asks about redial attempts for busy numbers; submit job and clarify standard redial behavior; include chitchat and ATTENTION for custom retry schedule.
+
+ROLES: user (guest faxing to a busy destination), assistant (business center describing retry policy and submitting fax)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"send_fax","description":"Submit a fax job.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"recipient_number":{"type":"string"},"pages":{"type":"integer"},"cover_note":{"type":"string"},"destination_type":{"type":"string","enum":["domestic","international"]}},"required":["room_number","recipient_number","pages","destination_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Skyline Central Hotel — Business Center
+Hours: 07:00–23:00
+Retries: System redials automatically on busy signals
+Rates: USD 2/page domestic; USD 5/page international; cover complimentary
+
+user:
+I’m sending 3 domestic pages to +1-917-555-0162. If it’s busy, do you retry?
+
+assistant channel=analysis:
+Confirm automatic redial per system and submit the job.
+
+assistant channel=commentary to=tool.send_fax:
+{"room_number":"1901","recipient_number":"+1-917-555-0162","pages":3,"cover_note":"Please advise","destination_type":"domestic"}
+
+tool.send_fax channel=commentary to=assistant:
+{"job_id":"fax_2025_09_07_934","status":"queued","billed_pages":3,"rate_per_page":2,"currency":"USD"}
+
+assistant channel=final:
+Queued as fax_2025_09_07_934 for 3 domestic pages; the system redials automatically on busy signals.
+
+user:
+Thanks—nice lobby plants.
+
+assistant channel=final:
+We’ll keep an eye on the queue.
+
+user:
+Can you retry every minute for the next hour?
+
+assistant channel=final:
+[ATTENTION] Custom retry schedules aren’t available here. Reviewing available resources.
+

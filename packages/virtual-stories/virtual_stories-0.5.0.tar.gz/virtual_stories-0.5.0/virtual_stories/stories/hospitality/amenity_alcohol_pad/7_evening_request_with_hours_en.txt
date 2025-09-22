@@ -1,0 +1,94 @@
+"""
+Evening request for alcohol pads; confirm within delivery window and arrange. Include small talk, an in-context hours confirmation, and an [ATTENTION] pharmacy run request.
+
+ROLES: user (evening guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"aid_check","description":"Check item availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"aid_dispatch","description":"Dispatch delivery to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer"}},"required":["room","item","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seabright Quay (hotel_id: sq_ca_26)
+Address: 700 Cliff Ave, Santa Cruz, CA 95062
+Timezone: America/Los_Angeles
+Check-in/Out: 16:00 / 11:00
+Delivery Window: 08:00–22:00
+
+First-Aid Items:
+- alcohol pads, bandages, gauze
+- No medical guidance provided
+
+Facilities:
+1) Fire ring patio 18:00–22:00
+2) Boardwalk access path
+3) Café Brisa 06:30–12:00
+4) Fitness 24/7
+5) Quiet hours 22:00–07:00
+
+Dining:
+- Café Brisa breakfast 06:30–12:00
+
+Accessibility:
+- Step-free lobby and patio access
+
+Sustainability:
+- Recycling on each floor; refillable amenities
+
+Design:
+- Beach glass colors and driftwood accents
+
+user:
+Hi—room 256. Could I get 4 alcohol pads this evening?
+
+assistant channel=analysis:
+Check item availability and dispatch 4.
+
+assistant channel=commentary to=tool.aid_check:
+{"item":"alcohol pads"}
+
+tool.aid_check channel=commentary to=assistant:
+{"item":"alcohol pads","available":true}
+
+assistant channel=commentary to=tool.aid_dispatch:
+{"room":"256","item":"alcohol pads","qty":4}
+
+tool.aid_dispatch channel=commentary to=assistant:
+{"id":"SQ-DEL-256-144","eta_minutes":11}
+
+assistant channel=final:
+I’ve dispatched 4 alcohol pads to room 256 (SQ-DEL-256-144). ETA is about 11 minutes.
+
+user:
+Is delivery still available at 9:45 PM?
+
+assistant channel=analysis:
+Answer using Delivery Window.
+
+assistant channel=final:
+Yes—delivery runs until 22:00.
+
+user:
+The fire ring patio looked cozy.
+
+assistant channel=analysis:
+Small talk referencing facilities.
+
+assistant channel=final:
+The patio from 18:00 to 22:00 is a nice evening spot.
+
+user:
+Can you pick up allergy meds from a nearby store and charge them to my room?
+
+assistant channel=analysis:
+Out of scope; apply flag.
+
+assistant channel=final:
+[ATTENTION] Looking deeper into this issue.
+
+user:
+Thanks.

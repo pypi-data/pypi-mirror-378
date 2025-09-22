@@ -1,0 +1,50 @@
+"""
+Guest asks for pot and quick rinse options; include tool call, pantry info, small talk, and out-of-scope appliance power rating.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"request_kitchen_item","description":"Request a specific item from the hotel kitchen.",
+   "parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_name":{"type":"string"}},"required":["room_number","item_name"]}}
+]
+```
+"""
+
+system:
+Oak & Ivy Hotel — Quick Rinse Options
+Available: small pot upon request
+Pantry: floor 5 rinse station 07:00–21:30
+Delivery ETA: ~10 minutes
+Hygiene: sealed after wash
+Returns: leave outside door
+Use request_kitchen_item for dispatch
+
+user:
+Room 518—could I get a small pot? Also, is there a rinse station nearby?
+
+assistant channel=analysis:
+Send small_pot to 518; then provide pantry location and hours from system.
+
+assistant channel=commentary to=tool.request_kitchen_item:
+{"room_number": "518", "item_name": "small_pot"}
+
+tool.request_kitchen_item channel=commentary to=assistant:
+{"status":"success","message":"Small pot on the way to room 518."}
+
+assistant channel=final:
+On the way—arrival in about 10 minutes. The floor‑5 rinse station runs 07:00–21:30.
+
+user:
+Thanks—hope your shift’s going smoothly.
+
+assistant channel=final:
+Appreciate it—it is, thank you.
+
+user:
+What’s the exact wattage of your in-room kettles?
+
+assistant channel=final:
+[ATTENTION] Specific appliance wattage isn’t provided in these resources.
+

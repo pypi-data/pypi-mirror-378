@@ -1,0 +1,81 @@
+"""
+Family with twins requests two high chairs; verify stock, create complimentary loans, and schedule delivery.
+
+ROLES: user (guest dining with infant twins), assistant (guest services arranging in-room equipment delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_kid_chair_stock","description":"Check and hold kids' high chairs","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","quantity","room"]},"strict":true},
+  {"name":"create_loan","description":"Create a complimentary loan order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"}},"required":["hotel_id","room","item","quantity","duration_hours","charge_code"]},"strict":true},
+  {"name":"schedule_runner","description":"Schedule runner delivery with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Alpine Crest Zurich (ACZH-22)
+Address: Bahnhofstrasse 45, 8001 Zürich, Switzerland
+Front Desk: 24/7 | Service Team: 06:00–23:00
+Kids’ High Chairs: 12 units total; complimentary; no deposit; max weight 15 kg; 5-point safety straps; dishwasher-sanitized after each use.
+Delivery: Typical in-room delivery ETA 10–18 minutes; peak times 15–25 minutes; pickup on request.
+Inventory Handling: Items tracked by serial; loans up to 8 hours by default; extensions available via Guest Services.
+Room Access: Please ensure doorway clearance of 78 cm; runners will not move personal furniture.
+Accessibility: Narrow-corridor adapter legs available (2 sets); request if needed.
+Policies: Only registered guests may request loans to occupied rooms; no balcony use for safety.
+
+user:
+We have twins in 1104—can we get two high chairs?
+
+assistant channel=analysis:
+Check stock for 2 units, then create a comp loan and schedule delivery.
+
+assistant channel=commentary to=tool.check_kid_chair_stock:
+{"hotel_id":"ACZH-22","quantity":2,"room":"1104"}
+
+tool.check_kid_chair_stock channel=commentary to=assistant:
+{"available":true,"held":2,"serials":["KCH-ZH-03","KCH-ZH-07"]}
+
+assistant channel=commentary to=tool.create_loan:
+{"hotel_id":"ACZH-22","room":"1104","item":"kids_high_chair","quantity":2,"duration_hours":8,"charge_code":"COMP-FAM"}
+
+tool.create_loan channel=commentary to=assistant:
+{"order_id":"KID-1104-882","status":"created"}
+
+assistant channel=commentary to=tool.schedule_runner:
+{"hotel_id":"ACZH-22","room":"1104","order_id":"KID-1104-882"}
+
+tool.schedule_runner channel=commentary to=assistant:
+{"eta_minutes":14,"runner":"Nora","order_id":"KID-1104-882"}
+
+assistant channel=final:
+Two sanitized high chairs have been arranged (order KID-1104-882). Nora will bring them to 1104 in about 14 minutes.
+
+user:
+Is there any deposit or fee?
+
+assistant channel=analysis:
+Answer directly from system policy—complimentary, no deposit.
+
+assistant channel=final:
+They’re complimentary and require no deposit under our in-room loan policy.
+
+user:
+The lobby smells great today.
+
+assistant channel=analysis:
+Light, friendly acknowledgement—no new facts.
+
+assistant channel=final:
+Glad you noticed—it sets a relaxing tone for the evening.
+
+user:
+What’s the manufacturer warranty length on these chairs?
+
+assistant channel=analysis:
+This is outside the provided system details—use ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

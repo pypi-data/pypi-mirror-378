@@ -1,0 +1,69 @@
+"""
+Family requests a van to zoo; include chitchat, system-answered Q, and one [ATTENTION] via tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {"name":"get_taxi_eta","description":"Live ETA for vans","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"vehicle_type":{"type":"string","enum":["van"]}},"required":["pickup_point","vehicle_type"]}},
+  {"name":"request_taxi","description":"Dispatch a van","parameters":{"type":"object","properties":{"pickup_point":{"type":"string"},"destination":{"type":"string"},"passengers":{"type":"integer"},"vehicle_type":{"type":"string","enum":["van"]}},"required":["pickup_point","destination","passengers","vehicle_type"]}}
+]
+"""
+
+system:
+Hotel: Maple Crown Lodge (hotel_id: maple_crown_tor)
+Address: 120 Front St W, Toronto, ON M5J 1G6 | Timezone: America/Toronto
+Desk hours: taxi coordination 06:00–23:30; after-hours: limited sedan availability.
+Pickups: "Front Colonnade" (sedan), "Rear Coach Gate" (van), "Side Portico" (luxury).
+Baggage: vans recommended for 4+ suitcases.
+Payment: taxis accept Visa/MC; no room billing.
+Local tip: baseball game days can slow Front St.
+
+user:
+Hello! We’re heading to the zoo—can you get a van?
+
+assistant channel=analysis:
+Acknowledge, confirm pickup at Rear Coach Gate; offer ETA.
+
+assistant channel=final:
+Absolutely—we can dispatch a van to the Rear Coach Gate. Want me to check the live ETA?
+
+user:
+Where do vans pick up here?
+
+assistant channel=analysis:
+Answer from system: Rear Coach Gate.
+
+assistant channel=final:
+Vans use the Rear Coach Gate.
+
+user:
+[ATTENTION] How long will it take right now?
+
+assistant channel=analysis:
+Call get_taxi_eta with pickup_point Rear Coach Gate, vehicle_type van.
+
+assistant channel=commentary to=get_taxi_eta:
+{"pickup_point":"Rear Coach Gate","vehicle_type":"van"}
+
+tool.get_taxi_eta:
+{"eta_minutes": 11, "provider":"Union Taxi Co.", "vehicle":"White Sprinter VAN-204"}
+
+assistant channel=final:
+The van ETA is 11 minutes (White Sprinter VAN-204) from Union Taxi Co.
+
+user:
+Great—book for 5 people to Toronto Zoo.
+
+assistant channel=analysis:
+Dispatch via request_taxi.
+
+assistant channel=commentary to=request_taxi:
+{"pickup_point":"Rear Coach Gate","destination":"Toronto Zoo","passengers":5,"vehicle_type":"van"}
+
+tool.request_taxi:
+{"status":"confirmed","dispatch_id":"MC-8841","eta_minutes":11}
+
+assistant channel=final:
+All set—Dispatch MC-8841, van to Toronto Zoo, ETA 11 minutes at Rear Coach Gate. Have a fun trip!
+

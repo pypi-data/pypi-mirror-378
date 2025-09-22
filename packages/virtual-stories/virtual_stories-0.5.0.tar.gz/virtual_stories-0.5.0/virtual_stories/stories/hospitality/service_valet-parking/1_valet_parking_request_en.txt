@@ -1,0 +1,56 @@
+"""
+Guest uses valet parking; confirm ticket, overnight rate, and retrieval estimate.
+
+ROLES: user (guest arriving by car), assistant (valet/concierge handling vehicle intake)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"request_valet_ticket","description":"Issue valet ticket and store vehicle info","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"guest_name":{"type":"string"},"plate":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","guest_name","plate","room"]},"strict":true},
+  {"name":"retrieve_vehicle_eta","description":"Request vehicle retrieval ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"ticket":{"type":"string"}},"required":["hotel_id","ticket"]},"strict":true}
+]
+```
+"""
+
+system:
+Riverfront Crown New Orleans (RCNO-22), 601 Canal St, New Orleans, LA.
+Valet parking: USD 48 overnight; in/out privileges; typical retrieval 10–15 minutes.
+Vehicles stored in covered garage; tickets required for retrieval.
+
+user:
+I’ve just arrived—can I valet my car? Plate NOLA-442, room 936.
+
+assistant channel=analysis:
+Issue valet ticket for plate NOLA-442 linked to room 936 and state rate.
+
+assistant channel=commentary to=tool.request_valet_ticket:
+{"hotel_id":"RCNO-22","guest_name":"Guest 936","plate":"NOLA-442","room":"936"}
+
+tool.request_valet_ticket channel=commentary to=assistant:
+{"ticket":"VLT-936-2201","overnight_rate_usd":48}
+
+assistant channel=final:
+Your valet ticket is VLT-936-2201. Overnight is USD 48 with in/out privileges; retrieval typically takes 10–15 minutes.
+
+user:
+Could you bring the car around in 15 minutes?
+
+assistant channel=analysis:
+Request a retrieval ETA against the ticket.
+
+assistant channel=commentary to=tool.retrieve_vehicle_eta:
+{"hotel_id":"RCNO-22","ticket":"VLT-936-2201"}
+
+tool.retrieve_vehicle_eta channel=commentary to=assistant:
+{"eta_minutes":12}
+
+assistant channel=final:
+Got it—current retrieval estimate is about 12 minutes for ticket VLT-936-2201.
+
+user:
+Can you share the garage operator’s contract?
+
+assistant channel=final:
+[ATTENTION] Checking available resources.
+

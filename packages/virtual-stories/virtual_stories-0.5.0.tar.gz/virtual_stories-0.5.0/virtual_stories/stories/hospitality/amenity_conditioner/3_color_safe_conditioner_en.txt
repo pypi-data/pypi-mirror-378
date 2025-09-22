@@ -1,0 +1,69 @@
+"""
+Guest requests color-safe conditioner and leave-in protection.
+Include UV-shield options and immediate delivery.
+
+ROLES: user (guest with color-treated hair), assistant (spa amenities concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_hair_care_products","description":"Retrieve available premium hair care products including conditioners.","parameters":{"type":"object","additionalProperties":false,"properties":{"hair_type":{"type":"string","enum":["dry","oily","normal","curly","colored","damaged","all"]},"product_type":{"type":"string","enum":["conditioner","deep_treatment","leave_in","all_conditioning"]}},"required":[]},"strict":true},
+  {"name":"check_ingredient_allergies","description":"Check if products contain specific ingredients for allergy-sensitive guests.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_sku":{"type":"string"},"allergens_to_avoid":{"type":"array","items":{"type":"string","enum":["sulfates","parabens","fragrance","coconut","tree_nuts","gluten"]}}},"required":["product_sku","allergens_to_avoid"]},"strict":true},
+  {"name":"deliver_hair_care_amenities","description":"Arrange delivery of hair care products to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"size":{"type":"string","enum":["travel_50ml","standard_200ml","luxury_400ml"]}},"required":["sku","size"],"additionalProperties":false}},"delivery_preference":{"type":"string","enum":["immediate","evening_turndown","morning_service"]}},"required":["room_number","products","delivery_preference"]},"strict":true}
+]
+```
+"""
+
+system:
+The Meridian Art Hotel (hotel_id: mah_london_city)
+Address: 28 Brushfield St, London E1 6AU, UK
+Timezone: Europe/London
+
+Color Care Program:
+- Protects vibrancy for dyed hair with UV defense
+- Daily conditioner and leave‑in shield options
+- Sizes: 50ml/200ml/400ml
+
+SKUs:
+- COND_COLOR_SHIELD: Color Shield Conditioner
+- COND_UV_LEAVEIN: UV Protect Leave‑In Mist
+
+user:
+Hi! I dyed my hair last week. Do you have a color-safe conditioner—and maybe something to protect from sun?
+
+assistant channel=analysis:
+Surface color-safe conditioner and a UV leave‑in.
+
+assistant channel=commentary to=tool.get_hair_care_products:
+{"hair_type":"colored","product_type":"all_conditioning"}
+
+tool.get_hair_care_products channel=commentary to=assistant:
+{"products":[{"sku":"COND_COLOR_SHIELD","name":"Color Shield Conditioner","treatment_type":"daily_conditioner"},{"sku":"COND_UV_LEAVEIN","name":"UV Protect Leave-In Mist","treatment_type":"leave_in"}]}
+
+assistant channel=final:
+Yes—our Color Shield Conditioner plus a UV Protect Leave‑In Mist work great together. Which sizes would you like?
+
+user:
+Room 1012. 200ml for the conditioner and travel leave-in. Also, do you have a rooftop bar?
+
+assistant channel=analysis:
+Arrange delivery; rooftop bar query is beyond scope -> [ATTENTION].
+
+assistant channel=commentary to=tool.deliver_hair_care_amenities:
+{"room_number":"1012","products":[{"sku":"COND_COLOR_SHIELD","size":"standard_200ml"},{"sku":"COND_UV_LEAVEIN","size":"travel_50ml"}],"delivery_preference":"immediate"}
+
+tool.deliver_hair_care_amenities channel=commentary to=assistant:
+{"delivery_id":"MAH-1012-CC-04","eta_minutes":15,"delivered_by":"concierge_team","note":"place with courtesy card"}
+
+assistant channel=final:
+[ATTENTION] Set—delivery MAH-1012-CC-04 in ~15 minutes with your selected sizes. Checking rooftop details separately.
+
+user:
+Thanks! By the way, love the lobby art.
+
+assistant channel=analysis:
+Offer warm acknowledgment without adding new facts.
+
+assistant channel=final:
+So glad to hear that—thank you for sharing!
+

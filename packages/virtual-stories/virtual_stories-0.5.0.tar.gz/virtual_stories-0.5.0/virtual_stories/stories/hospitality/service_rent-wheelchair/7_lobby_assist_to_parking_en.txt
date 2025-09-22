@@ -1,0 +1,40 @@
+"""
+Guest asks for wheelchair assistance from lobby to parking; schedule bell/runner assistance.
+
+ROLES: user (guest needing escort assistance), assistant (front desk coordinating runner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_assist","description":"Schedule wheelchair escort assistance","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"from":{"type":"string"},"to":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","from","to","room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Mountain Lodge Aspen (MLAS-13)
+Bell/Runner hours: 07:00–23:00; wheelchair assistance available
+Front Desk: 24/7
+Pickup points: Lobby, Front Drive
+Time Zone: Mountain Time (MT)
+
+user:
+Could someone help me by chair from the lobby to the parking? Room 512.
+
+assistant channel=analysis:
+Schedule assistance from Lobby to Parking.
+
+assistant channel=commentary to=tool.schedule_assist:
+{"hotel_id":"MLAS-13","from":"Lobby","to":"Parking","room":"512"}
+
+tool.schedule_assist channel=commentary to=assistant:
+{"eta_minutes":9,"runner":"Ivy"}
+
+assistant channel=final:
+I’ve arranged assistance—Ivy will meet you in the Lobby in about 9 minutes to escort you to Parking.
+
+user:
+Is tipping required for this?
+
+assistant channel=final:
+[ATTENTION] Checking available options.

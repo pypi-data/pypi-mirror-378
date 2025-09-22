@@ -1,0 +1,49 @@
+"""
+Guest wants to confirm which terminal the shuttle serves and the travel time; include small talk and [ATTENTION] query.
+
+ROLES: user (guest verifying terminal), assistant (front desk providing standard shuttle info)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_terminal_info","description":"Provide terminal served and travel time","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Airport Link Suites Frankfurt (ALFF-19)
+Shuttle Timing: Hourly 05:00–23:00
+Pickup: Hotel driveway
+Drop‑off: Terminal 1
+Travel time: ~10 minutes
+Capacity: 12 seats per run
+Booking: Recommended during peak hours
+Time Zone: Central European Time (CET/CEST)
+
+user:
+Does your shuttle go to Terminal 2, and how long does it take?
+
+assistant channel=analysis:
+The system says Terminal 1 only; travel time ~10 minutes. Provide that.
+
+assistant channel=commentary to=tool.get_terminal_info:
+{"hotel_id":"ALFF-19"}
+
+tool.get_terminal_info channel=commentary to=assistant:
+{"terminal":"Terminal 1","travel_time_minutes":10}
+
+assistant channel=final:
+It serves Terminal 1, about 10 minutes from the hotel driveway.
+
+user:
+The lobby plants are thriving.
+
+assistant channel=final:
+They bring a nice bit of green to the space.
+
+user:
+Can you share the shuttle’s GPS tracker link?
+
+assistant channel=final:
+[ATTENTION] Checking available options.

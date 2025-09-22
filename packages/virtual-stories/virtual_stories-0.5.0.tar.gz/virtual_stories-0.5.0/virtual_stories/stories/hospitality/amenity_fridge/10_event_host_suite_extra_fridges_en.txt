@@ -1,0 +1,85 @@
+"""
+Event host requests multiple fridges for a suite; confirm multiple-unit availability, fees, and delivery. Include chitchat and ATTENTION.
+
+ROLES: user (event host), assistant (amenity logistics coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"multi_fridge_check","description":"Check availability for multiple units and fee structure.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"units":{"type":"integer"}},
+     "required":["room_number","units"]},"strict":true},
+  {"name":"multi_fridge_deliver","description":"Deliver multiple units to a suite.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"units":{"type":"integer"},"model":{"type":"string"}},
+     "required":["room_number","units","model"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Grand Midtown Convention Hotel (hotel_id: GMCH_nyc_11)
+Address: 801 7th Ave, New York, NY 10019 | TZ: America/New_York
+
+Fridge Program:
+- Standard unit: GMCH-50L | Noise 33 dB | Fee $8/night each
+- Bulk request cap: up to 3 per suite without manager approval
+- Delivery: 08:00–23:00
+- Deposits: $20/unit refundable at pickup
+- Inventory on-hand: 34 units
+
+Venue Notes:
+Sky ballroom | Times Square block | Espresso bar in lobby
+
+user:
+Can I get two fridges in suite 3401 for our event snacks?
+
+assistant channel=analysis:
+Check multi-unit availability and then schedule delivery.
+
+assistant channel=commentary to=tool.multi_fridge_check:
+{"room_number":"3401","units":2}
+
+tool.multi_fridge_check channel=commentary to=assistant:
+{"available":true,"model":"GMCH-50L","fee_per_night":8,"deposit_per_unit":20}
+
+assistant channel=analysis:
+Schedule delivery for two units.
+
+assistant channel=commentary to=tool.multi_fridge_deliver:
+{"room_number":"3401","units":2,"model":"GMCH-50L"}
+
+tool.multi_fridge_deliver channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":20,"runner_team":["anna","jorge"],"ticket":"GMCH-3401-2X"}
+
+assistant channel=final:
+Confirmed—two GMCH-50L fridges for suite 3401. Fee $8/night each; $20 refundable deposit per unit. ETA ~20 minutes with Anna and Jorge (ticket GMCH-3401-2X).
+
+user:
+Is Times Square really just a block away?
+
+assistant channel=analysis:
+Answer from Venue Notes.
+
+assistant channel=final:
+Yes—it’s a single block from the hotel.
+
+user:
+That espresso bar smells fantastic.
+
+assistant channel=analysis:
+Chitchat grounded in Venue Notes.
+
+assistant channel=final:
+It’s popular with event teams between sessions.
+
+user:
+Could you arrange ice sculptures for the reception?
+
+assistant channel=analysis:
+Out of scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for ice sculpture arrangements.
+

@@ -1,0 +1,95 @@
+"""
+Guest asks about laundry pricing and payment options; assistant provides detailed cost breakdown with multiple payment methods and service alternatives.
+
+ROLES: user (budget-conscious traveler comparing laundry costs), assistant (billing coordinator with comprehensive pricing knowledge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {
+    "name": "get_pricing_details",
+    "description": "Get detailed pricing for laundry services and payment options.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": { "type": "string", "enum": ["standard_wash", "express_wash", "dry_only", "wash_dry_combo", "pressing"] }
+      },
+      "required": ["service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+You are a billing specialist at the Metropolitan Hotel, handling guest service inquiries and payments.
+
+## Hotel Information
+- Hotel Name: Metropolitan Hotel
+- Address: 569 Lexington Ave, New York, NY 10022
+- Phone: (212) 555-5678
+- Laundry Pricing: Standard wash $4.50, dry $3.50, express wash $7.50, combo $7.00
+- Payment Methods: Cash, credit card, room charge, digital wallet (Apple Pay, Google Pay)
+- Guest Perks: Free detergent for first wash, 10% discount for extended stays
+- Alternative Services: In-room pressing ($15), professional dry cleaning pickup ($25 minimum)
+- Operating Hours: Laundry room 6 AM - 11 PM, pressing service 7 AM - 9 PM
+- Amenities: Coin-operated machines, card readers, change machine, folding stations
+- Loyalty Program: Earn points on laundry charges, redeem for room upgrades
+- Sustainability: Energy-efficient machines, recycled water usage, biodegradable detergents
+
+user:
+I need to do some laundry but I'm watching my budget. Can you give me the exact costs for everything?
+
+assistant channel=analysis:
+The guest wants detailed pricing information. I should use the pricing tool to get accurate current rates and then provide a comprehensive breakdown.
+
+assistant channel=commentary to=tool.get_pricing_details:
+{"service_type": "standard_wash"}
+
+tool.get_pricing_details channel=commentary to=assistant:
+{"standard_wash": 4.50, "dry_only": 3.50, "express_wash": 7.50, "wash_dry_combo": 7.00, "pressing": 15.00, "discount_eligible": true}
+
+assistant channel=analysis:
+I have the pricing details. I should provide a clear breakdown and mention the available payment options and perks.
+
+assistant channel=final:
+Here's our current laundry pricing: Standard wash is $4.50, drying is $3.50, or you can get a wash-dry combo for $7.00. Express service (faster cycles) is $7.50. We accept cash, credit cards, room charge, or digital wallets like Apple Pay.
+
+user:
+The combo sounds like a good deal. Do you have any discounts or freebies?
+
+assistant channel=analysis:
+The user is asking about discounts and perks, which is information available in our system prompt. I can answer this directly.
+
+assistant channel=final:
+Yes! As a guest, you get free detergent for your first wash. If you're staying multiple nights, there's a 10% discount on laundry services. We also have a loyalty program where you earn points on laundry charges that can be redeemed for room upgrades.
+
+user:
+That's helpful. What about payment - can I put it on my room bill?
+
+assistant channel=analysis:
+Payment options are detailed in the system information. I can explain the room charge option and other alternatives available.
+
+assistant channel=final:
+Absolutely! You can charge it to your room bill, pay with cash or credit card at the machines, or use digital wallets. The machines have card readers and we have a change machine if you need coins. All payments are processed securely.
+
+user:
+Great. One more thing - I have a delicate silk blouse. Is there a better option than the regular machines?
+
+assistant channel=analysis:
+The user is asking about delicate items, which requires information beyond our basic laundry services. This falls under professional services not covered by our tools.
+
+assistant channel=final:
+[ATTENTION] Looking into delicate garment care options for you.
+
+user:
+Thanks. By the way, I love how you use biodegradable detergents - very environmentally conscious!
+
+assistant channel=analysis:
+The user is complimenting our sustainability efforts, which is mentioned in our system information. This is a chitchat opportunity I can respond to directly.
+
+assistant channel=final:
+Thank you! We're committed to sustainability with our energy-efficient machines, recycled water usage, and biodegradable detergents. It's part of our effort to reduce our environmental impact while serving our guests.

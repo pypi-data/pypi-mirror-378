@@ -1,0 +1,53 @@
+"""
+Morning express checkout before standard noon time; reinforce receipt timing; include small talk and an [ATTENTION] request.
+
+ROLES: user (guest catching a train, leaving early), assistant (front desk handling express checkout steps and reminders)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"initiate_express_checkout","description":"Start express checkout and email a digital receipt.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"email":{"type":"string"}},"required":["reservation_id","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel Name: Riverside Arcadia
+Address: 318 Quayside Road, Riverbend Quarter
+Key Details:
+- Express checkout: key drop next to the bell stand (plaque: “Express Checkout”).
+- Receipts: emailed after folio closes; standard checkout 12:00 noon.
+- Wi‑Fi: Arcadia-Guest; Parking: P1–P2; EV: P1 Bays A1–A4.
+- Front Office extension 0; Quiet hours 22:00–07:00.
+- Printers: Business Corner L1.
+
+user:
+Express checkout for RA-22119 to kai@sample.com, please.
+
+assistant channel=analysis:
+Trigger the tool and confirm where to drop the key and receipt timing.
+
+assistant channel=commentary to=tool.initiate_express_checkout:
+{"reservation_id":"RA-22119","email":"kai@sample.com"}
+
+tool.initiate_express_checkout channel=commentary to=assistant:
+{"status":"initiated","receipt":"queued"}
+
+assistant channel=final:
+Done. Drop your key at the plaque marked “Express Checkout” next to the bell stand. Your receipt will arrive by email after the folio closes.
+
+user:
+Great service—thanks!
+
+assistant channel=final:
+Safe travels—Front Office is at extension 0 if anything comes up.
+
+user:
+Could you also add my loyalty number now?
+
+assistant channel=analysis:
+No tool for profile edits; use the flag.
+
+assistant channel=final:
+[ATTENTION] Noted about the loyalty update. Reviewing the available options.
+

@@ -1,0 +1,97 @@
+"""
+Guest needs a passport scanned to email; include small talk, an in-context policy answer, and one [ATTENTION] step performed via tools.
+
+ROLES: user (guest), assistant (business center attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+[
+  {
+    "name": "quote_scan_job",
+    "description": "Quote price and turnaround based on pages and color mode.",
+    "parameters": {
+      "type": "object",
+      "properties": {"pages":{"type":"integer"},"color":{"type":"string","enum":["b&w","color"]}},
+      "required": ["pages","color"]
+    }
+  },
+  {
+    "name": "scan_document",
+    "description": "Scan a document to PDF with options.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pages": {"type":"integer"},
+        "dpi": {"type":"integer"},
+        "color": {"type":"string","enum":["b&w","color"]},
+        "duplex": {"type":"boolean"},
+        "ocr": {"type":"boolean"}
+      },
+      "required": ["pages","dpi","color","duplex","ocr"]
+    }
+  },
+  {
+    "name": "email_file",
+    "description": "Email a file to a recipient.",
+    "parameters": {
+      "type": "object",
+      "properties": {"recipient":{"type":"string"},"filename":{"type":"string"}},
+      "required": ["recipient","filename"]
+    }
+  }
+]
+"""
+
+system:
+Business Center – Skyline City Hotel (hotel_id: skyline_city_hotel_nyc)
+Address: 350 7th Ave, New York, NY 10001 | Timezone: America/New_York
+Hours: 07:00–22:00. Equipment: ADF scanner (duplex), max 1200 dpi; typical use 300 dpi.
+Formats: PDF only at the desk; JPG not supported. OCR available for searchable PDFs.
+Limits: up to 50 pages per job; passports count as 2 pages (photo + signature page).
+Pricing: b&w $0.25/page; color $0.50/page; OCR included.
+Privacy: we delete scans after 24 hours; staff can email files upon request.
+
+user:
+Hi, can you scan my passport and email it to me?
+
+assistant channel=analysis:
+Acknowledge; confirm formats and that we can email; offer quote.
+
+assistant channel=final:
+Yes—we can scan to PDF and email it to you. We support duplex OCR scans; typical quality is 300 dpi. Would you like a quick quote?
+
+user:
+How much would that cost if it’s in color?
+
+assistant channel=analysis:
+Passport is 2 pages; use quote tool for 2 pages color.
+
+assistant channel=commentary to=quote_scan_job:
+{"pages":2,"color":"color"}
+
+tool.quote_scan_job:
+{"currency":"USD","per_page":0.5,"pages":2,"total":1.0}
+
+assistant channel=final:
+Color scanning runs $0.50 per page; for 2 pages the total is $1.00.
+
+user:
+[ATTENTION] Please scan now at 300 dpi, duplex off, with OCR, and email to me@example.com.
+
+assistant channel=analysis:
+Perform scan with pages=2, 300 dpi, color, duplex=false, ocr=true; then email the resulting file.
+
+assistant channel=commentary to=scan_document:
+{"pages":2,"dpi":300,"color":"color","duplex":false,"ocr":true}
+
+tool.scan_document:
+{"status":"scanned","filename":"passport_scan_300dpi_color.pdf"}
+
+assistant channel=commentary to=email_file:
+{"recipient":"me@example.com","filename":"passport_scan_300dpi_color.pdf"}
+
+tool.email_file:
+{"status":"sent","message_id":"<SKY-BC-8821>"}
+
+assistant channel=final:
+Done—scanned at 300 dpi with OCR and emailed to me@example.com (message ID <SKY-BC-8821>). We’ll delete the file after 24 hours.
+

@@ -1,0 +1,90 @@
+"""
+Morning request for alcohol pads; deliver and answer café hours from system. Include chit-chat and an [ATTENTION] local clinic booking request.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"inv_check","description":"Check first-aid item availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"deliver_item","description":"Deliver first-aid item.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer"}},"required":["room","item","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Northwind Plaza (hotel_id: nwp_mn_52)
+Address: 1900 Nicollet Ave, Minneapolis, MN 55403
+Timezone: America/Chicago
+Check-in/Out: 16:00 / 11:00
+Delivery: 07:30–22:00
+
+Facilities:
+1) Winter Garden lobby
+2) Café North 06:30–12:30
+3) Fitness 24/7
+4) Quiet hours 22:00–07:00
+5) Skyway access
+
+First-Aid:
+- alcohol pads, bandages, gauze; typical ETA 10–15 minutes
+
+Accessibility:
+- Step-free access to skyway and lobby
+
+Sustainability:
+- Energy-efficient glazing; refill stations
+
+Design:
+- Warm wood and greenery in the Winter Garden
+
+user:
+Good morning—could I get 4 alcohol pads to 1120?
+
+assistant channel=analysis:
+Check availability and deliver 4 pads.
+
+assistant channel=commentary to=tool.inv_check:
+{"item":"alcohol pads"}
+
+tool.inv_check channel=commentary to=assistant:
+{"item":"alcohol pads","available":true}
+
+assistant channel=commentary to=tool.deliver_item:
+{"room":"1120","item":"alcohol pads","qty":4}
+
+tool.deliver_item channel=commentary to=assistant:
+{"ticket":"NWP-FA-1120-221","eta_minutes":11}
+
+assistant channel=final:
+Four alcohol pads are on their way to 1120 (NWP-FA-1120-221), ETA around 11 minutes.
+
+user:
+Is Café North open now?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—Café North runs 06:30–12:30.
+
+user:
+The Winter Garden lobby is beautiful.
+
+assistant channel=analysis:
+Chit-chat referencing system.
+
+assistant channel=final:
+The Winter Garden is a bright space, especially in the morning.
+
+user:
+Could you book a same-day clinic visit for a checkup?
+
+assistant channel=analysis:
+Out of scope; use flag.
+
+assistant channel=final:
+[ATTENTION] Retrieving information.
+
+user:
+Thanks!

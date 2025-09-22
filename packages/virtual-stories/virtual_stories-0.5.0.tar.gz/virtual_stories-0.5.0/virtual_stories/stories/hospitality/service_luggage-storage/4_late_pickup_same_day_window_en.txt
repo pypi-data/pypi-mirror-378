@@ -1,0 +1,48 @@
+"""
+Guest checks the latest same-day pickup time and stores items; include small talk and [ATTENTION].
+
+ROLES: user (late pickup), assistant (clarifies window and issues tags)
+CHANNELS: analysis, commentary, final
+TOOLS:
+[{"name":"get_window","description":"Return same-day storage window","parameters":{"type":"object","properties":{"hid":{"type":"string"}},"required":["hid"],"additionalProperties":false},"strict":true},{"name":"store","description":"Create storage ticket","parameters":{"type":"object","properties":{"name":{"type":"string"},"items":{"type":"integer","minimum":1},"pickup":{"type":"string"}},"required":["name","items"],"additionalProperties":false},"strict":true}]
+"""
+
+system:
+PROPERTY: Royal Arcade Residences (hid: rar)
+Luggage storage hours: 07:00–22:00 (same-day only)
+Claim: Printed tags; ID required
+Desk: Beside concierge podium
+
+user:
+What’s the latest I can pick up today, and can you hold 2 backpacks for Morgan?
+
+assistant channel=analysis:
+Return the end of window via get_window, then create a ticket for 2 items.
+
+assistant channel=commentary to=tool.get_window:
+{"hid":"rar"}
+
+tool.get_window channel=commentary to=assistant:
+{"hours":"07:00–22:00"}
+
+assistant channel=commentary to=tool.store:
+{"name":"Morgan","items":2,"pickup":"22:00"}
+
+tool.store channel=commentary to=assistant:
+{"ticket":"RA-7719","tags":["R441","R442"]}
+
+assistant channel=final:
+Same‑day storage runs until 22:00. We’ve stored 2 backpacks for Morgan—ticket RA-7719 with tags R441 and R442. Please bring ID to collect.
+
+user:
+The concierge podium looks sleek.
+
+assistant channel=final:
+The storage desk is just to its side for quick service.
+
+user:
+Can I extend pickup past 22:00 for a fee?
+
+assistant channel=final:
+[ATTENTION] Only same‑day storage is listed; no after‑hours extension is in the current context.
+

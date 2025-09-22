@@ -1,0 +1,148 @@
+"""
+Guest requests folders and document organization supplies for business work and personal organization.
+Provide office supply assistance with folder options and document management support.
+
+ROLES: user (business traveler needing document organization), assistant (business center coordinator with office supplies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_office_supply_inventory",
+    "description": "Check available office supplies and folders in hotel business center.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "supply_category": { "type": "string", "enum": ["folders", "binders", "organizers", "filing_supplies", "presentation_materials", "writing_supplies"] },
+        "quantity_needed": { "type": "number", "minimum": 1, "maximum": 50 }
+      },
+      "required": ["supply_category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_office_supplies",
+    "description": "Deliver office supplies and folders to guest room or business center.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "items": { "type": "array", "items": {"type": "string"} },
+        "delivery_location": { "type": "string", "enum": ["guest_room", "business_center", "meeting_room", "lobby_seating"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "asap"] },
+        "special_instructions": { "type": "string" }
+      },
+      "required": ["room_number", "items", "delivery_location"]
+    },
+    "strict": true
+  },
+  {
+    "name": "reserve_workspace_with_supplies",
+    "description": "Reserve workspace in business center with pre-organized supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_name": { "type": "string" },
+        "duration_hours": { "type": "number", "minimum": 1, "maximum": 12 },
+        "workspace_type": { "type": "string", "enum": ["private_office", "shared_desk", "conference_table", "quiet_corner"] },
+        "required_supplies": { "type": "array", "items": {"type": "string"} },
+        "start_time": { "type": "string" }
+      },
+      "required": ["guest_name", "duration_hours", "workspace_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Executive Tower Business Hotel (hotel_id: et_biz_01)
+Address: 1200 Corporate Plaza, Dallas, TX 75201
+Timezone: America/Chicago
+
+Business Center Services:
+- 24/7 business center with premium office supplies and document organization materials
+- Folder types available: manila folders, hanging folders, presentation folders, project binders, accordion organizers
+- Document services: printing, binding, laminating, scanning, copying with finishing options
+- Private workspaces with pre-organized supply kits for extended business sessions
+
+Office Supply Inventory:
+- File folders: manila (letter/legal), colored classification, hanging folders with tabs
+- Presentation materials: report covers, binding spines, clear sheet protectors
+- Organization tools: accordion files, expandable folders, document wallets, portfolio cases
+- Writing supplies: pens, markers, sticky notes, paper clips, binders, dividers
+
+Executive Services:
+- Complimentary supply delivery to guest rooms within 15 minutes
+- Document organization consultation for extended business stays
+- Meeting room setup with pre-arranged supplies and folders
+- 24-hour document printing and folder preparation for early meetings
+
+Pricing:
+- Basic folders and supplies: complimentary for hotel guests
+- Premium organization kits: $25-50 depending on complexity
+- Executive workspace with full supply setup: $75/day
+
+user:
+Hi! I'm preparing for a big presentation tomorrow and need some folders to organize my documents. Do you have any available?
+
+assistant channel=analysis:
+Business guest needs folders for presentation prep. I should check inventory for folders and presentation materials, then arrange delivery.
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category": "folders", "quantity_needed": 10}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available": true, "items": ["manila_folders_letter", "presentation_folders_black", "hanging_folders_with_tabs", "accordion_organizers", "clear_document_wallets"], "quantities": {"manila_folders": 25, "presentation_folders": 15, "hanging_folders": 20}, "location": "business_center_supply_room"}
+
+assistant channel=analysis:
+Good inventory available with multiple folder types suitable for presentation organization. I should offer options and get their room number for delivery.
+
+assistant channel=final:
+Absolutely! We have several folder options perfect for presentation prep: manila folders, professional black presentation folders, hanging folders with tabs, and accordion organizers. How many do you need and what's your room number? I can have them delivered within 15 minutes.
+
+user:
+I'm in room 1847. Could I get about 6 presentation folders and maybe an accordion organizer? I have a lot of client contracts to sort through.
+
+assistant channel=analysis:
+Guest in room 1847 needs 6 presentation folders and accordion organizer for contract organization. I'll deliver these supplies to help with their business preparation.
+
+assistant channel=commentary to=tool.deliver_office_supplies:
+{"room_number": "1847", "items": ["presentation_folders_black_6", "accordion_organizer_letter_size", "document_dividers"], "delivery_location": "guest_room", "urgency": "standard", "special_instructions": "Guest preparing for presentation tomorrow with client contracts"}
+
+tool.deliver_office_supplies channel=commentary to=assistant:
+{"delivered": true, "estimated_arrival": "12 minutes", "delivered_by": "business_center_staff", "items_included": ["6_black_presentation_folders", "letter_size_accordion_organizer", "tabbed_dividers", "complimentary_pens"], "tracking_id": "supply_1847_001"}
+
+assistant channel=final:
+Perfect! I'm sending up 6 black presentation folders, a letter-size accordion organizer, and dividers to room 1847. The business center staff will deliver them in about 12 minutes, and I've included some complimentary pens. Good luck with your presentation tomorrow!
+
+user:
+That's fantastic service! I've been staying at Executive Tower for years and you always take great care of business travelers.
+
+assistant channel=analysis:
+Guest expressing appreciation and loyalty to the hotel. Good opportunity for warm acknowledgment of their loyalty without needing tools.
+
+assistant channel=final:
+Thank you so much! We truly appreciate your continued loyalty to Executive Tower Business Hotel. It's guests like you that make our business services program so rewarding to provide.
+
+user:
+Actually, do you think you could also help me book a dinner reservation at that new steakhouse downtown?
+
+assistant channel=analysis:
+Guest asking about external restaurant reservations which is outside my office supply and business center tools scope. Need to use special flag.
+
+assistant channel=final:
+[ATTENTION] Gathering information about restaurant options.
+
+user:
+No worries! Thanks again for the quick folder delivery.
+
+assistant channel=analysis:
+Guest thanking for service, simple acknowledgment needed.
+
+assistant channel=final:
+You're very welcome! The supplies should arrive any moment. Have a successful presentation tomorrow!

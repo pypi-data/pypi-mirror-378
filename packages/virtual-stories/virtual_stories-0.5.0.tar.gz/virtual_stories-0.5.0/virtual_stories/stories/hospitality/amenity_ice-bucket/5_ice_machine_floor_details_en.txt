@@ -1,0 +1,58 @@
+"""
+Guest wants to know the nearest ice machine and requests extra tongs; include chat and [ATTENTION].
+
+ROLES: user (guest 1320), assistant (amenities desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"get_ice_machine_map","description":"Provide floor list for ice machines and nearest to current floor.","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver amenity item.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Harborfront East (hotel_id: hfe_bal)
+Address: 250 Pratt St, Baltimore, MD 21202
+Timezone: America/New_York
+Ice Machine Map:
+- Floors: 10, 13, 16
+- Nearest to 13th floor rooms: mid-corridor by elevators
+Amenities: Spare tongs available on request
+SLA: normal 15–25 min
+Contact: Guest Services x3
+
+user:
+Where’s the nearest ice machine to 1320? Also, can I get an extra pair of tongs?
+
+assistant channel=analysis:
+Provide machine details; arrange tongs delivery as amenity item.
+
+assistant channel=commentary to=tool.get_ice_machine_map:
+{}
+
+tool.get_ice_machine_map channel=commentary to=assistant:
+{"floors":[10,13,16],"nearest_for_13":"mid-corridor by elevators"}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1320","amenity_name":"tongs","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"ok":true,"eta_minutes":20,"ticket":"HFE-TNG-1320-7"}
+
+assistant channel=final:
+For 1320, the nearest ice machine is on 13 by the elevators, mid-corridor. I’ve also arranged an extra pair of tongs—ETA about 20 minutes. Ref HFE-TNG-1320-7.
+
+user:
+The harbor lights look great from the room.
+
+assistant channel=final:
+It’s a nice view as the evening sets in.
+
+user:
+Are the machines filtered or tap-fed?
+
+assistant channel=final:
+[ATTENTION] I’ll confirm the machine water feed type.
+

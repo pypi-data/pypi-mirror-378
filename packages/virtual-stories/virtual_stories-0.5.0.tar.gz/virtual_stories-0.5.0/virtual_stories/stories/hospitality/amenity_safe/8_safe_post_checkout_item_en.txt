@@ -1,0 +1,49 @@
+"""
+Guest asks about retrieving items after checkout; provide policy info from system, small talk, plus out-of-scope ask.
+
+ROLES: user (former guest inquiring about items left in safe), assistant (front desk providing guidance and status check)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"verify_safe_status","description":"Verify safe status for a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Bayfront Exchange (hotel_id: be_sfo)
+Address: 250 Embarcadero, San Francisco, CA
+Policy:
+- Safes reset during housekeeping after checkout
+- Lost-and-found procedure applies if items are discovered
+Support: Front desk 24/7; Engineering 07:00–22:00
+Lobby Note: Fireplace runs 17:00–22:00 daily
+
+user:
+I checked out of 1603 but left earrings in the safe. Is there any way to check?
+
+assistant channel=analysis:
+We can verify the current safe state only; policy indicates items go to lost-and-found if found by housekeeping. Provide policy-level answer without claiming possession.
+
+assistant channel=commentary to=tool.verify_safe_status:
+{"room_number":"1603"}
+
+tool.verify_safe_status channel=commentary to=assistant:
+{"status":"reset","error_code":null}
+
+assistant channel=final:
+Housekeeping resets safes after checkout; if items are found, they’re processed under lost-and-found. The safe in 1603 now shows as reset.
+
+user:
+I liked the lobby fireplace in the evening.
+
+assistant channel=final:
+It runs daily from 17:00 to 22:00.
+
+user:
+Could you contact the housekeeping team lead for me?
+
+assistant channel=final:
+[ATTENTION] Reviewing this request since it’s beyond our current resources.
+

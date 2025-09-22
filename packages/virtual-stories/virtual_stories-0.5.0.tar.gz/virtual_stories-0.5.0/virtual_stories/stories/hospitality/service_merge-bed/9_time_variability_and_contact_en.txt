@@ -1,0 +1,60 @@
+"""
+Guest asks about arrival variability and whom to contact; schedule. Include small talk and [ATTENTION].
+
+ROLES: user (guest planning around timing), assistant (housekeeping explaining ±10 minutes variability and contact via Front Desk, then booking)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"plan_merge","description":"Plan merge with timing note","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"time":{"type":"string"},"note":{"type":"string"}},"required":["room","time","note"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Grand Willow Toronto (GWTO-26)
+Address: 155 Wellington St W, Toronto, ON
+Timeline:
+- Window 10:00–18:00; arrival variability about ±10 minutes; ~25 minutes task time
+- FIFO scheduling via Housekeeping
+- Contact via Front Desk paging
+Setup:
+- Bridge + topper + king linens; no straps
+- Fee included; HK-MERGE tracking
+- Reversal on departure upon request
+Ops:
+- Tools sanitized; no mattress rotation
+- Team staging L3
+- Gap check performed
+
+user:
+How precise is the arrival time? Can you aim for 14:00 in 2411?
+
+assistant channel=analysis:
+Explain ±10 minutes variability and plan for 14:00 with note.
+
+assistant channel=final:
+Our arrival can vary by about ±10 minutes around the scheduled time.
+
+assistant channel=commentary to=tool.plan_merge:
+{"room":"2411","time":"14:00","note":"Arrival may vary ±10 minutes"}
+
+tool.plan_merge channel=commentary to=assistant:
+{"task_id":"merge_2411_1400","eta_minutes":25}
+
+assistant channel=final:
+Set—merge_2411_1400 at 14:00; please allow a ±10 minute window.
+
+user:
+Perfect.
+
+assistant channel=final:
+Front Desk can page us if you step out.
+
+user:
+Could you also add scent spray to linens?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

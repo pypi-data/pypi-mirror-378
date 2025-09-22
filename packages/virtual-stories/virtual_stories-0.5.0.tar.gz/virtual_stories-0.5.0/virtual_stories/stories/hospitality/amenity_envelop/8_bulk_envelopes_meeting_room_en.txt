@@ -1,0 +1,52 @@
+"""
+Guest requests bulk envelopes for a meeting; include chat and [ATTENTION].
+
+ROLES: user (event lead, room 420), assistant (events concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_stationery_item","description":"Deliver stationery items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_name":{"type":"string","enum":["envelope_standard","envelope_large","letterhead"]},"quantity":{"type":"integer","minimum":1}},"required":["room_number","item_name","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Summit Pavilion (hotel_id: spv_den)
+Address: 500 15th St, Denver, CO 80202
+Timezone: America/Denver
+Event Stationery:
+- Standard envelopes available in stacks of 25
+- Letterhead available
+- Delivery ETA: 12–20 minutes to rooms or meeting spaces
+- Contact: Events x77
+- Mail drop info available from concierge
+JSON sample: {"stack_size":25}
+
+user:
+Can I get 25 standard envelopes to 420 for a meeting?
+
+assistant channel=analysis:
+Deliver 25 standard envelopes to the room.
+
+assistant channel=commentary to=tool.request_stationery_item:
+{"room_number":"420","item_name":"envelope_standard","quantity":25}
+
+tool.request_stationery_item channel=commentary to=assistant:
+{"ok":true,"eta_minutes":18}
+
+assistant channel=final:
+Done—25 standard envelopes will be delivered to 420 in about 18 minutes.
+
+user:
+Thanks. The mountain mural in the hall is striking.
+
+assistant channel=final:
+It gives the event level a nice backdrop.
+
+user:
+Can you pre-print addresses for us?
+
+assistant channel=final:
+[ATTENTION] I’ll confirm if pre-printing is offered.
+

@@ -1,0 +1,63 @@
+"""
+Late-night high chair request; confirm 24/7 availability and longer ETA range.
+
+ROLES: user (guest requesting after 23:00), assistant (night shift arranging logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"night_stock_check","description":"Check night-shift inventory and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"quantity":{"type":"integer"}},"required":["hotel_id","room","quantity"]},"strict":true},
+  {"name":"dispatch_night_runner","description":"Dispatch runner with ETA range","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Night Lantern Tokyo (NLTK-19)
+Address: 2-4-8 Nihonbashi, Chuo City, Tokyo 103-0027, Japan
+Service Coverage: 24/7; quiet hours 22:00–06:00 (low-noise deliveries).
+Kids’ High Chairs: 8 units; complimentary; straps replaced every 6 months; last audit: 2025-07-12.
+Delivery Timing: Late-night ETA typically 20–30 minutes due to reduced elevators; runners knock softly twice.
+Safety Policy: Indoor use only; keep child supervised; max weight 14 kg.
+Other: In-room dining runs 24/7; microwaves available on request.
+
+user:
+Hi, can we get a high chair to 1807 now?
+
+assistant channel=analysis:
+Check night stock, then dispatch a runner with ETA.
+
+assistant channel=commentary to=tool.night_stock_check:
+{"hotel_id":"NLTK-19","room":"1807","quantity":1}
+
+tool.night_stock_check channel=commentary to=assistant:
+{"available":true,"hold_id":"NL-NH-509"}
+
+assistant channel=commentary to=tool.dispatch_night_runner:
+{"hotel_id":"NLTK-19","room":"1807","order_id":"NL-NH-509"}
+
+tool.dispatch_night_runner channel=commentary to=assistant:
+{"eta_minutes_min":20,"eta_minutes_max":28,"runner":"Sora"}
+
+assistant channel=final:
+We’ve got one held and on the way—Sora should arrive in about 20–28 minutes.
+
+user:
+Is there a fee?
+
+assistant channel=analysis:
+Answer using system policy: complimentary.
+
+assistant channel=final:
+No fee—it’s complimentary.
+
+user:
+Could you share the housekeeping roster for tonight?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

@@ -1,0 +1,65 @@
+"""
+Guest requests padded hangers; includes small talk and SLA question.
+
+ROLES: user (guest in room 2115 wanting padded hangers), assistant (guest services arranging delivery and quoting SLA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check if amenity is available","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Create delivery request","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Vale Springs — Summit Tower
+Room: 2115 (Corner Suite)
+Default: 8 wooden hangers; padded on request only; cap 6/night
+Hours: 07:00–23:00 normal; urgent 23:00–01:00
+Ext: Front 0; Butler 7740; HK 7741
+SLA floors 20–24: normal 12–20 min
+Access: Service lift S3; staging at ST-22 closet
+
+user:
+Could you send 4 padded hangers to 2115?
+
+assistant channel=analysis:
+Check for 4 padded hangers; queue a normal delivery to room 2115 if available.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"padded hanger","quantity":4}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"padded hanger","available":true,"in_stock":28}
+
+assistant channel=analysis:
+Place the delivery for 4 padded hangers to 2115.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2115","amenity_name":"padded hanger","quantity":4,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HNG-2115-8822","eta_minutes":17}
+
+assistant channel=final:
+All set—4 padded hangers are scheduled for room 2115 with an ETA of about 17 minutes.
+
+user:
+Thanks! Busy up on 21 tonight?
+
+assistant channel=final:
+We’re keeping pace—just let me know if you need anything else.
+
+user:
+What’s the normal SLA for these floors?
+
+assistant channel=final:
+For floors 20–24, normal deliveries are about 12–20 minutes.
+
+user:
+Are the pads satin?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation.
+

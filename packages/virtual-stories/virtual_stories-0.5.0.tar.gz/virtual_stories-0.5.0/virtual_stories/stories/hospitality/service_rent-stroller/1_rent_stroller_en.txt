@@ -1,0 +1,60 @@
+"""
+Guest requests a stroller; confirm availability, weight limit, and delivery timing.
+
+ROLES: user (guest with infant), assistant (guest services coordinating family amenity)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check stroller stock","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create stroller loan","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true},
+  {"name":"schedule_delivery","description":"Schedule delivery to room","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Bayview Marina Sydney (BVMS-11), 80 Pyrmont St, Sydney NSW 2009, Australia.
+Front Desk 24/7; Family services 7:00–22:00.
+Strollers: 10 units; complimentary; up to 15 kg; foldable; delivery ETA 10–20 minutes.
+
+user:
+Could we borrow a stroller in room 816?
+
+assistant channel=analysis:
+Hold one stroller, create a free loan for 6 hours, and deliver to 816.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"BVMS-11","item":"stroller","quantity":1,"room":"816"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["STR-06"],"notes":"Max 15 kg"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"BVMS-11","room":"816","item":"stroller","duration_hours":6,"charge_code":"COMP-FAM","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"STR-816-901","status":"created","charge":"comp"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"BVMS-11","room":"816","order_id":"STR-816-901"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":12,"runner":"Kara","order_id":"STR-816-901"}
+
+assistant channel=final:
+One stroller is reserved (order STR-816-901). Kara will deliver to 816 in about 12 minutes; the stroller supports up to 15 kg.
+
+user:
+Thank you! The view is amazing.
+
+assistant channel=final:
+Enjoy the harbour—have a lovely day.
+
+user:
+Could you provide product test reports for the stroller brand?
+
+assistant channel=final:
+[ATTENTION] Checking available resources.
+

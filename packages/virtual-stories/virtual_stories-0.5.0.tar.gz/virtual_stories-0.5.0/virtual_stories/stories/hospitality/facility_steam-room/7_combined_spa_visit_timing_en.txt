@@ -1,0 +1,81 @@
+"""
+Guest coordinates steam timing before a spa body scrub; asks about lockout cycles.
+
+ROLES: user (guest planning a pre-scrub steam), assistant (spa scheduler ensuring sanitation timing and window selection)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_hours_and_lockouts","description":"Return today hours and sanitation lockouts.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"suggest_pre_service_window","description":"Suggest a steam window ending ~20 min before service time.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"service_time":{"type":"string","format":"date-time"}},"required":["hotel_id","service_time"]},"strict":true},
+  {"name":"reserve_by_id","description":"Reserve a specific window id.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"window_id":{"type":"string"}},"required":["hotel_id","window_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Desert Bloom Resort (hotel_id: desert_bloom_scz)
+Address: 2200 Sable Mesa Dr, Scottsdale, AZ 85255 | TZ: America/Phoenix
+Steam Chamber “Sable Heat”
+  Wayfinding: Follow sandstone wall to spa wing; glass door with bronze handle
+  Hours: 09:00–20:00; last entry 19:40
+  Sanitation: Ozone rinse 5 minutes at :25 and :55 past the hour
+  Capacity: 2; Windows 20 minutes; co-ed; swimwear required
+  Hydration: Prickly-pear water and plain water available; towels on warming rack
+  Quiet: Whisper only; no devices inside
+  Payment: Room charge or card
+
+user:
+My body scrub is at 3:30 PM. Can I steam beforehand so I’m not rushed, and when do the sanitation lockouts happen?
+
+assistant channel=analysis:
+Provide hours and lockout cadence; suggest a window ending about 20 minutes before 15:30; reserve if accepted.
+
+assistant channel=commentary to=tool.get_hours_and_lockouts:
+{"hotel_id":"desert_bloom_scz"}
+
+tool.get_hours_and_lockouts channel=commentary to=assistant:
+{"hours":"09:00-20:00","lockouts":[":25",":55"]}
+
+assistant channel=commentary to=tool.suggest_pre_service_window:
+{"hotel_id":"desert_bloom_scz","service_time":"2025-09-03T15:30:00"}
+
+tool.suggest_pre_service_window channel=commentary to=assistant:
+{"window_id":"SH-1450-1510"}
+
+assistant channel=final:
+Steam runs 9:00 AM–8:00 PM with 5-minute sanitation at :25 and :55 each hour. I can place you in 2:50–3:10 PM (SH-1450-1510), ending ~20 minutes before your scrub. Want me to reserve it?
+
+user:
+Yes, please reserve that.
+
+assistant channel=analysis:
+Reserve the suggested window.
+
+assistant channel=commentary to=tool.reserve_by_id:
+{"hotel_id":"desert_bloom_scz","window_id":"SH-1450-1510"}
+
+tool.reserve_by_id channel=commentary to=assistant:
+{"status":"reserved","window_id":"SH-1450-1510"}
+
+assistant channel=final:
+Done—your 2:50–3:10 PM window is reserved (SH-1450-1510). Swimwear required; prickly-pear water and warm towels are ready.
+
+user:
+The bronze handle is pretty.
+
+assistant channel=analysis:
+Brief acknowledgment.
+
+assistant channel=final:
+It’s a subtle detail we enjoy, too.
+
+user:
+Can you pipe in soft music inside the steam room?
+
+assistant channel=analysis:
+No music setting is listed; use the attention flag.
+
+assistant channel=final:
+[ATTENTION] Understood on ambient music. Reviewing the available setup.
+

@@ -1,0 +1,78 @@
+"""
+Guest requests a kettle and asks about tea options; provide kettle and guidance, note tea scope. Include small talk and one [ATTENTION] query.
+
+ROLES: user (guest requesting hot water setup), assistant (amenities coordinator with appliance guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_item","description":"Send an amenity item to a room","parameters":{"type":"object","properties":{"item_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["item_name","room_number","quantity"],"additionalProperties":false},"strict":true},
+  {"name":"provide_appliance_guide","description":"Return quick guidance for an appliance","parameters":{"type":"object","properties":{"appliance":{"type":"string","enum":["kettle"]},"mode":{"type":"string","enum":["quick_start"]}},"required":["appliance","mode"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Glasshouse Esplanade (hotel_id: ghe_syd_10)
+Address: 80 Alfred St, Sydney NSW 2000, Australia
+Timezone: Australia/Sydney
+
+Kettle Policy:
+- On-request delivery for all room types
+- Typical ETA: 10–15 minutes
+- Sockets: 230V Type I; universal outlet at desk
+
+YAML Features:
+---
+harbor_view_levels: [12,13,14,15]
+sprinklers: true
+ice_machine_levels: [9, 12]
+---
+
+JSON Runner:
+{"primary":"Noah","backup":"Aria"}
+
+CSV Hot_Beverage_Notes (item,availability):
+kettle,request_only
+tea_bags,limited_selection
+coffee_pods,not_applicable
+
+user:
+Could I have a kettle sent to 1512? And do you have any tea bags?
+
+assistant channel=analysis:
+Arrange kettle to 1512; give quick-start tips; note tea availability per system.
+
+assistant channel=commentary to=tool.request_item:
+{"item_name":"electric_kettle","room_number":"1512","quantity":1}
+
+tool.request_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":12,"runner":"Noah"}
+
+assistant channel=commentary to=tool.provide_appliance_guide:
+{"appliance":"kettle","mode":"quick_start"}
+
+tool.provide_appliance_guide channel=commentary to=assistant:
+{"appliance":"kettle","mode":"quick_start","steps":["Fill to MAX line with water.","Place on base.","Press switch to start; auto-off after boil."]}
+
+assistant channel=final:
+Kettle is on the way to 1512—about 12 minutes (Noah). Quick start: Fill to the MAX line, place it on the base, press the switch; it shuts off after boiling. We have a limited tea selection available.
+
+user:
+The harbor view from this floor is unreal.
+
+assistant channel=analysis:
+Chit-chat referencing harbor-view levels.
+
+assistant channel=final:
+Levels 12–15 face the harbor—the sunsets can be spectacular.
+
+user:
+Could you secure two seats at the Opera House tour tomorrow?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Gathering relevant data.
+

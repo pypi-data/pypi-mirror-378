@@ -1,0 +1,51 @@
+"""
+Guest asks if a private event has an exemption to smoke indoors; clarify policy and include an out‑of‑scope request for permit details; add chit‑chat.
+
+ROLES: user (guest), assistant (events concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```
+[
+  {"name":"get_policy","description":"Retrieve policy details for a given category.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["smoking"]}},"required":["category"]},"strict":true}
+]
+```
+"""
+
+system:
+PROPERTY: The Galleria Steps
+SMOKING RULES: No indoor smoking under any circumstances; designated terrace zone only; cleaning fee USD 300 for indoor evidence
+FEATURES: Art walk 2F; Espresso bar 07:00–14:00; Sunset terrace 17:00–22:00.
+
+user:
+Does the wedding tonight have a smoking exemption indoors?
+
+assistant channel=analysis:
+Answer via policy: no exemptions.
+
+assistant channel=commentary to=tool.get_policy:
+{"category":"smoking"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"smoking","allowed":false,"summary":"No indoor smoking; designated terrace only; no exemptions."}
+
+assistant channel=final:
+There are no indoor smoking exemptions—the designated terrace is the only permitted area.
+
+user:
+The art walk was inspiring.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+We love hosting it—find it along the 2F corridor.
+
+user:
+Can you share the permit the couple obtained for smoking?
+
+assistant channel=analysis:
+Out of scope—no permits available.
+
+assistant channel=final:
+[ATTENTION] We don’t have permit documents within the provided resources.
+

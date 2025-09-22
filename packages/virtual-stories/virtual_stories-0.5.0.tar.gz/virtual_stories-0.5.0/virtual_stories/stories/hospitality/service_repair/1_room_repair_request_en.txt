@@ -1,0 +1,54 @@
+"""
+Guest reports an in-room issue and requests repair; log ticket and schedule engineering.
+
+ROLES: user (guest reporting malfunction), assistant (front desk coordinating engineering dispatch)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"create_maintenance_ticket","description":"Create a repair ticket with priority","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"issue":{"type":"string"},"priority":{"type":"string","enum":["low","normal","high","urgent"]}},"required":["hotel_id","room","issue","priority"]},"strict":true},
+  {"name":"dispatch_engineering","description":"Dispatch engineering with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"ticket_id":{"type":"string"}},"required":["hotel_id","ticket_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Golden Harbor Hong Kong (GHHK-14), 8 Finance St, Central, Hong Kong.
+Engineering on-site 8:00–22:00; on-call overnight. Typical response 15–30 minutes for normal priority.
+Common repairs: TV input issues, AC not cooling, faucet leaks.
+Only repairs logged via ticket can be dispatched.
+
+user:
+Hi, the TV in 2517 won’t switch to HDMI input.
+
+assistant channel=analysis:
+Create a normal priority ticket describing the HDMI input issue, then dispatch engineering for an ETA.
+
+assistant channel=commentary to=tool.create_maintenance_ticket:
+{"hotel_id":"GHHK-14","room":"2517","issue":"TV will not switch to HDMI input","priority":"normal"}
+
+tool.create_maintenance_ticket channel=commentary to=assistant:
+{"ticket_id":"ENG-2517-771","status":"open"}
+
+assistant channel=commentary to=tool.dispatch_engineering:
+{"hotel_id":"GHHK-14","ticket_id":"ENG-2517-771"}
+
+tool.dispatch_engineering channel=commentary to=assistant:
+{"eta_minutes":22,"assigned":"Engineer Lee","ticket_id":"ENG-2517-771"}
+
+assistant channel=final:
+Thanks for letting us know. Ticket ENG-2517-771 is open; Engineer Lee will arrive in about 22 minutes to address the HDMI input issue.
+
+user:
+Appreciate the quick response.
+
+assistant channel=final:
+You’re welcome—please keep the TV area accessible for the visit.
+
+user:
+Can you share the maintenance vendor’s service-level contract?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

@@ -1,0 +1,61 @@
+"""
+Guest asks about a 24-hour diner counter seating and wants a quick bite.
+
+ROLES: user (guest seeking fast counter seating), assistant (front desk guiding to 24-hr venue)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"list_venues","description":"List late-night venues and hours.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"period":{"type":"string","enum":["late_night","24h"]}},"required":["hotel_id"]}},
+  {"name":"hold_counter_seat","description":"Hold a counter seat with 10-minute grace.","parameters":{"type":"object","additionalProperties":false,"properties":{"venue_id":{"type":"string"},"guest":{"type":"string"}},"required":["venue_id","guest"]}}
+]
+```
+"""
+
+system:
+Hotel: Desert Star Phoenix (hotel_id: dsp_phx)
+Address: 2 N Central Ave, Phoenix, AZ 85004
+Timezone: America/Phoenix
+
+Venues:
+- 24/7: Starliner Diner (venue_id: v_starliner) – counter + booths
+- Late-night: Ember Tap (23:00–01:30)
+Seating Policy: 10-minute grace on counter holds
+Payment: Charge to room or pay at venue
+
+user:
+Is your diner counter open now? Can you hold one seat under Ray?
+
+assistant channel=analysis:
+Use tools to list venues and hold a counter seat at v_starliner with grace.
+
+assistant channel=commentary to=tool.list_venues:
+{"hotel_id":"dsp_phx","period":"24h"}
+
+tool.list_venues channel=commentary to=assistant:
+{"venues":[{"venue_id":"v_starliner","name":"Starliner Diner","hours":"24/7","seating":"counter, booths"}]}
+
+assistant channel=commentary to=tool.hold_counter_seat:
+{"venue_id":"v_starliner","guest":"Ray"}
+
+tool.hold_counter_seat channel=commentary to=assistant:
+{"hold_id":"CNT-2401","grace_minutes":10}
+
+assistant channel=final:
+Yes—the Starliner Diner counter is open 24/7. I’ve held one counter seat under Ray (hold CNT-2401) with a 10‑minute grace.
+
+user:
+Your neon sign is classic.
+
+assistant channel=final:
+Thanks—enjoy the diner.
+
+user:
+Do you have a gluten-free fryer?
+
+assistant channel=analysis:
+Fryer specification not in system. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Reviewing available resources.
+

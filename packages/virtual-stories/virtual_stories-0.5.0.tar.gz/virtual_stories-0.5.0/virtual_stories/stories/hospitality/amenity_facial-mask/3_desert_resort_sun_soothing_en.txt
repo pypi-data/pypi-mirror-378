@@ -1,0 +1,139 @@
+"""
+Guest requests soothing facial mask after desert sun exposure, plus brief advice.
+Provide full skincare support with assessment, selection, and delivery.
+
+ROLES: user (sun-exposed guest), assistant (spa therapist with product access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "analyze_skin_type",
+    "description": "Evaluate sensitivity and moisture loss from sun exposure.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_id": { "type": "string" },
+        "skin_concerns": { "type": "array", "items": { "type": "string", "enum": ["redness", "dryness", "tightness", "sensitivity", "dullness"] } },
+        "skin_type": { "type": "string", "enum": ["normal", "dry", "combination", "sensitive"] }
+      },
+      "required": ["guest_id", "skin_concerns", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "select_facial_mask",
+    "description": "Choose aloe-calming or oat-soothing mask for recovery.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "mask_type": { "type": "string", "enum": ["calming", "hydrating"] },
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "application_time": { "type": "number" }
+      },
+      "required": ["room_number", "mask_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_spa_package",
+    "description": "Deliver mask with cool compress and instructions.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "package_contents": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string" },
+        "setup_assistance": { "type": "boolean" }
+      },
+      "required": ["room_number", "package_contents"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Solstice Dunes Resort (hotel_id: sdr_psp_01)
+Address: 200 Mirage Way, Palm Springs, CA 92262
+Timezone: America/Los_Angeles
+
+Spa Essentials:
+- After-Sun Soothing: aloe, oat beta-glucan, calendula
+- Cooling tools: gel bead mask, jade roller from refrigerator cart
+- Typical application: 15–20 minutes; no rinse for leave-on gel
+- Availability: 09:00–21:00 therapists; 24/7 amenity delivery
+- Sensitive-skin options: fragrance-free, alcohol-free bases
+
+Property Highlights:
+- 210 rooms; desert-view balconies; misters on pool decks
+- Hydration stations on every floor (alkaline water)
+- Quiet spa courtyard with shade sails
+- Onsite dining: Citrus Kitchen 7:00–22:00; pool bar 11:00–18:00
+- EV chargers (Level 2) in garage B
+
+Sustainability & Safety:
+- Botanical masks sourced from certified growers
+- Recycled glass jars; return program for refills
+- Sun safety cards placed in rooms upon request
+
+user:
+Hi! Bit too much sun by the pool. I’m in 517. Something to calm redness?
+
+assistant channel=analysis:
+Sun redness and sensitivity; analyze then select calming aloe/oat mask and deliver with cooling tool.
+
+assistant channel=commentary to=tool.analyze_skin_type:
+{"guest_id":"r517","skin_concerns":["redness","sensitivity","dryness"],"skin_type":"sensitive"}
+
+tool.analyze_skin_type channel=commentary to=assistant:
+{"profile":"sun_reactive","recommended_masks":["calming","hydrating"],"key_ingredients":["aloe","beta_glucan","calendula"],"application_time":20}
+
+assistant channel=commentary to=tool.select_facial_mask:
+{"room_number":"517","mask_type":"calming","ingredients":["aloe","beta_glucan","calendula"],"application_time":20}
+
+tool.select_facial_mask channel=commentary to=assistant:
+{"mask_selected":"Oasis Calm Gel","compatibility":"excellent","application_time":20}
+
+assistant channel=commentary to=tool.deliver_spa_package:
+{"room_number":"517","package_contents":["Oasis Calm Gel","gel bead eye mask (chilled)","jade roller (chilled)","application card"],"delivery_window":"12 minutes","setup_assistance":true}
+
+tool.deliver_spa_package channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta":"12 minutes","package_id":"SDR517_CALM"}
+
+assistant channel=final:
+Yes—our Oasis Calm Gel is ideal. I’ll bring a chilled gel eye mask and jade roller with it to 517 in about 12 minutes and help set it up.
+
+user:
+Thanks. Is Citrus Kitchen open now?
+
+assistant channel=analysis:
+Answer from system: 7:00–22:00.
+
+assistant channel=final:
+Yes—open 7:00 to 22:00 daily.
+
+user:
+The courtyard looks so peaceful.
+
+assistant channel=analysis:
+Small talk response.
+
+assistant channel=final:
+It’s a favorite—shade sails and fountains keep it cool and quiet.
+
+user:
+Can you book a sunrise hot-air balloon ride tomorrow?
+
+assistant channel=analysis:
+Outside spa scope. Flag attention.
+
+assistant channel=final:
+[ATTENTION] Reviewing options for balloon experiences with our concierge.
+"""
+

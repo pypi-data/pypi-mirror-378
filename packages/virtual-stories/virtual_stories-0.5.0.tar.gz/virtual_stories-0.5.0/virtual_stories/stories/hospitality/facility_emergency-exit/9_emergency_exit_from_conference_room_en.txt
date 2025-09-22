@@ -1,0 +1,120 @@
+"""
+Guest asks about emergency exit from conference room; provide route information, include small talk, and one background acknowledgment.
+
+ROLES: user (business guest in conference room asking about emergency safety), assistant (hotel staff providing conference room safety information)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_emergency_exit_location",
+    "description": "Get the location of the nearest emergency exit.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "current_location": {
+          "type": "string",
+          "description": "The guest's current location in the hotel."
+        }
+      },
+      "required": ["current_location"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_conference_room_capacity",
+    "description": "Check current conference room capacity and evacuation procedures.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "event_type": { "type": "string" }
+      },
+      "required": ["room_number", "event_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Starlight Hotel (hotel_id: st_nyc_15)
+Address: 123 Broadway, New York, NY 10001
+Timezone: America/New_York
+
+Emergency Safety Features:
+- Emergency exits: Clearly marked with illuminated signs on every floor
+- Fire safety: Smoke detectors, sprinkler systems, and fire extinguishers throughout
+- Emergency lighting: Battery-powered backup lighting in all corridors
+- Stairwells: Fire-rated stairwells with emergency lighting and handrails
+- Elevator safety: Emergency stop buttons and communication systems
+- Guest room safety: Emergency evacuation plans posted in each room
+- Assembly point: Designated meeting area in the parking garage
+
+Hotel Layout:
+- 25 floors with 4 emergency stairwells (A, B, C, D)
+- Main lobby on ground floor with multiple exit points
+- Guest rooms: Floors 3-25 with emergency exits on each floor
+- Public areas: Restaurant, spa, conference rooms, pool, fitness center
+- Emergency assembly point: Parking garage level B2
+
+Conference Room Features:
+- Location: 4th floor with professional meeting facilities
+- Capacity: 50 guests maximum for safety and comfort
+- Layout: Theater-style seating with presentation equipment
+- Emergency exits: Two primary exits plus staff service entrance
+- Accessibility: Wheelchair accessible with wide aisles
+- Fire suppression: Conference room sprinkler system
+- Equipment: Projector, sound system, and emergency lighting
+
+Safety Protocols:
+- Emergency drills: Monthly fire safety training for all staff
+- Guest orientation: Safety information provided at check-in
+- Emergency response: 24/7 security team with direct fire department contact
+- Evacuation procedures: Clear protocols for different types of emergencies
+- Communication systems: PA system and emergency notification capabilities
+
+user:
+I'm attending a business meeting in the conference room. Where's the emergency exit from here?
+
+assistant channel=analysis:
+The guest is asking about emergency exit from the conference room. I'll get the exit location and check current capacity for evacuation planning.
+
+assistant channel=commentary to=tool.get_emergency_exit_location:
+{"current_location": "conference room"}
+
+tool.get_emergency_exit_location channel=commentary to=assistant:
+{"location": "From the conference room on the 4th floor, the nearest emergency exit is Stairwell D on the west side, accessible through the main entrance. There's also a secondary exit through the staff service entrance."}
+
+assistant channel=commentary to=tool.check_conference_room_capacity:
+{"room_number": "Conference Room A", "event_type": "business meeting"}
+
+tool.check_conference_room_capacity channel=commentary to=assistant:
+{"current_occupancy": 35, "max_capacity": 50, "evacuation_time_estimate": "2-3 minutes", "staff_evacuation_assistance": "available"}
+
+assistant channel=analysis:
+I have the exit location and current capacity information. I'll provide clear directions with evacuation context.
+
+assistant channel=final:
+From the conference room on the 4th floor, the nearest emergency exit is Stairwell D on the west side, accessible through the main entrance. There's also a secondary exit through the staff service entrance. With current occupancy at 35 guests, evacuation would take approximately 2-3 minutes, and our staff are trained to assist with evacuation procedures.
+
+user:
+The conference room's professional setup and presentation equipment really make for productive meetings.
+
+assistant channel=analysis:
+Acknowledge the positive feedback about the conference room facilities while maintaining safety awareness.
+
+assistant channel=final:
+I'm glad you're finding the conference room well-equipped for your business needs! The professional setup and presentation equipment are designed to support productive meetings. Just remember, in case of emergency, Stairwell D is your nearest exit to the west.
+
+user:
+Could you provide me with a detailed evacuation plan specifically for the conference room during large corporate events?
+
+assistant channel=analysis:
+Detailed corporate event evacuation plans aren't available through standard guest services; use background acknowledgment flag.
+
+assistant channel=final:
+[ATTENTION] I understand you'd like specific corporate event evacuation information. Reviewing available resources.

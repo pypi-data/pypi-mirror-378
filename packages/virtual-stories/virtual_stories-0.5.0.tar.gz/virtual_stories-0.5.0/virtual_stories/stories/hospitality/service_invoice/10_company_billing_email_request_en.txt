@@ -1,0 +1,48 @@
+"""
+Guest requests folio emailed to a company address for billing; include in-context question about what’s included and a beyond-scope request.
+
+ROLES: user (business traveler), assistant (front desk agent emailing folio)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"email_company_folio","description":"Email folio PDF to company billing","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"email":{"type":"string"}},"required":["room","email"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Midtown Business Plaza
+Folio Delivery: Email PDF or Front Desk print
+Included Details: room charges, taxes, dated incidentals, payment method
+Privacy: Verified email or in-person verification
+Printer: PRN-MBP-05
+Reissue: Within 30 days of checkout
+Time Zone: Central Time (CT)
+
+user:
+Please email my folio for room 1802 to ap@company.example.
+
+assistant channel=analysis:
+Send folio PDF to the provided company email.
+
+assistant channel=commentary to=tool.email_company_folio:
+{"room":"1802","email":"ap@company.example"}
+
+tool.email_company_folio channel=commentary to=assistant:
+{"request_id":"MBP-1802-AP1","status":"sent","filename":"MBP_1802_folio.pdf"}
+
+assistant channel=final:
+Sent—MBP-1802-AP1. The PDF (MBP_1802_folio.pdf) has been emailed to ap@company.example.
+
+user:
+What details are included on that folio?
+
+assistant channel=final:
+It lists room charges, taxes, dated incidentals, and your payment method.
+
+user:
+Can you export it as an XLSX instead?
+
+assistant channel=final:
+[ATTENTION] Spreadsheet exports aren’t available here. Working on your request.

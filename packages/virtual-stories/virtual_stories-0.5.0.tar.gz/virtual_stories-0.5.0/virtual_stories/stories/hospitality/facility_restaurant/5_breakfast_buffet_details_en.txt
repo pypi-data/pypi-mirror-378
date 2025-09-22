@@ -1,0 +1,72 @@
+"""
+Guest asks about breakfast buffet price and opening time; requests peak time info; small talk included.
+
+ROLES: user (guest planning breakfast), assistant (concierge providing buffet details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_breakfast_price","description":"Return buffet pricing for Sunrise Terrace.","parameters":{"type":"object","properties":{},"required":[],"additionalProperties":false},"strict":true},
+  {"name":"get_peak_times","description":"Return typical peak times for the breakfast buffet.","parameters":{"type":"object","properties":{},"required":[],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Breakfast Venue: Sunrise Terrace (restaurant_id: rest_sunrise_terrace)
+Hours: 06:30–10:30 daily
+Buffet highlights: Made‑to‑order eggs/omelets; cold‑pressed juices; espresso drinks; waffle station; fruit bar
+Dietary: Vegan corner; gluten‑free breads; halal‑friendly selections labelled
+Seating: Terrace tables with bay glance; indoor booths; stroller parking by host stand
+Accessibility: Step‑free; table height 28–30"; large‑print menu cards
+Notes: Peak flow 07:30–09:00; last seating 10:15
+Payment: Room charge, major cards
+
+user:
+What time do you open, and how much is the buffet?
+
+assistant channel=analysis:
+Opening time from system; price via tool; then offer peak window via tool if asked.
+
+assistant channel=commentary to=tool.get_breakfast_price:
+{}
+
+tool.get_breakfast_price channel=commentary to=assistant:
+{"adult":"$34++","child_6_12":"$18++","under_6":"complimentary with paying adult"}
+
+assistant channel=final:
+Sunrise Terrace opens at 06:30 daily. Pricing: adults $34++ , children 6–12 $18++, under 6 dine complimentary with a paying adult.
+
+user:
+When is it busiest?
+
+assistant channel=analysis:
+Call peak times tool; answer succinctly.
+
+assistant channel=commentary to=tool.get_peak_times:
+{}
+
+tool.get_peak_times channel=commentary to=assistant:
+{"peak":"07:30–09:00","tip":"Arrive by 07:15 for quieter seating."}
+
+assistant channel=final:
+It’s busiest from 07:30 to 09:00; arriving by 07:15 usually means a quieter table.
+
+user:
+Nice sunrise view there.
+
+assistant channel=analysis:
+Friendly acknowledgment.
+
+assistant channel=final:
+It’s a bright way to start the day.
+
+user:
+Can you send me photos of the buffet layout?
+
+assistant channel=analysis:
+Sending photos isn’t defined—apply the attention flag.
+
+assistant channel=final:
+[ATTENTION] Acknowledged your request for photos. Checking available options.
+

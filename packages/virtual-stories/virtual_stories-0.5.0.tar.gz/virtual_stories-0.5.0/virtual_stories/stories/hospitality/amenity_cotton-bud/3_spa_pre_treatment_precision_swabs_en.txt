@@ -1,0 +1,85 @@
+"""
+Guest before a spa treatment requests precision-tip swabs for skincare.
+Provide precision option and delivery to spa locker.
+
+ROLES: user (spa guest), assistant (amenities specialist)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_precision_swabs",
+    "description": "Verify availability of precision cosmetic swabs.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{}},
+    "strict": true
+  },
+  {
+    "name": "drop_to_spa_locker",
+    "description": "Arrange delivery to a spa locker number.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "locker": { "type": "string" },
+        "item": { "type": "string" }
+      },
+      "required": ["locker","item"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Oasis Thermal Spa (hotel_id: ots_athens_01)
+Address: 5 Vouliagmenis Ave, Athens 117 43, Greece
+Timezone: Europe/Athens
+Spa: lockers 100–199; treatment wing access 10:00–20:00
+
+Hygiene Amenities:
+- Precision Swabs: pointed-tip for cosmetic application
+- Organic Options: available on request
+- Delivery: to spa lockers or guest rooms
+- Fees: complimentary for spa guests
+- Contact: spa reception
+
+user:
+Could you leave precision-tip cosmetic swabs in spa locker 118 before my treatment?
+
+assistant channel=analysis:
+Verify precision swabs and deliver to locker 118.
+
+assistant channel=commentary to=tool.check_precision_swabs:
+{}
+
+tool.check_precision_swabs channel=commentary to=assistant:
+{"available":true,"pack_size":"100 count"}
+
+assistant channel=commentary to=tool.drop_to_spa_locker:
+{"locker":"118","item":"Precision-tip cosmetic swabs (100 count)"}
+
+tool.drop_to_spa_locker channel=commentary to=assistant:
+{"delivered":true,"timestamp":"scheduled within 20 minutes","note":"spa reception to notify guest"}
+
+assistant channel=final:
+Done—we’ll place a 100-count pack of precision-tip cosmetic swabs in locker 118 within about 20 minutes. Spa reception will notify you when it’s ready. Complimentary.
+
+user:
+Thank you! Do you also have organic versions?
+
+assistant channel=analysis:
+Organic options are available on request.
+
+assistant channel=final:
+Yes—organic options are available on request. I can switch the pack if you prefer organic.
+
+user:
+That’s perfect. Also, is the Acropolis visible from the spa terrace?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the terrace view details for you. Investigating potential answers.
+

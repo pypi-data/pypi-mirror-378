@@ -1,0 +1,59 @@
+"""
+Guest asks for the bed to be made immediately without full service.
+
+ROLES: user (guest requesting quick bed service), assistant (housekeeping coordinator dispatching a make‑the‑bed tasker)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_make_bed",
+    "description": "Dispatch a make-the-bed task to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "urgency": {"type": "string", "enum": ["now", "next_available"]}
+      },
+      "required": ["room_number", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Parkline Suites
+Make‑the‑Bed Task:
+- Purpose: tidy linens and pillows only; no full clean
+- Window: 08:00–20:00; typical ETA 10–20 minutes
+• DND pauses response until cleared
+
+user:
+Could someone just make the bed in 718 right now?
+
+assistant channel=analysis:
+Dispatch immediate make‑the‑bed for room 718.
+
+assistant channel=commentary to=tool.request_make_bed:
+{"room_number":"718","urgency":"now"}
+
+tool.request_make_bed channel=commentary to=assistant:
+{"task_id":"mtb_5509","eta_minutes":12}
+
+assistant channel=final:
+On it—make‑the‑bed is dispatched to room 718 (task mtb_5509) with an ETA of about 12 minutes. This is a tidy‑only visit; let us know if you want a full clean later.
+
+user:
+Thanks! The park view from here is calming.
+
+assistant channel=final:
+Make‑the‑bed operates 08:00–20:00; just let us know if you want another pass.
+
+user:
+Do you also rotate mattresses on request?
+
+assistant channel=final:
+[ATTENTION] Mattress rotation isn’t listed in our tidy‑only task. Accessing relevant resources.

@@ -1,0 +1,65 @@
+"""
+Guest asks if a trained service animal can accompany them during check-in and in restaurants.
+
+ROLES: user (guest with trained service animal), assistant (front desk clarifying permitted access areas)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_pet_policy","description":"Return pet and service animal policy.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}},
+  {"name":"get_access_areas","description":"Return areas where service animals are permitted.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}}
+]
+```
+"""
+
+system:
+Hotel: Aurora Bay Hotel (hotel_id: abh_sfo)
+Address: 55 Embarcadero, San Francisco, CA 94111
+Timezone: America/Los_Angeles
+
+Policy Overview (Pets):
+- No pets allowed in guestrooms or public spaces.
+- Trained service animals are welcome and must remain under control.
+- Emotional support animals are not considered service animals.
+
+Service Animal Access:
+- Allowed: lobby, elevators, corridors, restaurants, and bars (while under control)
+- Not Allowed: kitchen back‑of‑house areas
+- Housekeeping may schedule while guest is present upon request
+
+user:
+Can my trained service dog be with me at check‑in and at breakfast?
+
+assistant channel=analysis:
+Answer from policy and access areas; confirm allowed in lobby and restaurants while under control.
+
+assistant channel=commentary to=tool.get_pet_policy:
+{"hotel_id":"abh_sfo"}
+
+tool.get_pet_policy channel=commentary to=assistant:
+{"pets_allowed":false,"service_animals_allowed":true,"emotional_support_allowed":false}
+
+assistant channel=commentary to=tool.get_access_areas:
+{"hotel_id":"abh_sfo"}
+
+tool.get_access_areas channel=commentary to=assistant:
+{"allowed":["lobby","elevators","corridors","restaurants","bars"],"restricted":["kitchen"]}
+
+assistant channel=final:
+Yes—trained service animals are welcome at check‑in and at breakfast. They’re permitted in the lobby, elevators, corridors, restaurants, and bars while under control.
+
+user:
+Your lobby plants look great.
+
+assistant channel=final:
+Thank you—welcome to Aurora Bay Hotel.
+
+user:
+Do you require specific certification documents?
+
+assistant channel=analysis:
+Documentation requirements not provided. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Thanks for checking. Reviewing applicable requirements.
+

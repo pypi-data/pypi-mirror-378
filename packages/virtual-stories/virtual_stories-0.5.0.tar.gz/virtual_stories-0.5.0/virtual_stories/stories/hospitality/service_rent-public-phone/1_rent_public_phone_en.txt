@@ -1,0 +1,54 @@
+"""
+Guest requests a mobile handset (public phone equivalent) for local calls; confirm availability, call rate, and pickup.
+
+ROLES: user (guest without a phone), assistant (concierge lending prepaid handset)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check prepaid handset stock","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create handset rental with rate","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Capital Gate Abu Dhabi (CGAD-10), Al Khaleej Al Arabi St, Abu Dhabi, UAE.
+Business tower hotel; Front Desk 24/7; Concierge 9:00–21:00.
+Prepaid handsets for local calls: 10 units; AED 20/day includes AED 10 credit; top-up available at Concierge; pickup at desk.
+Charge code RENT-PHONE.
+
+user:
+Do you have a phone I can rent to make local calls? Room 2305.
+
+assistant channel=analysis:
+Hold one prepaid handset and create a 24-hour rental for pickup at desk.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"CGAD-10","item":"prepaid_handset","quantity":1,"room":"2305"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["PHN-03"],"notes":"AED 20/day incl. AED 10 credit"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"CGAD-10","room":"2305","item":"prepaid_handset","duration_hours":24,"charge_code":"RENT-PHONE","delivery_option":"pick_up_at_desk"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"PHN-2305-712","status":"created","daily_rate":"AED 20"}
+
+assistant channel=final:
+Yes—one prepaid handset is reserved. Order PHN-2305-712 is set for 24 hours at AED 20/day (includes AED 10 credit); please pick it up at the Concierge desk.
+
+user:
+Thanks, that helps a lot.
+
+assistant channel=final:
+You’re welcome—have a productive day.
+
+user:
+Can you provide the SIM provider’s contract details?
+
+assistant channel=final:
+[ATTENTION] Working on your request.
+

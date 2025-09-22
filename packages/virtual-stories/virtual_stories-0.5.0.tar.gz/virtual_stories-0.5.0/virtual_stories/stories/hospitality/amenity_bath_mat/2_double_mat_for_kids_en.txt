@@ -1,0 +1,149 @@
+"""
+Parent requests two bath mats for safer post-shower footing for kids; verify stock and arrange delivery via tools. Include small talk, an in-context policy question, and an [ATTENTION] case.
+
+ROLES: user (parent in a family room), assistant (front-desk coordinating housekeeping delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "room_status",
+    "description": "Get occupancy and DND status for a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"room_number": {"type": "string"}},
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "amenity_stock",
+    "description": "Check on-hand stock for an amenity SKU.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"sku": {"type": "string"}},
+      "required": ["sku"]
+    },
+    "strict": true
+  },
+  {
+    "name": "housekeeping_deliver",
+    "description": "Create a housekeeping delivery ticket for an amenity.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "sku": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["low", "normal", "high"]}
+      },
+      "required": ["room_number", "sku", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Redwood Harbor Lodge (hotel_id: rhl_sf_09)
+Address: 415 Ocean Esplanade, Pacifica, CA 94044
+Timezone: America/Los_Angeles
+Check-in/Check-out: 16:00 / 11:00
+Amenity Logistics Hours: 07:00–22:00
+
+Bath Linen & Safety:
+- SKUs: bath_mat (cotton, 60x90 cm), bath_mat_non_slip (rubber-backed, 55x85 cm)
+- Typical delivery ETA: 10–20 minutes; family-priority is available on request
+- Safety tip: place mats on dry floor outside tub; wipe excess water
+- Exchange: wet or soiled mats can be swapped on request
+- Housekeeping cannot provide cleaning chemicals or medical advice
+
+Facilities:
+1) Seaside Deck with firepits (18:00–22:00)
+2) Pool: 07:00–21:00; towels at entrance kiosk
+3) Fitness: 24/7 with keycard access
+4) Café Tide: 06:30–14:00 coffee & pastries
+5) Lobby bookstore alcove featuring coastal authors
+
+Design Notes:
+- Cedar-clad lobby with maritime maps
+- Rooms feature driftwood accents and local photography
+
+Sustainability:
+- Towel and linen reuse program; request extras anytime within logistics hours
+- On-site water bottling reduces plastic
+
+Transportation:
+- Surface parking on-site; EV chargers x4 (Level 2)
+- Rideshare pickup at Ocean Esplanade porte-cochère
+
+Accessibility:
+- Step-in showers available on request
+- Portable grab bars on loan via housekeeping
+
+user:
+Hi! Could we get two extra bath mats to room 233? The kids step out of the shower together and it gets slippery.
+
+assistant channel=analysis:
+Confirm room status, check stock for bath mats, then place a delivery for two units with normal priority. Keep statements aligned with tool outputs and system constraints.
+
+assistant channel=commentary to=tool.room_status:
+{"room_number":"233"}
+
+tool.room_status channel=commentary to=assistant:
+{"room_number":"233","occupied":true,"do_not_disturb":false}
+
+assistant channel=analysis:
+Room is serviceable. Check stock for bath_mat.
+
+assistant channel=commentary to=tool.amenity_stock:
+{"sku":"bath_mat"}
+
+tool.amenity_stock channel=commentary to=assistant:
+{"sku":"bath_mat","on_hand":22}
+
+assistant channel=analysis:
+Stock is sufficient. Request delivery of 2 bath mats.
+
+assistant channel=commentary to=tool.housekeeping_deliver:
+{"room_number":"233","sku":"bath_mat","quantity":2,"priority":"normal"}
+
+tool.housekeeping_deliver channel=commentary to=assistant:
+{"ticket_id":"HK-233-5527","eta_minutes":14}
+
+assistant channel=final:
+I’ve queued two bath mats for room 233 under ticket HK-233-5527. Estimated arrival is about 14 minutes. Please place them on a dry floor just outside the shower.
+
+user:
+By the way, the cedar scent in the lobby is really nice.
+
+assistant channel=analysis:
+Chit-chat referencing design notes.
+
+assistant channel=final:
+Thank you—the cedar-clad lobby and maritime maps give it that coastal feel.
+
+user:
+What time can we still ask for extra towels tonight?
+
+assistant channel=analysis:
+Answer using Amenity Logistics Hours from system.
+
+assistant channel=final:
+You can request extras until 22:00 during our amenity logistics hours.
+
+user:
+Could you also book surfing lessons for the kids tomorrow?
+
+assistant channel=analysis:
+Out of scope for tools and system; apply special flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+
+user:
+No problem—thanks for the quick help.

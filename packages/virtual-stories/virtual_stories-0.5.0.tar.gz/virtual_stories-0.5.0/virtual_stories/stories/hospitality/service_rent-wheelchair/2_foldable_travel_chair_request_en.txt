@@ -1,0 +1,55 @@
+"""
+Guest requests a foldable travel wheelchair; confirm availability and delivery timeline.
+
+ROLES: user (guest wanting a foldable travel chair), assistant (front desk accessibility coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_travel_chair_stock","description":"Check foldable travel chair availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","quantity","room"]},"strict":true},
+  {"name":"create_travel_chair_order","description":"Create loan order for travel chair","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"duration_hours":{"type":"integer"},"delivery":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","duration_hours","delivery"]},"strict":true},
+  {"name":"dispatch_runner","description":"Dispatch runner for delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_id":{"type":"string"}},"required":["hotel_id","room","order_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverside Executive Hotel (RSEH-22)
+Mobility Equipment:
+- 2 foldable travel wheelchairs (lightweight)
+- Complimentary loan for on-property use up to 24 hours
+- Delivery ETA: 10–15 minutes by runner
+- Front Desk: 24/7; Runner: 07:00–23:00
+
+user:
+Do you have a foldable chair I can borrow to room 903?
+
+assistant channel=analysis:
+Hold one travel chair and arrange room delivery within 15 minutes.
+
+assistant channel=commentary to=tool.check_travel_chair_stock:
+{"hotel_id":"RSEH-22","quantity":1,"room":"903"}
+
+tool.check_travel_chair_stock channel=commentary to=assistant:
+{"available":true,"held":1}
+
+assistant channel=commentary to=tool.create_travel_chair_order:
+{"hotel_id":"RSEH-22","room":"903","duration_hours":24,"delivery":"room_drop"}
+
+tool.create_travel_chair_order channel=commentary to=assistant:
+{"order_id":"TC-903-01","status":"created","charge":"comp"}
+
+assistant channel=commentary to=tool.dispatch_runner:
+{"hotel_id":"RSEH-22","room":"903","order_id":"TC-903-01"}
+
+tool.dispatch_runner channel=commentary to=assistant:
+{"eta_minutes":12,"runner":"Mae"}
+
+assistant channel=final:
+Held one foldable travel chair—order TC-903-01. Mae will deliver to 903 in about 12 minutes.
+
+user:
+Thanks. Can you certify the chair’s weight rating in writing?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

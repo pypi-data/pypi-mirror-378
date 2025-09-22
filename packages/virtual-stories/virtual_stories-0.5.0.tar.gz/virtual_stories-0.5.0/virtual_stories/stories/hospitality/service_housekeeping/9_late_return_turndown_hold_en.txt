@@ -1,0 +1,48 @@
+"""
+Guest will return late and asks to hold turndown until after 21:00.
+
+ROLES: user (guest coordinating late return), assistant (housekeeping coordinator aligning turndown window)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_housekeeping","description":"Schedule housekeeping service for a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["full_clean","refresh","turn_down"]},"preferred_window":{"type":"string"}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Aurora Park Hotel — Housekeeping
+Hours: 09:00–21:00
+Services: full_clean, refresh, turn_down
+Windows: 60‑minute blocks; last window starts 20:00
+Policy: DND respected; late returns can be aligned to last slot
+Location: Service base near Garden Lobby
+
+user:
+I’ll be back after nine. Could you do turndown for 704 in your last slot?
+
+assistant channel=analysis:
+Book turndown in the 20:00–21:00 last window.
+
+assistant channel=commentary to=tool.request_housekeeping:
+{"room_number":"704","service_type":"turn_down","preferred_window":"20:00-21:00"}
+
+tool.request_housekeeping channel=commentary to=assistant:
+{"request_id":"hk_704_td","status":"scheduled","window":"20:00-21:00"}
+
+assistant channel=final:
+Turndown is set for room 704 in the 20:00–21:00 window (hk_704_td). We respect DND and align late returns to the last slot when possible.
+
+user:
+The garden lobby smells great tonight.
+
+assistant channel=final:
+Housekeeping ends at 21:00 from the Garden Lobby base.
+
+user:
+Can you fold clothes as part of turndown?
+
+assistant channel=final:
+[ATTENTION] Clothing folding isn’t listed under turndown. Exploring different approaches.
+

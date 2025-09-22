@@ -1,0 +1,76 @@
+"""
+Guest requests portable battery-powered vanity mirror due to limited outlets.
+Provide options and delivery.
+
+ROLES: user (guest with outlet constraints), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_mirror_options", "description": "Check portable battery vanity mirrors.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "mirror_type": { "type": "string", "enum": ["vanity"] }, "lighting_needed": { "type": "boolean" } }, "required": ["mirror_type"] }, "strict": true },
+  { "name": "install_mirror_setup", "description": "Deliver portable vanity; no install required.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mirror_type": { "type": "string", "enum": ["vanity"] }, "lighting_type": { "type": "string", "enum": ["adjustable_led"] }, "placement_location": { "type": "string", "enum": ["bedroom"] }, "power_source": { "type": "string", "enum": ["battery"] } }, "required": ["room_number", "mirror_type", "power_source"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Cityline Tech Hotel (hotel_id: cth_sin_03)
+Address: 88 Fusionopolis Pl, Singapore 138567
+Timezone: Asia/Singapore
+
+Vanity Options:
+- Portable battery vanity mirrors (8‑hour runtime)
+- Adjustable LED brightness and color
+- Delivery in 20–30 minutes
+- No install; bedside placement by default
+- Collection at checkout
+
+user:
+Room 1822—portable battery vanity, please. Few outlets here.
+
+assistant channel=analysis:
+Check portable battery vanity; deliver to bedside.
+
+assistant channel=commentary to=tool.check_mirror_options:
+{"mirror_type":"vanity","lighting_needed":true}
+
+tool.check_mirror_options channel=commentary to=assistant:
+{"available_types":["portable_battery_vanity"],"lighting_options":["adjustable_led"],"inventory_status":"available"}
+
+assistant channel=commentary to=tool.install_mirror_setup:
+{"room_number":"1822","mirror_type":"vanity","lighting_type":"adjustable_led","placement_location":"bedroom","power_source":"battery"}
+
+tool.install_mirror_setup channel=commentary to=assistant:
+{"service_id":"MIR_SIN1822","installation_time":"delivery in 25 minutes","placement":"bedside","notes":"charged to 90%"}
+
+assistant channel=final:
+We’ll deliver a battery‑powered vanity mirror to 1822 in about 25 minutes; we’ll place it bedside and it’s pre‑charged.
+
+user:
+Is delivery 20–30 minutes?
+
+assistant channel=analysis:
+From system: yes.
+
+assistant channel=final:
+Yes—delivery typically takes 20–30 minutes.
+
+user:
+Lobby tech art is cool.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s a fun backdrop for creator gear.
+
+user:
+Can you lend a USB‑C charger too?
+
+assistant channel=analysis:
+Charger lending not in system; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check with front desk about charger loans.
+"""
+

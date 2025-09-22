@@ -1,0 +1,67 @@
+"""
+Guest requests unscented bath salts for sensitive skin and asks about dye-free policy.
+
+ROLES: user (guest with sensitivity), assistant (amenities desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "list_bath_salt_scents", "description": "List available bath salt scents and stock counts.", "parameters": {"type":"object","additionalProperties":false,"properties":{}}, "strict": true },
+  { "name": "request_bath_salt_delivery", "description": "Deliver bath salt to a room.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"scent":{"type":"string"},"quantity":{"type":"integer"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","scent","quantity","priority"]}, "strict": true }
+]
+```
+"""
+
+system:
+Willow Springs Retreat (hotel_id: wsr_denver_04)
+Address: 410 Aspen Ln, Denver, CO 80202
+Timezone: America/Denver
+
+Bath Salt Notes:
+- Scents: lavender, eucalyptus, unscented (dye‑free, skin‑safe)
+- Delivery window: 08:00–22:00
+- ETA typical: 10–15 minutes
+Spa: Hydrotherapy suites by appointment
+Accessibility: Braille labels available upon request
+Sustainability: Compostable outer wraps
+House Rules: No medical claims
+
+user:
+Could I have one unscented packet to room 640? Also, are your salts dye‑free?
+
+assistant channel=analysis:
+Confirm stock; place order; confirm dye‑free from system notes.
+
+assistant channel=commentary to=tool.list_bath_salt_scents:
+{}
+
+tool.list_bath_salt_scents channel=commentary to=assistant:
+{"scents":[{"name":"lavender","stock":21},{"name":"eucalyptus","stock":11},{"name":"unscented","stock":27}]}
+
+assistant channel=commentary to=tool.request_bath_salt_delivery:
+{"room_number":"640","scent":"unscented","quantity":1,"priority":"normal"}
+
+tool.request_bath_salt_delivery channel=commentary to=assistant:
+{"ticket_id":"SPA-640-2290","eta_minutes":11}
+
+assistant channel=final:
+Unscented bath salt is on the way to room 640 (SPA-640-2290) with an ETA of about 11 minutes. Our salts are dye‑free and skin‑safe.
+
+user:
+Nice! It’s been a beautiful day in Denver.
+
+assistant channel=analysis:
+Small talk only.
+
+assistant channel=final:
+Glad you’re enjoying the day at Willow Springs.
+
+user:
+Do you have pediatric formulations for kids?
+
+assistant channel=analysis:
+Not provided in system; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check whether a kid‑specific option is available.
+

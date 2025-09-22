@@ -1,0 +1,95 @@
+"""
+Near end-of-window request for alcohol pads; confirm availability, deliver, and clarify delivery window end time. Include small talk and an [ATTENTION] request.
+
+ROLES: user (late-night guest), assistant (front desk within delivery hours)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"fa_avail","description":"Check availability for first-aid item.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":{"type":"string"}},"required":["item"]},"strict":true},
+  {"name":"fa_send_now","description":"Send item to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer"}},"required":["room","item","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Palm Court Promenade (hotel_id: pcp_fl_63)
+Address: 600 Ocean Dr, Miami Beach, FL 33139
+Timezone: America/New_York
+Check-in/Out: 16:00 / 11:00
+Delivery Hours: 08:00–22:00
+
+First-Aid Items:
+- alcohol pads (limit 12 per request)
+- bandages, gauze
+- No medical advice
+
+Spaces:
+1) Art Deco lobby gallery
+2) Pool 08:00–20:00
+3) Espresso bar 06:30–12:00
+4) Fitness 24/7
+5) Quiet hours 22:00–07:00
+
+Dining:
+- Terrace snacks 16:00–20:00
+
+Accessibility:
+- Step-free access; ADA rooms available
+
+Sustainability:
+- Refillable amenities; water refill stations
+
+Design:
+- Restored Art Deco details throughout
+
+user:
+Hi—room 904. Could I get 12 alcohol pads now?
+
+assistant channel=analysis:
+Check availability, deliver 12.
+
+assistant channel=commentary to=tool.fa_avail:
+{"item":"alcohol pads"}
+
+tool.fa_avail channel=commentary to=assistant:
+{"item":"alcohol pads","available":true}
+
+assistant channel=commentary to=tool.fa_send_now:
+{"room":"904","item":"alcohol pads","qty":12}
+
+tool.fa_send_now channel=commentary to=assistant:
+{"ticket":"PCP-FA-904-882","eta_minutes":12}
+
+assistant channel=final:
+I’ve arranged 12 alcohol pads to 904 (ticket PCP-FA-904-882). ETA is about 12 minutes.
+
+user:
+Is delivery available after 10 PM?
+
+assistant channel=analysis:
+Answer from system Delivery Hours.
+
+assistant channel=final:
+Our delivery hours run until 22:00.
+
+user:
+Love the Art Deco gallery in the lobby.
+
+assistant channel=analysis:
+Chit-chat referencing spaces.
+
+assistant channel=final:
+The Art Deco lobby gallery is a highlight of the property.
+
+user:
+Could you set a reminder with a local clinic for tomorrow morning?
+
+assistant channel=analysis:
+Out of scope; use flag.
+
+assistant channel=final:
+[ATTENTION] Cross-referencing sources.
+
+user:
+Thanks!

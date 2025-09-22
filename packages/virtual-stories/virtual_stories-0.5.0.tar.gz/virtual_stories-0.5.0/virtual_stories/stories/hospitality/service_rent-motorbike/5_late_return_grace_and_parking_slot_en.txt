@@ -1,0 +1,63 @@
+"""
+Guest asks about late return grace and parking location before booking.
+
+ROLES: user (guest worried about timing), assistant (concierge clarifying grace period and parking slot, then booking)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_and_hold","description":"Check availability and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"model":{"type":"string"},"start":{"type":"string","format":"date-time"},"hours":{"type":"integer"}},"required":["partner_id","model","start","hours"]},"strict":true},
+  {"name":"finalize","description":"Finalize booking","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"name":{"type":"string"},"room":{"type":"string"},"model":{"type":"string"},"hours":{"type":"integer"}},"required":["partner_id","name","room","model","hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Alpine Crest Zermatt (ACZ-18)
+Address: Bahnhofstrasse 88, 3920 Zermatt, Switzerland
+Concierge: 07:30–21:30; ski valet adjacent
+Partner: MatterMoto (partner_id MM-09)
+Models: Vespa Sprint 150, Honda Forza 125
+Requirements: Passport + motorcycle license; age 21+
+Deposit: CHF 200 card hold; released after inspection
+Grace: 15-minute late return grace; after that, hourly charge applies
+Parking: Return to stall P5 on level -1
+Helmets: Two included; liners available
+Fuel: Full-to-full policy
+Boundaries: Village perimeter paved roads only
+Assistance: Concierge ext. 9 routes to partner
+
+user:
+Is there a late return grace? I want the Vespa Sprint from 11:15 for 2 hours. Room 603.
+
+assistant channel=analysis:
+Per system, 15-minute grace exists. Check and hold Vespa Sprint at 11:15 for 2 hours, then finalize under room 603.
+
+assistant channel=commentary to=tool.check_and_hold:
+{"partner_id":"MM-09","model":"Vespa Sprint 150","start":"2025-09-10T11:15:00","hours":2}
+
+tool.check_and_hold channel=commentary to=assistant:
+{"available":true,"hold_id":"MMH-301"}
+
+assistant channel=commentary to=tool.finalize:
+{"partner_id":"MM-09","name":"Guest 603","room":"603","model":"Vespa Sprint 150","hours":2}
+
+tool.finalize channel=commentary to=assistant:
+{"reservation_id":"MM-RES-301","status":"confirmed"}
+
+assistant channel=final:
+Yes—there’s a 15-minute grace window. Your Vespa Sprint 150 is confirmed (MM-RES-301) from 11:15 for 2 hours. Please return to stall P5 on level -1 with a full tank.
+
+user:
+The ski valet looks efficient.
+
+assistant channel=final:
+They’re right next to concierge for quick handoffs.
+
+user:
+Can you share a PDF of the partner’s liability terms?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation list.
+

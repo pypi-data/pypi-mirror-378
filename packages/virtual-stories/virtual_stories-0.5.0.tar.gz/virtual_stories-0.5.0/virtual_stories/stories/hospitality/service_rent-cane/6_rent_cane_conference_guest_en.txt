@@ -1,0 +1,54 @@
+"""
+Business conference guest needs cane for presentation mobility; confirm availability during conference hours, arrange delivery, and discuss professional appearance.
+
+ROLES: user (business professional attending conference with mobility needs), assistant (front desk supporting conference attendees)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check accessibility item availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create rental with fee or comp","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Old Town Heritage Prague (OTHP-05), Karlova 7, 110 00 Prague 1, Czechia.
+Boutique heritage hotel; 7 floors; Front Desk 24/7.
+Walking canes: 6 units; complimentary for up to 48 hours; return at Front Desk; no deposit.
+Conference amenities: Professional-grade canes available; Business center access; Meeting room accessibility; Executive concierge services.
+Other facts: Elevator to all floors; Breakfast 7:00–10:30; Conference facilities on floors 2-3; Executive lounge access.
+
+user:
+I'm here for the tech conference and need a walking cane for the presentations. I'll be moving between meeting rooms frequently. Room 1501.
+
+assistant channel=analysis:
+The guest is a conference attendee who needs a cane for professional mobility during presentations. I should prioritize a professional-looking cane and ensure it's suitable for business use.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"OTHP-05","item":"walking_cane","quantity":1,"room":"1501"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["CANE-06"],"notes":"Professional model; suitable for business use","appearance":"Sleek black finish, professional design"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"OTHP-05","room":"1501","item":"walking_cane","duration_hours":48,"charge_code":"COMP-ACCESS","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CAN-1501-2222","status":"created","charge":"comp","conference_priority":"yes","professional_model":"CANE-06"}
+
+assistant channel=final:
+Perfect for your conference needs! CANE-06 is our professional model with a sleek black finish—ideal for business presentations. Order CAN-1501-2222 is complimentary and we'll deliver it to room 1501. The conference facilities on floors 2-3 are fully accessible.
+
+user:
+Great! The conference setup looks very professional.
+
+assistant channel=final:
+Thank you—we're proud to host major tech conferences and ensure all attendees have seamless access to facilities.
+
+user:
+Do you have any partnerships with local mobility equipment suppliers for specialized business accessories?
+
+assistant channel=final:
+[ATTENTION] Checking available business partnerships.

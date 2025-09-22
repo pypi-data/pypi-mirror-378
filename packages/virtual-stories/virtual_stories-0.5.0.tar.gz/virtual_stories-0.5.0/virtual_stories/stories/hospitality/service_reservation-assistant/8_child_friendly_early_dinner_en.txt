@@ -1,0 +1,55 @@
+"""
+Guest requests an early child-friendly dinner; search and place a 5:30 PM booking.
+
+ROLES: user (parent), assistant (concierge arranging early slot via partner platform)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"search_restaurant_availability","description":"Search early slot","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","party_size","date","time"]},"strict":true},
+  {"name":"create_restaurant_booking","description":"Create early dinner booking","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","guest_name","party_size","date","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeshore Crown Geneva (LCGV-17)
+Address: Quai du Mont-Blanc 17, 1201 Genève, Switzerland
+Concierge: 08:00–22:00; Partner: OpenDine (partner_id ODN-640)
+Nearby: "Brasserie du Lac" (classic), "Al Dente Verde" (Italian family)
+Only services listed are available.
+
+user:
+Could you book a family-friendly place for 3 at 5:30 PM? Room 709.
+
+assistant channel=analysis:
+Search 17:30 for 3 via ODN-640 and confirm a nearby option; then book.
+
+assistant channel=commentary to=tool.search_restaurant_availability:
+{"partner_id":"ODN-640","party_size":3,"date":"2025-08-29","time":"17:30"}
+
+tool.search_restaurant_availability channel=commentary to=assistant:
+{"available":true,"options":[{"restaurant":"Al Dente Verde","time":"17:30"}]}
+
+assistant channel=commentary to=tool.create_restaurant_booking:
+{"partner_id":"ODN-640","guest_name":"Guest 709","party_size":3,"date":"2025-08-29","time":"17:30"}
+
+tool.create_restaurant_booking channel=commentary to=assistant:
+{"reservation_id":"ODN-RES-7745","restaurant":"Al Dente Verde","status":"confirmed"}
+
+assistant channel=final:
+Booked Al Dente Verde at 5:30 PM for three—reservation ODN-RES-7745.
+
+user:
+What’s the concierge schedule?
+
+assistant channel=final:
+08:00 to 22:00.
+
+user:
+Can you share the restaurant’s internal allergy procedure manual?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

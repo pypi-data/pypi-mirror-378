@@ -1,0 +1,67 @@
+"""
+Parent wants gentle pressure and low temp after kids pool time; set gentle and 98°F.
+
+ROLES: user (parent), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_anti_scald_limit","description":"Set anti-scald limit (°F).","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"max_temp_f":{"type":"integer","minimum":95,"maximum":110}},"required":["room_number","max_temp_f"]},"strict":true},
+  {"name":"enable_handheld_lock","description":"Limit handheld pressure.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"lock_level":{"type":"string","enum":["low","medium"]}},"required":["room_number","lock_level"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Coral Reef Club (hotel_id: crc_mia_10)
+Address: 1 Ocean Dr, Miami Beach, FL 33139
+Timezone: America/New_York
+
+Kid Shower Guidance:
+- After-pool rinse: 98–100°F and gentle pressure
+- Rinse salt/chlorine; moisturize afterward
+- Non-slip mats available
+
+Family Hours:
+- Kids pool: 09:00–18:00
+- Family concierge: 08:00–20:00
+
+user:
+Hi—please set our shower in 723 to 98°F and gentle pressure.
+
+assistant channel=analysis:
+Set anti-scald to 98°F and limit handheld to low.
+
+assistant channel=commentary to=tool.set_anti_scald_limit:
+{"room_number":"723","max_temp_f":98}
+
+tool.set_anti_scald_limit channel=commentary to=assistant:
+{"room_number":"723","max_temp_f":98,"applied":true}
+
+assistant channel=commentary to=tool.enable_handheld_lock:
+{"room_number":"723","lock_level":"low"}
+
+tool.enable_handheld_lock channel=commentary to=assistant:
+{"room_number":"723","lock_level":"low","applied":true}
+
+assistant channel=final:
+Set: your shower in 723 is capped at 98°F with gentle pressure for a comfortable after-pool rinse.
+
+user:
+Thanks! What time does the kids pool close?
+
+assistant channel=analysis:
+Use Family Hours.
+
+assistant channel=final:
+The kids pool closes at 18:00.
+
+user:
+Is the ocean temperature posted today?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about ocean temperature and will review external info.
+

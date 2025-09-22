@@ -1,0 +1,109 @@
+"""
+Prepare assorted clips and filing aids for assembling client packets before a meeting.
+
+ROLES: user (guest assembling client packets), assistant (business center coordinator handling supplies and quick delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_office_supplies",
+    "description": "Check availability of clips and filing aids.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": {"type": "string", "enum": ["clips_fasteners", "folders", "labels"]},
+        "item": {"type": "string", "enum": ["paper_clips", "binder_clips", "rubber_bands", "file_folders", "index_tabs"]}
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_supplies",
+    "description": "Deliver requested supplies to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": {"type": "string"},
+        "items": {"type": "array", "items": {"type": "string"}},
+        "priority": {"type": "string", "enum": ["standard", "rush"]}
+      },
+      "required": ["room", "items"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel Name: Harborfront Executive Suites (hotel_id: hbe_bos_21)
+Address: 200 Seaport Blvd, Boston, MA 02210
+Timezone: America/New_York
+Business Center: 06:30–22:30 daily; same-floor delivery in 15–25 minutes
+Contact: Business Desk x7711; Concierge x7701
+
+Inventory Snapshot (clips):
+- Paper clips: small, large, color-coated
+- Binder clips: 19mm, 25mm, 32mm
+- Rubber bands: light/medium tension
+- Filing aids: manila folders, index tabs, clear sleeves
+
+Policies:
+- Executive floors: complimentary standard supplies (limit: 2 boxes per item)
+- Rush delivery available on request
+
+user:
+Hi—do you have paper clips and maybe some file folders I can send to 1206? Need to bundle client packets.
+
+assistant channel=analysis:
+Confirm availability for clips and folders; offer delivery.
+
+assistant channel=commentary to=tool.check_office_supplies:
+{"category":"clips_fasteners","item":"paper_clips"}
+
+tool.check_office_supplies channel=commentary to=assistant:
+{"available":true,"stock":{"paper_clips_small":40,"paper_clips_large":30,"binder_clips_25mm":20},"notes":"Filing aids in stock: folders, index tabs"}
+
+assistant channel=analysis:
+Clips and filing aids available; proceed to arrange delivery to room 1206.
+
+assistant channel=commentary to=tool.deliver_supplies:
+{"room":"1206","items":["paper_clips_small","paper_clips_large","file_folders","index_tabs"],"priority":"standard"}
+
+tool.deliver_supplies channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":18,"assigned":"business_desk_erin"}
+
+assistant channel=final:
+Yes—small and large paper clips, plus file folders and index tabs are ready. I’ve scheduled delivery to 1206 in about 18 minutes with Erin from the Business Desk.
+
+user:
+Seaport’s nice—love the harbor breeze here.
+
+assistant channel=analysis:
+Acknowledge location detail from system without adding new facts.
+
+assistant channel=final:
+Being right by the harbor is a great perk at Harborfront Executive Suites.
+
+user:
+Can you also arrange a whale-watching charter this afternoon?
+
+assistant channel=analysis:
+Out of scope; use attention flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+
+user:
+No worries—thanks for the quick help.
+
+assistant channel=analysis:
+Close the loop courteously.
+
+assistant channel=final:
+You’re welcome—your packets will be ready shortly.
+

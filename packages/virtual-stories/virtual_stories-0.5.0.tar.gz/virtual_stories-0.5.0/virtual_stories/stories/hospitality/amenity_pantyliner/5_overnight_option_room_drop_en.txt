@@ -1,0 +1,66 @@
+"""
+Guest prefers overnight pantyliners and requests a discreet room drop.
+Provide type confirmation and arrange delivery.
+
+ROLES: user (guest seeking overnight protection), assistant (personal care coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check availability of personal care and hygiene supplies.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_category":{"type":"string","enum":["feminine_hygiene","personal_care","wellness_supplies","comfort_items"]},"specific_item":{"type":"string","enum":["pantyliners","sanitary_pads","tampons","intimate_wipes","pain_relief"]}},"required":["product_category"]},"strict":true},
+  {"name":"arrange_discreet_delivery","description":"Arrange private delivery of personal care items to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items_requested":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["housekeeping_discrete","wellness_staff","room_service_bag"]},"timing_preference":{"type":"string"}},"required":["room_number","items_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Stonebridge Women’s Retreat (hotel_id: swr_phl_36)
+Address: 1 Logan Square, Philadelphia, PA 19103
+Timezone: America/New_York
+
+Care Highlights:
+- Pantyliners: regular and overnight (Always)
+- Discreet delivery: 24/7 via housekeeping_discrete
+- Add‑ons: herbal comfort tea
+- Wellness line: ext 7733
+- Typical delivery: 9–13 minutes
+
+user:
+Room 1002—can I get overnight pantyliners discreetly?
+
+assistant channel=analysis:
+Check pantyliners availability and arrange housekeeping_discrete.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"product_category":"feminine_hygiene","specific_item":"pantyliners"}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"types":["regular","overnight"],"brands":["Always"],"stock_sufficient":true}
+
+assistant channel=commentary to=tool.arrange_discreet_delivery:
+{"room_number":"1002","items_requested":["always_pantyliners_overnight"],"delivery_method":"housekeeping_discrete","timing_preference":"within_20_minutes"}
+
+tool.arrange_discreet_delivery channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":11,"package_contents":["always_overnight_16ct","herbal_comfort_tea"],"discreet_packaging":true}
+
+assistant channel=final:
+Absolutely—Always overnight pantyliners (16‑count) will be discreetly delivered to room 1002 in about 11 minutes, with herbal comfort tea.
+
+user:
+Thank you. The lobby is so peaceful.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+It’s designed for quiet moments.
+
+user:
+Can you validate parking on my behalf?
+
+assistant channel=analysis:
+Parking validation not defined; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Analyzing the situation.
+

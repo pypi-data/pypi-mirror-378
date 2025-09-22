@@ -1,0 +1,58 @@
+"""
+Guest arrives to check in; confirm room assignment via tool and note ID policy and timing from system. Include small talk and a background handoff for an immigration fast-track request.
+
+ROLES: user (arriving guest), assistant (front desk agent verifying reservation and assigning a room)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_in_guest",
+    "description": "Check in a guest and return room number and key ID.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reservation_code": {"type":"string"},
+        "last_name": {"type":"string"}
+      },
+      "required": ["reservation_code","last_name"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborline Suites — Check‑In Desk
+Standard check‑in time: 15:00
+ID requirement: Government photo ID matching reservation name
+Deposit: Credit card preauthorization upon arrival
+
+user:
+Hi, checking in—code HL-44719 under Patel.
+
+assistant channel=analysis:
+Confirm check‑in via tool, then share policy reminders from system.
+
+assistant channel=commentary to=tool.check_in_guest:
+{"reservation_code":"HL-44719","last_name":"Patel"}
+
+tool.check_in_guest channel=commentary to=assistant:
+{"room":"1506","key_id":"K-983114"}
+
+assistant channel=final:
+Welcome to Harborline Suites. You’re all set in room 1506 and your key is K-983114. Standard check‑in is 15:00, and we require a matching government ID with a credit card preauthorization at arrival.
+
+user:
+Thanks! Lobby looks great—busy today?
+
+assistant channel=final:
+Thanks—enjoy your time with us.
+
+user:
+Can you also arrange airport immigration fast‑track for me?
+
+assistant channel=final:
+[ATTENTION] Immigration fast‑track cannot be handled from here. Reviewing available resources.

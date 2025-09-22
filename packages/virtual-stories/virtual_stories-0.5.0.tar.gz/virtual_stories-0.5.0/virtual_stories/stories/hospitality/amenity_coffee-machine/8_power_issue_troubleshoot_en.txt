@@ -1,0 +1,57 @@
+"""
+Guest reports no power; clarify outlet switch and check status; include chit-chat and an out-of-scope ask.
+
+ROLES: user (guest with machine not powering on), assistant (support confirming setup and status, offering next steps)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_coffee_machine_status","description":"Check whether machine reports power or fault.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Meridian Harborfront (hotel_id: mhf_bos)
+Address: 1 Seaport Ln, Boston, MA
+Program Details:
+- Machine: Vertuo Next
+- Tip: Outlet switch near minibar controls the machine power
+- Support: 24/7 line; replacements if fault persists
+- Daily Allocation: 4 coffee + 2 tea
+Delivery: Typical response 10–15 minutes Tower East
+Note: Harbor walk lights up at dusk
+
+user:
+My coffee maker in 1922 won’t turn on at all.
+
+assistant channel=analysis:
+Ask to confirm the outlet switch; check status after.
+
+assistant channel=final:
+Please flip the small outlet switch next to the minibar—this controls the machine. If it still won’t power, I’ll check the status now.
+
+user:
+I flipped it—still nothing.
+
+assistant channel=commentary to=tool.check_coffee_machine_status:
+{"room_number":"1922"}
+
+tool.check_coffee_machine_status channel=commentary to=assistant:
+{"room_number":"1922","machine_model":"Nespresso Vertuo Next","status":"fault","alerts":["power_failure"]}
+
+assistant channel=final:
+Thanks for checking—the unit reports a power fault. I can arrange a replacement immediately with typical arrival in about 10–15 minutes.
+
+user:
+The harbor lights sound lovely.
+
+assistant channel=final:
+They come on around dusk along the walkway—worth a quick look.
+
+user:
+Is there a late-night bakery nearby?
+
+assistant channel=final:
+[ATTENTION] Looking into this beyond our current hotel resources.
+

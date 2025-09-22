@@ -1,0 +1,72 @@
+"""
+Guest with oily scalp asks for clarifying shampoo; confirm availability and deliver. Include small talk and [ATTENTION].
+
+ROLES: user (guest needing clarifying shampoo), assistant (amenities concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hair_care_inventory","description":"Check clarifying options for oily scalp","parameters":{"type":"object","properties":{"scalp_condition":{"type":"string","enum":["oily","normal"]},"product_preference":{"type":"string","enum":["sulfate_free","standard","organic"]}},"required":["scalp_condition"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_hair_care_amenity","description":"Deliver product to room","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"product_selection":{"type":"string"},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown"]}},"required":["room_number","product_selection","delivery_timing"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Marina Vista Boardwalk (hotel_id: mvb_san_diego_04)
+Address: 700 Harbor Ln, San Diego, CA 92101, USA
+Timezone: America/Los_Angeles
+
+Program:
+- Clarifying shampoos available for oily scalp
+- Delivery ETA: 10–15 minutes
+- Complimentary amenity
+
+YAML Facility:
+---
+boardwalk_access: true
+sprinklers: true
+---
+
+JSON Options:
+{"clarifying": ["Paul_Mitchell_Clarifying","Neutrogena_AntiResidue"]}
+
+user:
+Do you have a clarifying shampoo for oily scalp? I’m in 615.
+
+assistant channel=analysis:
+Check oily scalp clarifying; deliver immediately.
+
+assistant channel=commentary to=tool.check_hair_care_inventory:
+{"scalp_condition":"oily","product_preference":"standard"}
+
+tool.check_hair_care_inventory channel=commentary to=assistant:
+{"available_products":["Paul_Mitchell_Clarifying","Neutrogena_AntiResidue"],"recommended":"Paul_Mitchell_Clarifying"}
+
+assistant channel=commentary to=tool.deliver_hair_care_amenity:
+{"room_number":"615","product_selection":"Paul_Mitchell_Clarifying","delivery_timing":"immediate"}
+
+tool.deliver_hair_care_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"10_minutes","products_included":["Paul_Mitchell_Clarifying_Shampoo_300ml"]}
+
+assistant channel=final:
+Yes—Paul Mitchell Clarifying is a solid option. It’s scheduled to room 615 and should arrive in about 10 minutes.
+
+user:
+The boardwalk access is convenient.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+Direct access makes quick walks by the water easy.
+
+user:
+Could you also set up paddleboard rentals for noon?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Processing your request.
+

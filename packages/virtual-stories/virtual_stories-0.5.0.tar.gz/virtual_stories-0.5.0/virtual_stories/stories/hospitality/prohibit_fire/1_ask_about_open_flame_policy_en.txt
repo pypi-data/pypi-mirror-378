@@ -1,0 +1,113 @@
+"""
+Guest asks about bringing candles and open flames.
+
+ROLES: user (hotel guest considering using candles or a portable stove), assistant (front-desk concierge explaining safety policies and options)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_policy",
+    "description": "Retrieve policy details for a given category.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["fire", "fireworks", "pets", "smoking", "drugs"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "record_incident_note",
+    "description": "Record a neutral note about a guest safety inquiry (no action taken).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "required": ["room_number", "note"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+HOTEL: Bayview Quays Hotel (Tower A & Tower B)
+ADDRESS: 88 Marina Crescent, South Wharf District
+FIRE SAFETY OVERVIEW:
+- Comprehensive NO-OPEN-FLAME policy: candles, incense, portable gas/electric stoves, charcoal grills prohibited in guestrooms, balconies, corridors, terraces.
+- Ceiling-mounted photoelectric smoke detectors in every room; corridor heat sensors; centralized alarm with local siren 85 dB.
+- Sprinkler grid: 10 ft spacing, quick-response heads; control valves at each floor’s service vestibule.
+- Emergency power for alarms: 4-hour battery backup; weekly self-test every Tuesday 11:00–11:10.
+DESIGNATED ALTERNATIVES:
+- Cake celebration policy: use LED flameless candles available from Concierge Kit (complimentary, limited stock).
+- Aromatherapy allowed only with UL-listed water-based diffusers (hotel provides upon request) — no essential oil burners using flame.
+GUEST AMENITIES:
+- “Harbor Breeze” lobby scent; complimentary cucumber-mint water at reception.
+- Quiet hours: 22:00–07:00.
+NOTES FOR AGENTS:
+- Provide strict safety guidance; do not authorize exceptions.
+- Offer flameless alternatives and note inquiries via tool when room number is given.
+
+user:
+I want to light two small birthday candles in my room tonight. Is that okay?
+
+assistant channel=analysis:
+I should fetch the fire policy and provide safe alternatives. Then clearly decline any open flames.
+
+assistant channel=commentary to=tool.get_policy:
+{"category": "fire"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"fire","allowed":false,"summary":"No open flames anywhere indoors (rooms, balconies, corridors, terraces). Use flameless options only.","alternatives":["LED flameless candles via Concierge Kit","Water-based diffuser (no heat)"]}
+
+assistant channel=final:
+For safety, open flames are not permitted anywhere indoors, including guestrooms and balconies. We can provide LED flameless candles from the Concierge Kit and a water-based diffuser as alternatives.
+
+user:
+I brought a tiny camping stove—can I use it by the window just for tea?
+
+assistant channel=analysis:
+Reiterate that portable stoves are prohibited as open flame/heat-producing devices per policy. Offer kettle alternatives.
+
+assistant channel=final:
+Portable stoves and any heat-producing burners are prohibited in rooms and on balconies. Open flames aren’t allowed, but we can provide flameless celebration items and water-based diffusers as alternatives.
+
+user:
+By the way, the cucumber-mint water in the lobby is refreshing.
+
+assistant channel=analysis:
+Provide a brief, friendly chitchat response referencing the lobby amenity from system info, no tools needed.
+
+assistant channel=final:
+Glad you enjoyed it—the dispenser is refreshed throughout the day near reception alongside our “Harbor Breeze” lobby scent.
+
+user:
+Can you confirm the specific building code subsection that mandates your open-flame rule?
+
+assistant channel=analysis:
+We don’t have jurisdictional code citations in tools or system. Use the special flag with a neutral acknowledgment.
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Reviewing available resources for the exact citation.
+
+user:
+Room 1527 here—please note I will use the LED flameless candles at 8 pm.
+
+assistant channel=analysis:
+Log a neutral note via the tool as allowed.
+
+assistant channel=commentary to=tool.record_incident_note:
+{"room_number": "1527", "note": "Guest will use LED flameless candles at 20:00; no open flames requested or used."}
+
+tool.record_incident_note channel=commentary to=assistant:
+{"status":"noted","ticket_id":"SAFE-LOG-01527-1"}
+
+assistant channel=final:
+Noted. We’ve recorded the plan to use flameless candles at 20:00.

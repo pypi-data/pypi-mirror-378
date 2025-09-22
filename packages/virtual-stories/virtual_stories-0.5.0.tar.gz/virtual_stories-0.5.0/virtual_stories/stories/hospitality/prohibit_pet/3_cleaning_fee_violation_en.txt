@@ -1,0 +1,60 @@
+"""
+Guest asks what happens if someone brings a pet anyway; clarify cleaning fee and policy enforcement.
+
+ROLES: user (inquiring guest), assistant (front desk explaining consequences)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_violation_fees","description":"Return fees for pet policy violations.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}},
+  {"name":"log_policy_ack","description":"Log that guest acknowledged pet policy.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"}},"required":["room"]}}
+]
+```
+"""
+
+system:
+Hotel: Midtown Arcadia (hotel_id: mta_nyc)
+Address: 400 Lexington Ave, New York, NY 10017
+Timezone: America/New_York
+
+Pet Policy:
+- No pets permitted; trained service animals only
+- Violation Cleaning Fee: $250 deep clean + loss‑of‑use if necessary
+- Notification: Front desk documents acknowledgment at check‑in
+
+user:
+What if someone sneaks a cat into the room—what do you charge?
+
+assistant channel=analysis:
+Answer from system: $250 deep clean + possible loss‑of‑use. Use tool to return fee details and log acknowledgment.
+
+assistant channel=commentary to=tool.get_violation_fees:
+{"hotel_id":"mta_nyc"}
+
+tool.get_violation_fees channel=commentary to=assistant:
+{"deep_clean":250,"loss_of_use_possible":true,"currency":"USD"}
+
+assistant channel=commentary to=tool.log_policy_ack:
+{"room":"1812"}
+
+tool.log_policy_ack channel=commentary to=assistant:
+{"acknowledged":true}
+
+assistant channel=final:
+We enforce a $250 USD deep‑clean fee for pet violations, and loss‑of‑use charges may apply if the room is taken out of service.
+
+user:
+Your elevator music is chill.
+
+assistant channel=final:
+Appreciate it.
+
+user:
+Can the fee be waived for first‑time offenses?
+
+assistant channel=analysis:
+Waiver criteria not provided. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available options.
+

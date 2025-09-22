@@ -1,0 +1,76 @@
+"""
+Guest requests simple condolence arrangement; discreet delivery.
+Provide check and arrangement.
+
+ROLES: user (guest requesting memorial flowers), assistant (floral coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_floral_inventory", "description": "Check memorial options.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "arrangement_type": { "type": "string", "enum": ["memorial"] }, "flower_preference": { "type": "string", "enum": ["orchids", "mixed_seasonal"] }, "budget_range": { "type": "string", "enum": ["standard_50_100"] } }, "required": ["arrangement_type"] }, "strict": true },
+  { "name": "create_floral_arrangement", "description": "Create simple condolence piece.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "arrangement_style": { "type": "string", "enum": ["elegant_mixed"] }, "delivery_time": { "type": "string" }, "special_message": { "type": "string" }, "occasion": { "type": "string", "enum": ["apology", "memorial"] } }, "required": ["room_number", "arrangement_style", "occasion"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Northern Pines Inn (hotel_id: npi_yyz_01)
+Address: 250 Queen’s Park, Toronto, ON M5S
+Timezone: America/Toronto
+
+Floral:
+- Memorial pieces: neutral tones, low scent
+- Discreet delivery window 14:00–17:00
+- Price: CAD 95 standard
+- Card with condolence message
+- Removal on request
+
+user:
+Room 910—simple condolence arrangement, please. Discreet delivery.
+
+assistant channel=analysis:
+Check memorial inventory; create elegant mixed neutral; schedule discreet delivery.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type":"memorial","flower_preference":"mixed_seasonal","budget_range":"standard_50_100"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available":true,"arrangements":["neutral_mixed_memorial"],"pricing":{"neutral_mixed_memorial":95}}
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number":"910","arrangement_style":"elegant_mixed","delivery_time":"4:00 PM","special_message":"With deepest sympathy","occasion":"memorial"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed":true,"arrangement_id":"NP910_MEM","delivery_scheduled":"4:00 PM","includes":["neutral_blooms","greenery","low_profile_vessel"],"total_cost":95}
+
+assistant channel=final:
+Understood—a neutral, low‑scent condolence arrangement will be delivered discreetly to 910 at 4:00 PM with your message.
+
+user:
+Thank you for being thoughtful.
+
+assistant channel=analysis:
+Small talk empathy.
+
+assistant channel=final:
+We’re here for you—please let us know if you need anything else.
+
+user:
+Is there a quiet delivery window?
+
+assistant channel=analysis:
+From system: 14:00–17:00.
+
+assistant channel=final:
+Yes—our discreet window runs 14:00 to 17:00.
+
+user:
+Could you arrange airport security fast-track?
+
+assistant channel=analysis:
+Out of floral scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll ask concierge about fast‑track options.
+"""
+

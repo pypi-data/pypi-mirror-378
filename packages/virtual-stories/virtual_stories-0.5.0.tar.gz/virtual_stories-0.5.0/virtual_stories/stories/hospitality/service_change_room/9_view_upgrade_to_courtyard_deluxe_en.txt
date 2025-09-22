@@ -1,0 +1,48 @@
+"""
+Guest wants better view; include system-answered upgrade pricing and [ATTENTION] availability tool.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"check_room_inventory","description":"Availability","parameters":{"type":"object","properties":{"requested_type":{"type":"string","enum":["deluxe","suite","standard"]},"zone":{"type":"string","enum":["courtyard","high_floor","corner"]}},"required":["requested_type","zone"]}},
+  {"name":"quote_change_fee","description":"Quote","parameters":{"type":"object","properties":{"requested_type":{"type":"string","enum":["deluxe","suite","standard"]},"stay_nights":{"type":"integer"}},"required":["requested_type","stay_nights"]}}
+]
+"""
+
+system:
+Hotel: Coral Court (hotel_id: coral_court_dub)
+Address: 1 Custom House Quay, Dublin | Timezone: Europe/Dublin
+Upgrade: deluxe +€25/night; suite +€95/night.
+Courtyard rooms have quieter exposure; river-view limited to suites.
+
+user:
+How much is a deluxe upgrade for 3 nights?
+
+assistant channel=analysis:
+Use quote tool to avoid assumptions.
+
+assistant channel=commentary to=quote_change_fee:
+{"requested_type":"deluxe","stay_nights":3}
+
+tool.quote_change_fee:
+{"currency":"EUR","nightly_delta":25,"total":75}
+
+assistant channel=final:
+Deluxe upgrades are €25 per night; for 3 nights, €75 total difference.
+
+user:
+[ATTENTION] Any deluxe courtyard available now?
+
+assistant channel=analysis:
+Check inventory deluxe/courtyard.
+
+assistant channel=commentary to=check_room_inventory:
+{"requested_type":"deluxe","zone":"courtyard"}
+
+tool.check_room_inventory:
+{"available": true, "candidate_room":"614","ready": true}
+
+assistant channel=final:
+Yes—614 (deluxe courtyard) is available and ready.
+

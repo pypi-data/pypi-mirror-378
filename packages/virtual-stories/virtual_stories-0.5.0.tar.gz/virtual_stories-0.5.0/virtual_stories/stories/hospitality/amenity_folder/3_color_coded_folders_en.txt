@@ -1,0 +1,107 @@
+"""
+Guest wants color-coded folders and clear labels for a workshop.
+Support color organization, label printing, and quick delivery.
+
+ROLES: user (training facilitator), assistant (supplies desk associate coordinating labels and folders)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supply_inventory","description":"Check stock by color/category.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_category":{"type":"string","enum":["folders","labels"]},"color":{"type":"string"},"quantity_needed":{"type":"number","minimum":1,"maximum":200}},"required":["supply_category"]},"strict":true},
+  {"name":"print_labels","description":"Print file tab labels with provided text.","parameters":{"type":"object","additionalProperties":false,"properties":{"label_texts":{"type":"array","items":{"type":"string"}},
+    "style":{"type":"string","enum":["clear","white","bold"]}},"required":["label_texts"]},"strict":true},
+  {"name":"deliver_office_supplies","description":"Deliver supplies to location.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center","meeting_room"]}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Summit Atrium & Conference (hotel_id: sac_07)
+Address: 2100 Peak Drive, Denver, CO 80202
+Timezone: America/Denver
+
+Workshop Supply Profile:
+- Folder colors: red/blue/green/yellow (letter & legal)
+- Labels: clear (for colored folders), white, bold black-on-white
+- Label printer queue: SAC-LABEL-02
+- Delivery window: 10–20 minutes to meeting level
+- Complimentary up to 40 items; beyond billed at $0.20 each
+
+Quick Reference (key:value):
+Red: Urgent
+Blue: Finance
+Green: Operations
+Yellow: Creative
+
+user:
+Hi, I need 12 green folders and 12 yellow folders, plus labels for four categories.
+
+assistant channel=analysis:
+Check inventory for folders in green/yellow; then print labels.
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"folders","color":"green","quantity_needed":12}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true,"items":["green_letter"],"quantities":{"green_letter":70}}
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"folders","color":"yellow","quantity_needed":12}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true,"items":["yellow_letter"],"quantities":{"yellow_letter":65}}
+
+assistant channel=analysis:
+Folders available. Now print labels.
+
+assistant channel=commentary to=tool.print_labels:
+{"label_texts":["Agenda","Budget","Logistics","Design"],"style":"clear"}
+
+tool.print_labels channel=commentary to=assistant:
+{"printed":true,"printer":"SAC-LABEL-02","sheets":1}
+
+assistant channel=final:
+All set—12 green and 12 yellow letter folders are available, and I’ve printed clear labels for Agenda, Budget, Logistics, and Design. Should I deliver these to your meeting room or to your guest room?
+
+user:
+Meeting room B, room code 2B.
+
+assistant channel=analysis:
+Deliver to meeting room B on conference level.
+
+assistant channel=commentary to=tool.deliver_office_supplies:
+{"room_number":"2B","items":["green_letter_12","yellow_letter_12","labels_clear_1sheet"],"delivery_location":"meeting_room"}
+
+tool.deliver_office_supplies channel=commentary to=assistant:
+{"delivered":true,"eta":"15 minutes","runner":"conf_team","ticket":"SAC-2B-114"}
+
+assistant channel=final:
+Delivery ticket SAC-2B-114 created—ETA 15 minutes to Meeting Room B.
+
+user:
+Are the first 40 items complimentary?
+
+assistant channel=analysis:
+Yes, per system note.
+
+assistant channel=final:
+Yes—up to 40 items are complimentary. Your order is within that.
+
+user:
+By the way, views from the atrium are stunning.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+They are—sunsets over the Front Range are a highlight here.
+
+user:
+Can you also book a museum group tour for tomorrow?
+
+assistant channel=analysis:
+Out of scope—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

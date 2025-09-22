@@ -1,0 +1,54 @@
+"""
+Guest wants directions to the designated smoking area; provide area details via tool; include chit‑chat and out‑of‑scope map image request.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```
+[
+  {"name":"get_policy","description":"Retrieve policy details for a given category.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["smoking"]}},"required":["category"]},"strict":true},
+  {"name":"get_location","description":"Get details for a named on-site area.","parameters":{"type":"object","additionalProperties":false,"properties":{"area":{"type":"string","enum":["north_gate_smoking_court"]}},"required":["area"]},"strict":true}
+]
+```
+"""
+
+system:
+PROPERTY: The Laurel Wharf
+POLICY: Smoke-free indoors; use North Gate Smoking Court only; cleaning fee GBP 220 for indoor smoking evidence.
+AREA DIRECTORY:
+- North Gate Smoking Court: past the art wall, left of the bike racks; hours 06:30–22:30; ash receptacles provided.
+HIGHLIGHTS: River library; Espresso cart 07:00–10:00; Night jazz Sat 20:00.
+
+user:
+Where’s the smoking area exactly?
+
+assistant channel=analysis:
+Provide the area details via tool.
+
+assistant channel=commentary to=tool.get_location:
+{"area":"north_gate_smoking_court"}
+
+tool.get_location channel=commentary to=assistant:
+{"name":"North Gate Smoking Court","directions":"Pass the art wall, then left of the bike racks","hours":"06:30–22:30","features":["ash receptacles"]}
+
+assistant channel=final:
+Use the North Gate Smoking Court—pass the art wall, then turn left of the bike racks. It’s open 06:30–22:30.
+
+user:
+The river library was a nice surprise.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+We’re glad you enjoyed it—quiet reading with river views.
+
+user:
+Can you send me a map image of the court?
+
+assistant channel=analysis:
+Out of scope—no map image available.
+
+assistant channel=final:
+[ATTENTION] A map image isn’t available within the provided resources.
+

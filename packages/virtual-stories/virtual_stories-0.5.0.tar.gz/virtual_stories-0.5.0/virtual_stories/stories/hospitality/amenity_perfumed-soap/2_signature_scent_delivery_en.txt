@@ -1,0 +1,71 @@
+"""
+Provide perfumed soaps with a choice of signature scents and allergen notes.
+
+ROLES: user (guest requesting scented soap), assistant (spa liaison arranging delivery with scent guidance)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_bath_amenities","description":"Check scented soap availability and allergen notes.","parameters":{"type":"object","additionalProperties":false,"properties":{"scent":{"type":"string","enum":["citrus","lavender","sandalwood","green_tea"]}},"required":[]},"strict":true},
+  {"name":"deliver_bath_amenities","description":"Deliver selected soaps to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"required":["room","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Seabreeze Spa Resort (hotel_id: sbr_mia_14)
+Address: 500 Ocean Dr, Miami Beach, FL 33139
+Timezone: America/New_York
+Spa Desk: 09:00–21:00; in-room amenity delivery 12–18 min
+Signature Soaps: citrus (zest), lavender (calming), sandalwood (warm), green_tea (fresh)
+Allergen Note: soaps are paraben-free; lavender contains natural essential oils
+Ext: x6608
+
+user:
+Do you have a lavender perfumed soap for 1510?
+
+assistant channel=analysis:
+Confirm lavender availability and allergen notes; deliver to 1510.
+
+assistant channel=commentary to=tool.check_bath_amenities:
+{"scent":"lavender"}
+
+tool.check_bath_amenities channel=commentary to=assistant:
+{"available":true,"scent":"lavender","allergen_note":"contains natural lavender essential oil"}
+
+assistant channel=commentary to=tool.deliver_bath_amenities:
+{"room":"1510","items":["soap_lavender"]}
+
+tool.deliver_bath_amenities channel=commentary to=assistant:
+{"dispatched":true,"eta":14}
+
+assistant channel=final:
+Yes—lavender perfumed soap is available. I’ve arranged delivery to 1510; it should arrive in about 14 minutes. Note: it contains natural lavender essential oil.
+
+user:
+Is the Spa Desk open now?
+
+assistant channel=analysis:
+Use system hours.
+
+assistant channel=final:
+Spa Desk hours are 09:00–21:00.
+
+user:
+Could you book a private yacht for sunset?
+
+assistant channel=analysis:
+Out of scope—attention.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+
+user:
+The ocean breeze is lovely.
+
+assistant channel=analysis:
+Chitchat grounded.
+
+assistant channel=final:
+Seabreeze Spa Resort’s Ocean Drive setting brings that coastal feel.
+

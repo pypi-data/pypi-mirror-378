@@ -1,0 +1,46 @@
+"""
+Guest asks to send a printed pass from Concierge to room; schedule delivery and cite operating window and scope; include chitchat and ATTENTION for ID verification.
+
+ROLES: user (guest receiving a printed pass), assistant (service center relaying item from Concierge to room)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_inhouse_delivery","description":"Relay an item from Concierge to a guestroom.","parameters":{"type":"object","additionalProperties":false,"properties":{"from_location":{"type":"string"},"to_room":{"type":"string"},"item":{"type":"string"}},"required":["from_location","to_room","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Highland Summit Lodge — Service Center
+Hours: 24/7; typical ETA 10–20 minutes
+Scope: On‑property item relay
+Policy: Service Center doesn’t perform guest ID verification
+
+user:
+Please send the ski‑lift pass from Concierge to room 1015.
+
+assistant channel=analysis:
+Schedule Concierge‑to‑room relay; confirm ETA and ID policy.
+
+assistant channel=commentary to=tool.schedule_inhouse_delivery:
+{"from_location":"Concierge","to_room":"1015","item":"ski‑lift pass"}
+
+tool.schedule_inhouse_delivery channel=commentary to=assistant:
+{"delivery_id":"DLV-6862","status":"scheduled","eta_minutes":12}
+
+assistant channel=final:
+Delivery DLV-6862 is scheduled from Concierge to 1015 with an ETA of about 12 minutes.
+
+user:
+Thanks—cozy lobby fireplace today.
+
+assistant channel=final:
+We’ll head up now.
+
+user:
+Can you verify the guest’s ID before handing it over?
+
+assistant channel=final:
+[ATTENTION] ID verification isn’t performed by this service. Reviewing available resources.
+

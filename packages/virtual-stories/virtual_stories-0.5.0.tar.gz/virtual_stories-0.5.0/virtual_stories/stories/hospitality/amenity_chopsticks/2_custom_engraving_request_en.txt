@@ -1,0 +1,123 @@
+"""
+Guest requests custom engraved chopsticks for anniversary celebration; check availability and arrange special order.
+
+ROLES: user (guest celebrating anniversary), assistant (guest services specialist handling custom amenity requests)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_custom_amenity_options",
+    "description": "Check availability and pricing for custom chopsticks engraving service.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": { "type": "string", "enum": ["engraving"] },
+        "item_type": { "type": "string", "enum": ["chopsticks"] },
+        "urgency": { "type": "string", "enum": ["standard", "express"] }
+      },
+      "required": ["service_type", "item_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "place_custom_order",
+    "description": "Place custom engraving order with specifications.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_type": { "type": "string" },
+        "engraving_text": { "type": "string", "maxLength": 30 },
+        "delivery_time": { "type": "string" },
+        "material": { "type": "string", "enum": ["bamboo", "rosewood", "ebony"] }
+      },
+      "required": ["room_number", "item_type", "engraving_text", "material"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Grand Heritage Resort & Spa (hotel_id: ghrs_kyoto_01)
+Address: 123 Gion-machi Minamigawa, Higashiyama-ku, Kyoto 605-0074, Japan
+Timezone: Asia/Tokyo
+
+Custom Chopsticks Service:
+- Materials: Premium bamboo (¥3,200/pair), rosewood (¥5,800/pair), ebony (¥8,500/pair)
+- Engraving: Laser precision up to 30 characters including spaces
+- Timing: Standard 48 hours, Express 24 hours (+30% fee)
+- Gift presentation: Silk-lined lacquered box with hotel seal
+- Cultural note: We partner with Kyoto artisan Takeshi Yamamoto (3rd generation craftsman)
+
+Historical Context:
+- Hotel established 1923, rebuilt 1955 with traditional sukiya-zukuri architecture
+- Main building features century-old pine beams from Yoshino mountains
+- Garden designed by master landscaper Mirei Shigemori in 1958
+- Award-winning kaiseki restaurant helmed by Chef Hiroshi Nakamura (2 Michelin stars)
+- UNESCO World Heritage sites within 800m walking radius
+
+Special Offerings:
+- Tea ceremony room (chashitsu) with 16th-century utensils on display
+- Private onsen with mountain spring water sourced from Mt. Daimonji
+- Meditation garden with authentic Zen rock arrangements
+- Traditional craft workshops: pottery, calligraphy, kimono dying
+- Library housing first-edition works on Japanese aesthetics and philosophy
+
+Room Categories:
+- Traditional tatami suites with futon bedding and shoji screens
+- Modern-fusion rooms blending Western comfort with Japanese design elements
+- Presidential suite featuring private garden and dedicated tea master
+- All rooms include views of either Higashiyama mountains or historic temple grounds
+
+user:
+Hi! Tomorrow is our 25th wedding anniversary, and we're staying in the Presidential suite. Could we get custom chopsticks made with our names engraved? Something really special to commemorate this trip to Kyoto.
+
+assistant channel=analysis:
+Check custom engraving options first, then discuss materials and timing for their anniversary.
+
+assistant channel=commentary to=tool.check_custom_amenity_options:
+{"service_type":"engraving","item_type":"chopsticks","urgency":"standard"}
+
+tool.check_custom_amenity_options channel=commentary to=assistant:
+{"available":true,"materials":["bamboo","rosewood","ebony"],"lead_times":{"standard":"48_hours","express":"24_hours"},"pricing":{"bamboo":3200,"rosewood":5800,"ebony":8500},"express_surcharge":"30_percent"}
+
+assistant channel=final:
+Congratulations on your 25th anniversary! We offer custom engraved chopsticks in three materials: bamboo (¥3,200), rosewood (¥5,800), or ebony (¥8,500) per pair. Our craftsman Takeshi Yamamoto can laser-engrave up to 30 characters. Standard takes 48 hours, or express 24 hours with a 30% surcharge. What names would you like engraved?
+
+user:
+That sounds wonderful! We'd love the ebony with "Sarah & David Chen - Kyoto 2025" engraved. Is 24 hours possible? We leave the day after tomorrow.
+
+assistant channel=analysis:
+Calculate express timing and place the order with the specified text and material choice.
+
+assistant channel=commentary to=tool.place_custom_order:
+{"room_number":"presidential_suite","item_type":"chopsticks","engraving_text":"Sarah & David Chen - Kyoto 2025","delivery_time":"24_hours","material":"ebony"}
+
+tool.place_custom_order channel=commentary to=assistant:
+{"order_id":"ENG-PS-2025-089","artisan":"takeshi_yamamoto","total_cost":"22100_yen","delivery_estimate":"tomorrow_16:00","presentation":"silk_lined_box"}
+
+assistant channel=final:
+Perfect choice! Order ENG-PS-2025-089 is confirmed for ebony chopsticks with "Sarah & David Chen - Kyoto 2025." Total is ¥22,100 (including express fee). Takeshi Yamamoto will handcraft them for delivery tomorrow around 16:00 in a silk-lined lacquered presentation box.
+
+user:
+That's perfect timing! I heard your hotel has an amazing history. How old is this place?
+
+assistant channel=analysis:
+Share hotel historical context from system information - this is casual conversation.
+
+assistant channel=final:
+We opened in 1923 and were rebuilt in 1955 with traditional sukiya-zukuri architecture. Our main building uses century-old pine beams from the Yoshino mountains, and the garden was designed by master landscaper Mirei Shigemori in 1958. You're staying in a piece of Kyoto's living history!
+
+user:
+Can you also arrange for a private tea ceremony in your chashitsu for tomorrow evening?
+
+assistant channel=analysis:
+Tea ceremony booking isn't covered by the available tools and goes beyond chopsticks service scope - use attention flag.
+
+assistant channel=final:
+[ATTENTION] I'll look into tea ceremony arrangements for tomorrow evening.

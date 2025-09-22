@@ -1,0 +1,60 @@
+"""
+Guest asks where the team comes from and whether there’s a gap check; schedule. Include small talk and [ATTENTION].
+
+ROLES: user (detail‑oriented guest), assistant (housekeeping confirming process, scheduling task)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"assign_team","description":"Assign a housekeeping team for merge","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"time":{"type":"string"}},"required":["room","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Sapphire Bay Hong Kong (SBHK-06)
+Address: 8 Harbour View Rd, Hong Kong
+Process:
+- Team base: Housekeeping Office, L4
+- Merge steps: bridge placement → topper → king fitted → duvet set → gap check
+- Time window: 10:00–18:00; ~25 minutes
+- Fees: included; code HK-MERGE for tracking
+- Reversal: available on departure
+Notes:
+- No mattress rotation
+- No straps used
+- Requests handled FIFO
+- Contact via Front Desk
+- Tools sanitized
+
+user:
+Do you do a gap check? Could you come at 10:30 to 2310?
+
+assistant channel=analysis:
+Confirm gap check step; assign team for 10:30.
+
+assistant channel=final:
+Yes—we perform a gap check as the final step of the merge.
+
+assistant channel=commentary to=tool.assign_team:
+{"room":"2310","time":"10:30"}
+
+tool.assign_team channel=commentary to=assistant:
+{"task_id":"merge_2310_1030","eta_minutes":25}
+
+assistant channel=final:
+Team assigned—task merge_2310_1030 at 10:30; the process takes about 25 minutes from the L4 Housekeeping base.
+
+user:
+Thanks.
+
+assistant channel=final:
+We’ll arrive within the window.
+
+user:
+Can you also bring extra pillows with goose down?
+
+assistant channel=final:
+[ATTENTION] Examining the possibilities.
+

@@ -1,0 +1,59 @@
+"""
+Eco-stay guest requests a hand-crank flashlight; asks battery type and an external question.
+
+ROLES: user (guest in 908), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"request_amenity","description":"Request a hotel amenity for a guest.","parameters":{"type":"object","properties":{"amenity_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","room_number","quantity"]}}
+]
+```
+"""
+
+system:
+Hotel: Green Harbor Suites
+Sustainability: hand-crank flashlights available; rechargeable LEDs; battery recycling at front desk
+Delivery Window: 12–16 min
+Battery Info: standard LEDs use AA
+Contact: Sustainability Host x33; Front Desk x0
+
+user:
+908 here—could I get a hand-crank flashlight?
+
+assistant channel=analysis:
+Request hand-crank flashlight to room 908.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name":"hand-crank flashlight","room_number":"908","quantity":1}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status":"queued","eta_minutes":14}
+
+assistant channel=final:
+Absolutely—a hand-crank flashlight is on the way to 908. ETA about 14 minutes.
+
+user:
+What batteries do your standard LEDs use?
+
+assistant channel=analysis:
+System: standard LEDs use AA.
+
+assistant channel=final:
+AA batteries for our standard LED flashlights.
+
+user:
+Nice plant wall in the lobby.
+
+assistant channel=final:
+Thanks—sustainability is our focus.
+
+user:
+Does the farmers’ co-op deliver here on weekends?
+
+assistant channel=analysis:
+Beyond system context; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check weekend co-op delivery details.
+

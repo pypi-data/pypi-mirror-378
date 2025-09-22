@@ -1,0 +1,51 @@
+"""
+Guest asks to check out; provide folio summary via tool and recap checkout policies from system. Include small talk and a background handoff for an invoice modification request.
+
+ROLES: user (departing guest), assistant (front desk providing folio and checkout steps)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "calculate_folio",
+    "description": "Return current folio summary for a reservation before checkout.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Lakeside Garden Hotel — Front Office
+Standard checkout time: 12:00 noon
+Late checkout: Subject to availability and may incur fees
+Express checkout: Available via key drop box in lobby
+
+user:
+Could you help me check out for reservation LG-22108?
+
+assistant channel=analysis:
+Retrieve folio via tool and provide policy reminders from system.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"LG-22108"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 420","taxes":"USD 37.80","incidentals":"USD 24","total":"USD 481.80"}
+
+assistant channel=final:
+Your folio total is USD 481.80 (room USD 420, taxes USD 37.80, incidentals USD 24). Standard checkout is at 12:00; express checkout is available via the lobby key drop box.
+
+user:
+Thanks—hope your day’s going well.
+
+assistant channel=final:
+Appreciate it—wishing you a smooth departure.
+
+user:
+Can you change the company tax ID shown on my previous invoice?
+
+assistant channel=final:
+[ATTENTION] Editing prior invoices isn’t supported through the provided resources. Verifying information.
+

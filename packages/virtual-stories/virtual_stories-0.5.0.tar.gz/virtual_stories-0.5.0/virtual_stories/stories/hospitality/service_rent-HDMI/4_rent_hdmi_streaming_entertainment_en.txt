@@ -1,0 +1,112 @@
+"""
+Guest wants HDMI cable for streaming entertainment; confirm streaming-compatible options, discuss entertainment amenities, and arrange delivery.
+
+ROLES: user (guest wanting to stream entertainment content on room TV), assistant (front desk providing entertainment-focused amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {
+    "name": "check_inventory",
+    "description": "Check availability of rentable items and hold stock if available.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "item": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "room": {"type": "string"}
+      },
+      "required": ["hotel_id", "item", "quantity", "room"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_rental_order",
+    "description": "Create a rental order and charge or comp to room folio as configured.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "item": {"type": "string"},
+        "duration_hours": {"type": "integer", "minimum": 1},
+        "charge_code": {"type": "string", "description": "comp or a billable code"},
+        "delivery_option": {"type": "string", "enum": ["room_drop", "pick_up_at_desk"]}
+      },
+      "required": ["hotel_id", "room", "item", "duration_hours", "charge_code", "delivery_option"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_delivery",
+    "description": "Schedule runner delivery to a room with ETA.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "order_id": {"type": "string"}
+      },
+      "required": ["hotel_id", "room", "order_id"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborview Grand Boston (HVGR-01), 1 Seaport Blvd, Boston, MA 02210.
+5-star waterfront property; 42 floors; 24/7 front desk and runners.
+Check-in 3:00 PM; check-out 12:00 PM; late check-out on availability.
+Complimentary in-room HDMI cables (10 units total); no deposit; first-come, first-served; typical delivery ETA 10–15 minutes.
+Entertainment features: Streaming-compatible HDMI cables available; High-definition support; Smart TV integration; Entertainment concierge services.
+Other facts: Gym 24/7 (keycard access); Business Center 7:00–22:00; In-room TVs support HDMI on input 2; Room folio comp code: COMP-IT-ACC.
+Smart TVs in all rooms; Streaming service partnerships; Entertainment lounge; Movie theater access.
+
+user:
+I want to stream Netflix and other services from my laptop to the room TV. Do you have HDMI cables that work well with streaming? Room 3201.
+
+assistant channel=analysis:
+The guest wants to stream entertainment content from their laptop to the room TV. I should prioritize streaming-compatible HDMI cables and discuss entertainment amenities.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"HVGR-01","item":"HDMI_cable_streaming","quantity":1,"room":"3201"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["HDMI-STREAM-2874"],"notes":"Streaming-optimized; high-definition support; smart TV compatible"}
+
+assistant channel=analysis:
+Streaming HDMI cable is available and reserved. Now I'll create a comp order and schedule delivery for the entertainment setup.
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"HVGR-01","room":"3201","item":"HDMI_cable_streaming","duration_hours":24,"charge_code":"COMP-IT-ACC","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"RNT-3201-98318","status":"created","charge":"comp","streaming_features":"high-definition support"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"HVGR-01","room":"3201","order_id":"RNT-3201-98318"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":10,"runner":"Jessica","order_id":"RNT-3201-98318"}
+
+assistant channel=final:
+Perfect for streaming! HDMI cable HDMI-STREAM-2874 is optimized for high-definition streaming and works great with Netflix and other services. Order RNT-3201-98318 is complimentary and Jessica will deliver it to room 3201 in about 10 minutes. Your smart TV supports all major streaming platforms.
+
+user:
+Fantastic! The entertainment options here are amazing.
+
+assistant channel=final:
+Thank you—we want our guests to have access to all their favorite entertainment during their stay.
+
+user:
+Do you have any partnerships with streaming services for exclusive content or premium access?
+
+assistant channel=final:
+[ATTENTION] Checking available streaming partnerships.

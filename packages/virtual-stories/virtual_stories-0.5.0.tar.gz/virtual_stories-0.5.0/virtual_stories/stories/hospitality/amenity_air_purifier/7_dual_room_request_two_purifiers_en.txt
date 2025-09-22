@@ -1,0 +1,79 @@
+"""
+Guest requests two purifiers for adjoining rooms; confirm status for both and set modes.
+
+ROLES: user (family with adjoining rooms), assistant (guest services)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  { "name": "get_air_purifier_status", "description": "Get purifier status.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]}, "strict": true },
+  { "name": "set_air_purifier_mode", "description": "Set mode with optional timer.", "parameters": {"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"mode":{"type":"string","enum":["auto","sleep","turbo"]},"timer_minutes":{"type":"integer"}},"required":["room_number","mode"]}, "strict": true }
+]
+```
+"""
+
+system:
+Maple Grove Inn (hotel_id: mgi_toronto_02)
+Address: 88 Front St E, Toronto, ON M5E 1B5
+Timezone: America/Toronto
+
+Program Notes:
+- Adjoining rooms supported: sync modes on request
+- Modes: auto, sleep, turbo; ionizer disabled
+Guest Services: 06:00–24:00
+Dining: Market café 06:30–14:00; Lobby bites 14:00–22:00
+Accessibility: Button labels in English/French
+Sustainability: HEPA media recycling
+Safety: Annual device certification
+
+user:
+We’re in 718 and 720 (adjoining). Can you set both purifiers to sleep for an hour?
+
+assistant channel=analysis:
+Check both statuses; apply sleep 60 minutes to both.
+
+assistant channel=commentary to=tool.get_air_purifier_status:
+{"room_number":"718"}
+
+tool.get_air_purifier_status channel=commentary to=assistant:
+{"room_number":"718","mode":"auto","filter_status":"good"}
+
+assistant channel=commentary to=tool.get_air_purifier_status:
+{"room_number":"720"}
+
+tool.get_air_purifier_status channel=commentary to=assistant:
+{"room_number":"720","mode":"auto","filter_status":"good"}
+
+assistant channel=commentary to=tool.set_air_purifier_mode:
+{"room_number":"718","mode":"sleep","timer_minutes":60}
+
+tool.set_air_purifier_mode channel=commentary to=assistant:
+{"applied":true,"mode":"sleep","timer_minutes":60}
+
+assistant channel=commentary to=tool.set_air_purifier_mode:
+{"room_number":"720","mode":"sleep","timer_minutes":60}
+
+tool.set_air_purifier_mode channel=commentary to=assistant:
+{"applied":true,"mode":"sleep","timer_minutes":60}
+
+assistant channel=final:
+Both rooms are set to sleep for 60 minutes. Filters in 718 and 720 are reporting good.
+
+user:
+Thanks! The market café croissants were great earlier.
+
+assistant channel=analysis:
+Small talk reply referencing system info only.
+
+assistant channel=final:
+Glad you enjoyed the market café—open 06:30 to 14:00.
+
+user:
+Do you loan out baby monitors?
+
+assistant channel=analysis:
+Outside system scope.
+
+assistant channel=final:
+[ATTENTION] I can look into availability for baby monitors.
+

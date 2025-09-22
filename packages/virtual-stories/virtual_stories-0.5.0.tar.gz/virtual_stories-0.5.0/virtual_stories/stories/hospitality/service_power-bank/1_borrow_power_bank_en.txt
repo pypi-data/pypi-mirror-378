@@ -1,0 +1,59 @@
+"""
+Guest requests to borrow a power bank with a stated return plan.
+
+ROLES: user (guest needing a portable charger), assistant (front desk lending devices and tracking returns)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "borrow_power_bank",
+    "description": "Lend a power bank to a guest and record planned return time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "planned_return_time": {"type": "string"}
+      },
+      "required": ["room_number", "planned_return_time"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Techline Downtown
+Power Bank Lending:
+- Inventory: USB‑C + USB‑A cables included
+- Hold: One unit per room; 24‑hour courtesy; after 24h a $20 hold may apply
+- Return: Front Desk drop
+
+user:
+Can I borrow a power bank for room 1012? I’ll return it by 10 pm.
+
+assistant channel=analysis:
+Record planned return 22:00 for room 1012 and confirm terms.
+
+assistant channel=commentary to=tool.borrow_power_bank:
+{"room_number":"1012","planned_return_time":"22:00"}
+
+tool.borrow_power_bank channel=commentary to=assistant:
+{"loan_id":"pbank_1180","due":"22:00","cables":["USB-C","USB-A"]}
+
+assistant channel=final:
+One power bank is set aside for room 1012 (pbank_1180) with USB‑C and USB‑A cables. Please return it to the Front Desk by 22:00; after 24 hours a $20 hold may apply.
+
+user:
+Thanks—the neon sign in the lobby is fun.
+
+assistant channel=final:
+Your unit includes USB‑C and USB‑A cables; just return it to the Front Desk by 22:00.
+
+user:
+Do you have MagSafe‑only models?
+
+assistant channel=final:
+[ATTENTION] MagSafe‑only units aren’t listed in our inventory. Reviewing available resources.

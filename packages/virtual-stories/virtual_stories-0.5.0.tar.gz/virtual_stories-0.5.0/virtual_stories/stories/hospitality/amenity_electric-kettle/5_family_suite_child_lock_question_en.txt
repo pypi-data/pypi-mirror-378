@@ -1,0 +1,70 @@
+"""
+Family requests a kettle and asks if there’s a child lock; provide kettle, clarify safety from system. Include small talk and [ATTENTION] query.
+
+ROLES: user (family in suite requesting kettle), assistant (amenities desk with safety knowledge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_item","description":"Send an amenity item to a room","parameters":{"type":"object","properties":{"item_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["item_name","room_number","quantity"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Maple & Stone Suites (hotel_id: mss_tor_12)
+Address: 55 Front St E, Toronto, ON M5E 1B2, Canada
+Timezone: America/Toronto
+
+Facts:
+- Kettle on request for all suites
+- Voltage: 120V North American outlets
+- Child lock: not on kettles; general safety guidance available
+
+YAML Family:
+---
+cribs: available
+high_chairs: available
+non_slip_mats: available
+---
+
+JSON Runner:
+{"primary":"Aidan","backup":"Priya"}
+
+CSV Nearby (place,walk_min):
+St_Lawrence_Market,2
+Union_Station,6
+
+user:
+Hi—could we have a kettle to 808? Do they have a child lock?
+
+assistant channel=analysis:
+Deliver kettle to 808; clarify child lock is not a feature; stick to system facts.
+
+assistant channel=commentary to=tool.request_item:
+{"item_name":"electric_kettle","room_number":"808","quantity":1}
+
+tool.request_item channel=commentary to=assistant:
+{"status":"success","eta_minutes":10,"runner":"Aidan"}
+
+assistant channel=final:
+Your kettle is on the way to 808—about 10 minutes (Aidan). Our kettles do not have a child lock; we can share safety tips if helpful.
+
+user:
+We’re heading to the market after tea.
+
+assistant channel=analysis:
+Chit-chat referencing nearby market.
+
+assistant channel=final:
+St. Lawrence Market is a 2‑minute walk—lots of great stalls.
+
+user:
+Could you also reserve a babysitter for tonight?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

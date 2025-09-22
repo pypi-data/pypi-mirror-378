@@ -1,0 +1,75 @@
+"""
+Guest wants a soft wrap nursing top for poolside comfort.
+Provide size/color and arrange swift delivery.
+
+ROLES: user (mother relaxing poolside), assistant (family pool host coordinating apparel)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_family_amenities","description":"Check availability of family and maternal support amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["nursing_tops","nursing_pillow","privacy_screen","comfortable_chair","baby_supplies"]},"size_needed":{"type":"string","enum":["XS","S","M","L","XL","XXL"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_maternal_support","description":"Coordinate maternal wellness and nursing support services.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"service_type":{"type":"string","enum":["nursing_clothing","privacy_setup","comfort_furniture","feeding_supplies"]},"size_specifications":{"type":"string"},"delivery_urgency":{"type":"string","enum":["standard","priority","immediate"]}},"required":["room_number","service_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Palms Shore Family Club (hotel_id: psf_mia_22)
+Address: 1 Ocean Ct, Miami Beach, FL 33139
+Timezone: America/New_York
+
+Poolside Comfort:
+- Wrap nursing tops: colors—sand, sky; sizes XS–L
+- Covers: lightweight sun shawl
+- Feeding chair: cushioned lounge by request
+- Delivery: 6–10 min to pool or room
+- Wellness: sunscreen guidance available
+
+user:
+Hi—room 714. Do you have a soft wrap nursing top in sky?
+
+assistant channel=analysis:
+Check nursing_tops; request size; then deliver.
+
+assistant channel=commentary to=tool.check_family_amenities:
+{"amenity_type":"nursing_tops"}
+
+tool.check_family_amenities channel=commentary to=assistant:
+{"available":true,"styles":["wrap"],"colors":["sand","sky"],"stock_levels":{"XS":2,"S":3,"M":4,"L":3}}
+
+assistant channel=final:
+Yes—sky wrap tops are available. What size would you like for room 714?
+
+user:
+Medium.
+
+assistant channel=analysis:
+Arrange delivery to room.
+
+assistant channel=commentary to=tool.arrange_maternal_support:
+{"room_number":"714","service_type":"nursing_clothing","size_specifications":"wrap, sky, M","delivery_urgency":"immediate"}
+
+tool.arrange_maternal_support channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":7,"items_included":["wrap_top_sky_M","sun_shawl"],"delivery_team":"pool_host"}
+
+assistant channel=final:
+On the way—one sky wrap top (M) and a lightweight sun shawl will reach room 714 in about 7 minutes.
+
+user:
+The water is perfect today.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+Ideal for a relaxed feed.
+
+user:
+Could you reserve a private cabana with childcare right now?
+
+assistant channel=analysis:
+Childcare/cabana reservation not defined; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Processing your request.
+

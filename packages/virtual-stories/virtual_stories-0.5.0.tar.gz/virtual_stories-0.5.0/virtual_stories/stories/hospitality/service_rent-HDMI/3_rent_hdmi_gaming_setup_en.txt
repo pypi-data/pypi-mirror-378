@@ -1,0 +1,112 @@
+"""
+Gaming enthusiast needs HDMI cable for gaming console setup; confirm gaming-compatible options, discuss gaming amenities, and arrange delivery.
+
+ROLES: user (gaming enthusiast setting up gaming console in room), assistant (front desk providing gaming-focused amenities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {
+    "name": "check_inventory",
+    "description": "Check availability of rentable items and hold stock if available.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "item": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "room": {"type": "string"}
+      },
+      "required": ["hotel_id", "item", "quantity", "room"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_rental_order",
+    "description": "Create a rental order and charge or comp to room folio as configured.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "item": {"type": "string"},
+        "duration_hours": {"type": "integer", "minimum": 1},
+        "charge_code": {"type": "string", "description": "comp or a billable code"},
+        "delivery_option": {"type": "string", "enum": ["room_drop", "pick_up_at_desk"]}
+      },
+      "required": ["hotel_id", "room", "item", "duration_hours", "charge_code", "delivery_option"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_delivery",
+    "description": "Schedule runner delivery to a room with ETA.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type": "string"},
+        "room": {"type": "string"},
+        "order_id": {"type": "string"}
+      },
+      "required": ["hotel_id", "room", "order_id"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harborview Grand Boston (HVGR-01), 1 Seaport Blvd, Boston, MA 02210.
+5-star waterfront property; 42 floors; 24/7 front desk and runners.
+Check-in 3:00 PM; check-out 12:00 PM; late check-out on availability.
+Complimentary in-room HDMI cables (10 units total); no deposit; first-come, first-served; typical delivery ETA 10–15 minutes.
+Gaming amenities: Gaming-compatible HDMI cables available; High-speed internet; Gaming lounge access; Console gaming support.
+Other facts: Gym 24/7 (keycard access); Business Center 7:00–22:00; In-room TVs support HDMI on input 2; Room folio comp code: COMP-IT-ACC.
+Gaming lounge floor 25; Esports tournaments; Gaming equipment rental; High-refresh-rate displays.
+
+user:
+I brought my PlayStation 5 and need an HDMI cable to connect it to the room TV. Do you have gaming-compatible cables? Room 2503.
+
+assistant channel=analysis:
+The guest is a gaming enthusiast who needs an HDMI cable for their PlayStation 5 console. I should prioritize gaming-compatible cables and discuss gaming amenities.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"HVGR-01","item":"HDMI_cable_gaming","quantity":1,"room":"2503"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["HDMI-GAME-2873"],"notes":"Gaming-compatible; high refresh rate support; PlayStation 5 optimized"}
+
+assistant channel=analysis:
+Gaming HDMI cable is available and reserved. Now I'll create a comp order and schedule delivery for the gaming setup.
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"HVGR-01","room":"2503","item":"HDMI_cable_gaming","duration_hours":24,"charge_code":"COMP-IT-ACC","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"RNT-2503-98317","status":"created","charge":"comp","gaming_features":"high refresh rate support"}
+
+assistant channel=commentary to=tool.schedule_delivery:
+{"hotel_id":"HVGR-01","room":"2503","order_id":"RNT-2503-98317"}
+
+tool.schedule_delivery channel=commentary to=assistant:
+{"eta_minutes":12,"runner":"Mike","order_id":"RNT-2503-98317"}
+
+assistant channel=final:
+Perfect for gaming! Gaming HDMI cable HDMI-GAME-2873 supports high refresh rates and is optimized for PlayStation 5. Order RNT-2503-98317 is complimentary and Mike will deliver it to room 2503 in about 12 minutes. You also have access to our gaming lounge on floor 25 with high-refresh-rate displays.
+
+user:
+Awesome! The gaming facilities here are incredible.
+
+assistant channel=final:
+Thank you—we're proud to support the gaming community with dedicated amenities and tournament spaces.
+
+user:
+Do you have any partnerships with gaming companies for exclusive events or tournaments?
+
+assistant channel=final:
+[ATTENTION] Checking available gaming partnerships.

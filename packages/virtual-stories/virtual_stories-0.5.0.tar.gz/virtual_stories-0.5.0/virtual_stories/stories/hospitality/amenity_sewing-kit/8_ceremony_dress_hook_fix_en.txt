@@ -1,0 +1,110 @@
+"""
+Guest needs hook-and-eye fix for ceremony dress; confirm executive kit and timing.
+
+ROLES: user (wedding guest with dress closure issue), assistant (floor attendant with sewing access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_sewing_kit_availability",
+    "description": "Check availability of sewing kits and repair supplies.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kit_type": { "type": "string", "enum": ["basic", "executive", "emergency"] },
+        "floor_level": { "type": "string" }
+      },
+      "required": ["kit_type", "floor_level"]
+    },
+    "strict": true
+  },
+  {
+    "name": "arrange_repair_service",
+    "description": "Arrange professional garment repair or emergency sewing assistance.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "service_type": { "type": "string", "enum": ["kit_delivery", "on_site_assistance", "valet_repair"] },
+        "urgency": { "type": "string", "enum": ["standard", "urgent", "emergency"] },
+        "garment_type": { "type": "string" }
+      },
+      "required": ["room_number", "service_type", "urgency"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Palais Lumière Paris (hotel_id: plx_cdg_08)
+Address: 12 Rue de la Paix, 75002 Paris, France
+Timezone: Europe/Paris
+
+Sewing & Dress Support:
+- Executive kits: hooks-and-eyes, fine needles, beige/black thread, fashion tape
+- Basic kits: needles, black/white thread, safety pins
+- On-site assistance: 08:00–22:00 for quick dress closures
+- Delivery SLA: executive floors < 10 minutes, standard < 20 minutes
+- Policy: first kit complimentary; fashion tape limited to 1 per room/day
+
+Facilities & Contact:
+- Executive floors: 10–14
+- Housekeeping line: ext 22
+- Express valet: collect by 17:30 for next-day 10:30
+- Advisory: fashion tape is temporary, avoid on delicate lace > 6 hrs
+
+user:
+Bonjour—my dress hook came off. I’m in 1107. Could you bring something to fix a hook-and-eye quickly?
+
+assistant channel=analysis:
+Floor 11 executive; check executive kit; deliver with fashion tape; offer assistance.
+
+assistant channel=commentary to=tool.check_sewing_kit_availability:
+{"kit_type":"executive","floor_level":"11"}
+
+tool.check_sewing_kit_availability channel=commentary to=assistant:
+{"available":true,"kit_contents":["hooks_and_eyes","beige_thread","fine_needles","fashion_tape"],"eta_minutes":8}
+
+assistant channel=analysis:
+Arrange delivery to 1107; include advisory on temporary nature of tape.
+
+assistant channel=commentary to=tool.arrange_repair_service:
+{"room_number":"1107","service_type":"kit_delivery","urgency":"urgent","garment_type":"dress"}
+
+tool.arrange_repair_service channel=commentary to=assistant:
+{"service_arranged":true,"delivery_time":"8_minutes","assistance_offered":true}
+
+assistant channel=final:
+Bien sûr—we’ll bring an executive kit with hooks-and-eyes, fine needles, and fashion tape to 1107 in about 8 minutes. Fashion tape is a temporary aid; I can also assist on-site now.
+
+user:
+What time is your on-site assistance available until?
+
+assistant channel=analysis:
+Answer from system: 08:00–22:00.
+
+assistant channel=final:
+We assist on-site from 08:00 to 22:00 daily.
+
+user:
+Merci! The lobby chandelier is gorgeous.
+
+assistant channel=analysis:
+Chit-chat acknowledgment only.
+
+assistant channel=final:
+Thank you—wishing you a wonderful ceremony!
+
+user:
+Could you also suggest a late-night patisserie nearby?
+
+assistant channel=analysis:
+Beyond system scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check nearby late-night patisseries and follow up.

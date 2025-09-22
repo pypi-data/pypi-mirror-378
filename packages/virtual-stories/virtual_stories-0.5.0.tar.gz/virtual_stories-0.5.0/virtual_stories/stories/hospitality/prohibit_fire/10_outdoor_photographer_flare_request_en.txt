@@ -1,0 +1,102 @@
+"""
+Professional photographer requests to use emergency flares for artistic shoot on hotel grounds.
+
+ROLES: user (professional photographer planning artistic photo shoot), assistant (front-desk concierge enforcing fire safety while suggesting creative alternatives)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_policy",
+    "description": "Retrieve policy details for a given category.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["fire", "fireworks", "pets", "smoking", "drugs"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "record_incident_note",
+    "description": "Record a neutral note about a guest safety inquiry (no action taken).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "required": ["room_number", "note"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+HOTEL: Desert Mirage Luxury Resort
+ADDRESS: 4900 Cactus Ridge Drive, Scottsdale, Arizona  
+FIRE SAFETY OVERVIEW:
+- Zero-tolerance NO-OPEN-FLAME policy: emergency flares, road flares, signal fires, any incendiary devices prohibited on all property areas
+- Xerophyte landscape fire prevention: drought-resistant plants, gravel pathways, strategic firebreaks between buildings
+- Multi-zone heat detection: outdoor sensors throughout grounds; indoor/outdoor sprinkler integration with 24/7 command center
+- Emergency protocols: Direct coordination with Scottsdale Fire Department; staff-only exception for supervised controlled burns
+DESIGNATED ALTERNATIVES:
+- Photography services: Professional LED panel rentals, colored gel lighting systems, smoke machines (non-pyrotechnic)
+- Creative lighting: Programmable RGB spotlights, fiber optic installations, holographic projectors available through Guest Services
+GUEST AMENITIES:
+- Desert botanical gardens with evening illumination shows; stargazing observatory with telescope access
+- "Saguaro Sunset" signature aromatherapy in spa areas; complimentary prickly pear lemonade at poolside
+- Photography-friendly hours: Golden hour sessions 6:00-8:00 AM and 5:00-7:00 PM with advance booking
+NOTES FOR AGENTS:
+- Absolutely no exceptions for pyrotechnic/incendiary devices regardless of professional status
+- Offer advanced lighting alternatives and document professional photography requests appropriately
+
+user:
+Hello! I'm a professional photographer staying in room 847. I'd like permission to use some emergency road flares for an artistic desert landscape shoot on your grounds tomorrow morning.
+
+assistant channel=analysis:
+This is a request to use emergency flares, which are definitely prohibited under the fire policy. I need to check the policy and firmly decline while offering professional lighting alternatives. Also need to record the inquiry since a room number was provided.
+
+assistant channel=commentary to=tool.get_policy:
+{"category": "fire"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"fire","allowed":false,"summary":"Zero-tolerance policy - no emergency flares, road flares, or any incendiary devices anywhere on property. Fire prevention critical in desert environment.","alternatives":["Professional LED panels","Colored gel lighting","Smoke machines (non-pyrotechnic)"]}
+
+assistant channel=commentary to=tool.record_incident_note:
+{"room_number": "847", "note": "Professional photographer inquiry about using emergency road flares for artistic shoot - declined per fire safety policy, offered LED lighting alternatives"}
+
+tool.record_incident_note channel=commentary to=assistant:
+{"status":"noted","ticket_id":"SAFE-LOG-0847-2"}
+
+assistant channel=final:
+I understand your creative vision, but emergency flares and all incendiary devices are strictly prohibited throughout our property due to desert fire risks. However, we offer professional LED panel rentals, colored gel lighting systems, and non-pyrotechnic smoke machines through Guest Services that can create stunning artistic effects for your shoot.
+
+user:
+That's a shame - the flares would have created perfect drama against the desert backdrop.
+
+assistant channel=final:
+I completely understand! Our programmable RGB spotlights and fiber optic installations can actually create even more dramatic effects with full color control and no fire hazards. Many professional photographers find they get better shots with our controlled lighting during golden hour sessions.
+
+user:
+Your desert botanical gardens do look incredible in the evening light.
+
+assistant channel=analysis:
+This is casual conversation about the hotel's botanical gardens mentioned in the amenities, no tools needed.
+
+assistant channel=final:
+Thank you! The gardens are especially beautiful during our evening illumination shows, and the stargazing observatory offers incredible photo opportunities. Perfect timing with golden hour sessions from 5:00-7:00 PM.
+
+user:
+Could you provide me with the specific municipal fire ordinance that governs flare usage in this zone?
+
+assistant channel=analysis:
+This requests specific municipal fire ordinance details and legal codes, which isn't available in our system or tools.
+
+assistant channel=final:
+[ATTENTION] Specific municipal ordinance details aren't available in our current information. Looking into available resources.

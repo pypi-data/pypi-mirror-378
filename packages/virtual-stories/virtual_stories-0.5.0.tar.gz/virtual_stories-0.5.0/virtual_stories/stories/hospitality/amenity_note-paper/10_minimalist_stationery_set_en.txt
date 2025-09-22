@@ -1,0 +1,83 @@
+"""
+Guest requests minimalist white cards and small envelopes for quick notes.
+Provide premium minimalist set and deliver to room.
+
+ROLES: user (design-forward guest preferring minimalist stationery), assistant (design concierge with curated paper)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check available stationery supplies in hotel inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_type":{"type":"string","enum":["note_paper","letterhead","envelopes","memo_pads","writing_pads","sticky_notes"]},"quality_level":{"type":"string","enum":["standard","premium","luxury"]}},"required":["item_type"]},"strict":true},
+  {"name":"deliver_stationery_supplies","description":"Arrange delivery of stationery items to guest room or business center.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center","meeting_room"]},"quantity_per_item":{"type":"number"},"special_requests":{"type":"string"}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Linea House (hotel_id: tlh_por_14)
+Address: 400 SW 12th Ave, Portland, OR 97205
+Timezone: America/Los_Angeles
+
+Minimal Stationery Cues:
+1. White flat cards, 120gsm, square corners
+2. Envelopes: C6, unlined, cotton blend
+3. Note pad: grid‑light, A5, 80gsm
+4. Stickers: neutral circle seals
+5. Pens: ultra‑fine rollerball loan set
+
+Delivery Rhythm: 9–12 min typical
+
+user:
+Hi—room 714. Do you have a minimalist white card set with small envelopes?
+
+assistant channel=analysis:
+Offer white flat cards 120gsm and C6 envelopes; deliver to 714.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"note_paper","quality_level":"premium"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"quality_level":"premium","options":["white_flat_cards_120gsm"],"stock_count":22}
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"envelopes","quality_level":"premium"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"quality_level":"premium","options":["C6_cotton_blend_unlined"],"stock_count":40}
+
+assistant channel=final:
+Yes—white 120gsm flat cards with C6 cotton‑blend envelopes are available. Would you like a small set sent to room 714?
+
+user:
+Please do.
+
+assistant channel=analysis:
+Deliver one small set; include neutral seals.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"714","items":["white_flat_cards_120gsm","C6_cotton_blend_unlined","neutral_circle_seals"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"small set 8"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":10,"items_included":["white_cards_8","C6_envelopes_8","seals_8"],"delivery_team":"design_concierge"}
+
+assistant channel=final:
+On the way—8 white 120gsm cards, 8 C6 cotton‑blend envelopes, and seals will reach room 714 in about 10 minutes.
+
+user:
+Love the lobby plants.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+They bring calm to the space.
+
+user:
+Do you offer foil stamping right now?
+
+assistant channel=analysis:
+Foil stamping not listed; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

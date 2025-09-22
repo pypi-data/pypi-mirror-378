@@ -1,0 +1,81 @@
+"""
+Guest requests two covers: one for bed and one for a sofa bed; includes tool usage, chit-chat, and [ATTENTION] query.
+
+ROLES: user (family in room 1002), assistant (linen logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "request_linen_delivery",
+    "description": "Deliver duvet covers to a room with notes.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type":"string"},
+        "items": {
+          "type":"array",
+          "items": {
+            "type":"object",
+            "properties": {"size":{"type":"string","enum":["queen","king"]},"quantity":{"type":"integer","minimum":1}},
+            "required": ["size","quantity"],
+            "additionalProperties": false
+          }
+        },
+        "note": {"type":"string"}
+      },
+      "required": ["room_number","items"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Riverside Garden Inn (hotel_id: rgi_chi)
+Address: 455 W Kinzie St, Chicago, IL 60654
+Timezone: America/Chicago
+Bed Setup Reference:
+- Master: king
+- Sofa bed: queen
+Service Windows: 09:30–16:00 (normal), 16:00–22:00 (on-demand)
+Inventory Snapshot (covers): { king: 21, queen: 30 }
+Notes:
+1. Family rooms often request mixed sizes
+2. Covers come folded in thirds
+3. Sofabed mechanism requires cover placed after unfolding
+4. Turnaround ETA normal 20–35 min; on-demand 10–20 min
+5. Contact: Linen Ops radio channel 3
+
+user:
+We’re in 1002. Could we get two duvet covers—one king and one queen for the sofa bed?
+
+assistant channel=analysis:
+Deliver one king and one queen with a note for sofa bed.
+
+assistant channel=commentary to=tool.request_linen_delivery:
+{"room_number":"1002","items":[{"size":"king","quantity":1},{"size":"queen","quantity":1}],"note":"One for sofa bed"}
+
+tool.request_linen_delivery channel=commentary to=assistant:
+{"ok":true,"ticket":"RGI-LIN-7712","eta_minutes":18}
+
+assistant channel=final:
+Confirmed—one king and one queen cover are en route to 1002. ETA about 18 minutes. Ref RGI-LIN-7712. We’ll note the queen is for the sofa bed.
+
+user:
+Thanks! The riverwalk at night is gorgeous.
+
+assistant channel=final:
+It’s a great view from this side of the building.
+
+user:
+Can you fold the corners hospital-style?
+
+assistant channel=analysis:
+Corner fold style isn’t defined; flag attention.
+
+assistant channel=final:
+[ATTENTION] Noted. Reviewing service specifics.
+

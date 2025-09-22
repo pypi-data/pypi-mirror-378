@@ -1,0 +1,78 @@
+"""
+Guest on rooftop lounge asks for multiple cap lifters and asks about maximum quantity allowed; coordinate delivery to venue host stand.
+
+ROLES: user (event guest), assistant (rooftop lounge coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_rooftop_inventory","description":"Check openers available at rooftop host stand.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"stage_rooftop_items","description":"Stage items for pickup at host stand.","parameters":{"type":"object","additionalProperties":false,"properties":{"item":"string","qty":{"type":"integer","minimum":1}},"required":["item","qty"]}}
+]
+```
+"""
+
+system:
+Highland Springs Lodge (hotel_id: hsl_den_05)
+Address: 1900 W 32nd Ave, Denver, CO 80211
+Timezone: America/Denver
+Setting: Mountain-inspired lodge with a seasonal rooftop lounge
+
+Rooftop Tools:
+- Cap lifters stored at host stand drawer B
+- Multitools reserved for private events
+
+Limits & Policy:
+- Max 3 cap lifters per party on the rooftop
+- Returns at shift end; no deposit
+
+Timing:
+- Host stand pick-up readiness: 5–10 minutes
+
+Sanitation:
+- Pre-wiped with food-safe sanitizer; sleeves provided
+
+Contact:
+- Rooftop host stand ext. 7; Front Desk ext. 0
+
+user:
+Hi—could we get three bottle openers up here on the rooftop? We’re sharing among friends. Is three okay?
+
+assistant channel=analysis:
+Confirm max policy and inventory; stage for pickup.
+
+assistant channel=commentary to=tool.check_rooftop_inventory:
+{}
+
+tool.check_rooftop_inventory channel=commentary to=assistant:
+{"cap_lifters":12,"multitools":2,"note":"drawer_B"}
+
+assistant channel=final:
+Yes—policy allows up to 3 per party on the rooftop. I’ll stage three at the host stand (drawer B).
+
+assistant channel=commentary to=tool.stage_rooftop_items:
+{"item":"cap_lifter","qty":3}
+
+tool.stage_rooftop_items channel=commentary to=assistant:
+{"staged":3,"pickup":"rooftop_host_stand","ready_in_minutes":6}
+
+assistant channel=final:
+Ready in about 6 minutes at the rooftop host stand. Sleeves are included.
+
+user:
+Thanks! The mountain views are incredible tonight.
+
+assistant channel=analysis:
+Small talk reply.
+
+assistant channel=final:
+They’re extra vivid at sunset—enjoy the evening!
+
+user:
+Do you offer glass rentals for private offsite events?
+
+assistant channel=analysis:
+Beyond rooftop scope. Mark attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check what’s possible beyond our rooftop lending policy.

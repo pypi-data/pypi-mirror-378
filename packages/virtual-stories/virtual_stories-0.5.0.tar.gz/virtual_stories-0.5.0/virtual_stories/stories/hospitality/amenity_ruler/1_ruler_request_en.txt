@@ -1,0 +1,98 @@
+"""
+Guest requests a ruler with specific length and material; confirm availability and deliver; include a casual remark and one background-acknowledgment message.
+
+ROLES: user (guest needing a ruler for work), assistant (front desk managing stationery loans)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_stationery_inventory",
+    "description": "Check availability of rulers by length and material.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "enum": ["ruler"] },
+        "length": { "type": "string", "enum": ["15cm", "30cm"] },
+        "material": { "type": "string", "enum": ["plastic", "metal"] }
+      },
+      "required": ["item_code", "length", "material"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_stationery",
+    "description": "Deliver a ruler to a guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "length": { "type": "string", "enum": ["15cm", "30cm"] },
+        "material": { "type": "string", "enum": ["plastic", "metal"] }
+      },
+      "required": ["room_number", "item_code", "length", "material"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Library Row Hotel (hotel_id: lr_nyc_18)
+Address: 72 W 41st St, New York, NY 10018
+Stationery delivery: 07:00–22:30; typical ETA 10–20 minutes
+
+Ruler availability:
+- Lengths: 15cm, 30cm
+- Materials: plastic (clear), metal (steel edge)
+- Stock snapshot: 15cm/plastic(14), 15cm/metal(6), 30cm/plastic(9), 30cm/metal(7)
+
+Property vibe:
+- The second-floor reading lounge stays library-quiet all evening.
+
+user:
+Do you have a 30 cm metal ruler you could send to 2213?
+
+assistant channel=analysis:
+Check 30cm/metal, then deliver to room 2213.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_code":"ruler","length":"30cm","material":"metal"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":7,"item_code":"ruler","length":"30cm","material":"metal"}
+
+assistant channel=analysis:
+Proceed to deliver the ruler to 2213.
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"2213","item_code":"ruler","length":"30cm","material":"metal"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-2213-9091","eta_minutes":12}
+
+assistant channel=final:
+Yes—one 30 cm metal ruler is on its way to 2213. Ticket ST-2213-9091, arriving in about 12 minutes.
+
+user:
+The reading lounge was perfectly quiet earlier.
+
+assistant channel=analysis:
+Offer a light acknowledgment tied to the property vibe.
+
+assistant channel=final:
+That’s our intent—the second-floor lounge keeps a library hush all evening.
+
+user:
+Any chance you also have a cutting mat?
+
+assistant channel=analysis:
+Cutting mats aren’t in tools or system inventory; use the flag.
+
+assistant channel=final:
+[ATTENTION] I’ll investigate this matter. Assessing the available data.
+

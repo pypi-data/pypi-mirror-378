@@ -1,0 +1,71 @@
+"""
+Guest requests two buckets of ice; includes small talk and a service-hours question.
+
+ROLES: user (guest in room 1528 requesting two buckets of ice), assistant (guest services arranging ice delivery and quoting hours/SLA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "request_amenity_delivery",
+    "description": "Create a fulfillment for an amenity delivery to a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": {"type": "string"},
+        "amenity_name": {"type": "string"},
+        "quantity": {"type": "integer", "minimum": 1},
+        "priority": {"type": "string", "enum": ["normal", "urgent"]},
+        "note": {"type": "string"}
+      },
+      "required": ["room_number", "amenity_name", "quantity", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Cobalt Exchange — North Tower
+Room: 1528 (Premier Corner King)
+Ice service: Scooped ice in insulated bucket; bagged ice on request; typical limit 2 buckets per run
+Service hours: Normal 07:00–23:00; Urgent 23:00–01:00
+SLA floors 15–18: normal 12–18 minutes
+Dispatch: NT-15 service galley; use S2 elevator; knock & announce
+Extensions: 0 Front; 7810 Services; 7811 HK
+
+user:
+Could I get two buckets of ice to 1528?
+
+assistant channel=analysis:
+Place normal-priority delivery for 2 ice buckets to room 1528, note scooped ice.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1528","amenity_name":"ice (bucket)","quantity":2,"priority":"normal","note":"Scooped ice; from NT-15 galley"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"ICE-1528-2201","eta_minutes":14}
+
+assistant channel=final:
+Done—two buckets of scooped ice are scheduled for room 1528 with an ETA of about 14 minutes.
+
+user:
+Thanks! Big views up here.
+
+assistant channel=final:
+They are—corner rooms tend to get the widest angles.
+
+user:
+What hours do you run ice service?
+
+assistant channel=final:
+Ice runs 07:00–23:00 for normal service, with urgent coverage 23:00–01:00.
+
+user:
+Is the ice filtered through a specific brand?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

@@ -1,0 +1,61 @@
+"""
+Guest confirms steam room hours and books a session.
+
+ROLES: user (guest wanting a pre-spa steam), assistant (spa host managing humid heat facilities)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_steam_room_status","description":"Return open status and capacity.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"reserve_steam_room","description":"Reserve a 20-minute steam room window.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"start_time":{"type":"string","format":"date-time"},"guests":{"type":"integer","minimum":1,"maximum":2}},"required":["hotel_id","start_time","guests"]},"strict":true}
+]
+```
+"""
+
+system:
+Spa Level: Cascadia Springs Retreat (hotel_id: cascadia_springs_pdx)
+Address: 901 Pine Street, Portland, OR 97205 | Timezone: America/Los_Angeles
+Steam Room:
+  Type: Tiled, aromatherapy infusion on the hour
+  Capacity: 2 simultaneous guests; 20-minute windows
+  Policy: Shower before entry; rehydrate after session
+
+user:
+Is the steam room open right now? I’d like a 5:20 PM window for one.
+
+assistant channel=analysis:
+Check status; if operational, reserve 17:20 for 1.
+
+assistant channel=commentary to=tool.check_steam_room_status:
+{"hotel_id":"cascadia_springs_pdx"}
+
+tool.check_steam_room_status channel=commentary to=assistant:
+{"open":true,"capacity":2}
+
+assistant channel=commentary to=tool.reserve_steam_room:
+{"hotel_id":"cascadia_springs_pdx","start_time":"2025-08-29T17:20:00","guests":1}
+
+tool.reserve_steam_room channel=commentary to=assistant:
+{"status":"reserved","window_id":"STRM-1720-1740"}
+
+assistant channel=final:
+The steam room is open. Your 5:20–5:40 PM window is reserved (STRM-1720-1740). Please shower before entry.
+
+user:
+Thanks! The spa music is relaxing.
+
+assistant channel=analysis:
+Provide a kind acknowledgment.
+
+assistant channel=final:
+Thank you—glad it adds to your experience.
+
+user:
+Is the aromatherapy infusion made with organic oils?
+
+assistant channel=analysis:
+No detail provided in system or tools; apply acknowledgment flag.
+
+assistant channel=final:
+[ATTENTION] That’s a great question about the infusion. Verifying information.
+

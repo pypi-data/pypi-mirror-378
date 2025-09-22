@@ -1,0 +1,64 @@
+"""
+Guest reports a worn brush from earlier stay; replace with new and confirm delivery ETA.
+
+ROLES: user (guest noticing worn tool), assistant (housekeeping supply coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_supply_stock","description":"Check availability for replacement.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_code":{"type":"string","enum":["shower_scrubber_soft_brush","shower_scrubber_long_handle"]}},"required":["supply_code"]},"strict":true},
+  {"name":"deliver_supply","description":"Deliver replacement item.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"supply_code":{"type":"string"},"quantity":{"type":"integer","minimum":1,"maximum":1}},"required":["room_number","supply_code","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Copper Canyon Lodge (hotel_id: ccl_phx_07)
+Address: 750 N Central Ave, Phoenix, AZ 85004
+Timezone: America/Phoenix
+
+Supply Policy:
+- Immediate replacement if brush is worn or frayed
+- Typical ETA: 8–12 minutes
+- Disposal per sanitation protocol
+ - Stock audited at 14:00 daily
+ - Contact: Housekeeping via in-room tablet or dial 3
+
+user:
+Hi—the soft scrubber looks worn. Could I get a fresh one to 1110?
+
+assistant channel=analysis:
+Check stock for soft brush and deliver one replacement.
+
+assistant channel=commentary to=tool.check_supply_stock:
+{"supply_code":"shower_scrubber_soft_brush"}
+
+tool.check_supply_stock channel=commentary to=assistant:
+{"supply_code":"shower_scrubber_soft_brush","on_hand":10,"estimated_delivery_minutes":9}
+
+assistant channel=commentary to=tool.deliver_supply:
+{"room_number":"1110","supply_code":"shower_scrubber_soft_brush","quantity":1}
+
+tool.deliver_supply channel=commentary to=assistant:
+{"delivery_id":"SUP-DEL-5510","room_number":"1110","supply_code":"shower_scrubber_soft_brush","quantity":1,"eta_minutes":9}
+
+assistant channel=final:
+Absolutely—one new soft scrubber is headed to 1110 (SUP-DEL-5510) with an ETA of about 9 minutes.
+
+user:
+Thanks! Do you dispose of worn ones properly?
+
+assistant channel=analysis:
+Use Supply Policy.
+
+assistant channel=final:
+Yes—we follow sanitation protocol to dispose of worn items.
+
+user:
+Any nearby desert stargazing tips?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about stargazing and will review external info.

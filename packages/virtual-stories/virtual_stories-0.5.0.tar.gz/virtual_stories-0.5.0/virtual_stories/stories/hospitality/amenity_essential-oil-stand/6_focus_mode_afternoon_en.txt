@@ -1,0 +1,70 @@
+"""
+Guest requests a focus mode diffuser with woody base and asks placement guidance.
+
+ROLES: user (business traveler), assistant (aroma concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"woody_list","description":"Woody oil list.","parameters":{"type":"object","additionalProperties":false,"properties":{"need":{"type":"string","enum":["focus"]}},"required":["need"]},"strict":true},
+  {"name":"setup","description":"Set diffuser at position.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"type":{"type":"string","enum":["nebulizing","ultrasonic"]},"position":{"type":"string","enum":["desk","bedside","lounge"]}},"required":["room","type","position"]},"strict":true},
+  {"name":"placement_tips","description":"Provide placement tips.","parameters":{"type":"object","additionalProperties":false,"properties":{"context":{"type":"string","enum":["focus_desk"]}},"required":["context"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Granite & Glass Tower (hotel_id: ggt_ny_31)
+Address: 777 Lexington Ave, New York, NY 10065
+Aromatherapy info:
+- Focus profiles: Sandalwood, Cedarwood, Rosemary accent
+- Diffusers: Nebulizing (pure), Ultrasonic (quiet)
+- Desk placement recommended for work sessions
+- Delivery: 15–25 minutes; Hours: 07:00–22:00
+- Allergy screen available
+
+user:
+I’m in 1911. Could you set a focus diffuser with a woody base at the desk?
+
+assistant channel=analysis:
+List woody/focus oils; set nebulizing at desk (pure vapor) for room 1911; provide desk placement tips.
+
+assistant channel=commentary to=tool.woody_list:
+{"need":"focus"}
+
+tool.woody_list channel=commentary to=assistant:
+{"oils":["Sandalwood","Cedarwood","Rosemary (accent)"]}
+
+assistant channel=commentary to=tool.setup:
+{"room":"1911","type":"nebulizing","position":"desk"}
+
+tool.setup channel=commentary to=assistant:
+{"ticket":"GGT-1911-NBL-882","eta_minutes":18}
+
+assistant channel=commentary to=tool.placement_tips:
+{"context":"focus_desk"}
+
+tool.placement_tips channel=commentary to=assistant:
+{"tips":["Place 50–70 cm from chair","Keep vent behind unit to avoid drafts","Use medium intermittence"]}
+
+assistant channel=final:
+I’ll set a nebulizing diffuser at your desk with a woody focus profile—Sandalwood with Cedarwood and a Rosemary accent. Placement tips: keep it about 50–70 cm from your chair, avoid direct drafts, and use medium intermittence. Ticket GGT-1911-NBL-882 is confirmed, ETA ~18 minutes within 07:00–22:00.
+
+user:
+Thanks. The lobby glass sculpture is sleek.
+
+assistant channel=analysis:
+Chitchat reply.
+
+assistant channel=final:
+It sets a modern tone upon entry.
+
+user:
+Can you dim my room’s overhead lights remotely?
+
+assistant channel=analysis:
+Lighting controls aren’t part of this dialogue’s tools.
+
+assistant channel=final:
+[ATTENTION] I’ll check options for adjusting overhead lights.
+

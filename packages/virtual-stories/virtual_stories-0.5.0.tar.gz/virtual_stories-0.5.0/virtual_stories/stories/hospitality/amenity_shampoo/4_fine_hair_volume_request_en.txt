@@ -1,0 +1,72 @@
+"""
+Guest with fine hair requests a volumizing shampoo; confirm availability and arrange delivery with timing. Include chitchat and one [ATTENTION] query.
+
+ROLES: user (guest seeking volume shampoo for fine hair), assistant (spa concierge arranging premium amenity delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_hair_care_inventory","description":"Check hair care inventory","parameters":{"type":"object","properties":{"hair_type":{"type":"string","enum":["fine","thick","normal"]},"product_preference":{"type":"string","enum":["luxury_brand","sulfate_free","organic","standard"]}},"required":["hair_type"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_hair_care_amenity","description":"Deliver selected item","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"product_selection":{"type":"string"},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown"]}},"required":["room_number","product_selection","delivery_timing"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: The Lantern Quarters (hotel_id: tlq_kyoto_02)
+Address: 325 Shijo-dori, Kyoto, Japan
+Timezone: Asia/Tokyo
+
+Program:
+- Volumizing lines for fine hair
+- Spa delivery window: 10–15 minutes
+- Fragrance profiles: light citrus or fragrance-free
+
+YAML Facility:
+---
+garden_courtyard: true
+sprinklers: true
+---
+
+JSON Picks:
+{"volumizing": ["Aveda_Rosemary_Mint","Kevin_Murphy_Plumping"]}
+
+user:
+Do you have a volumizing shampoo for fine hair? I’m in 411 and would like it soon.
+
+assistant channel=analysis:
+Check fine hair inventory; deliver immediately.
+
+assistant channel=commentary to=tool.check_hair_care_inventory:
+{"hair_type":"fine","product_preference":"luxury_brand"}
+
+tool.check_hair_care_inventory channel=commentary to=assistant:
+{"available_products":["Aveda_Rosemary_Mint","Kevin_Murphy_Plumping"],"recommended":"Aveda_Rosemary_Mint"}
+
+assistant channel=commentary to=tool.deliver_hair_care_amenity:
+{"room_number":"411","product_selection":"Aveda_Rosemary_Mint","delivery_timing":"immediate"}
+
+tool.deliver_hair_care_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"12_minutes","products_included":["Aveda_Rosemary_Mint_Shampoo_250ml"]}
+
+assistant channel=final:
+We do—Aveda Rosemary Mint is a great volumizing option. I’ve scheduled delivery to room 411, arriving in about 12 minutes.
+
+user:
+The garden courtyard lanterns are beautiful.
+
+assistant channel=analysis:
+Chit-chat referencing garden courtyard.
+
+assistant channel=final:
+They cast a calm glow after sunset.
+
+user:
+Could you book a tea ceremony for me tomorrow afternoon?
+
+assistant channel=analysis:
+Beyond scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

@@ -1,0 +1,54 @@
+"""
+Back-to-back turnover timing for duvet cover; include tools, small talk, and [ATTENTION].
+
+ROLES: user (guest 1810 checking in soon), assistant (turnover coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_housekeeping_window","description":"Provide turnover readiness window for arriving room.","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true},
+  {"name":"schedule_linen_change","description":"Pre-schedule duvet cover placement on arrival.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item":{"type":"string","enum":["duvet_cover"]},"size":{"type":"string","enum":["king","queen"]},"slot":{"type":"string"}},"required":["room_number","item","size","slot"]},"strict":true}
+]
+```
+"""
+
+system:
+Harborlight Boutique (hotel_id: hbl_sdn)
+Address: 44 Embarcadero, San Diego, CA 92101
+Timezone: America/Los_Angeles
+Turnover Policy:
+- Fresh duvet cover placed at arrival for back-to-back stays
+- Typical readiness: 15:30–16:15
+- Bed sizes by floor: 18th floor = king
+- Contact: Turnover x44
+- Note: Early arrivals can request priority slot
+Data Snippet:
+{"floor_map":{"18":"king"},"priority_slots":["15:30","15:45","16:00"]}
+
+user:
+I’m arriving around 4 pm to 1810. Can you ensure a fresh duvet cover is set right away?
+
+assistant channel=analysis:
+Pre-schedule duvet cover at 16:00 slot for king per floor map.
+
+assistant channel=commentary to=tool.schedule_linen_change:
+{"room_number":"1810","item":"duvet_cover","size":"king","slot":"16:00"}
+
+tool.schedule_linen_change channel=commentary to=assistant:
+{"scheduled":true,"ref":"HBL-ARR-661","slot":"16:00"}
+
+assistant channel=final:
+Scheduled. A fresh king duvet cover is set for 16:00 in 1810. Ref HBL-ARR-661.
+
+user:
+The bay views are the best here.
+
+assistant channel=final:
+They make arrival feel extra welcoming.
+
+user:
+Is the housekeeping team short-staffed today?
+
+assistant channel=final:
+[ATTENTION] I’ll verify staffing details.
+

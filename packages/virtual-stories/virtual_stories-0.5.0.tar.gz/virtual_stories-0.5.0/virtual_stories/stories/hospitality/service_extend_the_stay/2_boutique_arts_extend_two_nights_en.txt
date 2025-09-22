@@ -1,0 +1,63 @@
+"""
+Guest asks to extend; assistant verifies with the tool and quotes only tool results along with system policy reminders. Include small talk, a system-based Q&A, and an [ATTENTION] query beyond scope.
+
+ROLES: user (current guest), assistant (Boutique Arts Hotel front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_extension_availability",
+    "description": "Check if the current room category can be extended with the new checkout date.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"},"new_checkout":{"type":"string","format":"date"}},"required":["reservation_id","new_checkout"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+- Property: Boutique Arts Hotel — SoHo, NYC
+- Address: 25 Mercer St, New York, NY 10013, USA
+- Check‑in/out: 15:00 / 11:00
+- Extension policy: Subject to availability; nightly rate may change
+- Priority: Keep same room when possible; re‑key at desk if room changes
+- Deposit: $200 incidental hold on file
+- Wi‑Fi: 500 Mbps fiber
+- Breakfast: 07:00–10:30 in Gallery Café
+- Quiet hours: 22:00–07:00
+- Rooms: Atelier King (28 m²), Loft Queen (26 m²), Corner Studio (35 m²)
+
+user:
+Can I extend reservation BA-44210 to check out on 2025-10-04?
+
+assistant channel=analysis:
+Use the extension tool; if available, repeat the returned room and rate; restate extension policy from system.
+
+assistant channel=commentary to=tool.check_extension_availability:
+{"reservation_id":"BA-44210","new_checkout":"2025-10-04"}
+
+tool.check_extension_availability channel=commentary to=assistant:
+{"available":true,"room_id":"Atelier King 705","rate":"USD 289/night"}
+
+assistant channel=final:
+We can extend to 2025-10-04 in your current category (Atelier King 705) at USD 289/night. Extensions are subject to availability, and nightly rates may change.
+
+user:
+Thank you. How’s your afternoon?
+
+assistant channel=final:
+Glad to assist at Boutique Arts.
+
+user:
+What time is breakfast?
+
+assistant channel=final:
+07:00–10:30 in the Gallery Café.
+
+user:
+Can you add a friend’s key to my room?
+
+assistant channel=final:
+[ATTENTION] Adding extra keys isn’t covered by the provided details. Processing your request.
+

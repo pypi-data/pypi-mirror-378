@@ -1,0 +1,64 @@
+"""
+Guest asks for ingredient label details and requests a bottle; assistant confirms labeling and delivers; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in room 1422 concerned about allergens), assistant (housekeeping providing labeled amenity)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"get_amenity_details","description":"Get ingredient/label details","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"}},"required":["amenity_name"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Panorama Ridge — Horizon Wing
+Room 1422: Premium King
+Mouthwash: Brand "Horizon Fresh"; alcohol-free; labeled with full ingredients
+Units: 20 ml single-use
+Policy: Up to 3 per night
+Delivery hours: 06:30–23:30
+Contacts: Housekeeping 660; Concierge 100
+Note: Horizon Wing lift H2 serves 14th floor
+Safety: Do not swallow; not for children under 6
+
+user:
+Can you confirm the mouthwash has full ingredient labeling? And send one to 1422.
+
+assistant channel=analysis:
+Confirm labeling per system and send 1 bottle to 1422.
+
+assistant channel=commentary to=tool.get_amenity_details:
+{"amenity_name":"mouthwash"}
+
+tool.get_amenity_details channel=commentary to=assistant:
+{"amenity_name":"mouthwash","brand":"Horizon Fresh","ingredient_label":"full","alcohol_free":true}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1422","amenity_name":"mouthwash","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MW-1422-1188","eta_minutes":9}
+
+assistant channel=final:
+Yes—the Horizon Fresh mouthwash includes full ingredient labeling and is alcohol-free. One bottle is on its way to 1422 with an ETA of about 9 minutes.
+
+user:
+Appreciate it. Delivery hours tonight?
+
+assistant channel=final:
+We deliver from 06:30 to 23:30.
+
+user:
+Hope you’re having a good night.
+
+assistant channel=final:
+Thank you—I am!
+
+user:
+Do you know if the pharmacy downstairs offers flu shots?
+
+assistant channel=final:
+[ATTENTION] Pharmacy services fall outside the provided system context.
+

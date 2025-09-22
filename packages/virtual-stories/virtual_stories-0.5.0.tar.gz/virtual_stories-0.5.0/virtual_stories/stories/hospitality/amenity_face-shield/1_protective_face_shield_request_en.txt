@@ -1,0 +1,149 @@
+"""
+Guest requests face shield for enhanced safety during hotel stay and public area navigation.
+Provide professional safety equipment assistance with inventory management and delivery coordination.
+
+ROLES: user (health-conscious hotel guest requesting protective equipment), assistant (guest services coordinator with safety equipment access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_safety_equipment",
+    "description": "Check availability of personal protective equipment.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "equipment_type": { "type": "string", "enum": ["face_shield", "surgical_mask", "n95_mask", "hand_sanitizer", "gloves"] },
+        "quantity_needed": { "type": "number" },
+        "size_preference": { "type": "string", "enum": ["small", "medium", "large", "adjustable"] }
+      },
+      "required": ["equipment_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_safety_equipment",
+    "description": "Arrange delivery of safety equipment to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "equipment_list": { "type": "array", "items": { "type": "string" } },
+        "delivery_time": { "type": "string" },
+        "special_instructions": { "type": "string" }
+      },
+      "required": ["room_number", "equipment_list"]
+    },
+    "strict": true
+  },
+  {
+    "name": "update_guest_safety_profile",
+    "description": "Update guest profile with safety preferences for future stays.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guest_id": { "type": "string" },
+        "safety_preferences": { "type": "array", "items": { "type": "string" } },
+        "medical_considerations": { "type": "string" },
+        "contact_notes": { "type": "string" }
+      },
+      "required": ["guest_id", "safety_preferences"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Metropolitan Health & Safety Suites Chicago (hotel_id: mhs_chi_01)
+Address: 450 North Michigan Ave, Chicago, IL 60611
+Timezone: America/Chicago
+
+Safety Equipment Services:
+- Personal Protective Equipment: Face shields (clear acrylic, anti-fog), Surgical masks (Level 1-3), N95 respirators, Disposable gloves (latex-free nitrile), Hand sanitizer (70% alcohol)
+- Face shield specifications: Adjustable headband, optical clarity, lightweight design, disposable/reusable options
+- Sizes available: Small (youth/petite), Medium (standard adult), Large (wide-fit), Adjustable (one-size-fits-most)
+- Delivery service: 24/7 availability, contactless delivery option, sanitized packaging
+- Inventory restocked daily; emergency supplies maintained
+
+Health & Safety Standards:
+- All equipment meets CDC and FDA guidelines
+- Single-use items provided sealed and sterile
+- Reusable items sanitized with hospital-grade disinfectant
+- Guest safety profile tracking for future preference management
+- Medical-grade air filtration system throughout property
+
+Guest Services:
+- Concierge desk: 06:00–24:00
+- Emergency safety equipment: Available 24/7 via night manager
+- Health consultation: Registered nurse on-call 08:00–20:00
+
+user:
+Hi there! I'm staying in room 1156 and wondering if you have face shields available? I have some health concerns and would feel more comfortable with extra protection during my stay.
+
+assistant channel=analysis:
+Guest needs face shields for health protection. Check availability first, then arrange delivery to room 1156.
+
+assistant channel=commentary to=tool.check_safety_equipment:
+{"equipment_type": "face_shield", "quantity_needed": 3, "size_preference": "adjustable"}
+
+tool.check_safety_equipment channel=commentary to=assistant:
+{"available": true, "equipment_type": "face_shield", "quantity_available": 24, "models": ["ClearVision Pro (reusable)", "SafeGuard Disposable", "ComfortFit Adjustable"], "sizes": ["adjustable"], "specifications": {"clarity": "optical-grade", "weight": "lightweight", "sanitization": "hospital-grade"}}
+
+assistant channel=final:
+Absolutely! We have several face shield options available. I can provide ClearVision Pro reusable shields, SafeGuard disposables, or ComfortFit adjustable models—all with optical-grade clarity and lightweight design. How many would you like, and do you have a preference for reusable or disposable?
+
+user:
+I'd prefer the reusable ones. Could I get 2 shields? And is it possible to have some hand sanitizer as well?
+
+assistant channel=analysis:
+Guest wants 2 reusable face shields plus hand sanitizer. Check hand sanitizer availability, then arrange delivery.
+
+assistant channel=commentary to=tool.check_safety_equipment:
+{"equipment_type": "hand_sanitizer", "quantity_needed": 2}
+
+tool.check_safety_equipment channel=commentary to=assistant:
+{"available": true, "equipment_type": "hand_sanitizer", "quantity_available": 48, "specifications": {"alcohol_content": "70%", "size_options": ["2oz travel", "8oz pump", "16oz refill"], "scent": "unscented/light citrus"}}
+
+assistant channel=analysis:
+Hand sanitizer available. Deliver 2 reusable face shields and hand sanitizer to room 1156.
+
+assistant channel=commentary to=tool.deliver_safety_equipment:
+{"room_number": "1156", "equipment_list": ["2 ClearVision Pro face shields", "2 8oz hand sanitizer pumps"], "delivery_time": "15 minutes", "special_instructions": "Contactless delivery, include usage and care instructions"}
+
+tool.deliver_safety_equipment channel=commentary to=assistant:
+{"delivery_scheduled": true, "estimated_arrival": "15 minutes", "delivery_method": "contactless", "included_items": ["2 ClearVision Pro reusable face shields", "2 8oz unscented hand sanitizer pumps", "care instruction card", "sanitization wipes"], "tracking_id": "SAFETY_1156_240829"}
+
+assistant channel=final:
+Perfect! I'm sending 2 ClearVision Pro reusable face shields and 2 8oz hand sanitizer pumps to room 1156. The delivery will arrive contactlessly in about 15 minutes with care instructions and sanitization wipes included.
+
+user:
+That's wonderful service! By the way, how's the weather looking for tomorrow? I'm planning to explore downtown.
+
+assistant channel=analysis:
+Guest making small talk about weather and plans. Respond warmly without tools, staying within hotel context.
+
+assistant channel=final:
+Chicago's been lovely lately! The concierge desk can provide detailed weather forecasts and downtown recommendations when you're ready to explore.
+
+user:
+Could you also help me book a spa treatment that incorporates aromatherapy? I love essential oils.
+
+assistant channel=analysis:
+Guest asking about spa aromatherapy treatments. This goes beyond my safety equipment tools—need to acknowledge and pass to appropriate department.
+
+assistant channel=final:
+[ATTENTION] I'd love to help with aromatherapy spa treatments. Looking into available options.
+
+user:
+Thanks for everything! The face shields will be perfect for my peace of mind.
+
+assistant channel=analysis:
+Guest expressing satisfaction. Acknowledge their thanks and confirm the safety equipment delivery.
+
+assistant channel=final:
+You're very welcome! Your safety equipment delivery should arrive shortly. Feel confident and protected during your stay at Metropolitan Health & Safety Suites.

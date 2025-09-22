@@ -1,0 +1,69 @@
+"""
+Guest asks for a quick equipment orientation and safety contacts; include brief small talk and an ATTENTION request.
+
+ROLES: user (guest new to the gym), assistant (attendant offering guidance windows)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_orientation_windows","description":"Return times when staff offer equipment orientation.","parameters":{"type":"object","properties":{}},"strict":true},
+  {"name":"get_emergency_info","description":"Return emergency contact point inside gym.","parameters":{"type":"object","properties":{}},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Crescent Bay Hotel
+Fitness Center: Crescent Fit Lab (Level 2, near Spa)
+Open Access: 24 hours; keycard required
+Equipment Snapshot:
+- Cardio: 4 treadmills, 2 rowers, 2 stair climbers
+- Strength: selectorized circuit, bench + barbell to 90 kg
+- Mobility: mats, foam rollers, stretch cage
+
+Policies:
+• Close-toed shoes, no glass bottles
+• Wipe-down required; wipes and bins provided
+
+Support & Safety:
+- Orientation with attendant 07:00–09:00 and 18:00–19:30
+- Emergency wall phone connects to Security Desk
+
+user:
+Do you have someone who can show me the machines? Also, where do I call if there’s an emergency?
+
+assistant channel=analysis:
+Provide orientation windows and emergency phone location from tools.
+
+assistant channel=commentary to=tool.get_orientation_windows:
+{}
+
+tool.get_orientation_windows channel=commentary to=assistant:
+{"windows":["07:00–09:00","18:00–19:30"]}
+
+assistant channel=commentary to=tool.get_emergency_info:
+{}
+
+tool.get_emergency_info channel=commentary to=assistant:
+{"contact_point":"Wall phone inside the gym connects to Security Desk"}
+
+assistant channel=final:
+Yes—an attendant offers quick orientations from 07:00–09:00 and 18:00–19:30. For emergencies, use the wall phone inside the gym to reach the Security Desk.
+
+user:
+Thanks! The spa smells amazing today.
+
+assistant channel=final:
+Hope you have a relaxing time after your workout.
+
+user:
+Do you require close‑toed shoes?
+
+assistant channel=final:
+Yes—close‑toed shoes are required and no glass bottles.
+
+user:
+Can you design a 12-week strength plan for me?
+
+assistant channel=final:
+[ATTENTION] Program design isn’t supported here. Reviewing available resources.

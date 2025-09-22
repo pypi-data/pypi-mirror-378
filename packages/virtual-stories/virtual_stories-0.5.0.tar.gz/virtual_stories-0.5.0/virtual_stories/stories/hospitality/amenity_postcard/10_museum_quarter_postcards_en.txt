@@ -1,0 +1,50 @@
+"""
+Guest inquires about museum-quarter postcards and asks an archival detail beyond scope.
+
+ROLES: user (museum visitor), assistant (concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_gift_shop_inventory","description":"Checks the inventory of the hotel gift shop.",
+   "parameters":{"type":"object","properties":{"item_name":{"type":"string"}},"required":["item_name"]}}
+]
+```
+"""
+
+system:
+Marble Court Hotel — Museum Quarter Kiosk
+Series: Colonnade Perspectives, Marble Reliefs, Atrium Oculus
+Hours: 10:00–19:00 (Thu extended to 21:00)
+Pricing: $2.30 each; museum-member guests 10% off
+Mail: concierge bag departs 15:00 daily
+Paper: archival cotton blend; deckled edge on select designs
+Inventory via get_gift_shop_inventory
+
+user:
+Do you have the Atrium Oculus postcards today?
+
+assistant channel=analysis:
+Check inventory for atrium_oculus_postcard; then share hours and pricing from system.
+
+assistant channel=commentary to=tool.get_gift_shop_inventory:
+{"item_name": "atrium_oculus_postcard"}
+
+tool.get_gift_shop_inventory channel=commentary to=assistant:
+{"item_name": "atrium_oculus_postcard", "quantity": 21, "price": 2.3}
+
+assistant channel=final:
+Yes—21 available at $2.30 each. The kiosk is open 10:00–19:00 (Thu until 21:00). We can mail them via our 15:00 concierge bag.
+
+user:
+Beautiful space!
+
+assistant channel=final:
+That oculus is stunning in afternoon light.
+
+user:
+Can you provide the curator’s internal catalog number for the relief series?
+
+assistant channel=final:
+[ATTENTION] Internal catalog numbers aren’t included in the provided resources.
+

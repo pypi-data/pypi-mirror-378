@@ -1,0 +1,94 @@
+"""
+Family with allergies requests hypoallergenic cotton buds and delivery timing details.
+Provide options and restocking policy.
+
+ROLES: user (family guest), assistant (amenities specialist)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_swab_options",
+    "description": "Check available cotton bud options and allergy-friendly variants.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preference": { "type": "string", "enum": ["hypoallergenic","organic","standard"] }
+      },
+      "required": ["preference"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_swabs",
+    "description": "Schedule swab delivery with quantity and method.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room": { "type": "string" },
+        "item": { "type": "string" },
+        "quantity": { "type": "string", "enum": ["single_pack","weekly_supply"] },
+        "method": { "type": "string", "enum": ["housekeeping","front_desk_pickup","immediate_delivery"] }
+      },
+      "required": ["room","item","quantity","method"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Alpine Springs Resort (hotel_id: asr_zermatt_03)
+Address: Bahnhofstrasse 7, 3920 Zermatt, Switzerland
+Timezone: Europe/Zurich
+Family Focus: allergy-friendly amenities available
+
+Hygiene Amenities:
+- Options: hypoallergenic swabs, organic bamboo, standard multi-pack
+- Delivery: housekeeping restock twice daily; immediate delivery available
+- Fees: complimentary
+- Packaging: individually wrapped options available
+- Contact: front desk coordinates special requests
+
+user:
+Hi, we have allergies in our family. Could you send hypoallergenic cotton buds to room 214? A weekly supply would be helpful.
+
+assistant channel=analysis:
+Confirm hypoallergenic option and schedule weekly supply via housekeeping.
+
+assistant channel=commentary to=tool.check_swab_options:
+{"preference":"hypoallergenic"}
+
+tool.check_swab_options channel=commentary to=assistant:
+{"available":true,"items":["Hypoallergenic sterile swabs (individually wrapped)"]}
+
+assistant channel=commentary to=tool.deliver_swabs:
+{"room":"214","item":"Hypoallergenic sterile swabs (individually wrapped)","quantity":"weekly_supply","method":"housekeeping"}
+
+tool.deliver_swabs channel=commentary to=assistant:
+{"scheduled":true,"first_drop":"next housekeeping round","note":"allergy-friendly labeling"}
+
+assistant channel=final:
+Absolutely—we’ll provide hypoallergenic sterile swabs (individually wrapped) as a weekly supply. Housekeeping will deliver starting with the next round. Complimentary.
+
+user:
+Thanks! If we run out, is immediate delivery possible?
+
+assistant channel=analysis:
+Answer from system delivery note.
+
+assistant channel=final:
+Yes—immediate delivery is available anytime; just let us know and we’ll send more right away.
+
+user:
+Great. Also, is there sledding on the hill tonight?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check the sledding schedule and hill access times for tonight. Investigating potential answers.
+

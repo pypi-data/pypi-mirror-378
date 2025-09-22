@@ -1,0 +1,57 @@
+"""
+Guest reports no hot water in shower; asks about escalation and follow-up call.
+
+ROLES: user (guest without hot water), assistant (front desk opening high-priority ticket, advising escalation and follow-up)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"open","description":"Create high-priority ticket","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"issue":{"type":"string"},"priority":{"type":"string","enum":["low","normal","high","urgent"]}},"required":["hotel_id","room","issue","priority"],"additionalProperties":false},"strict":true},
+  {"name":"assign","description":"Assign engineer with ETA","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"ticket_id":{"type":"string"}},"required":["hotel_id","ticket_id"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Thames View London (TVL-44)
+Address: 88 Upper Thames St, London EC4V 3EJ, UK
+Engineering: 08:00–22:00; boiler tech on-call
+Response: High priority 10–15 minutes
+Escalation: If temperature below standard after fix, escalate to boiler tech
+Follow-up: Front desk calls guest after closure
+Dispatch: Ticket required
+
+user:
+There’s no hot water in 514. How quickly can this be fixed, and do you follow up?
+
+assistant channel=analysis:
+Open a high-priority ticket; assign engineer with ETA; confirm we follow up after closure.
+
+assistant channel=commentary to=tool.open:
+{"hotel_id":"TVL-44","room":"514","issue":"No hot water in shower","priority":"high"}
+
+tool.open channel=commentary to=assistant:
+{"ticket_id":"TVL-ENG-404","status":"open"}
+
+assistant channel=commentary to=tool.assign:
+{"hotel_id":"TVL-44","ticket_id":"TVL-ENG-404"}
+
+tool.assign channel=commentary to=assistant:
+{"eta_minutes":12,"assigned":"Engineer Patel"}
+
+assistant channel=final:
+I’ve opened ticket TVL-ENG-404 as high priority; Engineer Patel will arrive in about 12 minutes. If temperature is still below standard after the fix, we escalate to our boiler tech, and the front desk will follow up once the ticket is closed.
+
+user:
+The river looks calm.
+
+assistant channel=final:
+It’s a peaceful stretch by this time.
+
+user:
+Can you share the boiler’s full service contract?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

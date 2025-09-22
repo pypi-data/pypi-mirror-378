@@ -1,0 +1,76 @@
+"""
+Guest requests a conference room centerpiece; concise, neutral style.
+Provide check and creation.
+
+ROLES: user (meeting host), assistant (florist coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_floral_inventory", "description": "Check centerpiece options and availability.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "arrangement_type": { "type": "string", "enum": ["centerpiece"] }, "flower_preference": { "type": "string", "enum": ["mixed_seasonal", "modern_minimalist"] }, "budget_range": { "type": "string", "enum": ["premium_100_200"] } }, "required": ["arrangement_type"] }, "strict": true },
+  { "name": "create_floral_arrangement", "description": "Create centerpiece and deliver to meeting room.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "arrangement_style": { "type": "string", "enum": ["elegant_mixed", "modern_minimalist"] }, "delivery_time": { "type": "string" }, "special_message": { "type": "string" }, "occasion": { "type": "string", "enum": ["corporate"] } }, "required": ["room_number", "arrangement_style", "occasion"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Seaside Convention Hotel (hotel_id: sch_syd_01)
+Address: 200 Darling Dr, Sydney NSW 2000, Australia
+Timezone: Australia/Sydney
+
+Floral:
+- Neutral corporate centerpieces available 09:00–18:00
+- Delivery to meeting levels in 25–45 minutes
+- Maintenance: water refresh during lunch break on request
+- Price: AUD 180 premium
+- Card with logo optional
+
+user:
+Meeting room Coral B—need a neutral centerpiece before 1:00 PM.
+
+assistant channel=analysis:
+Check centerpiece availability; create modern minimalist; schedule delivery.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type":"centerpiece","flower_preference":"modern_minimalist","budget_range":"premium_100_200"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available":true,"arrangements":["modern_greenery_bowl"],"pricing":{"modern_greenery_bowl":180}}
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number":"Coral B","arrangement_style":"modern_minimalist","delivery_time":"12:30 PM","special_message":"Seaside Convention Hotel","occasion":"corporate"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed":true,"arrangement_id":"SCH_CB_MIN","delivery_scheduled":"12:30 PM","includes":["greenery","textural_elements","low_profile_vessel"],"total_cost":180}
+
+assistant channel=final:
+Confirmed—modern minimalist centerpiece for Coral B at 12:30 PM. We can refresh water during your lunch break if needed.
+
+user:
+Thanks. Is delivery 25–45 minutes to meeting floors?
+
+assistant channel=analysis:
+Yes, from system.
+
+assistant channel=final:
+Correct—meeting floor deliveries run about 25–45 minutes.
+
+user:
+Views are great from the foyer.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+The harbor outlook is a favorite during breaks.
+
+user:
+Could you arrange A/V support too?
+
+assistant channel=analysis:
+Outside floral scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll contact our events team about A/V assistance.
+"""
+

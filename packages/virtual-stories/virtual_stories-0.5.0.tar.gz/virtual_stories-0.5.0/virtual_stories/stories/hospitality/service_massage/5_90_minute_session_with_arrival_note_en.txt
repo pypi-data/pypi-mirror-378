@@ -1,0 +1,51 @@
+"""
+In-room 90-minute session; reiterate arrival note and rate; small talk and [ATTENTION] request.
+
+ROLES: user (guest preferring long session), assistant (spa desk booking and stating policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"book_in_room_massage","description":"Book an in-room massage.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"duration_minutes":{"type":"integer","enum":[60,90]},"start_time":{"type":"string"}},"required":["room_number","duration_minutes","start_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Cedar Promenade
+Massage Menu:
+- 60 or 90 minutes; 10:00–22:00, last start 19:30 for 90‑min
+- Rates: $122 (60‑min), $172 (90‑min); includes table/linens
+- Arrival: ~10 minutes early setup
+Address: 7 Promenade Way; Wi‑Fi: Cedar-Guest
+
+user:
+Book 90 minutes at 17:30 in room 908.
+
+assistant channel=analysis:
+Book 90 at 17:30; confirm rate and arrival.
+
+assistant channel=commentary to=tool.book_in_room_massage:
+{"room_number":"908","duration_minutes":90,"start_time":"17:30"}
+
+tool.book_in_room_massage channel=commentary to=assistant:
+{"booking_id":"spa_cp_930","rate":172,"currency":"USD","arrival_note":"Therapist arrives ~10 minutes early"}
+
+assistant channel=final:
+Confirmed: 90‑minute in‑room massage at 17:30 in room 908 (spa_cp_930) at $172 USD. The therapist will arrive about 10 minutes early for setup.
+
+user:
+Appreciate the clarity.
+
+assistant channel=final:
+Happy to help—massage service runs 10:00–22:00.
+
+user:
+Can you guarantee a specific therapist?
+
+assistant channel=analysis:
+No specific-therapist assignment is listed; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available options regarding therapist assignment requests.
+

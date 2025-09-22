@@ -1,0 +1,63 @@
+"""
+Guest requests bright desk task lighting with cool temperature and asks for recommended range.
+
+ROLES: user (working guest), assistant (lighting coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"guidelines","description":"Return recommended ranges.","parameters":{"type":"object","additionalProperties":false,"properties":{"area":{"type":"string","enum":["desk","reading","ambiance"]}},"required":["area"]},"strict":true},
+  {"name":"adjust","description":"Adjust lamp settings.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"brightness":{"type":"number","minimum":10,"maximum":100},"position":{"type":"string","enum":["desk_area","reading_chair","bedside_left","bedside_right","window_corner"]},"temperature":{"type":"string","enum":["neutral_3000k","cool_4000k","daylight_5000k"]}},"required":["room","brightness","position"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Business Hotel (hotel_id: sbh_il_13)
+Address: 40 Wacker Dr, Chicago, IL 60601
+Standards:
+- Desk work: 85–95% brightness, daylight 5000K
+- Reading chair: 70–80% brightness, neutral 3000K
+- Evening ambiance: 30–50% brightness, warm tones
+Service hours: 06:30–23:00; ETA 8–14 minutes
+Two movable floor lamps per room
+
+user:
+In 2514—set desk lighting to your recommended bright setting with daylight.
+
+assistant channel=analysis:
+Use desk standard 85–95% and daylight 5000K; set to 90% at desk_area for 2514.
+
+assistant channel=commentary to=tool.guidelines:
+{"area":"desk"}
+
+tool.guidelines channel=commentary to=assistant:
+{"area":"desk","recommendation":{"brightness":"85–95%","temperature":"daylight_5000k"}}
+
+assistant channel=commentary to=tool.adjust:
+{"room":"2514","brightness":90,"position":"desk_area","temperature":"daylight_5000k"}
+
+tool.adjust channel=commentary to=assistant:
+{"ticket":"SBH-2514-LMP-905","eta_minutes":10}
+
+assistant channel=final:
+Desk work standard is 85–95% with daylight 5000K. I’ve set your desk lamp to 90% at 5000K in 2514 (ticket SBH-2514-LMP-905), ETA about 10 minutes within 06:30–23:00.
+
+user:
+Appreciate it. The river looks busy.
+
+assistant channel=analysis:
+Chitchat reply.
+
+assistant channel=final:
+It’s a lively view from that side.
+
+user:
+Do you rent monitors for laptops?
+
+assistant channel=analysis:
+Monitor rental isn’t included in lighting tools.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability of laptop monitors.
+

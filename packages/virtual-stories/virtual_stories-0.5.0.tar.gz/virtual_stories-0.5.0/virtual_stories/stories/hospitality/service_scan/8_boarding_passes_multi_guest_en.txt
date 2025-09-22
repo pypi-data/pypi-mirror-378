@@ -1,0 +1,59 @@
+"""
+Two guests need boarding passes scanned and emailed separately; include in-context email policy and [ATTENTION] tool actions.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"scan_document","description":"Scan","parameters":{"type":"object","properties":{"pages":{"type":"integer"},"dpi":{"type":"integer"},"color":{"type":"string","enum":["b&w","color"]},"duplex":{"type":"boolean"},"ocr":{"type":"boolean"}},"required":["pages","dpi","color","duplex","ocr"]}},
+  {"name":"email_file","description":"Email","parameters":{"type":"object","properties":{"recipient":{"type":"string"},"filename":{"type":"string"}},"required":["recipient","filename"]}}
+]
+"""
+
+system:
+Center: Northern Lights Inn (hotel_id: nli_reyk)
+Email service: staff can email files upon guest request.
+Recommended: 300 dpi b&w for boarding passes; OCR optional.
+
+user:
+Can you email scans of two boarding passes, one to each of us?
+
+assistant channel=analysis:
+Confirm we can email; proceed with scans and two emails.
+
+assistant channel=final:
+Yes—we can scan and email each file separately. We’ll use 300 dpi b&w unless you prefer color.
+
+user:
+[ATTENTION] Please scan both at 300 dpi b&w and email to a@example.com and b@example.com.
+
+assistant channel=analysis:
+Run two 1-page scans; email each.
+
+assistant channel=commentary to=scan_document:
+{"pages":1,"dpi":300,"color":"b&w","duplex":false,"ocr":false}
+
+tool.scan_document:
+{"status":"scanned","filename":"boarding_pass_A_bw.pdf"}
+
+assistant channel=commentary to=email_file:
+{"recipient":"a@example.com","filename":"boarding_pass_A_bw.pdf"}
+
+tool.email_file:
+{"status":"sent","message_id":"<NLI-201A>"}
+
+assistant channel=commentary to=scan_document:
+{"pages":1,"dpi":300,"color":"b&w","duplex":false,"ocr":false}
+
+tool.scan_document:
+{"status":"scanned","filename":"boarding_pass_B_bw.pdf"}
+
+assistant channel=commentary to=email_file:
+{"recipient":"b@example.com","filename":"boarding_pass_B_bw.pdf"}
+
+tool.email_file:
+{"status":"sent","message_id":"<NLI-201B>"}
+
+assistant channel=final:
+Both scans completed and emailed: a@example.com (ID <NLI-201A>) and b@example.com (ID <NLI-201B>).
+

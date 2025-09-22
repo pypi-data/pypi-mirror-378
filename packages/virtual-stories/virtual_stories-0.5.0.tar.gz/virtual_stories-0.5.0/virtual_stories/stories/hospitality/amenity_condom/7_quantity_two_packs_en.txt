@@ -1,0 +1,43 @@
+"""
+Guest requests two premium packs and lubricant together.
+
+ROLES: user (bulk request), assistant (wellness concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"arrange_wellness_delivery","description":"Arrange discreet delivery of personal wellness amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_method":{"type":"string","enum":["room_service_tray","housekeeping_supplies","front_desk_envelope"]},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown","next_housekeeping","specific_time"]}},"required":["room_number","items","delivery_method","delivery_timing"]},"strict":true}
+]
+```
+"""
+
+system:
+Riverside Panorama (hotel_id: rvp_bangkok)
+Address: 299 Charoenkrung Rd, Bangkok, Thailand
+Timezone: Asia/Bangkok
+
+Inventory:
+- WELLNESS_PROTECTION_PREMIUM
+- WELLNESS_LUBRICANT_WATER
+
+user:
+Could I get two premium latex‑free packs and one water‑based lubricant right away?
+
+assistant channel=analysis:
+Arrange immediate covered tray delivery.
+
+assistant channel=commentary to=tool.arrange_wellness_delivery:
+{"room_number":"1010","items":[{"sku":"WELLNESS_PROTECTION_PREMIUM","quantity":2},{"sku":"WELLNESS_LUBRICANT_WATER","quantity":1}],"delivery_method":"room_service_tray","delivery_timing":"immediate"}
+
+tool.arrange_wellness_delivery channel=commentary to=assistant:
+{"delivery_id":"RVP-1010-CM-18","eta_minutes":12}
+
+assistant channel=final:
+On the way—RVP-1010-CM-18, arriving in about 12 minutes on a covered tray.
+
+user:
+Great, thank you! Do you also have rose petals service?
+
+assistant channel=final:
+[ATTENTION] Checking special setup options.
+

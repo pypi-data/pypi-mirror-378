@@ -1,0 +1,80 @@
+"""
+Guest requests a digital thermometer and pain relief tablets; confirm inventory and deliver. Include chitchat and ATTENTION.
+
+ROLES: user (guest feeling unwell), assistant (medical amenity desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"inventory_check","description":"Check thermometer and pain relief availability at front desk.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"items":{"type":"array","items":{"type":"string"}}},
+     "required":["items"]},"strict":true},
+  {"name":"medical_drop","description":"Deliver requested medical items to room with standard priority.",
+   "parameters":{"type":"object","additionalProperties":false,
+     "properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},
+                  "priority":{"type":"string","enum":["standard","urgent"]}},
+     "required":["room_number","items","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Capitol View Hotel (hotel_id: CVH_dc_12)
+Address: 900 Constitution Ave NW, Washington, DC 20001 | TZ: America/New_York
+
+First Aid Desk:
+- Digital thermometers (single-use probe covers)
+- Pain relief tablets (standard dosage)
+- Hydration packets
+- Delivery: 06:00–23:00 (urgent overnight on-call)
+- Rooftop deck with monument views
+
+user:
+Could I get a thermometer and some pain relief tablets to room 1506?
+
+assistant channel=analysis:
+Check both items in inventory, then deliver standard priority.
+
+assistant channel=commentary to=tool.inventory_check:
+{"items":["thermometer","pain_relief_tablets"]}
+
+tool.inventory_check channel=commentary to=assistant:
+{"available":true,"items":["thermometer","pain_relief_tablets"],"notes":"probe_covers_included"}
+
+assistant channel=commentary to=tool.medical_drop:
+{"room_number":"1506","items":["thermometer","pain_relief_tablets"],"priority":"standard"}
+
+tool.medical_drop channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":12,"runner":"fd-team","ticket":"CVH-1506-TP"}
+
+assistant channel=final:
+Absolutely—thermometer (with single-use covers) and standard-dosage pain relief tablets are on their way to room 1506. ETA ~12 minutes (fd-team, ticket CVH-1506-TP).
+
+user:
+Is there a rooftop here?
+
+assistant channel=analysis:
+Answer from First Aid Desk extras.
+
+assistant channel=final:
+Yes—there’s a rooftop deck with monument views.
+
+user:
+That sounds nice.
+
+assistant channel=analysis:
+Chitchat.
+
+assistant channel=final:
+It’s a peaceful place to unwind when you’re feeling better.
+
+user:
+Can you provide medical advice on dosage timing for me?
+
+assistant channel=analysis:
+Medical advice beyond inventory is out of scope—use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I can’t advise on dosage timing; I’ll check appropriate guidance options for you.
+

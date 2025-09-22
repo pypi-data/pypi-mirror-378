@@ -1,0 +1,67 @@
+"""
+Family in bunkroom requests extra non-slip mats and step stool, plus temp cap; confirm playroom hours.
+
+ROLES: user (parent), assistant (family services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_anti_scald_limit","description":"Set anti-scald limit (°F).","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"max_temp_f":{"type":"integer","minimum":95,"maximum":110}},"required":["room_number","max_temp_f"]},"strict":true},
+  {"name":"deliver_child_bath_kit","description":"Deliver requested child bath items.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string","enum":["non_slip_mat","step_stool","rinse_cup","handheld_shower_holder"]}}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Evergreen Bunkhouse (hotel_id: ebh_boi_03)
+Address: 150 Grove St, Boise, ID 83702
+Timezone: America/Boise
+
+Family Bathing:
+- Anti-scald adjustable 95–110°F
+- Extra non-slip mats kept on each floor
+- Step stools available in sets
+
+Kids Spaces:
+- Playroom hours: 09:00–19:00
+- Movie night Sat 18:00
+
+user:
+Hi—cap shower temp in 414 at 100°F and send two non-slip mats and a step stool, please.
+
+assistant channel=analysis:
+Apply 100°F and deliver items.
+
+assistant channel=commentary to=tool.set_anti_scald_limit:
+{"room_number":"414","max_temp_f":100}
+
+tool.set_anti_scald_limit channel=commentary to=assistant:
+{"room_number":"414","max_temp_f":100,"applied":true}
+
+assistant channel=commentary to=tool.deliver_child_bath_kit:
+{"room_number":"414","items":["non_slip_mat","non_slip_mat","step_stool"]}
+
+tool.deliver_child_bath_kit channel=commentary to=assistant:
+{"delivery_id":"CBK-414-3109","eta_minutes":9,"items":["non_slip_mat","non_slip_mat","step_stool"]}
+
+assistant channel=final:
+Done: anti-scald set to 100°F, and two non-slip mats plus a step stool are en route (CBK-414-3109) with a ~9 minute ETA.
+
+user:
+Thanks—when does the playroom close?
+
+assistant channel=analysis:
+Use Kids Spaces.
+
+assistant channel=final:
+The playroom closes at 19:00.
+
+user:
+Do you host birthday parties?
+
+assistant channel=analysis:
+Beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about birthday parties and will review options.
+

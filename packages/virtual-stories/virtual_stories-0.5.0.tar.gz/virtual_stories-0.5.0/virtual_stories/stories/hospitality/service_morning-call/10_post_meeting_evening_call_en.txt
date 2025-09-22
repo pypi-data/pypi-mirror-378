@@ -1,0 +1,47 @@
+"""
+Guest requests an evening wake‑up after a long meeting and asks about ring behavior.
+
+ROLES: user (guest needing evening wake‑up), assistant (operator setting call and confirming details)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"set_wake_up_call","description":"Set a wake‑up call for a room at a given time.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"time":{"type":"string"}},"required":["room_number","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Orchard Lane Hotel — Wake‑Up Calls
+Behavior: Up to 3 rings; no knocks
+Time Format: 24‑hour or am/pm
+Desk: Between Business Center and Library
+Availability: 24/7
+
+user:
+Please set 7:40 pm for 836. Does it ring more than once?
+
+assistant channel=analysis:
+Confirm attempts and convert to 19:40; schedule the call.
+
+assistant channel=commentary to=tool.set_wake_up_call:
+{"room_number":"836","time":"19:40"}
+
+tool.set_wake_up_call channel=commentary to=assistant:
+{"confirmation_id":"wakeup_836_1940","time":"19:40"}
+
+assistant channel=final:
+Wake‑up set for room 836 at 19:40 (wakeup_836_1940). The system rings up to three times if not answered; there are no courtesy door knocks.
+
+user:
+The library looks peaceful.
+
+assistant channel=final:
+Our desk sits between the Business Center and Library.
+
+user:
+Could you page me over the PA if I miss it?
+
+assistant channel=final:
+[ATTENTION] PA paging isn’t part of wake‑up services. Reviewing the documentation.
+

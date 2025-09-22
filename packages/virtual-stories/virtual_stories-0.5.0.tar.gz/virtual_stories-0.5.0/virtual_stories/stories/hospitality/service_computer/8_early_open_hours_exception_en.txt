@@ -1,0 +1,52 @@
+"""
+Guest requests an early opening; we test via tool that no early access is available, include small talk, and handle an extra out‑of‑scope storage request.
+
+ROLES: user (guest asking for early access), assistant (business center attendant checking availability)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_early_open","description":"Attempt to approve early opening for a specific date/time.","parameters":{"type":"object","additionalProperties":false,"properties":{"date":{"type":"string","format":"date"},"time":{"type":"string","pattern":"^\\d{2}:\\d{2}$"}},"required":["date","time"]}}
+]
+```
+"""
+
+system:
+Seabreeze Hotel — Business Center
+Facts:
+- Standard hours: 07:00–22:00
+- Location: Lobby level, behind the library wall
+- Printing: A4 mono/color; card payment at desk
+- PCs: 8 units; idle logout at 5 minutes
+Contact: Ext. 112
+
+user:
+Could you open at 6:30 tomorrow?
+
+assistant channel=analysis:
+Attempt early‑open via tool and share the tool result.
+
+assistant channel=commentary to=tool.request_early_open:
+{"date":"2025-09-03","time":"06:30"}
+
+tool.request_early_open channel=commentary to=assistant:
+{"approved":false,"reason":"staffing_unavailable"}
+
+assistant channel=final:
+Early opening at 06:30 tomorrow isn’t available (staffing unavailable). Standard hours are 07:00–22:00 on the lobby level behind the library wall.
+
+user:
+The library wall looks great.
+
+assistant channel=final:
+It’s a guest favorite detail.
+
+user:
+Could you store my external hard drive there overnight?
+
+assistant channel=analysis:
+Storage service isn’t defined; use special flag.
+
+assistant channel=final:
+[ATTENTION] Overnight storage isn’t described here. Checking available options.
+

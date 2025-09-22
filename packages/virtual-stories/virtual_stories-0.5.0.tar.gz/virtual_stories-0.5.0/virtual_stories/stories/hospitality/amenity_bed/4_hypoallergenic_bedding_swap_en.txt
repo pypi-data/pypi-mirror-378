@@ -1,0 +1,64 @@
+"""
+Guest requests hypoallergenic bedding and feather removal.
+
+ROLES: user (guest with allergies), assistant (bedding services)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_bed_configuration","description":"Check current bedding and allergy profile.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"schedule_bedding_upgrade","description":"Swap to hypoallergenic package.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"upgrade_package":{"type":"string","enum":["hypoallergenic"]},"service_time":{"type":"string"}},"required":["room_number","upgrade_package"]},"strict":true}
+]
+```
+"""
+
+system:
+Harbor Lights Urban Retreat (hotel_id: hlar_sf)
+Address: 299 Embarcadero, San Francisco, CA 94105
+Timezone: America/Los_Angeles
+
+Allergy Program:
+1) Hypoallergenic set: microfiber duvet, down‑alternative pillows, dust‑mite encasements.
+2) Entire feather removal performed in one visit; estimated 15–20 minutes.
+3) Air purifier units available on request.
+4) Laundry uses fragrance‑free detergent on allergy flagged rooms.
+5) Late‑night swaps supported until 23:00.
+
+user:
+Hi, I’m sensitive to feathers—can we switch everything to hypoallergenic in 1906?
+
+assistant channel=analysis:
+Check current bedding; schedule hypoallergenic swap tonight.
+
+assistant channel=commentary to=tool.check_bed_configuration:
+{"room_number":"1906"}
+
+tool.check_bed_configuration channel=commentary to=assistant:
+{"room_number":"1906","bedding_package":"standard","pillows":["duck_down","memory_foam"],"encasements":"none"}
+
+assistant channel=commentary to=tool.schedule_bedding_upgrade:
+{"room_number":"1906","upgrade_package":"hypoallergenic","service_time":"22:00"}
+
+tool.schedule_bedding_upgrade channel=commentary to=assistant:
+{"scheduled":true,"package":"hypoallergenic","eta_minutes":35}
+
+assistant channel=final:
+Absolutely—your room 1906 is scheduled at 22:00 for a full hypoallergenic swap. We’ll remove feather items and add encasements; arrival in about 35 minutes.
+
+user:
+Thank you! The bay bridge lights are stunning.
+
+assistant channel=analysis:
+Small talk reply.
+
+assistant channel=final:
+Glad the view made your evening.
+
+user:
+Could you also reserve an air purifier for tomorrow?
+
+assistant channel=analysis:
+Air purifier reservation isn’t defined here; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check availability for an air purifier tomorrow.

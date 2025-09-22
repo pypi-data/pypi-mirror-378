@@ -1,0 +1,94 @@
+"""
+Guest reports missing or unpaired television remote; locate or pair a spare and confirm delivery, plus include one small-talk turn and one background acknowledgment.
+
+ROLES: user (guest without working TV remote), assistant (front desk tech liaison handling remote logistics)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "locate_spare_remote",
+    "description": "Check inventory for a compatible spare remote and its pairing steps.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tv_model": { "type": "string" }
+      },
+      "required": ["tv_model"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_and_pair_remote",
+    "description": "Deliver a spare remote to the room and complete pairing.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "remote_id": { "type": "string" }
+      },
+      "required": ["room_number", "remote_id"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harborline Boardwalk Hotel (hotel_id: hb_bos_07)
+Address: 88 Seaport Blvd, Boston, MA 02210
+Timezone: America/New_York
+
+TV & Remote Info:
+- In-room TV: LG NanoCell 50" (2023) — model NC50-LG23
+- Remotes: LG-MR23 magic remote with voice disabled by default; universal spare REM-U200 available
+- Pairing: Hold Home + Back for 5 seconds near TV sensor
+
+Food & Beverage:
+- Lobby oyster bar with daily raw selections after 5PM
+
+user:
+Hi—my room 1432 doesn’t have a TV remote. Can you help?
+
+assistant channel=analysis:
+Find compatible spare and arrange delivery with pairing.
+
+assistant channel=commentary to=tool.locate_spare_remote:
+{"tv_model":"NC50-LG23"}
+
+tool.locate_spare_remote channel=commentary to=assistant:
+{"available":true,"remote_id":"REM-U200","pairing":"hold Home+Back for 5s near sensor","notes":"voice_control_disabled_by_default"}
+
+assistant channel=analysis:
+Deliver and pair the spare remote for room 1432.
+
+assistant channel=commentary to=tool.deliver_and_pair_remote:
+{"room_number":"1432","remote_id":"REM-U200"}
+
+tool.deliver_and_pair_remote channel=commentary to=assistant:
+{"delivered":true,"paired":true,"technician":"avery","eta_minutes":8}
+
+assistant channel=final:
+All set—technician Avery will arrive in about 8 minutes with spare remote REM-U200 and complete pairing for room 1432.
+
+user:
+By the way, is that oyster bar in the lobby any good?
+
+assistant channel=analysis:
+Reply with a light remark grounded in system info.
+
+assistant channel=final:
+It’s popular—our lobby oyster bar has a daily raw selection after 5PM.
+
+user:
+Could I take this spare remote home when I check out?
+
+assistant channel=analysis:
+Not covered by tools or system; acknowledge with background flag.
+
+assistant channel=final:
+[ATTENTION] Noted. Checking available options.
+

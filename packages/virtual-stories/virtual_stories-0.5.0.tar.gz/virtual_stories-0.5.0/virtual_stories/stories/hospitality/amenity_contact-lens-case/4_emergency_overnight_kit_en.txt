@@ -1,0 +1,59 @@
+"""
+Guest needs complete overnight kit after tearing lens.
+
+ROLES: user (lens emergency), assistant (guest services coordinator)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_amenities","description":"Check availability of personal care and optical amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_type":{"type":"string","enum":["contact_lens_case","lens_solution","eye_drops","complete_kit","travel_size"]}},"required":["amenity_type"]},"strict":true},
+  {"name":"arrange_amenity_delivery","description":"Arrange delivery or pickup of personal care amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["room_delivery","front_desk_pickup","concierge_hand_delivery"]},"timing":{"type":"string","enum":["immediate","within_hour","specific_time"]}},"required":["room_number","items","delivery_method"]},"strict":true},
+  {"name":"check_nearby_pharmacy","description":"Check nearby pharmacy locations and contact lens product availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_type":{"type":"string","enum":["daily_disposables","lens_solution","lens_case","complete_care_kit"]},"emergency_hours":{"type":"boolean"}},"required":["product_type"]},"strict":true}
+]
+```
+"""
+
+system:
+Seaside Boardwalk Hotel (hotel_id: sbh_santa_cruz)
+Address: 101 Beach St, Santa Cruz, CA
+Timezone: America/Los_Angeles
+
+Overnight Kit Contents:
+- Case, 120ml solution, comfort drops, lens wipes
+
+user:
+I tore a lens—do you have a full overnight kit with case and solution?
+
+assistant channel=analysis:
+Confirm complete kit availability and arrange quick delivery.
+
+assistant channel=commentary to=tool.check_personal_care_amenities:
+{"amenity_type":"complete_kit"}
+
+tool.check_personal_care_amenities channel=commentary to=assistant:
+{"available_items":[{"type":"Complete Overnight Kit","availability":"in_stock","contents":"case, 120ml solution, comfort drops, wipes"}]}
+
+assistant channel=commentary to=tool.arrange_amenity_delivery:
+{"room_number":"336","items":["Complete Overnight Kit"],"delivery_method":"concierge_hand_delivery","timing":"immediate"}
+
+tool.arrange_amenity_delivery channel=commentary to=assistant:
+{"delivery_id":"SBH-336-OK-03","estimated_delivery":"18 minutes"}
+
+assistant channel=final:
+Confirmed—Complete Overnight Kit arriving via concierge hand delivery in ~18 minutes (SBH-336-OK-03). Anything else I can line up?
+
+user:
+Thanks! Do you sell daily disposables with my prescription?
+
+assistant channel=analysis:
+Check nearby pharmacy for disposables with limited prescriptions.
+
+assistant channel=commentary to=tool.check_nearby_pharmacy:
+{"product_type":"daily_disposables","emergency_hours":true}
+
+tool.check_nearby_pharmacy channel=commentary to=assistant:
+{"availability":"limited_prescriptions","note":"partner pharmacy handles select powers; ID required"}
+
+assistant channel=final:
+Daily disposables are available in limited prescriptions through our partner pharmacy; they’ll require ID. I can assist if you’d like.
+

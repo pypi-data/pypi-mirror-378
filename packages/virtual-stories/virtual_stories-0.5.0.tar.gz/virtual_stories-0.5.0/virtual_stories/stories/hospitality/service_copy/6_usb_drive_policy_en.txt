@@ -1,0 +1,53 @@
+"""
+Guest asks if a USB drive can be used; create job and cite USB handling policy; include small talk and ATTENTION for file conversion.
+
+ROLES: user (guest with files on USB), assistant (copy desk stating policy and creating job)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "create_copy_job",
+    "description": "Create a copy job from provided files.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"pages":{"type":"integer"},"color":{"type":"boolean"},"paper_size":{"type":"string","enum":["A4","Letter"]}},"required":["pages","color","paper_size"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Seaside Meridian — Print Point (Lobby East)
+USB policy: Staff can handle USB media directly at the counter; antivirus scan performed before opening
+Hours: 07:00–22:00
+Rates: B/W 0.15 USD; Color 0.50 USD per page
+Pickup: 10–20 minutes depending on queue
+Receipts: Available on request; charges can post to folio
+
+user:
+I have files on a USB drive. Can you do 14 color pages on A4?
+
+assistant channel=analysis:
+Confirm USB is allowed by staff; create the job; share pickup window from system.
+
+assistant channel=commentary to=tool.create_copy_job:
+{"pages":14,"color":true,"paper_size":"A4"}
+
+tool.create_copy_job channel=commentary to=assistant:
+{"job_id":"CPY-5526","price":"USD 7.00"}
+
+assistant channel=final:
+USBs are handled at the counter with an antivirus scan. Your job CPY-5526 is set for 14 A4 color pages at USD 7.00; pickup is about 10–20 minutes at the Lobby East Print Point.
+
+user:
+Thanks—nice view of the ocean today.
+
+assistant channel=final:
+We’ll keep it moving in the queue.
+
+user:
+Can you convert my .pages file to PDF before copying?
+
+assistant channel=final:
+[ATTENTION] File conversion isn’t available in these resources. Checking available options.
+

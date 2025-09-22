@@ -1,0 +1,49 @@
+"""
+Guest asks about the site, then makes an out-of-scope request. We confirm via tool.
+
+ROLES: user (asks), assistant (answers concisely)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```
+[{"name":"lookup","description":"Get web URL","parameters":{"type":"object","properties":{"hid":{"type":"string"}},"required":["hid"],"additionalProperties":false},"strict":true}]
+```
+"""
+
+system:
+FACT SHEET
+Property: The Pearl Battery
+hid: pearl_battery
+Website: https://www.thepearlbattery.com
+Dining: Courtyard cafe 07:00–17:00; raw bar Fri–Sun
+Rooms: 72; brick-and-beam; blackout drapes
+Tech: In-room Chromecast; 2.5 Gbps uplink; WPA3
+Wellness: Peloton bikes; eucalyptus steam room
+Transport: Streetcar stop D4 (90 m)
+
+user:
+Your official website?
+
+assistant channel=analysis:
+Confirm via lookup tool.
+
+assistant channel=commentary to=tool.lookup:
+{"hid":"pearl_battery"}
+
+tool.lookup channel=commentary to=assistant:
+{"website":"https://www.thepearlbattery.com"}
+
+assistant channel=final:
+https://www.thepearlbattery.com
+
+user:
+Is your raw bar menu online right now?
+
+assistant channel=final:
+[ATTENTION] Live menu status isn’t available in the provided context.
+
+user:
+Steam room smelled amazing.
+
+assistant channel=final:
+Glad you enjoyed it—the eucalyptus steam room is a guest favorite.
+

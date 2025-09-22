@@ -1,0 +1,74 @@
+"""
+Guest requests a standard 12 L open bin for the bathroom with compostable liner; confirm and schedule; include small talk and one [ATTENTION] question.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bin_availability","description":"Check bin stock.","parameters":{"type":"object","properties":{"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]}},"required":["bin_type"],"additionalProperties":false},"strict":true},
+  {"name":"request_additional_bin","description":"Deliver bin with placement and liner.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]},"placement":{"type":"string","enum":["bathroom","bedside","desk"]},"liner_type":{"type":"string","enum":["standard","compostable"]}},"required":["room_number","bin_type","placement","liner_type"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Silverline Park (hotel_id: slp_mia_44)
+Address: 700 Bay Harbor Dr, Miami, FL 33139
+Housekeeping rounds: 08:00–20:30; ETA 9–14 minutes
+
+Bin inventory
+compact_6L_lid(5)
+standard_12L_open(8)
+Liners: standard / compostable
+
+Ops facts
+• Check-in 16:00; Check-out 12:00
+• Pool towels at cabana desk
+• Corridor humidity kept under 55%
+• Ice dispensers: floors 4, 8, 12
+• Lobby soundtrack capped at 58 dB
+• Languages: EN, ES
+
+user:
+Please add a standard 12 L open bin to the bathroom in 902, compostable liner.
+
+assistant channel=analysis:
+Check standard_12L_open availability; request bathroom placement with compostable liner to 902.
+
+assistant channel=commentary to=tool.check_bin_availability:
+{"bin_type":"standard_12L_open"}
+
+tool.check_bin_availability channel=commentary to=assistant:
+{"available":true,"bin_type":"standard_12L_open","on_hand":8}
+
+assistant channel=analysis:
+Place request for delivery.
+
+assistant channel=commentary to=tool.request_additional_bin:
+{"room_number":"902","bin_type":"standard_12L_open","placement":"bathroom","liner_type":"compostable"}
+
+tool.request_additional_bin channel=commentary to=assistant:
+{"ticket_id":"HK-902-3355","eta_minutes":10}
+
+assistant channel=final:
+Confirmed—one standard 12 L open bin with a compostable liner will be placed in the bathroom of 902. Ticket HK-902-3355, ETA about 10 minutes.
+
+user:
+The lobby music sounds gentle.
+
+assistant channel=analysis:
+Use ops facts.
+
+assistant channel=final:
+We cap the lobby soundtrack at around 58 dB.
+
+user:
+Can housekeeping come at 22:00?
+
+assistant channel=analysis:
+Housekeeping rounds end 20:30; 22:00 not listed—flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking for a 22:00 housekeeping visit. Coordinating with the team.
+

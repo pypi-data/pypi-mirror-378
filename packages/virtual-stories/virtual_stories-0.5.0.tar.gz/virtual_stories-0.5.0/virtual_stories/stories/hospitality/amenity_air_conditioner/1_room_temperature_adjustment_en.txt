@@ -1,0 +1,119 @@
+"""
+Guest requests temperature adjustment and status verification for in-room air conditioner.
+Provide actionable HVAC assistance with tool-based changes and confirmations.
+
+ROLES: user (hotel guest requesting cooler temperature), assistant (front-desk agent with HVAC controls)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_hvac_status",
+    "description": "Get current HVAC status for a room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string", "description": "Room number" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "set_hvac_settings",
+    "description": "Apply HVAC settings for target temperature, mode, and fan speed.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "target_temp_c": { "type": "number" },
+        "mode": { "type": "string", "enum": ["cool", "heat", "auto", "dry", "fan_only"] },
+        "fan_speed": { "type": "string", "enum": ["low", "medium", "high", "auto"] }
+      },
+      "required": ["room_number", "target_temp_c", "mode"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_engineering_ticket",
+    "description": "Create an engineering ticket for HVAC issues.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "note": { "type": "string" }
+      },
+      "required": ["room_number", "category", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harborview Grand Boston (hotel_id: hv_bos_01)
+Address: 200 Seaport Blvd, Boston, MA 02210
+Timezone: America/New_York
+
+HVAC:
+- Building-wide VRF system; in-room thermostats linked to central controls.
+- Allowed temperature range: 18–26 °C; requests outside range must be declined.
+- Modes available: cool, heat, auto, dry, fan_only. Fan speeds: low, medium, high, auto.
+- Quiet hours 22:00–07:00: we recommend low/auto fan to reduce noise.
+
+Support:
+- Engineering on-site 06:00–23:00; overnight on-call ETA ~25 minutes.
+- Tickets can be opened via engineering tool only for mechanical faults.
+
+user:
+Hi! It feels a bit warm in my room 1421. Could you set the A/C to 20°C on low fan?
+
+assistant channel=analysis:
+Confirm current status, then apply 20 °C cool with low fan. Values are within allowed range.
+
+assistant channel=commentary to=tool.get_hvac_status:
+{"room_number":"1421"}
+
+tool.get_hvac_status channel=commentary to=assistant:
+{"room_number":"1421","temperature_c":24.0,"mode":"auto","fan_speed":"medium","online":true}
+
+assistant channel=analysis:
+Room 1421 is at 24 °C, mode auto, fan medium. Apply cool 20 °C, fan low.
+
+assistant channel=commentary to=tool.set_hvac_settings:
+{"room_number":"1421","target_temp_c":20,"mode":"cool","fan_speed":"low"}
+
+tool.set_hvac_settings channel=commentary to=assistant:
+{"applied":true,"effective_temp_c":20.0,"mode":"cool","fan_speed":"low","estimated_stabilization_minutes":15}
+
+assistant channel=final:
+All set—room 1421 is now on cool, low fan, targeting 20 °C. It should feel comfortable in about 15 minutes. If it doesn’t stabilize, I can open an engineering ticket.
+
+user:
+By the way, the harbor looks amazing from here tonight.
+
+assistant channel=analysis:
+Small talk response drawing from hotel identity only; no tool use needed.
+
+assistant channel=final:
+It does look amazing from here at Harborview Grand. Enjoy the harbor view!
+
+user:
+Could you arrange a whale-watching tour for tomorrow morning?
+
+assistant channel=analysis:
+Out of scope for defined tools and system capabilities; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for your request. Checking available options.
+
+user:
+That’s fine—thanks for helping with the A/C.
+
+

@@ -1,0 +1,66 @@
+"""
+Guest requests forks for an outdoor picnic setup.
+Provide cutlery delivery.
+
+ROLES: user (guest heading to park), assistant (concierge dispatching picnic cutlery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_amenity","description":"Deliver forks to lobby or room.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","room_number","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Parkside Commons (hotel_id: psc_40)
+Address: 11 Arbor Way, Boston, MA 02116
+Timezone: America/New_York
+
+Picnic Convenience:
+- Forks available in travel sleeves
+- Lobby pickup or room delivery
+- Typical timing: 8–10 minutes
+
+user:
+Could I grab 4 forks at the lobby? I'm in room 312.
+
+assistant channel=analysis:
+Dispatch 4 forks for lobby pickup; still use room number for ticketing.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name":"fork","room_number":"312","quantity":4}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status":"success","eta":"8 minutes","pickup":"lobby_desk","ticket":"PSC-312-PIC1"}
+
+assistant channel=final:
+Ready in about 8 minutes at the lobby desk—ticket PSC-312-PIC1 under room 312.
+
+user:
+Are these in sleeves?
+
+assistant channel=analysis:
+Yes per system.
+
+assistant channel=final:
+Yes—forks come in travel sleeves.
+
+user:
+Nice trees along the mall today.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+The canopy makes a perfect picnic path.
+
+user:
+Can you reserve a park permit?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

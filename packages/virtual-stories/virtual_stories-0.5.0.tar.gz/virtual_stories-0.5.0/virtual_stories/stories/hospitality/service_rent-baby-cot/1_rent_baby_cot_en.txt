@@ -1,0 +1,55 @@
+"""
+Guest requests a baby cot/crib rental; confirm availability, setup window, and safety policy; schedule delivery and setup.
+
+ROLES: user (parent requesting a cot), assistant (guest services coordinating housekeeping setup)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check stock and hold cot","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"schedule_housekeeping_setup","description":"Schedule housekeeping for in-room setup","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_note":{"type":"string"}},"required":["hotel_id","room","order_note"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeside Meridian Zürich (LMZH-03), Utoquai 35, 8008 Zürich, Switzerland.
+Premium family-friendly hotel; 16 floors; Front Desk 24/7; Housekeeping 7:00–23:00.
+Baby cots: 12 units; complimentary; suitable up to 2 years; bedding included; setup by housekeeping only; typical setup window 20–30 minutes.
+Safety: Place cot away from windows and cords; guest presence required during setup.
+Other facts: Breakfast 6:30–10:30; Pool 7:00–21:00.
+
+user:
+Hello! Can we get a baby cot in room 714?
+
+assistant channel=analysis:
+Hold one baby cot, then schedule housekeeping setup with safety note.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"LMZH-03","item":"baby_cot","quantity":1,"room":"714"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"notes":"Complimentary; bedding included","serials":["COT-07"]}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"LMZH-03","room":"714","order_note":"Deliver and set up baby cot (COT-07). Guest to be present; place away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":25,"assigned_team":"HK-East","ticket":"HK-714-5592"}
+
+assistant channel=final:
+We’ve reserved one baby cot (COT-07). Housekeeping (ticket HK-714-5592) will deliver and set it up in about 25 minutes; please have someone present.
+
+user:
+Great, thanks! Is the pool open now?
+
+assistant channel=final:
+Yes—the pool operates 7:00 to 21:00.
+
+user:
+Could you send me your manufacturer’s full safety certification documents?
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

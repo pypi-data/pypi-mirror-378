@@ -1,0 +1,89 @@
+"""
+Guest needs redness-reducing mask after cold wind exposure; asks for quick delivery.
+Provide analysis, selection, and delivery.
+
+ROLES: user (wind-exposed guest), assistant (spa host with calming line)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "analyze_skin_type", "description": "Assess redness from wind and barrier needs.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "guest_id": { "type": "string" }, "skin_concerns": { "type": "array", "items": { "type": "string", "enum": ["redness", "tightness", "dryness"] } }, "skin_type": { "type": "string", "enum": ["sensitive", "dry"] } }, "required": ["guest_id", "skin_concerns", "skin_type"] }, "strict": true },
+  { "name": "select_facial_mask", "description": "Choose centella + ceramide calming cream mask.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "mask_type": { "type": "string", "enum": ["calming"] }, "ingredients": { "type": "array", "items": { "type": "string" } }, "application_time": { "type": "number" } }, "required": ["room_number", "mask_type"] }, "strict": true },
+  { "name": "deliver_spa_package", "description": "Deliver mask with warm towel and tips.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "package_contents": { "type": "array", "items": { "type": "string" } }, "delivery_window": { "type": "string" }, "setup_assistance": { "type": "boolean" } }, "required": ["room_number", "package_contents"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Fjordlight Nordic Spa Hotel (hotel_id: fns_osl_01)
+Address: Strandgata 7, 0250 Oslo, Norway
+Timezone: Europe/Oslo
+
+Spa Menu:
+- Calm Cream: centella, ceramides; 15 minutes
+- Wind care tip: warm towel press before application
+- Delivery: 10–18 minutes to rooms and sauna wing
+- Evening sauna circuit: 17:00–21:00
+- Sensitive protocol: fragrance-free available
+
+House & Amenities:
+- 140 rooms; heated floors; wool blankets
+- Breakfast 6:30–10:00; bakery 10:00–16:00
+- Tram stop outside; bike rental in lobby
+- Quiet hours 22:00–7:00
+
+user:
+Hei, room 615. Face is red from the wind. Can you send something calming?
+
+assistant channel=analysis:
+Analyze redness; choose Calm Cream; deliver with warm towel.
+
+assistant channel=commentary to=tool.analyze_skin_type:
+{"guest_id":"r615","skin_concerns":["redness","dryness"],"skin_type":"sensitive"}
+
+tool.analyze_skin_type channel=commentary to=assistant:
+{"profile":"wind_reactive","recommended_masks":["calming"],"key_ingredients":["centella","ceramides"],"application_time":15}
+
+assistant channel=commentary to=tool.select_facial_mask:
+{"room_number":"615","mask_type":"calming","ingredients":["centella","ceramides"],"application_time":15}
+
+tool.select_facial_mask channel=commentary to=assistant:
+{"mask_selected":"Calm Cream","application_time":15,"compatibility":"excellent"}
+
+assistant channel=commentary to=tool.deliver_spa_package:
+{"room_number":"615","package_contents":["Calm Cream","warm towel","tip card"],"delivery_window":"12 minutes","setup_assistance":true}
+
+tool.deliver_spa_package channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta":"12 minutes","package_id":"FJ615_CALM"}
+
+assistant channel=final:
+We’ll deliver Calm Cream with a warm towel to 615 in about 12 minutes. Apply for 15 minutes after a brief warm towel press.
+
+user:
+Is the sauna circuit open now?
+
+assistant channel=analysis:
+From system: 17:00–21:00.
+
+assistant channel=final:
+Yes—open 17:00 to 21:00.
+
+user:
+The wool blankets are nice.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+They’re locally made—great after a cold walk.
+
+user:
+Could you arrange a fjord cruise tomorrow?
+
+assistant channel=analysis:
+Beyond spa scope; flag.
+
+assistant channel=final:
+[ATTENTION] Coordinating with concierge regarding fjord cruise options.
+"""
+

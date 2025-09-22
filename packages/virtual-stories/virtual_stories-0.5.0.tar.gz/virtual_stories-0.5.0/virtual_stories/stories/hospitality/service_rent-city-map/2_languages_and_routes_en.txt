@@ -1,0 +1,58 @@
+"""
+Guest requests a printed city map, asks about language versions and curated routes; include small talk and an [ATTENTION] query.
+
+ROLES: user (sightseer choosing map language), assistant (concierge providing map stock and route info)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check printed map stock by language","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"language":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","language","quantity","room"]},"strict":true},
+  {"name":"log_request","description":"Log complimentary map request","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"note":{"type":"string"}},"required":["hotel_id","room","note"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Highland Crest Edinburgh (HCED-12)
+Address: 5 North Bridge, Edinburgh EH1
+Map service:
+- Complimentary paper maps: 250 copies; languages EN/FR/DE
+- Curated routes: Old Town loop (2h), New Town loop (1.5h), Arthur’s Seat (half‑day)
+- Pickup: Concierge stand near fireplace; Front Desk when Concierge closed
+- Hours: Concierge 08:00–21:00; Front Desk 24/7
+- Laminated trail sheet: £5 deposit, return same day
+
+user:
+Do you have a German map? I’m in 514.
+
+assistant channel=analysis:
+Check stock for DE, log the request, and confirm pickup location.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"HCED-12","language":"DE","quantity":1,"room":"514"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held":1,"ticket":"MAP-514-01"}
+
+assistant channel=commentary to=tool.log_request:
+{"hotel_id":"HCED-12","room":"514","note":"Hold 1 DE city map at Concierge stand."}
+
+tool.log_request channel=commentary to=assistant:
+{"logged":true}
+
+assistant channel=final:
+Yes—one German map is held under ticket MAP-514-01. Please pick it up at the Concierge stand near the fireplace; the Old Town loop is marked in red on the map.
+
+user:
+Thanks! Cozy lobby.
+
+assistant channel=final:
+We’re glad you like it—Concierge is open until 21:00.
+
+user:
+Do you have 18th‑century archival street plans?
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

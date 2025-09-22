@@ -1,0 +1,45 @@
+"""
+Guest wants items split across two claimants; include chitchat and [ATTENTION].
+
+ROLES: user (family group), assistant (issues separate tags)
+CHANNELS: analysis, commentary, final
+TOOLS:
+[{"name":"open_split","description":"Create two linked storage tickets","parameters":{"type":"object","properties":{"primary":{"type":"string"},"secondary":{"type":"string"},"items_primary":{"type":"integer","minimum":1},"items_secondary":{"type":"integer","minimum":1}},"required":["primary","secondary","items_primary","items_secondary"],"additionalProperties":false},"strict":true}]
+"""
+
+system:
+HOTEL: The Copper Arcade
+STORAGE POLICY:
+- Hours: 06:30–23:00
+- ID required for each claimant
+- Complimentary same day
+- Desk located behind Lobby Column A
+- No refrigerated storage
+
+user:
+Can we store 1 suitcase under Kim and 2 under Lee?
+
+assistant channel=analysis:
+Open two linked tickets for 1 and 2 items respectively.
+
+assistant channel=commentary to=tool.open_split:
+{"primary":"Kim","secondary":"Lee","items_primary":1,"items_secondary":2}
+
+tool.open_split channel=commentary to=assistant:
+{"tickets":[{"name":"Kim","ticket":"CA-201","tags":["K090"]},{"name":"Lee","ticket":"CA-202","tags":["L311","L312"]}],"fee":"complimentary"}
+
+assistant channel=final:
+All set. Kim: ticket CA-201 (tag K090). Lee: ticket CA-202 (tags L311, L312). Please bring photo ID for each pickup.
+
+user:
+Your lobby columns are grand.
+
+assistant channel=final:
+The storage desk is just behind Column A for easy access.
+
+user:
+Could you keep the bags chilled? There’s chocolate inside.
+
+assistant channel=final:
+[ATTENTION] Refrigerated storage isn’t available per our policy.
+

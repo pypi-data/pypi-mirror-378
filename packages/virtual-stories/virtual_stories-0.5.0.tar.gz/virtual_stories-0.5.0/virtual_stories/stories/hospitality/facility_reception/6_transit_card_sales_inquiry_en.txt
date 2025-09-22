@@ -1,0 +1,61 @@
+"""
+Guest asks if reception sells local transit cards and what alternatives exist.
+
+ROLES: user (guest seeking metro card), assistant (receptionist verifying sales availability and suggesting desk resources)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_transit_card_sales",
+    "description": "Report whether reception sells local transit cards and suggest nearest purchase point.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Front Desk Facts (INI)
+[desk]
+name = Lobby Reception
+coverage = 24/7
+queue_display = overhead_screen
+city_maps = EN/ES (rev 2025-03)
+currency_exchange = not_available
+
+[advice]
+nearest_bank_info = available_on_request
+metro_help = show metro map on city map reverse
+contactless_cards = guidance only; not sold at desk
+printer = laser_for_invoice, thermal_for_labels
+sanitizer = 70% IPA on counter
+
+user:
+Do you sell metro cards at the front desk?
+
+assistant channel=analysis:
+Use tool for sales availability and nearest purchase point; keep to facts.
+
+assistant channel=commentary to=tool.check_transit_card_sales:
+{}
+
+tool.check_transit_card_sales channel=commentary to=assistant:
+{"sell_here":false,"nearest_purchase":"34th St Station vending machines","hours":"24/7"}
+
+assistant channel=analysis:
+State that we don’t sell them and provide the alternative.
+
+assistant channel=final:
+We don’t sell metro cards at reception. You can buy them at the 34th St Station vending machines, open 24/7. We can also point out the metro map on the back of our city map.
+
+user:
+Got it—thanks.
+
+assistant channel=analysis:
+Brief close.
+
+assistant channel=final:
+Anytime.
+

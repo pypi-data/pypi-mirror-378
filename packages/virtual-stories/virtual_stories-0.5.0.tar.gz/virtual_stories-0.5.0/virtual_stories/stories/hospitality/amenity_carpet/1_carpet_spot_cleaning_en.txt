@@ -1,0 +1,134 @@
+"""
+Guest reports a small spill on the room carpet and asks about spot cleaning; confirm options, schedule service, and set expectations.
+
+ROLES: user (guest with minor carpet spill), assistant (housekeeping dispatcher for spot cleaning)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "assess_carpet_spill",
+    "description": "Record spill details to determine suitable spot-clean method.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "spill_type": { "type": "string", "enum": ["coffee", "tea", "juice", "wine", "water", "other"] },
+        "area_size_cm": { "type": "integer", "minimum": 1 },
+        "time_since_minutes": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["room_number", "spill_type", "area_size_cm", "time_since_minutes"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_spot_cleaning_slots",
+    "description": "Get next available housekeeping slots for carpet spot cleaning.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "urgency": { "type": "string", "enum": ["standard", "expedite"] }
+      },
+      "required": ["room_number", "urgency"]
+    },
+    "strict": true
+  },
+  {
+    "name": "dispatch_spot_cleaning",
+    "description": "Dispatch housekeeping for carpet spot cleaning with selected method.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "method": { "type": "string", "enum": ["water_blottie", "enzymatic_pre_treat", "oxidizing_agent_low","steam_edge"] },
+        "appointment_time": { "type": "string" }
+      },
+      "required": ["room_number", "method"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Maple & Slate City Hotel (hotel_id: msch_chi_03)
+Address: 220 W Superior St, Chicago, IL 60654
+Timezone: America/Chicago
+
+Carpet Specs:
+- Guest floors: solution-dyed nylon loop pile, low-VOC backing
+- Spot-clean compatible methods: water blottie (fresh spills), enzymatic pre-treat (food/organic), oxidizing agent low (coffee/tea/wine), steam edge (final pass)
+
+Housekeeping Coverage:
+- Daily 07:00–22:00; Expedite queue 07:00–21:30
+- Typical response times: standard 30–60 min; expedite 10–20 min
+
+Noise Considerations:
+- Spot-clean uses portable quiet units; steam edge is brief and below 55 dB
+- For guests resting, we avoid prolonged runs after 21:30
+
+Design Notes:
+- Lobby includes terrazzo floors with copper inlays and a maple wall
+
+user:
+Hi—I've spilled a bit of coffee on the carpet in room 1112, about the size of a small plate. It happened maybe 10 minutes ago. Can someone help clean it?
+
+assistant channel=analysis:
+Capture spill details, then check cleaning slots. Prefer oxidizing agent low for coffee if needed.
+
+assistant channel=commentary to=tool.assess_carpet_spill:
+{"room_number":"1112","spill_type":"coffee","area_size_cm":20,"time_since_minutes":10}
+
+tool.assess_carpet_spill channel=commentary to=assistant:
+{"room_number":"1112","spill":"coffee","area_size_cm":20,"recommended_method":"oxidizing_agent_low","pre_step":"water_blottie_if_damp"}
+
+assistant channel=commentary to=tool.check_spot_cleaning_slots:
+{"room_number":"1112","urgency":"expedite"}
+
+tool.check_spot_cleaning_slots channel=commentary to=assistant:
+{"next_slots":[{"time":"within_15_min"},{"time":"in_30_min"}],"team":"floor_11_team_b"}
+
+assistant channel=final:
+Thanks for the details. I can send our Floor 11 Team B within 15 minutes with an oxidizing agent (low strength) and a quick water blottie pre-step. Does that timing work for room 1112?
+
+user:
+Yes, within 15 minutes is perfect—thank you. Will it be noisy? I'm on a call shortly.
+
+assistant channel=analysis:
+Use system noise facts to reassure. Then dispatch the service with the within_15_min slot.
+
+assistant channel=final:
+The process is quiet; the brief steam edge stays below 55 dB. I’ll confirm your expedite slot now.
+
+assistant channel=commentary to=tool.dispatch_spot_cleaning:
+{"room_number":"1112","method":"oxidizing_agent_low","appointment_time":"within_15_min"}
+
+tool.dispatch_spot_cleaning channel=commentary to=assistant:
+{"ticket_id":"SC-1112-5521","assigned_team":"floor_11_team_b","eta_minutes":12,"steps":["water_blottie","oxidizing_agent_low","steam_edge_brief"]}
+
+assistant channel=final:
+All set—ticket SC-1112-5521 is confirmed. Team B will arrive in about 12 minutes and perform water blottie, low-strength oxidizing treatment, then a brief steam edge. Let us know if you prefer we return after your call.
+
+user:
+By the way, your lobby materials look great. Is that real terrazzo?
+
+assistant channel=analysis:
+Respond with design note as small talk; no tools required.
+
+assistant channel=final:
+Yes—the lobby features terrazzo with copper inlays and a maple wall. Glad you noticed!
+
+user:
+Could you also arrange a late-night carpet shampoo for a deeper clean?
+
+assistant channel=analysis:
+Deep shampoo outside scope of defined tools and after-hours policy; use special flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for the request. Reviewing available resources.
+

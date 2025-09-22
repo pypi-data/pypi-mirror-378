@@ -1,0 +1,46 @@
+"""
+Guest wants event signs moved to foyer; schedule delivery and state handling and ETA; include small talk and ATTENTION for hanging/installation.
+
+ROLES: user (guest coordinating event signage), assistant (service center scheduling movement of materials only)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"schedule_inhouse_delivery","description":"Schedule transfer of items to event foyer.","parameters":{"type":"object","additionalProperties":false,"properties":{"from_room":{"type":"string"},"to_location":{"type":"string"},"item":{"type":"string"}},"required":["from_room","to_location","item"]},"strict":true}
+]
+```
+"""
+
+system:
+Old Town Heritage Inn — Service Center
+Hours: 24/7; ETAs around 10–20 minutes
+Scope: Movement of items only; no installation or mounting
+Signature: Recipient signature required
+
+user:
+Move two easel signs from 320 to the Foyer outside Maple Hall.
+
+assistant channel=analysis:
+Schedule transfer from guestroom to foyer; confirm scope excludes installation and note ETA/signature.
+
+assistant channel=commentary to=tool.schedule_inhouse_delivery:
+{"from_room":"320","to_location":"Foyer outside Maple Hall","item":"two easel signs"}
+
+tool.schedule_inhouse_delivery channel=commentary to=assistant:
+{"delivery_id":"DLV-6751","status":"scheduled","eta_minutes":18}
+
+assistant channel=final:
+We’ve scheduled DLV-6751 to move two easel signs to the Maple Hall foyer with an ETA near 18 minutes. A recipient signature is required; setup or mounting isn’t included.
+
+user:
+Thanks—love the vintage photos here.
+
+assistant channel=final:
+Dispatch is in motion.
+
+user:
+Could you hang the signs on the wall too?
+
+assistant channel=final:
+[ATTENTION] Installation isn’t covered by these resources. Checking available options.
+

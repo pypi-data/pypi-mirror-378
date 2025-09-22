@@ -1,0 +1,63 @@
+"""
+Guest requests room availability for specific dates; return options via tool and summarize policies from system. Include small talk and a background handoff for a price-matching request.
+
+ROLES: user (guest exploring room availability), assistant (reservations agent retrieving options and clarifying policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Cityline Central Hotel — Reservations
+Desk hours: 08:00–20:00 daily
+Deposit: 1 night + tax for advance purchase; flexible rate requires credit card guarantee
+Room categories overview:
+  - Superior King: 28 m², city view
+  - Deluxe Twin: 32 m², partial park view
+  - Executive King: 35 m², lounge access
+
+user:
+Do you have availability for two adults from 2025-09-12 to 2025-09-14?
+
+assistant channel=analysis:
+Query inventory via tool for the dates and guest count; list the returned options and map to system descriptions.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-09-12","check_out":"2025-09-14","adults":2,"children":0}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"SUP_KING","name":"Superior King","rate":"USD 189/night"},{"code":"EXEC_KING","name":"Executive King","rate":"USD 259/night"}]}
+
+assistant channel=final:
+I can offer Superior King at USD 189/night (28 m², city view) or Executive King at USD 259/night (35 m² with lounge access). Our desk runs 08:00–20:00; flexible bookings require a card guarantee, and advance purchase needs a 1-night deposit.
+
+user:
+Sounds good—busy day on your side?
+
+assistant channel=final:
+Happy to help with your plans.
+
+user:
+Can you match a lower third-party price I saw?
+
+assistant channel=final:
+[ATTENTION] Price matching isn’t available through the resources provided. Working on your request.

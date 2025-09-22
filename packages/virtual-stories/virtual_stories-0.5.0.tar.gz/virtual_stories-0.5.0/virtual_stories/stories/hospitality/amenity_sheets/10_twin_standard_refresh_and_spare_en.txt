@@ -1,0 +1,138 @@
+"""
+Family requests fresh standard_300tc twin sets with one spare and an afternoon remake; verify and schedule.
+
+ROLES: user (family guest requesting refresh), assistant (day housekeeping coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_linen_inventory",
+    "description": "Check availability of sheet collections and sizes.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] }
+      },
+      "required": ["collection", "size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "order_linen_delivery",
+    "description": "Deliver specified sheet collection to room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "size": { "type": "string", "enum": ["king", "queen", "twin"] },
+        "quantity_sets": { "type": "integer", "minimum": 1, "maximum": 4 }
+      },
+      "required": ["room_number", "collection", "size", "quantity_sets"]
+    },
+    "strict": true
+  },
+  {
+    "name": "schedule_bed_service",
+    "description": "Schedule housekeeping to remake bed with specified sheets.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "collection": { "type": "string", "enum": ["standard_300tc", "luxury_600tc", "bamboo_eco", "silk_1000tc"] },
+        "preferred_time": { "type": "string", "description": "HH:MM in 24h local time" }
+      },
+      "required": ["room_number", "collection"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Palm Grove Family Resort Orlando (hotel_id: pgf_mco_10)
+Address: 8100 International Dr, Orlando, FL 32819
+Timezone: America/New_York
+
+Linen Options:
+- standard_300tc: family-favorite, durable
+- bamboo_eco: hypoallergenic upgrade
+- luxury_600tc: premium cotton
+- silk_1000tc: limited, by request
+
+Service:
+- Same-day changes 08:00–22:00
+- Delivery ETA 15–35 minutes
+- Priority window 15:30–18:00
+- Spare sets up to 2 per room
+- Contact: Housekeeping ext 71
+
+Family Notes:
+- Twin bed refresh common for families
+- Pillowcase refresh on request
+- Turn-down 19:00–21:00
+- Inventory checked hourly
+- Requests logged in room profile
+
+user:
+Hi—can you refresh both twin beds with standard_300tc and leave one spare set? We’re in 5406. 16:40 works.
+
+assistant channel=analysis:
+Check standard_300tc twin; order 3 sets (2 beds + 1 spare); schedule 16:40.
+
+assistant channel=commentary to=tool.check_linen_inventory:
+{"collection":"standard_300tc","size":"twin"}
+
+tool.check_linen_inventory channel=commentary to=assistant:
+{"collection":"standard_300tc","size":"twin","available_sets":28,"estimated_delivery_minutes":18}
+
+assistant channel=analysis:
+Order 3 sets and schedule.
+
+assistant channel=commentary to=tool.order_linen_delivery:
+{"room_number":"5406","collection":"standard_300tc","size":"twin","quantity_sets":3}
+
+tool.order_linen_delivery channel=commentary to=assistant:
+{"room_number":"5406","collection":"standard_300tc","size":"twin","quantity_sets":3,"delivery_eta_minutes":18,"delivery_id":"LINEN-ST-3341"}
+
+assistant channel=commentary to=tool.schedule_bed_service:
+{"room_number":"5406","collection":"standard_300tc","preferred_time":"16:40"}
+
+tool.schedule_bed_service channel=commentary to=assistant:
+{"scheduled":true,"room_number":"5406","collection":"standard_300tc","window":"16:30–16:50"}
+
+assistant channel=final:
+All set—three standard_300tc twin sets are on the way (ETA ~18 minutes). We’ll remake at 16:40 (window 16:30–16:50) and leave one spare set in your closet.
+
+user:
+Is turn-down available tonight if we need it?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—turn-down service is available from 19:00 to 21:00.
+
+user:
+Thanks! Kids love the pool.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+That’s wonderful—enjoy your afternoon.
+
+user:
+Any tips for a character breakfast tomorrow?
+
+assistant channel=analysis:
+Beyond linen scope; attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check character breakfast options and share times and booking details.

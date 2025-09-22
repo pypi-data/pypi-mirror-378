@@ -1,0 +1,56 @@
+"""
+Guest’s in-room safe is locked; asks about override policy and visit window.
+
+ROLES: user (guest locked out of safe), assistant (front desk creating ticket and explaining dual-control override policy and ETA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"ticket","description":"Create safe issue ticket","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"issue":{"type":"string"},"priority":{"type":"string","enum":["low","normal","high","urgent"]}},"required":["hotel_id","room","issue","priority"],"additionalProperties":false},"strict":true},
+  {"name":"eta","description":"Get ETA","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"ticket_id":{"type":"string"}},"required":["hotel_id","ticket_id"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Skyline Tokyo (SKT-17)
+Address: 1-1-2 Oshiage, Sumida City, Tokyo 131-0045, Japan
+Engineering: 08:00–22:00; on-call overnight
+Safe Override: Dual-control with supervisor presence and ID verification
+Response: Normal 15–30 minutes; urgent 10–15 minutes
+Dispatch: Ticket required before visit
+
+user:
+My safe in 2610 won’t open. How do you override it, and when can someone come?
+
+assistant channel=analysis:
+Explain dual-control override and ID check; open a normal ticket; fetch ETA.
+
+assistant channel=commentary to=tool.ticket:
+{"hotel_id":"SKT-17","room":"2610","issue":"In-room safe lockout","priority":"normal"}
+
+tool.ticket channel=commentary to=assistant:
+{"ticket_id":"SKT-ENG-880","status":"open"}
+
+assistant channel=commentary to=tool.eta:
+{"hotel_id":"SKT-17","ticket_id":"SKT-ENG-880"}
+
+tool.eta channel=commentary to=assistant:
+{"eta_minutes":16,"assigned":"Supervisor Ito + Engineer Sato"}
+
+assistant channel=final:
+We perform a dual-control override with a supervisor present and verify your ID before opening the safe. Ticket SKT-ENG-880 is open; Supervisor Ito and Engineer Sato will arrive in about 16 minutes.
+
+user:
+The tower looks close from here.
+
+assistant channel=final:
+We’re right by it—great views at sunset.
+
+user:
+Could you share detailed safe override manuals?
+
+assistant channel=final:
+[ATTENTION] Reviewing the documentation list.
+

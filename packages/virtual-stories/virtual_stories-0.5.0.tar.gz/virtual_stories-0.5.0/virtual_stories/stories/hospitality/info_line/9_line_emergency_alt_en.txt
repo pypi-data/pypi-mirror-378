@@ -1,0 +1,53 @@
+"""
+Guest asks if emergencies can be reported via LINE; clarify not for emergencies, provide phone, include small talk and an out-of-scope staffing question.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"get_contact_channel","description":"Return a specific contact channel for the hotel (email, phone, fax, line, wechat, website).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"channel":{"type":"string","enum":["email","phone","fax","line","wechat","website"]}},"required":["hotel_id","channel"]},"strict":true}
+]
+```
+"""
+
+system:
+Coral Drift Villas (hotel_id: coral_drift)
+Contacts: LINE @coraldrift | Phone +61 7 5550 3300 | Email hi@coraldrift.au | Web https://coraldrift.au
+Policy: LINE isn’t for emergencies—please call the main phone for urgent assistance
+Hours: LINE 06:30–22:00 AEST | Typical reply 10–20 min
+Extras: Reef viewing deck 07:00–18:00; Sunset mocktails 17:00–19:00; Kids club 3F.
+
+user:
+Can I report emergencies on LINE?
+
+assistant channel=analysis:
+Answer from system: not for emergencies; provide phone via tool.
+
+assistant channel=commentary to=tool.get_contact_channel:
+{"hotel_id":"coral_drift","channel":"phone"}
+
+tool.get_contact_channel channel=commentary to=assistant:
+{"phone":"+61 7 5550 3300"}
+
+assistant channel=final:
+LINE isn’t for emergencies—please call our main line at +61 7 5550 3300.
+
+user:
+Sunset mocktails sound great.
+
+assistant channel=analysis:
+Chit‑chat acknowledgment.
+
+assistant channel=final:
+They’re served 17:00–19:00 on the reef deck—enjoy!
+
+user:
+How many agents are on LINE duty overnight?
+
+assistant channel=analysis:
+Out of scope—no staffing counts.
+
+assistant channel=final:
+[ATTENTION] Staffing counts aren’t available within the provided resources.
+

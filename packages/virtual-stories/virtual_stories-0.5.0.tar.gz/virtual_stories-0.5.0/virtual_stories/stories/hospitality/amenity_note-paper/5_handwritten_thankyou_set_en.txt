@@ -1,0 +1,78 @@
+"""
+Guest wants a compact handwritten thank-you set with folded cards and envelopes.
+Provide card set options and arrange quick delivery.
+
+ROLES: user (guest sending thank-you cards), assistant (concierge desk managing stationery kits)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check available stationery supplies in hotel inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_type":{"type":"string","enum":["note_paper","letterhead","envelopes","memo_pads","writing_pads","sticky_notes"]},"quality_level":{"type":"string","enum":["standard","premium","luxury"]}},"required":["item_type"]},"strict":true},
+  {"name":"deliver_stationery_supplies","description":"Arrange delivery of stationery items to guest room or business center.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center","meeting_room"]},"quantity_per_item":{"type":"number"},"special_requests":{"type":"string"}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seaside Promenade & Convention (hotel_id: sp_sd_07)
+Address: 155 Harbor Dr, San Diego, CA 92101
+TZ: America/Los_Angeles
+
+Stationery Kits Index:
+KIT-A (standard): flat cards 10 + DL envelopes 10
+KIT-B (premium): folded cards 10 + C6 envelopes 10 (120gsm)
+KIT-C (luxury): cotton card 8 + hand-lined envelopes 8 (160gsm)
+Add-ons: adhesive seals, mini calligraphy guide insert
+Delivery: rooms 8–14 min; convention halls 6–10 min
+
+user:
+Hi—room 1908. Do you have a small thank-you card set with matching envelopes?
+
+assistant channel=analysis:
+Offer premium KIT-B as suitable; verify via inventory and deliver.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_type":"note_paper","quality_level":"premium"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"quality_level":"premium","options":["KIT-B_folded_cards_10_C6_10","120gsm_note_set"],"stock_count":18}
+
+assistant channel=analysis:
+Present KIT-B folded cards; then deliver to room 1908.
+
+assistant channel=final:
+Yes—our premium KIT‑B includes 10 folded cards and 10 C6 envelopes on 120gsm stock. Would you like that set sent to room 1908?
+
+user:
+Yes please.
+
+assistant channel=analysis:
+Arrange delivery.
+
+assistant channel=commentary to=tool.deliver_stationery_supplies:
+{"room_number":"1908","items":["KIT-B_folded_cards_10_C6_10"],"delivery_location":"guest_room","quantity_per_item":1,"special_requests":"include adhesive seals"}
+
+tool.deliver_stationery_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":11,"items_included":["folded_cards_10","C6_envelopes_10","adhesive_seals_10"],"delivery_team":"concierge"}
+
+assistant channel=final:
+Great—10 folded cards, 10 C6 envelopes, and adhesive seals are on the way to room 1908 in about 11 minutes.
+
+user:
+You’re quick! By the way, the pool looks inviting.
+
+assistant channel=analysis:
+Small talk acknowledgment only.
+
+assistant channel=final:
+It’s a relaxing spot after a busy day.
+
+user:
+Could you print custom calligraphy for the names this evening?
+
+assistant channel=analysis:
+Custom calligraphy not defined; mark as [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

@@ -1,0 +1,77 @@
+"""
+Guest wants pre-cut fruit with knife-free prep; small talk and extra queries.
+
+ROLES: user (guest traveling with child in room 1503), assistant (in-room dining coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service",
+    "description": "Order food and beverages to a guest's room.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "item_name": {"type": "string"},
+        "room_number": {"type": "string"},
+        "quantity": {"type": "integer"},
+        "notes": {"type": "string"}
+      },
+      "required": ["item_name", "room_number", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Property Name: Redwood City Center Hotel
+Wing: Family Level (Floors 14–16)
+In-Room Dining: 07:00–22:00
+Family Amenities: child-safe cutlery; highchairs; kid bowls
+Fruit Options:
+  - "Peel-only" prep available
+  - Pre-cut platter upon request
+  - Add-ons: yogurt cup $3, honey $2
+Sourcing: local co-op; compostable trays; no plastic cutlery
+Delivery SLA: Standard 20–30 min; Priority 10–15 min (Family Level)
+
+user:
+Hi, in 1503—can I get a pre-cut fruit platter, knife-free, please?
+
+assistant channel=analysis:
+Use tool to order pre-cut platter to room 1503 with note "knife-free, pre-cut".
+
+assistant channel=commentary to=tool.order_room_service:
+{"item_name":"pre-cut fruit platter","room_number":"1503","quantity":1,"notes":"knife-free, pre-cut"}
+
+tool.order_room_service channel=commentary to=assistant:
+{"status":"ok","eta":"18-25 min"}
+
+assistant channel=final:
+Done—your pre-cut, knife-free fruit platter is on the way to 1503. ETA 18–25 minutes.
+
+user:
+Is honey an option?
+
+assistant channel=analysis:
+System lists honey $2.
+
+assistant channel=final:
+Yes—honey is available as a $2 add-on.
+
+user:
+My kid says thanks!
+
+assistant channel=final:
+You’re very welcome—hope they enjoy the snack.
+
+user:
+Do you know if the children’s museum across town has a puppet show today?
+
+assistant channel=analysis:
+Beyond system context; respond with [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] I’ll check puppet show times for you.
+

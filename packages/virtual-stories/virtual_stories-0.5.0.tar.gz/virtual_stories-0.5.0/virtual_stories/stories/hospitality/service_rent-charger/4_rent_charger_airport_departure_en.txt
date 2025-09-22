@@ -1,0 +1,54 @@
+"""
+Guest needs charger for airport departure; confirm quick pickup, discuss airport shuttle timing, and arrange express service.
+
+ROLES: user (guest needing charger for airport departure with tight timeline), assistant (front desk providing express departure support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"check_inventory","description":"Check charger stock (USB-C/Lightning/Micro-USB)","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create charger rental order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Midtown Arc Toronto (MATO-06), 200 Front St W, Toronto, ON M5V 3J1, Canada.
+Business hotel; 32 floors; Front Desk 24/7.
+Phone chargers: USB-C (15), Lightning (10), Micro-USB (6); complimentary up to 4 hours, then CAD 3/hour; code RENT-CHGR.
+Express departure: Express pickup available; Airport shuttle coordination; Priority service for departing guests; Quick checkout process.
+Other facts: Airport shuttle every 30 minutes; Express checkout available; Baggage storage; Departure assistance.
+
+user:
+I'm leaving for the airport in 30 minutes and my phone is almost dead! I need a USB-C charger quickly. Room 1803.
+
+assistant channel=analysis:
+The guest has a tight departure timeline and needs immediate charger access. I should prioritize express service and airport coordination.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"MATO-06","item":"charger_usb_c","quantity":1,"room":"1803"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":1,"serials":["CHG-C-15"],"notes":"Express departure priority; immediate pickup"}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"MATO-06","room":"1803","item":"charger_usb_c","duration_hours":2,"charge_code":"EXPRESS-DEPARTURE","delivery_option":"pick_up_at_desk"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"CHG-1803-8844","status":"created","charge_policy":"Express departure: complimentary","priority":"immediate"}
+
+assistant channel=final:
+Urgent pickup arranged! USB-C charger CHG-C-15 is ready immediately at the Front Desk. Order CHG-1803-8844 is complimentary for your departure. Our airport shuttle leaves every 30 minutes—would you like me to coordinate your shuttle timing?
+
+user:
+Perfect! The express service is exactly what I needed.
+
+assistant channel=final:
+We understand how stressful departures can be—we're here to make everything as smooth as possible.
+
+user:
+Do you have any partnerships with airlines for expedited check-in services?
+
+assistant channel=final:
+[ATTENTION] Checking available airline partnerships.

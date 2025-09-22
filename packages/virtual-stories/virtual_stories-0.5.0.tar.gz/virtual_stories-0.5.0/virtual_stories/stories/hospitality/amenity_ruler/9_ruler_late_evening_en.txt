@@ -1,0 +1,71 @@
+"""
+Guest requests a ruler later in the evening; confirm availability and deliver; include casual remark and background acknowledgment.
+
+ROLES: user (guest annotating a printout), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_stationery_inventory","description":"Check rulers by length and material.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["ruler"]},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["item_code","length","material"]},"strict":true},
+  {"name":"deliver_stationery","description":"Deliver a ruler to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"length":{"type":"string","enum":["15cm","30cm"]},"material":{"type":"string","enum":["plastic","metal"]}},"required":["room_number","item_code","length","material"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Juniper & Stone (hotel_id: js_por_06)
+Address: 700 SW 10th Ave, Portland, OR 97205
+Stationery: 07:00–22:30; ETA 8–14 minutes
+Tea hour: 16:00–17:00 in library nook
+Wi‑Fi: 150/150 Mbps; no device cap
+Green: refill stations on every floor; paper-lite initiative
+Noise: library nook is quiet zone after 20:30
+Check-in/out: 15:00 / 11:00
+
+Ruler inventory details:
+- 15cm plastic(15), metal(4)
+- 30cm plastic(9), metal(7)
+- Cleaned nightly; sleeves labeled with date
+
+user:
+Can you send a 30 cm metal ruler to 908 now?
+
+assistant channel=analysis:
+Check availability then deliver to 908.
+
+assistant channel=commentary to=tool.check_stationery_inventory:
+{"item_code":"ruler","length":"30cm","material":"metal"}
+
+tool.check_stationery_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":7,"item_code":"ruler","length":"30cm","material":"metal"}
+
+assistant channel=analysis:
+Proceed to deliver.
+
+assistant channel=commentary to=tool.deliver_stationery:
+{"room_number":"908","item_code":"ruler","length":"30cm","material":"metal"}
+
+tool.deliver_stationery channel=commentary to=assistant:
+{"ticket_id":"ST-908-9912","eta_minutes":10}
+
+assistant channel=final:
+Yes—30 cm metal ruler en route to 908. Ticket ST-908-9912, arriving in about 10 minutes.
+
+user:
+The tea hour in the library nook was charming.
+
+assistant channel=analysis:
+Respond referencing tea hour.
+
+assistant channel=final:
+Happy to hear—it runs 16:00–17:00 daily in the library nook.
+
+user:
+Do you have fountain pen ink refills, by the way?
+
+assistant channel=analysis:
+Not listed; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on ink refills. Reviewing amenity list.
+

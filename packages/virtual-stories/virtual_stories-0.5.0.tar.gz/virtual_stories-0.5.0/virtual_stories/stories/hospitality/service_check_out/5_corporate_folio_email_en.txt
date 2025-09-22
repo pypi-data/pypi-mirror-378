@@ -1,0 +1,51 @@
+"""
+Business guest checks out and wants folio emailed; include small talk, restate standard time from system, and an out-of-scope multi-recipient email request.
+
+ROLES: user (business guest), assistant (front desk)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"calculate_folio","description":"Return current folio summary for a reservation before checkout.","parameters":{"type":"object","additionalProperties":false,"properties":{"reservation_id":{"type":"string"}},"required":["reservation_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Metro Gate Hotel — Front Office
+Address: 20 Transit Plaza, Chicago, IL 60606, USA
+Standard checkout: 11:00
+Express checkout: Key return at Bell Desk
+Invoices: Emailed after checkout
+Wi‑Fi: SSID "MetroGate-Guest" (Lobby/rooms)
+Parking: Garage P3; EV charging level 2
+Business Center: Level 2, 06:00–22:00
+Payment: USD; accepts major cards
+Accessibility: Ramp at East Entrance
+
+user:
+Check out MG-44107 and email the folio.
+
+assistant channel=analysis:
+Return folio, confirm email practice, and restate checkout time.
+
+assistant channel=commentary to=tool.calculate_folio:
+{"reservation_id":"MG-44107"}
+
+tool.calculate_folio channel=commentary to=assistant:
+{"room_charges":"USD 640","taxes":"USD 57.60","incidentals":"USD 0","total":"USD 697.60"}
+
+assistant channel=final:
+Your total is USD 697.60 (room USD 640, taxes USD 57.60). The folio is emailed after checkout; standard checkout is 11:00.
+
+user:
+Thanks—appreciate the help today.
+
+assistant channel=final:
+Happy to help.
+
+user:
+Can you also CC three managers on that folio?
+
+assistant channel=final:
+[ATTENTION] Multi‑recipient settings aren’t listed in these resources. Reviewing.

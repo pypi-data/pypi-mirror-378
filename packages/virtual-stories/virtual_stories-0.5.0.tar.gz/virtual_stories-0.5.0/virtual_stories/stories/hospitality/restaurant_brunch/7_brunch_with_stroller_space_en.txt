@@ -1,0 +1,68 @@
+"""
+Guest requests stroller space and wants beverage preview; include small talk, confirm stroller parking from system, and an out-of-scope allergen certification list.
+
+ROLES: user (parent), assistant (restaurant concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_table_availability","description":"Check availability.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"},"notes":{"type":"string"}},"required":["restaurant_id","guest_name","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Preview beverages.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["beverages"]}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Riverstone Hotel (hotel_id: riverstone_hotel)
+Brunch: Riverstone Café (restaurant_id: riverstone_cafe)
+Hours: Sat–Sun 10:00–14:00
+Family: Stroller parking alcove; changing table by restrooms
+Address: 12 Mill Lane, Cambridge CB2, UK
+Wi‑Fi: SSID "Riverstone-Guest"
+Access: Ramp via South Door; wide aisles in café
+
+user:
+Can I book for 3 at 12:30 under Noor—space for a stroller—and what drinks do you offer?
+
+assistant channel=analysis:
+Check availability, include stroller note, then list beverages.
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"riverstone_cafe","party_size":3,"datetime":"2025-09-07T12:30:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"A05"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"riverstone_cafe","guest_name":"Noor","party_size":3,"datetime":"2025-09-07T12:30:00","notes":"Stroller space requested"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"RSC-BRN-8831"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"riverstone_cafe","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"Chai Latte"},{"name":"Fresh Orange Juice"},{"name":"Rosemary Lemonade"}]}
+
+assistant channel=final:
+Booked—table for 3 at 12:30 under Noor (RSC-BRN-8831). Beverages: Chai Latte, Fresh Orange Juice, Rosemary Lemonade.
+
+user:
+Great—stroller alcove is a relief.
+
+assistant channel=final:
+There’s a stroller parking alcove near the café entrance.
+
+user:
+Do you have stroller parking available?
+
+assistant channel=final:
+Yes—there’s a stroller parking alcove.
+
+user:
+Do you have a formal allergen certification list?
+
+assistant channel=final:
+[ATTENTION] That document isn’t included in these resources. Reviewing.

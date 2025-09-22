@@ -1,0 +1,57 @@
+"""
+Guest plans a high-value exchange and asks about limits and ID; include a live quote and small talk.
+
+ROLES: user (guest exchanging a large sum), assistant (cashier explaining limits and quoting FX)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "quote_fx",
+    "description": "Quote a currency exchange with applied fee and total payout.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"from":{"type":"string"},"to":{"type":"string"},"amount":{"type":"number"}},"required":["from","to","amount"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Grand Meridian Hotel — Currency Services Desk
+Location: Lobby level, opposite Bell Desk
+Hours: 08:30–20:30 daily
+Supported Currencies: USD, EUR, GBP, JPY, AUD
+Limits: Up to USD 3,000 equivalent per day
+ID Policy: Passport required for any exchange ≥ USD 500 equivalent
+Fees: Flat handling fee applied per transaction
+Queue: Ticketed line; priority for Elite guests 09:00–11:00
+Payment Methods: Cash only; no cards for FX
+Security: CCTV coverage at the FX counter, dual verification for high-value transactions
+
+user:
+I need to exchange 1,200 USD to GBP today. Can you quote it and remind me what ID I need?
+
+assistant channel=analysis:
+Use the quote_fx tool, then restate the passport rule and hours from system.
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"USD","to":"GBP","amount":1200}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":0.76,"fee":"GBP 4.00","payout":"GBP 908.00"}
+
+assistant channel=final:
+For 1,200 USD to GBP, the quote is GBP 908.00 after a GBP 4.00 fee (rate 0.76). Please bring your passport since the amount is over USD 500; the desk is open 08:30–20:30 at the lobby opposite the Bell Desk.
+
+user:
+The lobby feels lively this evening.
+
+assistant channel=final:
+We operate a ticketed line with CCTV monitoring at the FX counter.
+
+user:
+Should I split the exchange across two days to get a better rate?
+
+assistant channel=final:
+[ATTENTION] Rate‑timing advice isn’t provided here. Reviewing available resources.
+

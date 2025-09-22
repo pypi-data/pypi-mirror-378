@@ -1,0 +1,64 @@
+"""
+Guest asks about expected refill schedule and requests three extra mats for a two-night stay.
+
+ROLES: user (planning usage), assistant (amenity operations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"deliver","description":"Deliver amenity to room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","item","qty"]},"strict":true},
+  {"name":"policy","description":"Return refill guidance text.","parameters":{"type":"object","additionalProperties":false,"properties":{"topic":{"type":"string","enum":["refill_schedule"]}},"required":["topic"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Lakeview Canopy Hotel (hotel_id: lch_in_05)
+Address: 44 Lakeshore Rd, Udaipur, Rajasthan 313001, India
+Hours: 07:30–22:00 amenity runs
+Electric mosquito coil program:
+• Kit includes 1 device + 2 mats
+• Typical use: 1 mat per evening (4–6 hours)
+• Extra mats available on request
+Safety: Ventilation required; keep away from drapes
+Delivery: Standard 12–20 minutes
+
+user:
+We’re in 617 for two nights. Could you send three extra mats and advise how often to replace them?
+
+assistant channel=analysis:
+Send three mats via tool and provide replacement guidance from tool. Only state what’s provided.
+
+assistant channel=commentary to=tool.deliver:
+{"room":"617","item":"mosquito_coil_refill_mat","qty":3}
+
+tool.deliver channel=commentary to=assistant:
+{"ticket":"LCH-617-REF-441","eta_minutes":14}
+
+assistant channel=commentary to=tool.policy:
+{"topic":"refill_schedule"}
+
+tool.policy channel=commentary to=assistant:
+{"guidance":"Use one mat per evening (4–6 hours). Replace when scent fades."}
+
+assistant channel=final:
+Three refill mats are on the way to 617 (ticket LCH-617-REF-441), ETA ~14 minutes. Guidance: use one mat per evening for about 4–6 hours and replace when the scent fades; ensure ventilation and keep away from drapes.
+
+user:
+Cheers. The lake is calm tonight.
+
+assistant channel=analysis:
+Chitchat acknowledgment only.
+
+assistant channel=final:
+Perfect weather for a quiet evening.
+
+user:
+Can you suggest a lakeside restaurant?
+
+assistant channel=analysis:
+Dining recommendations are beyond the amenity context.
+
+assistant channel=final:
+[ATTENTION] Understood. I’ll check dining suggestions.
+

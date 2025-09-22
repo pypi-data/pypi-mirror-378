@@ -1,0 +1,39 @@
+"""
+Guest wants to extend an ongoing wheelchair loan by 12 hours; update order.
+
+ROLES: user (guest extending loan), assistant (front desk managing orders)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"extend_order","description":"Extend loan duration","parameters":{"type":"object","additionalProperties":false,"properties":{"order_id":{"type":"string"},"extra_hours":{"type":"integer","minimum":1}},"required":["order_id","extra_hours"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Mountain Lodge Aspen (MLAS-13)
+Loan Policy: Complimentary up to 48 hours on-property; extensions subject to availability
+Front Desk: 24/7; Runner: 07:00–23:00
+Time Zone: Mountain Time (MT)
+
+user:
+Can I extend WHL-305-480 by 12 hours?
+
+assistant channel=analysis:
+Extend the order by 12 hours.
+
+assistant channel=commentary to=tool.extend_order:
+{"order_id":"WHL-305-480","extra_hours":12}
+
+tool.extend_order channel=commentary to=assistant:
+{"order_id":"WHL-305-480","new_total_hours":60,"status":"extended"}
+
+assistant channel=final:
+Extended—WHL-305-480 now totals 60 hours, subject to on‑property use.
+
+user:
+Can I take it off property for dinner?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

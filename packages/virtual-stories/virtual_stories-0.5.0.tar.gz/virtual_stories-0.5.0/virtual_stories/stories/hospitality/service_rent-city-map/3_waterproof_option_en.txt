@@ -1,0 +1,54 @@
+"""
+Guest asks about waterproof maps and deposit; process request. Include small talk and an [ATTENTION] query.
+
+ROLES: user (guest planning for rain), assistant (concierge explaining waterproof option and deposit, then logging request)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```json
+[
+  {"name":"hold_map","description":"Hold map copy by type","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"type":{"type":"string","enum":["standard","laminated"]},"room":{"type":"string"}},"required":["hotel_id","type","room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Old Port Inn Montreal (OPIM-04)
+Address: 17 Rue St‑Paul O, Montréal, QC H2Y
+Map options:
+- Standard paper: complimentary
+- Laminated waterproof: CA$5 deposit, return same day for refund
+- Pickup: Concierge table by the main entrance; Front Desk after 22:00
+- Hours: Concierge 09:00–22:00; Front Desk 24/7
+- Languages: EN/FR
+
+user:
+Do you have a waterproof city map? Room 802.
+
+assistant channel=analysis:
+Confirm laminated option with CA$5 deposit and hold one laminated copy.
+
+assistant channel=final:
+Yes—our laminated waterproof map is available with a CA$5 deposit, refunded on same‑day return.
+
+assistant channel=commentary to=tool.hold_map:
+{"hotel_id":"OPIM-04","type":"laminated","room":"802"}
+
+tool.hold_map channel=commentary to=assistant:
+{"held":true,"ticket":"MAP-802-L1"}
+
+assistant channel=final:
+I’ve held one laminated map under ticket MAP-802-L1. Please pick it up at the Concierge table by the main entrance.
+
+user:
+Merci!
+
+assistant channel=final:
+You’re welcome—Concierge closes at 22:00.
+
+user:
+Can you print me turn‑by‑turn directions from my GPS file?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

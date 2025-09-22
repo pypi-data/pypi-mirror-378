@@ -1,0 +1,92 @@
+"""
+Small business group asks for a breakfast table and a mix of menu previews; include small talk and ATTENTION follow‑up.
+
+ROLES: user (party of 5), assistant (host coordinating table and menu section previews)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List breakfast venues","parameters":{"type":"object","properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string"}},"required":["hotel_id","meal_period"]},"strict":true},
+  {"name":"check_table_availability","description":"Check availability","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book table","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Get menu section preview","parameters":{"type":"object","properties":{"restaurant_id":{"type":"string"},"section":{"type":"string"}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Orchard Way (hotel_id: orchard_way)
+Breakfast: Citrus & Grain (restaurant_id: rest_citrus_grain) 06:45–10:45
+
+Seating & Groups:
+- Large tables near windows
+- Banquette seating for 4–6
+
+Access & Flow:
+- Step‑free from Lobby West
+- Separate host queue for groups
+
+Menu Sections:
+- Beverages: juices, coffee, tea
+- Mains: skillets, pancakes, eggs
+
+Billing & Notes:
+- Room charge available
+- Paperless receipt upon request
+
+user:
+Table for 5 at 8:45 under Ahmed; show one beverage and one mains preview.
+
+assistant channel=analysis:
+List venue, check/hold 08:45 for 5, book, fetch beverages and mains previews.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"orchard_way","meal_period":"breakfast"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_citrus_grain","name":"Citrus & Grain","hours":"06:45-10:45"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_citrus_grain","party_size":5,"datetime":"2025-09-02T08:45:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_citrus_grain","guest_name":"Ahmed","contact":"","party_size":5,"datetime":"2025-09-02T08:45:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"CG-BRK-8845"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_citrus_grain","section":"beverages"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"beverages","items":[{"name":"Orange juice"},{"name":"Cold brew"}]}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_citrus_grain","section":"mains"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"mains","items":[{"name":"Buttermilk pancakes"},{"name":"Veggie omelet"}]}
+
+assistant channel=final:
+Your 8:45 table for 5 at Citrus & Grain is confirmed (CG-BRK-8845). Beverages preview: Orange juice, Cold brew. Mains preview: Buttermilk pancakes, Veggie omelet.
+
+user:
+The citrus scent in the lobby is refreshing.
+
+assistant channel=final:
+It ties in with the breakfast theme nicely.
+
+user:
+Can we room‑charge the group bill?
+
+assistant channel=final:
+Yes—room charge is available.
+
+user:
+Can you pre‑split the bill by department codes?
+
+assistant channel=final:
+[ATTENTION] Pre‑splitting by codes isn’t handled here. Reviewing available options.

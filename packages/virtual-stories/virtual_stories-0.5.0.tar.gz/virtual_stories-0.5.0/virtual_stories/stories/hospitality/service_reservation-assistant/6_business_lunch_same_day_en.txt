@@ -1,0 +1,55 @@
+"""
+Business guest requests a same-day lunch booking; confirm availability nearby and place reservation.
+
+ROLES: user (business traveler), assistant (concierge booking via partner for midday slot)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"search_restaurant_availability","description":"Search lunch availability","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","party_size","date","time"]},"strict":true},
+  {"name":"create_restaurant_booking","description":"Create lunch booking","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","guest_name","party_size","date","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Marina Crest Vancouver (MCVA-41)
+Address: 900 Canada Pl, Vancouver, BC V6C 3L5, Canada
+Concierge 08:00–22:00; Partner: OpenDine (partner_id ODN-320)
+Nearby picks: "Coalhouse Kitchen" (Pacific NW), "Giardino Nove" (Italian)
+Only services listed are available.
+
+user:
+Can you get a table for 3 at 12:30 today? Room 1624.
+
+assistant channel=analysis:
+Search 12:30 for 3 via ODN-320 and confirm; then book under room 1624.
+
+assistant channel=commentary to=tool.search_restaurant_availability:
+{"partner_id":"ODN-320","party_size":3,"date":"2025-08-29","time":"12:30"}
+
+tool.search_restaurant_availability channel=commentary to=assistant:
+{"available":true,"options":[{"restaurant":"Coalhouse Kitchen","time":"12:30"}]}
+
+assistant channel=commentary to=tool.create_restaurant_booking:
+{"partner_id":"ODN-320","guest_name":"Guest 1624","party_size":3,"date":"2025-08-29","time":"12:30"}
+
+tool.create_restaurant_booking channel=commentary to=assistant:
+{"reservation_id":"ODN-RES-3110","restaurant":"Coalhouse Kitchen","status":"confirmed"}
+
+assistant channel=final:
+Booked—Coalhouse Kitchen at 12:30 for 3 under ODN-RES-3110.
+
+user:
+Your view is incredible.
+
+assistant channel=final:
+Thank you—enjoy lunch.
+
+user:
+Could you provide the restaurant’s private cost breakdown?
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

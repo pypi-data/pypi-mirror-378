@@ -1,0 +1,65 @@
+"""
+Guest reports missing fork from room service tray.
+Provide quick replacement.
+
+ROLES: user (dining guest), assistant (in-room dining support)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_amenity","description":"Send replacement fork.","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"room_number":{"type":"string"},"quantity":{"type":"integer"}},"required":["amenity_name","room_number","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Harbor Quay Hotel (hotel_id: hqh_66)
+Address: 5 Pier Rd, Baltimore, MD 21202
+Timezone: America/New_York
+
+In-Room Dining Support:
+- Cutlery replacements prioritized
+- ETA: 6–10 minutes
+
+user:
+My tray's missing a fork. Room 1102.
+
+assistant channel=analysis:
+Dispatch replacement fork to 1102.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name":"fork","room_number":"1102","quantity":1}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status":"success","eta":"8 minutes","ticket":"HQH-1102-RP1"}
+
+assistant channel=final:
+Thanks for flagging—I've sent a replacement fork to room 1102 (ticket HQH-1102-RP1). ETA about 8 minutes.
+
+user:
+Do replacements come fast?
+
+assistant channel=analysis:
+Answer with ETA policy.
+
+assistant channel=final:
+Yes—cutlery replacements are prioritized with a 6–10 minute ETA.
+
+user:
+Harbor lights look lovely.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+They do—reflections on the water are calming.
+
+user:
+Can you provide a phone charger too?
+
+assistant channel=analysis:
+Not in system—attention.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

@@ -1,0 +1,76 @@
+"""
+Guest asks about payment methods, billing options, and how to handle room service charges on their hotel bill.
+
+ROLES: user (guest inquiring about payment and billing for room service), assistant (in-room dining operator explaining payment options and billing procedures)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"get_room_service_menu","description":"Retrieve room service menu","parameters":{"type":"object","additionalProperties":false,"properties":{},"required":[]},"strict":true},
+  {"name":"place_room_service_order","description":"Place an in-room dining order","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"qty":{"type":"integer"}}}},"delivery_notes":{"type":"string"}},"required":["hotel_id","room","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Royal Crescent Edinburgh (RCED-16), 12 Royal Circus, Edinburgh EH3.
+Room Service 24/7. Delivery estimate 30–45 minutes.
+Menu highlights (SKUs): RS-BRG (Angus Burger), RS-CAES (Chicken Caesar Salad), RS-TEA (Assorted Teas), RS-SUP (Tomato Soup), RS-SND (Club Sandwich), RS-PST (Pasta), RS-DRT (Dessert Platter), RS-CAF (Coffee Selection).
+Payment options: Charge to room account (default); credit card payment on delivery; cash payment accepted; mobile payment apps supported; corporate billing available.
+Billing procedures: All charges automatically added to room bill; itemized receipt provided; service charge included; gratuity optional; final bill available at checkout.
+Special services: Tray pickup by request after dining; corporate account billing; group billing for multiple rooms; receipt email available.
+
+user:
+Hi! I'd like to order some food, but I'm not sure about the payment options. How does billing work for room service?
+
+assistant channel=analysis:
+Provide payment and billing information from system prompt.
+
+assistant channel=final:
+Great question! By default, all room service charges are automatically added to your room account and will appear on your final bill at checkout. We also accept credit card payment on delivery, cash payment, and mobile payment apps. An itemized receipt is provided with each order, and service charge is included. Gratuity is optional.
+
+user:
+Perfect! Can I get a Club Sandwich and Coffee Selection to room 1205, charged to my room?
+
+assistant channel=analysis:
+Place the order with room billing specified.
+
+assistant channel=commentary to=tool.place_room_service_order:
+{"hotel_id":"RCED-16","room":"1205","items":[{"sku":"RS-SND","qty":1},{"sku":"RS-CAF","qty":1}],"delivery_notes":"Charge to room account; itemized receipt requested"}
+
+tool.place_room_service_order channel=commentary to=assistant:
+{"order_id":"RS-1205-889","eta_minutes":35,"status":"accepted","billing":"room_account"}
+
+assistant channel=analysis:
+Confirm the order with room billing.
+
+assistant channel=final:
+Order RS-1205-889 is confirmed: 1 Club Sandwich and Coffee Selection to room 1205, charged to your room account. Estimated delivery is about 35 minutes, and you'll receive an itemized receipt.
+
+user:
+The automatic room billing is so convenient.
+
+assistant channel=analysis:
+Acknowledge their appreciation for the billing convenience without adding new information.
+
+assistant channel=final:
+We're glad it makes your stay more convenient! Everything will be ready for you at checkout.
+
+user:
+Do you offer corporate billing for business travelers?
+
+assistant channel=analysis:
+Provide information about corporate billing from system prompt.
+
+assistant channel=final:
+Yes! We offer corporate billing for business travelers. This can be set up through our front desk for corporate accounts and group bookings.
+
+user:
+Do you have any loyalty program discounts for frequent guests?
+
+assistant channel=analysis:
+Loyalty program discounts aren't mentioned in system prompt, so use attention flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for your question. Reviewing available resources.

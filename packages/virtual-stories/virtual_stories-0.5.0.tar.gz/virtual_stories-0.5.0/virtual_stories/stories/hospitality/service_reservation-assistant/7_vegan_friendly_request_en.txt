@@ -1,0 +1,55 @@
+"""
+Guest requests a vegan-friendly place; confirm via partner options and book.
+
+ROLES: user (dietary preference), assistant (concierge selecting a suitable option using partner)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"search_restaurant_availability","description":"Search availability","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","party_size","date","time"]},"strict":true},
+  {"name":"create_restaurant_booking","description":"Create booking","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest_name":{"type":"string"},"party_size":{"type":"integer"},"date":{"type":"string","format":"date"},"time":{"type":"string"}},"required":["partner_id","guest_name","party_size","date","time"]},"strict":true}
+]
+```
+"""
+
+system:
+Highline Tower Melbourne (HTMB-26)
+Address: 31 City Rd, Southbank VIC 3006, Australia
+Concierge: 08:00–22:00; Front Desk 24/7; Partner: TableLink (partner_id TBL-560)
+Nearby suggestions: "Green Atelier" (vegan), "Southbank Hearth" (modern grill)
+Only services listed are available.
+
+user:
+Can you find a vegan-friendly spot for 2 at 7 PM? Room 1811.
+
+assistant channel=analysis:
+Search via TBL-560 at 19:00 for 2 and prefer Green Atelier if available; then book.
+
+assistant channel=commentary to=tool.search_restaurant_availability:
+{"partner_id":"TBL-560","party_size":2,"date":"2025-08-29","time":"19:00"}
+
+tool.search_restaurant_availability channel=commentary to=assistant:
+{"available":true,"options":[{"restaurant":"Green Atelier","time":"19:00"}]}
+
+assistant channel=commentary to=tool.create_restaurant_booking:
+{"partner_id":"TBL-560","guest_name":"Guest 1811","party_size":2,"date":"2025-08-29","time":"19:00"}
+
+tool.create_restaurant_booking channel=commentary to=assistant:
+{"reservation_id":"TBL-RES-2259","restaurant":"Green Atelier","status":"confirmed"}
+
+assistant channel=final:
+Confirmed—Green Atelier at 7:00 PM for two under TBL-RES-2259.
+
+user:
+When can I catch the concierge?
+
+assistant channel=final:
+08:00 to 22:00.
+
+user:
+Could you provide the restaurant’s private supplier list?
+
+assistant channel=final:
+[ATTENTION] Looking into this.
+

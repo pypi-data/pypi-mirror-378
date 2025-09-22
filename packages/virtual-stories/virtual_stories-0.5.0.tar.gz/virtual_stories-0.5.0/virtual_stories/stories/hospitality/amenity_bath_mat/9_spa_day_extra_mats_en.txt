@@ -1,0 +1,97 @@
+"""
+Guest plans a spa day and asks for extra mats; verify stock and deliver. Include chit-chat, an in-context café hours question, and an [ATTENTION] case.
+
+ROLES: user (spa-goer), assistant (front desk with amenity tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"lookup","description":"Lookup inventory.","parameters":{"type":"object","additionalProperties":false,"properties":{"sku":{"type":"string"}},"required":["sku"]},"strict":true},
+  {"name":"queue_delivery","description":"Queue amenity delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"sku":{"type":"string"},"qty":{"type":"integer","minimum":1}},"required":["room","sku","qty"]},"strict":true}
+]
+```
+"""
+
+system:
+Resort: Summit Springs Retreat (hotel_id: ssr_co_88)
+Address: 700 Mineral Ridge Rd, Glenwood Springs, CO 81601
+Timezone: America/Denver
+Check-in/Out: 16:00 / 11:00
+Dispatch: 07:00–22:00
+
+Highlights:
+1) Thermal soaking pools (09:00–21:00)
+2) Trailhead access behind Building B
+3) Summit Café 06:30–13:30
+4) Quiet rooms wing on Level 4
+5) Yoga deck sunrise sessions
+
+Linens & Safety:
+- bath_mat available; ETA 10–18 minutes
+- Place on dry floor and wipe excess water
+
+Dining:
+- Summit Café 06:30–13:30; poolside smoothies 12:00–16:00
+
+Accessibility:
+- Elevators to all levels; ADA rooms in Building A
+- Shower stools and grab bars on request
+
+Transportation:
+- Complimentary shuttle to town hourly 10:00–18:00
+- On-site parking; EV charging x2 (Level 2)
+
+Sustainability:
+- Natural geothermal heating in soaking pools
+- Linen reuse and refillable amenities
+
+user:
+Hi—could we have two extra bath mats delivered to 440? We’re heading to the soaking pools.
+
+assistant channel=analysis:
+Check bath_mat inventory and queue delivery for 2.
+
+assistant channel=commentary to=tool.lookup:
+{"sku":"bath_mat"}
+
+tool.lookup channel=commentary to=assistant:
+{"sku":"bath_mat","on_hand":20}
+
+assistant channel=commentary to=tool.queue_delivery:
+{"room":"440","sku":"bath_mat","qty":2}
+
+tool.queue_delivery channel=commentary to=assistant:
+{"ticket":"SSR-440-7762","eta_minutes":15}
+
+assistant channel=final:
+Two bath mats are queued for room 440 under ticket SSR-440-7762, arriving in about 15 minutes.
+
+user:
+Is Summit Café still open if we come back late morning?
+
+assistant channel=analysis:
+Answer from Highlights café hours.
+
+assistant channel=final:
+Summit Café runs 06:30–13:30.
+
+user:
+The sunrise from the yoga deck was beautiful.
+
+assistant channel=analysis:
+Small talk referencing system.
+
+assistant channel=final:
+Those sunrise sessions on the yoga deck are a guest favorite.
+
+user:
+Can you extend the soaking pool hours tonight for us?
+
+assistant channel=analysis:
+Beyond stated capabilities; flag.
+
+assistant channel=final:
+[ATTENTION] Assessing the available data.
+
+user:
+Thanks!

@@ -1,0 +1,59 @@
+"""
+Guest requests a compact ironing board; includes small talk and hours.
+
+ROLES: user (guest in room 1503 requesting a compact ironing board), assistant (concierge arranging delivery and quoting service window/SLA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check if an amenity is available","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Deliver an amenity to a room","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]},"note":{"type":"string"}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Property: Midtown Arcade — Crescent Tower
+Room: 1503 (Deluxe King)
+Policy: Ironing board on request; compact or full-size; 1 per room max
+Service window: 07:00–23:00 normal; 23:00–00:30 urgent limited
+SLA floors 14–16: normal 10–16 minutes
+Staging: CT-15 service closet; S2 elevator after 22:00
+Contacts: Front 0; Services 7900; Housekeeping 7901
+
+user:
+Could I get a compact ironing board to 1503?
+
+assistant channel=analysis:
+Check availability for one compact board; then place normal delivery to room 1503 with staging note.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"ironing board (compact)","quantity":1}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"ironing board (compact)","available":true,"in_stock":7}
+
+assistant channel=analysis:
+Proceed to request normal delivery with CT-15 dispatch note.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"1503","amenity_name":"ironing board (compact)","quantity":1,"priority":"normal","note":"Dispatch from CT-15 via S2"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"IB-1503-2207","eta_minutes":12}
+
+assistant channel=final:
+All set—a compact ironing board is scheduled for room 1503 with an ETA of about 12 minutes.
+
+user:
+Thanks! Are you still open later tonight?
+
+assistant channel=final:
+Normal service runs 07:00–23:00, with urgent coverage 23:00–00:30.
+
+user:
+Is the cover made of a specific fabric?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

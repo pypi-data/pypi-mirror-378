@@ -1,0 +1,58 @@
+"""
+Group booking requests bulk adapters across two adjacent rooms; confirm combined stock and create a single order.
+
+ROLES: user (tour lead coordinating two rooms), assistant (concierge bundling a multi-room request under a single folio)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check bulk adapter stock and hold","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create bulk rental order under lead room","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","quantity","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Coral Vista Dubai (CVDB-05)
+Address: Sheikh Zayed Rd, Dubai, UAE
+Profile: Leisure tower; Timezone GST
+Electrical: 230V/50Hz; Type G sockets
+Adapters: 30 units; AED 10/night; no deposit; folio code RENT-ADPT
+Fulfillment: Delivery 10–20 min; desk pickup 24/7
+Facilities: Pool 07:00–21:00; Kids Club 10:00–18:00
+Only services listed are available.
+
+user:
+We have rooms 2201 and 2203. Can I get 5 adapters on my room 2201 folio?
+
+assistant channel=analysis:
+Hold 5 units, create one bulk order on 2201, and note both rooms for delivery.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"CVDB-05","item":"universal_power_adapter","quantity":5,"room":"2201"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true,"held_quantity":5}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"CVDB-05","room":"2201","item":"universal_power_adapter","quantity":5,"duration_hours":24,"charge_code":"RENT-ADPT","delivery_option":"room_drop"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"ORD-CVDB-77120","status":"created","rate":"AED 10/night each"}
+
+assistant channel=final:
+Done—5 adapters are reserved under order ORD-CVDB-77120 (AED 10 per unit per night) on room 2201. We’ll split delivery between 2201 and 2203.
+
+user:
+Is the pool still open?
+
+assistant channel=final:
+The pool operates 07:00 to 21:00.
+
+user:
+Can you provide your import duty documentation for the adapters?
+
+assistant channel=final:
+[ATTENTION] Analyzing the situation.
+

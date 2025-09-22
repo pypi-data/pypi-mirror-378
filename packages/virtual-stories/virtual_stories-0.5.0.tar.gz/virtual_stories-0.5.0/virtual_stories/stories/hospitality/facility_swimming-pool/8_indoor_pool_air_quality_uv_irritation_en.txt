@@ -1,0 +1,65 @@
+"""
+Guest asks about indoor air quality and UV sanitation levels.
+
+ROLES: user (sensitive to chloramines), assistant (spa operations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_air_quality_metrics","description":"Return current indoor pool air metrics (RH, temp, chloramines proxy).","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"get_uv_sanitation_status","description":"Return secondary UV system status and last maintenance.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Center: Nordic Thermal Spa Hotel (hotel_id: nordic_thermal_reykjavik)
+Address: 3 Geothermal Way, Reykjavik 101, Iceland
+Timezone: Atlantic/Reykjavik
+Indoor Pool Environment:
+  - Water temp 30–31°C; air temp 29–30°C; RH target 50–55%
+  - Air handling with dedicated dehumidification; CO2 monitoring on wall displays
+  - UV secondary sanitation installed; chlorination adjusted by ORP setpoint
+  - Ventilation purge every hour for 5 minutes to refresh deck air
+  - Eye care: rinse stations by ladders; shower before/after recommended
+  - Quiet zone signage; no running on wet tiles; slip mats at corners
+
+user:
+I’m sensitive to chloramines. How’s the air quality right now? Is the UV system active?
+
+assistant channel=analysis:
+Get air metrics; check UV status.
+
+assistant channel=commentary to=tool.get_air_quality_metrics:
+{"hotel_id":"nordic_thermal_reykjavik"}
+
+tool.get_air_quality_metrics channel=commentary to=assistant:
+{"rh":53,"air_temp_c":29.5,"proxy_chloramines":"low","co2_ppm":620}
+
+assistant channel=commentary to=tool.get_uv_sanitation_status:
+{"hotel_id":"nordic_thermal_reykjavik"}
+
+tool.get_uv_sanitation_status channel=commentary to=assistant:
+{"status":"active","last_service":"2025-08-20"}
+
+assistant channel=final:
+Air metrics: RH 53%, air 29.5°C, CO2 620 ppm, chloramine proxy low. UV sanitation is active (last serviced 2025-08-20).
+
+user:
+Do you add essential oils to the water?
+
+assistant channel=analysis:
+No essential oils policy in system; flag attention.
+
+assistant channel=final:
+[ATTENTION] I don’t have a record of essential oils being added. I’ll verify with water care.
+
+user:
+The quiet zone is peaceful—thanks.
+
+assistant channel=analysis:
+Chitchat acknowledgment.
+
+assistant channel=final:
+We’re glad it helps you relax.
+

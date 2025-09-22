@@ -1,0 +1,48 @@
+"""
+Guest requests swapping to a different wheelchair unit due to fit; confirm availability and exchange.
+
+ROLES: user (guest requesting a swap), assistant (front desk accessibility coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_alt_unit","description":"Check alternate unit availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","room"]},"strict":true},
+  {"name":"schedule_exchange","description":"Schedule an exchange at room or desk","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"method":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","method"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Mountain Lodge Aspen (MLAS-13)
+Wheelchairs: 4 standard units
+Delivery: 10–20 minutes
+Pickup: Front Desk available
+Policy: Complimentary on‑property use up to 48 hours
+Time Zone: Mountain Time (MT)
+
+user:
+The one I got is a bit small—can I swap it? I’m in 512.
+
+assistant channel=analysis:
+Check alternate availability and schedule an exchange to room.
+
+assistant channel=commentary to=tool.check_alt_unit:
+{"hotel_id":"MLAS-13","room":"512"}
+
+tool.check_alt_unit channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.schedule_exchange:
+{"hotel_id":"MLAS-13","room":"512","method":"room_drop"}
+
+tool.schedule_exchange channel=commentary to=assistant:
+{"eta_minutes":14,"runner":"Nia"}
+
+assistant channel=final:
+Available—Nia will bring an alternate unit to 512 in about 14 minutes.
+
+user:
+Can you provide manufacturer spec sheets?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.

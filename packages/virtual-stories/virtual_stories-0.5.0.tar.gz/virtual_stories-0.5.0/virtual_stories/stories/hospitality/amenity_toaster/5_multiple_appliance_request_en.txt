@@ -1,0 +1,157 @@
+"""
+Guest requests multiple kitchen appliances including toaster; check availability, deliver available items, include small talk, and one background acknowledgment.
+
+ROLES: user (guest requesting multiple kitchen appliances), assistant (guest services managing appliance loans)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_appliance_availability",
+    "description": "Check availability of portable kitchen appliances for loan.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "appliance_type": { "type": "string", "enum": ["toaster", "hot_plate", "rice_cooker"] }
+      },
+      "required": ["appliance_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_appliance",
+    "description": "Deliver an available appliance to the guest room with safety card.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "appliance_type": { "type": "string" }
+      },
+      "required": ["room_number", "appliance_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Residence: Garden Court Suites (hotel_id: gc_sfo_21)
+Address: 600 Pine Street, San Francisco, CA 94108
+Timezone: America/Los_Angeles
+
+Kitchenette Policy:
+- Portable toaster loan available on request
+- Safety: Use on the countertop only; keep 6 inches clearance
+- Supply: Limited units; first-come, first-served
+- Models: Dualit Mini Classic (2-slice), Cuisinart Compact (4-slice)
+- Loan duration: Up to 24 hours per request
+- Multiple appliances: Can loan up to 2 appliances per room simultaneously
+
+Lobby Feature:
+- Morning bakery cart with fresh sourdough slices and croissants
+- Gluten-free bread options available upon request
+- Organic butter and artisanal jams from local suppliers
+
+Room Service:
+- Continental breakfast available 6:00 AM - 11:00 AM
+- Special dietary accommodations: vegan, gluten-free, keto-friendly
+- Fresh fruit platters and yogurt parfaits
+
+Local Attractions:
+- Ferry Building Marketplace (0.3 miles) - artisanal food vendors
+- Union Square (0.4 miles) - shopping and dining district
+- Chinatown (0.6 miles) - authentic Asian cuisine and markets
+
+Hotel Amenities:
+- 24-hour fitness center with cardio equipment
+- Business center with printing and scanning services
+- Concierge desk for local recommendations and reservations
+
+Available Appliances:
+- Toaster: Dualit Mini Classic, Cuisinart Compact
+- Hot Plate: Single burner induction cooktop
+- Rice Cooker: 3-cup capacity with keep-warm function
+
+user:
+Hi! I'm in room 621 and I'd like to request a toaster and a hot plate for cooking in my room tonight.
+
+assistant channel=analysis:
+Guest in room 621 wants both toaster and hot plate. Need to check availability for both appliances and deliver what's available.
+
+assistant channel=commentary to=tool.check_appliance_availability:
+{"appliance_type":"toaster"}
+
+tool.check_appliance_availability channel=commentary to=assistant:
+{"available":true,"models":["Dualit_Mini_Classic","Cuisinart_Compact"],"notes":"loan_only_countertop_use"}
+
+assistant channel=commentary to=tool.check_appliance_availability:
+{"appliance_type":"hot_plate"}
+
+tool.check_appliance_availability channel=commentary to=assistant:
+{"available":false,"models":[],"notes":"all_units_currently_loaned"}
+
+assistant channel=analysis:
+Toaster is available but hot plate is not. Deliver the toaster and inform guest about hot plate availability.
+
+assistant channel=commentary to=tool.deliver_appliance:
+{"room_number":"621","appliance_type":"toaster"}
+
+tool.deliver_appliance channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":10,"model":"Cuisinart_Compact","safety_card_included":true}
+
+assistant channel=final:
+Great! I can deliver a Cuisinart Compact toaster to room 621 - it should arrive in about 10 minutes with a safety card. However, I'm sorry to say that all hot plates are currently loaned out to other guests. Would you like me to check if any become available later this evening?
+
+user:
+That's okay about the hot plate. The toaster will be perfect for breakfast tomorrow. I'm really looking forward to trying the local sourdough bread.
+
+assistant channel=analysis:
+Guest is making small talk about looking forward to trying local sourdough bread, which relates to our bakery cart feature.
+
+assistant channel=final:
+Excellent choice! Our morning bakery cart in the lobby has fresh sourdough slices from local bakeries. It's a San Francisco specialty and pairs perfectly with our artisanal jams and organic butter. The toaster will make it even better!
+
+user:
+Do you know what time the bakery cart opens in the morning?
+
+assistant channel=analysis:
+Guest is asking about bakery cart opening times, which is not specified in our system knowledge.
+
+assistant channel=final:
+[ATTENTION] I'll check the bakery cart opening times for you. Reviewing available information.
+
+user:
+Actually, I can ask at the front desk when I check out the cart. The toaster should be perfect for my morning routine.
+
+assistant channel=analysis:
+Guest is referencing the front desk and expressing satisfaction with the toaster for their morning routine.
+
+assistant channel=final:
+That's a great idea! The front desk staff can give you the exact timing. The toaster will definitely enhance your morning routine - there's nothing quite like fresh, warm toast to start the day. Enjoy your stay!
+
+user:
+Can I also request a rice cooker? I'm planning to make some rice dishes during my stay.
+
+assistant channel=analysis:
+Guest is asking about rice cooker availability, which is mentioned in our system knowledge as an available appliance.
+
+assistant channel=commentary to=tool.check_appliance_availability:
+{"appliance_type":"rice_cooker"}
+
+tool.check_appliance_availability channel=commentary to=assistant:
+{"available":true,"models":["3_cup_capacity"],"notes":"includes_keep_warm_function"}
+
+assistant channel=analysis:
+Rice cooker is available. Deliver to room 621.
+
+assistant channel=commentary to=tool.deliver_appliance:
+{"room_number":"621","appliance_type":"rice_cooker"}
+
+tool.deliver_appliance channel=commentary to=assistant:
+{"delivered":true,"eta_minutes":15,"model":"3_cup_capacity","safety_card_included":true}
+
+assistant channel=final:
+Perfect! I can deliver a 3-cup capacity rice cooker to room 621 as well. It includes a keep-warm function and should arrive in about 15 minutes. You'll now have both the toaster and rice cooker for your cooking needs.

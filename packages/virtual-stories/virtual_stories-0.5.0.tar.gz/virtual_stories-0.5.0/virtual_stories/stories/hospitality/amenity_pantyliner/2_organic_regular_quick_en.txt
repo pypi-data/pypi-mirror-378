@@ -1,0 +1,76 @@
+"""
+Guest requests organic pantyliners with discreet delivery to the room.
+Provide inventory confirmation and arrange private delivery.
+
+ROLES: user (female guest seeking organic pantyliners), assistant (wellness coordinator handling discreet requests)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_personal_care_inventory","description":"Check availability of personal care and hygiene supplies.","parameters":{"type":"object","additionalProperties":false,"properties":{"product_category":{"type":"string","enum":["feminine_hygiene","personal_care","wellness_supplies","comfort_items"]},"specific_item":{"type":"string","enum":["pantyliners","sanitary_pads","tampons","intimate_wipes","pain_relief"]}},"required":["product_category"]},"strict":true},
+  {"name":"arrange_discreet_delivery","description":"Arrange private delivery of personal care items to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items_requested":{"type":"array","items":{"type":"string"}},"delivery_method":{"type":"string","enum":["housekeeping_discrete","wellness_staff","room_service_bag"]},"timing_preference":{"type":"string"}},"required":["room_number","items_requested"]},"strict":true},
+  {"name":"connect_wellness_support","description":"Connect guest with wellness team for additional feminine health support.","parameters":{"type":"object","additionalProperties":false,"properties":{"support_type":{"type":"string","enum":["menstrual_comfort","wellness_consultation","pharmacy_coordination","spa_treatments"]},"guest_room":{"type":"string"},"consultation_type":{"type":"string","enum":["phone","in_person","text_guidance"]}},"required":["support_type","guest_room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: CityGarden Wellness Hotel (hotel_id: cgw_phx_31)
+Address: 10 E Van Buren St, Phoenix, AZ 85004
+Timezone: America/Phoenix
+
+Feminine Care Shelf:
+- Pantyliners: organic (Natracare), conventional (Always); types—ultra‑thin, regular
+- Pads/Tampons: day/night pads; regular/super tampons
+- Intimate care: pH‑balanced wipes, soothing spray
+- Comfort items: heating pad, herbal tea
+- Delivery: discreet 7–12 minutes
+
+user:
+Hello—room 1504. Do you have organic pantyliners you can send discreetly?
+
+assistant channel=analysis:
+Check feminine_hygiene pantyliners; then offer discreet delivery.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"product_category":"feminine_hygiene","specific_item":"pantyliners"}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"brands":["Natracare_organic","Always"],"types":["ultra_thin","regular"],"stock_sufficient":true,"delivery_options":["housekeeping_discrete","wellness_staff"]}
+
+assistant channel=final:
+Yes—organic Natracare pantyliners are available in ultra‑thin or regular. Which type do you prefer for room 1504, and I’ll arrange discreet delivery?
+
+user:
+Regular, please.
+
+assistant channel=analysis:
+Arrange wellness_staff delivery.
+
+assistant channel=commentary to=tool.arrange_discreet_delivery:
+{"room_number":"1504","items_requested":["natracare_pantyliners_regular"],"delivery_method":"wellness_staff","timing_preference":"within_15_minutes"}
+
+tool.arrange_discreet_delivery channel=commentary to=assistant:
+{"delivery_confirmed":true,"estimated_arrival_minutes":9,"package_contents":["natracare_regular_20_count"],"discreet_packaging":true}
+
+assistant channel=final:
+All set—Natracare regular pantyliners (20‑count) will arrive discreetly to room 1504 in about 9 minutes.
+
+user:
+Thank you. The cactus garden downstairs is beautiful.
+
+assistant channel=analysis:
+Chitchat acknowledgment only.
+
+assistant channel=final:
+It’s a calming spot to stroll.
+
+user:
+Could you also arrange a sunrise hot‑air balloon ride?
+
+assistant channel=analysis:
+Balloon booking not defined; [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

@@ -1,0 +1,40 @@
+"""
+Guest asks if OCR handles messy handwriting; include in-context limitation and [ATTENTION] proceed with non-OCR scan.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"scan_document","description":"Scan","parameters":{"type":"object","properties":{"pages":{"type":"integer"},"dpi":{"type":"integer"},"color":{"type":"string","enum":["b&w","color"]},"duplex":{"type":"boolean"},"ocr":{"type":"boolean"}},"required":["pages","dpi","color","duplex","ocr"]}}
+]
+"""
+
+system:
+Center: Coral Court (hotel_id: coral_court_dub)
+OCR note: OCR works best for printed text; handwriting recognition isn’t guaranteed.
+Recommendation: 300 dpi color for handwritten notes.
+
+user:
+Will your OCR read messy handwriting?
+
+assistant channel=analysis:
+Answer from system: not guaranteed.
+
+assistant channel=final:
+Handwriting recognition isn’t guaranteed—OCR works best on typed text. We can still scan clearly at 300 dpi.
+
+user:
+[ATTENTION] Go ahead and scan these 5 pages in color without OCR.
+
+assistant channel=analysis:
+Run a 5-page color 300 dpi non-OCR scan.
+
+assistant channel=commentary to=scan_document:
+{"pages":5,"dpi":300,"color":"color","duplex":false,"ocr":false}
+
+tool.scan_document:
+{"status":"scanned","filename":"handwritten_notes_5pp_color.pdf"}
+
+assistant channel=final:
+Done—saved as handwritten_notes_5pp_color.pdf at 300 dpi.
+

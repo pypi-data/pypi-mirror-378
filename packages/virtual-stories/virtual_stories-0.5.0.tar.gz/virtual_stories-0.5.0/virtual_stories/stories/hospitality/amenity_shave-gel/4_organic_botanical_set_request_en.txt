@@ -1,0 +1,112 @@
+"""
+Guest asks for organic botanical shaving gel and pre-shave oil; verify availability and deliver.
+
+ROLES: user (guest preferring organic products), assistant (spa concierge with amenity access)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_grooming_products",
+    "description": "Check availability of specialized grooming and shaving products.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_type": { "type": "string", "enum": ["shaving_gel", "shaving_cream", "aftershave", "complete_kit"] },
+        "skin_type": { "type": "string", "enum": ["sensitive", "normal", "dry", "oily", "combination"] },
+        "brand_preference": { "type": "string", "enum": ["luxury", "organic", "hypoallergenic", "standard", "any"] }
+      },
+      "required": ["product_type", "skin_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_grooming_amenities",
+    "description": "Deliver selected grooming products to guest room.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "string" } },
+        "delivery_window": { "type": "string", "enum": ["immediate", "within_hour", "evening_service"] },
+        "include_instructions": { "type": "boolean" }
+      },
+      "required": ["room_number", "products", "delivery_window"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Desert Dunes Resort Dubai (hotel_id: ddr_dxb_04)
+Address: Crescent Rd, Palm Jumeirah, Dubai, UAE
+Timezone: Asia/Dubai
+
+Organic Grooming Line:
+- Botanical gel: aloe + chamomile, light natural scent
+- Pre-shave oil: argan + jojoba, unscented
+- Aftershave: alcohol-free botanical balm
+- Kits: organic trio set (gel + oil + balm)
+- Sizes: 100 ml gel, 30 ml oil, 60 ml balm
+
+Service & Policy:
+- Delivery 10–25 minutes, 08:00–23:00
+- Evening service tray available 19:00–21:00
+- Complimentary: one item swap per stay for sensitivities
+- Contact: Spa Butler ext 44
+- Storage: all items sealed, batch-coded
+
+user:
+Hi there—do you have an organic botanical shaving gel and a pre-shave oil? I’m in 1506.
+
+assistant channel=analysis:
+Check organic products for normal/combination skin; then deliver gel and oil to 1506 immediately.
+
+assistant channel=commentary to=tool.check_grooming_products:
+{"product_type":"shaving_gel","skin_type":"normal","brand_preference":"organic"}
+
+tool.check_grooming_products channel=commentary to=assistant:
+{"available":true,"recommended_products":["Botanical_AloeChamomile_Gel","ArganJojoba_PreShave_Oil"],"complete_kits_available":true}
+
+assistant channel=analysis:
+Arrange immediate delivery with instructions.
+
+assistant channel=commentary to=tool.deliver_grooming_amenities:
+{"room_number":"1506","products":["Botanical_AloeChamomile_Gel_100ml","ArganJojoba_PreShave_Oil_30ml"],"delivery_window":"immediate","include_instructions":true}
+
+tool.deliver_grooming_amenities channel=commentary to=assistant:
+{"delivery_scheduled":true,"arrival_time":"16_minutes","instructions":"organic_line_usage_card"}
+
+assistant channel=final:
+Yes—we have an aloe + chamomile botanical gel and an unscented argan + jojoba pre-shave oil. They’ll reach 1506 in about 16 minutes with a quick usage card.
+
+user:
+Is the swap complimentary if the standard cream bothered my skin?
+
+assistant channel=analysis:
+System policy: one item swap per stay for sensitivities.
+
+assistant channel=final:
+Yes—one complimentary swap per stay is available for sensitivities.
+
+user:
+Your lobby lighting is beautiful.
+
+assistant channel=analysis:
+Chit-chat acknowledgment only.
+
+assistant channel=final:
+Thank you—enjoy your evening.
+
+user:
+Can you book a desert safari for tomorrow?
+
+assistant channel=analysis:
+Beyond grooming scope; use attention flag.
+
+assistant channel=final:
+[ATTENTION] I can check desert safari options and follow up with times.

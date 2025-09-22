@@ -1,0 +1,81 @@
+"""
+Guest requests a minimalist bouquet for a business welcome; concise timing.
+Provide floral inventory check and create arrangement.
+
+ROLES: user (business traveler), assistant (hotel florist coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_floral_inventory", "description": "Check minimalist bouquet options and availability.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "arrangement_type": { "type": "string", "enum": ["bouquet", "room_decor"] }, "flower_preference": { "type": "string", "enum": ["orchids", "lilies", "mixed_seasonal", "modern_minimalist"] }, "budget_range": { "type": "string", "enum": ["standard_50_100", "premium_100_200"] } }, "required": ["arrangement_type"] }, "strict": true },
+  { "name": "create_floral_arrangement", "description": "Create a modern minimalist arrangement for a room.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "arrangement_style": { "type": "string", "enum": ["modern_minimalist", "elegant_mixed"] }, "delivery_time": { "type": "string" }, "special_message": { "type": "string" }, "occasion": { "type": "string", "enum": ["welcome", "corporate", "celebration"] } }, "required": ["room_number", "arrangement_style", "occasion"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Metro Pavilion Hotel (hotel_id: mph_nyc_07)
+Address: 77 W 24th St, New York, NY 10010
+Timezone: America/New_York
+
+Floral Studio:
+- Minimalist options: single-stem orchids, structured lilies, sleek greenery
+- Delivery: 9:00–18:00 studio; in-room drop 20–40 minutes
+- Corporate card stock available
+- Maintenance: water refresh on request
+- Budget tiers: $75 standard, $150 premium
+
+Hotel Notes:
+- 260 rooms; meeting floors 3–5
+- Espresso bar 6:30–14:00; lounge 17:00–23:00
+- Quiet hours 22:00–7:00
+
+user:
+Hi—room 1220. I’d like a clean, minimalist bouquet to welcome a client.
+
+assistant channel=analysis:
+Check minimalist options and budget; create modern minimalist arrangement; schedule delivery.
+
+assistant channel=commentary to=tool.check_floral_inventory:
+{"arrangement_type":"bouquet","flower_preference":"modern_minimalist","budget_range":"premium_100_200"}
+
+tool.check_floral_inventory channel=commentary to=assistant:
+{"available":true,"arrangements":["single_phalaenopsis_orchid","structured_lilies_modern"],"pricing":{"single_phalaenopsis_orchid":150,"structured_lilies_modern":135}}
+
+assistant channel=commentary to=tool.create_floral_arrangement:
+{"room_number":"1220","arrangement_style":"modern_minimalist","delivery_time":"today 4:15 PM","special_message":"Welcome to Metro Pavilion Hotel","occasion":"corporate"}
+
+tool.create_floral_arrangement channel=commentary to=assistant:
+{"confirmed":true,"arrangement_id":"MN1220_MINI","delivery_scheduled":"4:15 PM","includes":["white_phalaenopsis","sleek_monstera_leaf","matte_ceramic_vase"],"total_cost":150}
+
+assistant channel=final:
+Confirmed. A modern minimalist orchid arrangement will reach 1220 at 4:15 PM with a welcome card.
+
+user:
+Is the espresso bar still open?
+
+assistant channel=analysis:
+From system: 6:30–14:00.
+
+assistant channel=final:
+It closes at 14:00.
+
+user:
+The lobby looks stylish.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+The design is very clean-lined—perfect match for the minimalist bouquet.
+
+user:
+Could you also arrange a private car?
+
+assistant channel=analysis:
+Transportation beyond floral scope; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll coordinate with concierge for a private car.
+"""
+

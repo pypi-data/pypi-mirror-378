@@ -1,0 +1,70 @@
+"""
+Guest asks for calming body lotion, mentions green tea preference; asks about delivery slots.
+
+ROLES: user (wellness guest), assistant (spa attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_skincare_inventory","description":"Calming body lotions","parameters":{"type":"object","properties":{"product_type":{"type":"string","enum":["body_lotion"]},"skin_type":{"type":"string","enum":["sensitive","all"]}},"required":["product_type"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_spa_amenities","description":"Schedule delivery","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"product_id":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_time":{"type":"string","enum":["immediate","evening_turndown","morning_refresh"]}},"required":["room_number","products"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Kyoto Garden Ryokan Hotel (hotel_id: kgr_kyoto_01)
+Address: Karasuma-dori, Kyoto 600-8421, Japan
+Timezone: Asia/Tokyo
+
+Wellness Notes:
+- Green tea and rice bran lines available
+- Delivery slots: immediate, evening turndown, morning refresh
+- Public onsen hours: 06:00–10:00, 16:00–23:00
+- Tatami floors on select rooms—slippers provided
+- Quiet tea lounge overlooking courtyard
+
+Lotion Tray (table):
+| ID | Name |
+| MATCHA_CALM | Matcha Calm Body Gel-Lotion |
+| RICE_BRAN_SILK | Rice Bran Silk Lotion |
+
+user:
+Konnichiwa—do you have a green tea body lotion? Can it be delivered at morning refresh to 802?
+
+assistant channel=analysis:
+Confirm delivery slot from system; list tea-based option; schedule.
+
+assistant channel=final:
+Yes—morning refresh delivery is available. Our tea-based option is Matcha Calm Body Gel-Lotion.
+
+assistant channel=commentary to=tool.get_skincare_inventory:
+{"product_type":"body_lotion","skin_type":"sensitive"}
+
+tool.get_skincare_inventory channel=commentary to=assistant:
+{"available_products":[{"id":"MATCHA_CALM","name":"Matcha Calm Body Gel-Lotion","description":"Green tea infused"}]}
+
+assistant channel=commentary to=tool.deliver_spa_amenities:
+{"room_number":"802","products":[{"product_id":"MATCHA_CALM","quantity":1}],"delivery_time":"morning_refresh"}
+
+tool.deliver_spa_amenities channel=commentary to=assistant:
+{"ticket_id":"KGR-802-MR-77","scheduled":"morning_refresh","items":["Matcha Calm x1"],"charge":"bill_to_room"}
+
+assistant channel=final:
+Confirmed—Matcha Calm will arrive with morning refresh under KGR-802-MR-77.
+
+user:
+Arigato! The tea lounge is beautiful.
+
+assistant channel=final:
+We’re glad you enjoyed the courtyard view.
+
+user:
+Any temple walk suggestions for tomorrow?
+
+assistant channel=analysis:
+Out of scope—flag.
+
+assistant channel=final:
+[ATTENTION] I’ll ask the concierge for temple walks.
+

@@ -1,0 +1,61 @@
+"""
+Guest wants a dual‑monitor station reservation; we check and reserve via tools, include chitchat, and handle an out‑of‑scope admin rights request with the special flag.
+
+ROLES: user (guest needing dual‑monitor setup), assistant (business center attendant handling reservations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_pc_availability","description":"List available time slots for a zone.","parameters":{"type":"object","additionalProperties":false,"properties":{"zone":{"type":"string","enum":["dual_monitor","quiet","general"]},"date":{"type":"string","format":"date"}},"required":["zone","date"]},"strict":true},
+  {"name":"reserve_pc_slot","description":"Reserve a slot by id and last name.","parameters":{"type":"object","additionalProperties":false,"properties":{"slot_id":{"type":"string"},"last_name":{"type":"string"}},"required":["slot_id","last_name"]},"strict":true}
+]
+```
+"""
+
+system:
+North Pier Hotel — Business Center
+Reference sheet:
+- Zones: Dual‑monitor (2), Quiet (3), General (5)
+- Hours: 07:30–22:30
+- Session: 55 minutes; grace 5 minutes; idle timeout 6 minutes
+- Location: Level 2, next to the skybridge
+- Printing: Color/mono A4; self‑service kiosk
+Accessibility: adjustable chairs at dual‑monitor stations
+Contact: +1 212 555 8802
+
+user:
+Any dual‑monitor slots tomorrow for the name Alvarez?
+
+assistant channel=analysis:
+Check dual‑monitor availability for tomorrow and then reserve a slot under Alvarez upon confirmation.
+
+assistant channel=commentary to=tool.get_pc_availability:
+{"zone":"dual_monitor","date":"2025-09-02"}
+
+tool.get_pc_availability channel=commentary to=assistant:
+{"slots":[{"slot_id":"DM-2025-09-02-09:00","time":"09:00–09:55"},{"slot_id":"DM-2025-09-02-11:00","time":"11:00–11:55"}]}
+
+assistant channel=commentary to=tool.reserve_pc_slot:
+{"slot_id":"DM-2025-09-02-09:00","last_name":"Alvarez"}
+
+tool.reserve_pc_slot channel=commentary to=assistant:
+{"status":"confirmed","slot_id":"DM-2025-09-02-09:00","time":"09:00–09:55"}
+
+assistant channel=final:
+Reserved dual‑monitor station for 09:00–09:55 under Alvarez. We’re on Level 2 next to the skybridge; sessions are 55 minutes with a 5‑minute grace.
+
+user:
+Nice—love that skybridge view.
+
+assistant channel=final:
+It’s a guest favorite.
+
+user:
+Could you grant me admin rights on that PC?
+
+assistant channel=analysis:
+Admin rights policy isn’t provided; use special flag.
+
+assistant channel=final:
+[ATTENTION] Admin permissions aren’t specified here. Reviewing available resources.
+

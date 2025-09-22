@@ -1,0 +1,116 @@
+"""
+New employee asking about drug policy enforcement during training.
+
+ROLES: user (new housekeeping staff member during orientation), assistant (training supervisor explaining policy implementation)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {
+    "name": "get_policy",
+    "description": "Retrieve policy details for a given category.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string", "enum": ["fire", "fireworks", "pets", "smoking", "drugs"] }
+      },
+      "required": ["category"]
+    },
+    "strict": true
+  },
+  {
+    "name": "record_training_note",
+    "description": "Record training progress and questions.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "employee_id": { "type": "string" },
+        "topic": { "type": "string" },
+        "status": { "type": "string", "enum": ["completed", "needs_review", "questions_answered"] }
+      },
+      "required": ["employee_id", "topic", "status"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+VENUE: Grandview Conference Resort — 850-room convention destination with training facilities
+LOCATION: Suburban business park with dedicated conference wings and exhibition halls
+STAR RATING: 4-star business resort specializing in corporate events and professional development
+ARCHITECTURE: Modular design with flexible meeting spaces and state-of-the-art AV systems
+STAFF CAPACITY: 340 employees across departments with comprehensive training programs
+POLICY — Illicit Drugs (possession or use):
+- Staff must report suspected violations immediately to management
+- Never confront guests directly - follow chain of command protocols  
+- Document observations objectively without making accusations
+- Maintain guest privacy while ensuring safety compliance
+- Training required for all guest-facing positions on proper procedures
+STAFF FACILITIES:
+- Employee training center with simulation rooms for scenario practice
+- Multi-language policy manuals in staff break rooms (English, Spanish, Korean)
+- 24-hour employee assistance program with confidential counseling
+- Staff cafeteria with international cuisine rotating menu (changes weekly)
+- Employee shuttle service to local transit hub (operates 6:00-24:00)
+- Professional development scholarships for hospitality degree programs
+
+user:
+During housekeeping rounds, what should I do if I smell something suspicious in a guest room?
+
+assistant channel=analysis:
+New employee asking about proper protocol when encountering potential drug use - need to explain reporting procedures.
+
+assistant channel=commentary to=tool.get_policy:
+{"category": "drugs"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"drugs","staff_protocol":"report to management immediately","direct_confrontation":"prohibited","documentation":"objective observations only"}
+
+assistant channel=final:
+Report to management immediately - never confront guests directly. Document what you observe objectively without making accusations.
+
+user:
+What if a guest asks me directly about the drug policy?
+
+assistant channel=analysis:
+Employee asking about responding to guest inquiries which requires specific training on appropriate responses.
+
+assistant channel=final:
+[ATTENTION] Let me review the specific scripts and responses you should use when guests ask policy questions directly.
+
+user:
+The employee cafeteria's international menu this week looks delicious.
+
+assistant channel=analysis:
+Chitchat about staff cafeteria - can share system info about rotating international cuisine menu.
+
+assistant channel=final:
+Yes! The international cuisine menu changes weekly. It's great having such variety for our diverse staff.
+
+user:
+How detailed should my incident reports be?
+
+assistant channel=analysis:
+Question about documentation standards which requires specific training guidance beyond basic policy.
+
+assistant channel=final:
+[ATTENTION] I'll go over the detailed documentation standards and report formats with you during your incident reporting training module.
+
+user:
+Should I complete my policy training certification today?
+
+assistant channel=analysis:
+Employee asking about training progress - should record this in their training status.
+
+assistant channel=commentary to=tool.record_training_note:
+{"employee_id": "HK-2024-0847", "topic": "drug_policy_procedures", "status": "questions_answered"}
+
+tool.record_training_note channel=commentary to=assistant:
+{"status": "recorded", "employee_id": "HK-2024-0847", "next_step": "complete_certification_module", "deadline": "end_of_shift"}
+
+assistant channel=final:
+Yes, please complete your certification module by end of shift. Your questions have been recorded as answered in your training progress.

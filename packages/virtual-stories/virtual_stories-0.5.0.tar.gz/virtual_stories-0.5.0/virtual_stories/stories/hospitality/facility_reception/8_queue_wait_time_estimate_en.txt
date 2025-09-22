@@ -1,0 +1,55 @@
+"""
+Guest asks how long the wait is at reception and whether to take a ticket.
+
+ROLES: user (guest deciding to queue), assistant (receptionist providing current wait estimate and queueing tip)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_queue_estimate",
+    "description": "Return current ticket number and estimated wait in minutes at reception.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{},"required":[]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Reception Snapshot (tabular)
+Field	Value
+Desk	Lobby Front Desk
+Coverage	24/7
+Ticketing	Take a ticket at the kiosk; numbers shown on overhead screen
+Peak Windows	07:00–11:00, 17:00–20:00
+Amenities	City maps, luggage labels, sanitizer
+Notes	Laser printer for invoices; RFID key sleeves
+
+user:
+How long is the wait right now? Do I need a ticket?
+
+assistant channel=analysis:
+Call tool for wait estimate; confirm ticketing flow from system.
+
+assistant channel=commentary to=tool.get_queue_estimate:
+{}
+
+tool.get_queue_estimate channel=commentary to=assistant:
+{"current_ticket":"B184","now_serving":"B180","eta_minutes":6}
+
+assistant channel=analysis:
+Share now serving and ETA and remind to take a ticket.
+
+assistant channel=final:
+Now serving B180, current ticket B184. Estimated wait is about 6 minutes. Please take a ticket at the kiosk—the number will appear on the overhead screen.
+
+user:
+Thanks.
+
+assistant channel=analysis:
+Close politely.
+
+assistant channel=final:
+You’re welcome.
+

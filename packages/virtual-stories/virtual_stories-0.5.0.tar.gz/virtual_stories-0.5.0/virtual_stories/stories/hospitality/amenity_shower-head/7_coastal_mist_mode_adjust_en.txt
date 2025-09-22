@@ -1,0 +1,65 @@
+"""
+Guest requests cool mist mode for after-sun comfort; verify mist and gentle pressure.
+
+ROLES: user (guest with mild sunburn), assistant (engineering coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"adjust_shower_settings","description":"Set pressure and spray.",
+    "parameters":{"type":"object","additionalProperties":false,
+      "properties":{"room_number":{"type":"string"},"pressure_setting":{"type":"string","enum":["gentle","medium","high","massage"]},"spray_pattern":{"type":"string","enum":["mist","wide_rainfall","focused_stream","massage_pulse"]}},
+      "required":["room_number","pressure_setting","spray_pattern"]},
+    "strict":true}
+]
+```
+"""
+
+system:
+Hotel: Pacific Dunes Retreat (hotel_id: pdr_san_06)
+Address: 701 Coast Blvd, San Diego, CA 92037
+Timezone: America/Los_Angeles
+
+Bath Comfort:
+- Fine-mist mode for after-sun cooling
+- Aloe and chamomile amenities available
+- Ventilated bath with quick-dehumidify fan
+
+Water & Ops:
+- Pressure 52–60 PSI typical
+- Engineering 08:00–22:00
+- Beach towel service 07:00–19:00
+
+user:
+Could you set my shower in 615 to a gentle mist?
+
+assistant channel=analysis:
+Directly set gentle + mist per tools.
+
+assistant channel=commentary to=tool.adjust_shower_settings:
+{"room_number":"615","pressure_setting":"gentle","spray_pattern":"mist"}
+
+tool.adjust_shower_settings channel=commentary to=assistant:
+{"room_number":"615","pressure_setting":"gentle","spray_pattern":"mist","applied":true}
+
+assistant channel=final:
+Your shower in 615 is set to gentle pressure with a cool mist spray. It pairs nicely with the aloe amenities if you’d like those.
+
+user:
+Thanks! Do you have beach towels until the evening?
+
+assistant channel=analysis:
+Use Water & Ops details.
+
+assistant channel=final:
+Yes—beach towel service runs 07:00 to 19:00.
+
+user:
+What’s the UV index this afternoon?
+
+assistant channel=analysis:
+UV index is beyond system.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your question about the UV index and will review external info.
+

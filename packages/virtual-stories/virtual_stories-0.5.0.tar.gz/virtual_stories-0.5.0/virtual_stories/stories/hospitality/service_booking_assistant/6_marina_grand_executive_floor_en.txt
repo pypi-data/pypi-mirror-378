@@ -1,0 +1,75 @@
+"""
+Executive floor request; assistant queries via tool and shares tool response; then answers one policy point from system. Include small talk and an [ATTENTION] query outside system.
+
+ROLES: user (business traveler), assistant (Marina Grand reservations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "search_rooms",
+    "description": "Search available room types for given dates and guests.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {"type":"string","format":"date"},
+        "check_out": {"type":"string","format":"date"},
+        "adults": {"type":"integer"},
+        "children": {"type":"integer"}
+      },
+      "required": ["check_in","check_out","adults","children"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+- Hotel: Marina Grand Tower
+- Address: Pier 3, 1000 Harbor Walk, Boston, MA 02210, USA
+- Check-in: 15:00; Check-out: 12:00
+- Lounge: Executive access 06:00–21:00 (breakfast 06:30–10:00)
+- Wi‑Fi: Premium 400 Mbps included on executive floors
+- Gym/Pool: 24/7 gym; lap pool 06:00–22:00
+- Parking: Valet $58/night; EV fast charge (22kW) at valet only
+- Policies: Smoke‑free; quiet hours 22:00–07:00; $200 incidental hold
+- Rooms:
+  * Executive Harbor King (33 m²)
+  * Executive Harbor Twin (33 m²)
+  * Junior Suite Harbor (45 m²)
+
+user:
+Availability for Executive Harbor King, 2025-05-05 to 2025-05-07, 1 adult?
+
+assistant channel=analysis:
+Use search tool; present only the returned items and rate.
+
+assistant channel=commentary to=tool.search_rooms:
+{"check_in":"2025-05-05","check_out":"2025-05-07","adults":1,"children":0}
+
+tool.search_rooms channel=commentary to=assistant:
+{"options":[{"code":"EX_H_K","name":"Executive Harbor King","rate":"USD 319/night"}]}
+
+assistant channel=final:
+Executive Harbor King is available at USD 319/night. Executive lounge runs 06:00–21:00; breakfast 06:30–10:00.
+
+user:
+Cheers. Calm day at the harbor?
+
+assistant channel=final:
+Welcome aboard at Marina Grand.
+
+user:
+Is the gym open 24/7?
+
+assistant channel=final:
+Yes—the gym is open 24/7.
+
+user:
+Can you comp parking with the room?
+
+assistant channel=final:
+[ATTENTION] Complimentary parking isn’t specified in the provided details. Processing your request.
+

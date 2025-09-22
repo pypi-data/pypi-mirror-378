@@ -1,0 +1,56 @@
+"""
+Guest asks for same-day cot setup with a tight ETA window; confirm typical window and proceed.
+
+ROLES: user (tight schedule), assistant (housekeeping scheduler providing realistic ETA)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check cot stock","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"schedule_housekeeping_setup","description":"Schedule setup with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"order_note":{"type":"string"}},"required":["hotel_id","room","order_note"]},"strict":true}
+]
+```
+"""
+
+system:
+Riviera Plaza Nice (RPNC-06)
+Address: 12 Prom. des Anglais, 06000 Nice, France
+Family amenities: Baby cots complimentary; bedding included; suitable up to 2 years; setup by housekeeping only; typical window 20–30 minutes
+Inventory: 14 cots; Housekeeping 07:00–22:00; Front Desk 24/7
+Other: Breakfast 06:30–10:30; Beach access 08:00–19:00
+Only services listed are available.
+
+user:
+Can you set up a cot in the next 10 minutes? Room 803.
+
+assistant channel=analysis:
+Explain typical window (20–30 minutes) from system, then proceed to schedule ASAP.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"RPNC-06","item":"baby_cot","quantity":1,"room":"803"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.schedule_housekeeping_setup:
+{"hotel_id":"RPNC-06","room":"803","order_note":"Set up baby cot ASAP; guest present; away from windows/cords."}
+
+tool.schedule_housekeeping_setup channel=commentary to=assistant:
+{"eta_minutes":21,"ticket":"HK-803-1189"}
+
+assistant channel=final:
+Our typical setup window is 20–30 minutes. I’ve scheduled ASAP—ticket HK-803-1189 with an ETA of about 21 minutes.
+
+user:
+Is breakfast still available?
+
+assistant channel=final:
+Breakfast runs 06:30 to 10:30.
+
+user:
+Could you send internal staffing rosters for housekeeping?
+
+assistant channel=final:
+[ATTENTION] Reviewing available resources.
+

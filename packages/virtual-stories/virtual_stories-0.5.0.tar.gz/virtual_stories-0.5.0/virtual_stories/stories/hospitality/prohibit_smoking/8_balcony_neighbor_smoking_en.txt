@@ -1,0 +1,58 @@
+"""
+Guest reports a neighbor smoking on their balcony; clarify policy and log a concern; include chitchat and an out‑of‑scope request to identify the guest.
+
+ROLES: user (guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```
+[
+  {"name":"get_policy","description":"Retrieve policy details for a given category.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["smoking"]}},"required":["category"]},"strict":true},
+  {"name":"record_air_quality_concern","description":"Record a non‑urgent air quality concern (e.g., smoke smell).","parameters":{"type":"object","additionalProperties":false,"properties":{"floor":{"type":"string"},"note":{"type":"string"}},"required":["floor","note"]},"strict":true}
+]
+```
+"""
+
+system:
+PROPERTY: Rivergate Quarters
+SMOKING POLICY: No smoking indoors or on balconies; designated garden only; cleaning fee USD 250 for indoor/balcony evidence
+EXTRAS: Evening cocoa 21:00; River stroll maps at concierge.
+
+user:
+Someone’s smoking on the balcony next door.
+
+assistant channel=analysis:
+Confirm policy; log concern noting the floor.
+
+assistant channel=commentary to=tool.get_policy:
+{"category":"smoking"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"smoking","allowed":false,"summary":"No smoking indoors or on balconies; garden only."}
+
+assistant channel=commentary to=tool.record_air_quality_concern:
+{"floor":"reported_by_guest","note":"Neighbor smoking on adjacent balcony; please check and remind policy."}
+
+tool.record_air_quality_concern channel=commentary to=assistant:
+{"status":"noted","case_id":"AQ-RIVER-BALC"}
+
+assistant channel=final:
+Thanks for letting us know—smoking isn’t allowed on balconies. We’ve noted it for a policy reminder.
+
+user:
+The river stroll map was handy.
+
+assistant channel=analysis:
+Chit‑chat acknowledgment.
+
+assistant channel=final:
+Happy it helped—enjoy the sunset loop along the bank.
+
+user:
+Who is the guest in that room?
+
+assistant channel=analysis:
+Out of scope—no identity disclosure.
+
+assistant channel=final:
+[ATTENTION] Guest identity details aren’t available within the provided resources.
+

@@ -1,0 +1,115 @@
+"""
+Guest reports bathroom phone with intermittent buzzing; perform moisture check, remote line test, and offer temporary handset if needed.
+
+ROLES: user (guest with noisy bathroom phone), assistant (telecom support liaison)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "run_remote_line_test",
+    "description": "Run a remote diagnostic on the room phone line at a specified location (bathroom or desk).",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "location": { "type": "string", "enum": ["bathroom", "desk"] }
+      },
+      "required": ["room_number", "location"]
+    },
+    "strict": true
+  },
+  {
+    "name": "mark_moisture_risk",
+    "description": "Flag potential moisture ingress at bathroom handset plate for engineering.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "evidence": { "type": "string" }
+      },
+      "required": ["room_number", "evidence"]
+    },
+    "strict": true
+  },
+  {
+    "name": "create_engineering_ticket",
+    "description": "Open an engineering ticket for a room device issue.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "note": { "type": "string" }
+      },
+      "required": ["room_number", "category", "priority"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Harbor Quay Waterfront Hotel (hotel_id: hq_wh_bos_02)
+Address: 88 Atlantic Ave, Boston, MA 02110
+Timezone: America/New_York
+
+Bathroom Telephony Facts:
+1) Wall-mounted IP-analog adapter rated IP54; condensation can trigger hum/buzz.
+2) Remote line test reports: voltage, impedance, and packet loss for hybrid ports.
+3) Moisture events require drying time (45–60 min) and plate reseal within 24 hours.
+4) Engineering window: 07:00–22:30 (priority high for wet-area electrics).
+5) Desk handset is on separate circuit and can be offered as a temporary bathroom unit.
+
+user:
+Hi, in room 714 the bathroom phone keeps buzzing and then goes silent. Can you check it?
+
+assistant channel=analysis:
+Run bathroom remote test; if noise signature suggests moisture, flag and open ticket.
+
+assistant channel=commentary to=tool.run_remote_line_test:
+{"room_number":"714","location":"bathroom"}
+
+tool.run_remote_line_test channel=commentary to=assistant:
+{"room_number":"714","location":"bathroom","result":"degraded","details":"impedance_fluctuation, packet_loss_3pct, hum_60hz"}
+
+assistant channel=analysis:
+Degraded with 60hz hum suggests moisture; mark moisture risk and open high-priority ticket.
+
+assistant channel=commentary to=tool.mark_moisture_risk:
+{"room_number":"714","evidence":"hum_60hz and impedance_fluctuation on hybrid port"}
+
+tool.mark_moisture_risk channel=commentary to=assistant:
+{"flagged":true,"note":"Likely moisture ingress at wall plate"}
+
+assistant channel=commentary to=tool.create_engineering_ticket:
+{"room_number":"714","category":"bathroom_phone","priority":"high","note":"Buzzing then silence; remote test shows hum_60hz, packet_loss_3pct; moisture risk flagged"}
+
+tool.create_engineering_ticket channel=commentary to=assistant:
+{"ticket_id":"ENG-HQ-714-2219","status":"open","eta_minutes":35}
+
+assistant channel=final:
+Thanks for letting me know. I’ve opened ticket ENG-HQ-714-2219 at high priority; engineering is due in about 35 minutes. The buzzing suggests minor moisture inside the wall plate. If you’d like, I can have the desk handset temporarily placed in the bathroom so you have a working line in the meantime.
+
+user:
+That would be great—also, the harbor view is gorgeous tonight.
+
+assistant channel=analysis:
+Small talk acknowledgment—no tools.
+
+assistant channel=final:
+Glad you’re enjoying the view tonight.
+
+user:
+Can you also send up a dehumidifier for the bathroom?
+
+assistant channel=analysis:
+Dehumidifiers aren’t covered in the system; use special flag.
+
+assistant channel=final:
+[ATTENTION] Noted. Reviewing if a dehumidifier can be arranged.

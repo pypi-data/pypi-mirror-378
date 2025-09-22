@@ -1,0 +1,81 @@
+"""
+Guest requests presentation binders with spine labels and report covers.
+Provide availability check and offer simple binding.
+
+ROLES: user (marketing manager), assistant (print & bind attendant)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supply_inventory","description":"Check binders and report covers.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_category":{"type":"string","enum":["binders","report_covers","spine_labels"]},"quantity_needed":{"type":"number"}},"required":["supply_category"]},"strict":true},
+  {"name":"deliver_office_supplies","description":"Deliver binders and covers.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center"]}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Capitol View Suites (hotel_id: cvs_18)
+Address: 120 Constitution Ave NW, Washington, DC 20001
+Timezone: America/New_York
+
+Presentation Materials:
+- Binders: 1" and 2"; colors black/white
+- Spine labels: 1" and 2" widths
+- Report covers: clear front + black back
+- Complimentary on first 10 units per day
+- Delivery 10–15 minutes; basic binding 20–30 minutes
+
+user:
+Can I get eight 1-inch binders with spine labels to room 607?
+
+assistant channel=analysis:
+Check binders and spine labels; deliver to 607.
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"binders","quantity_needed":8}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true,"sizes":["1in","2in"],"colors":["black","white"]}
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"spine_labels","quantity_needed":8}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true,"widths":["1in","2in"]}
+
+assistant channel=commentary to=tool.deliver_office_supplies:
+{"room_number":"607","items":["binders_1in_8","spine_labels_1in_8"],"delivery_location":"guest_room"}
+
+tool.deliver_office_supplies channel=commentary to=assistant:
+{"delivered":true,"eta":"13 minutes","ticket":"CVS-607-500"}
+
+assistant channel=final:
+Yes—eight 1" binders with matching 1" spine labels are heading to room 607 (ticket CVS-607-500). ETA ~13 minutes.
+
+user:
+Are the first 10 free daily?
+
+assistant channel=analysis:
+Yes per system.
+
+assistant channel=final:
+Correct—the first 10 units per day are complimentary.
+
+user:
+Your rooftop has great views at dusk.
+
+assistant channel=analysis:
+Chit-chat acknowledgment.
+
+assistant channel=final:
+Golden hour over the dome is a treat.
+
+user:
+Could you reserve the committee room for 5 PM?
+
+assistant channel=analysis:
+Room reservations out of scope—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Processing your request.
+

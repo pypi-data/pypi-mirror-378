@@ -1,0 +1,64 @@
+"""
+Guest asks about license acceptance and fuel/coverage; proceed with booking.
+
+ROLES: user (guest clarifying license type and costs), assistant (concierge confirming policies and arranging partner booking)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"availability_window","description":"Check ChiangRide window availability","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"start_time":{"type":"string","format":"date-time"},"hours":{"type":"integer"},"model":{"type":"string"}},"required":["partner_id","start_time","hours","model"]},"strict":true},
+  {"name":"book_partner","description":"Book motorbike with deposit and notes","parameters":{"type":"object","additionalProperties":false,"properties":{"partner_id":{"type":"string"},"guest":{"type":"string"},"room":{"type":"string"},"model":{"type":"string"},"hours":{"type":"integer"},"deposit_amount":{"type":"number"},"deposit_currency":{"type":"string"}},"required":["partner_id","guest","room","model","hours","deposit_amount","deposit_currency"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Riverside Chiang Mai (RCM-22)
+Address: 123 Thapae Rd, Chiang Mai 50100, Thailand
+Concierge: 08:00–21:00; WhatsApp info card at desk
+Partner: ChiangRide (partner_id CR-02)
+Models: Honda Click 125i, Honda ADV 160, Yamaha NMAX 155
+Requirements: Passport + motorcycle license (international permits accepted); age 20+
+Deposit: THB 3,000 card pre-auth; refunded after return check
+Fuel: Return same level; refuel fee THB 120 if not full
+Helmets: Two included; hair caps available on request
+Add-ons: Phone holder and USB adapter available
+Pickup/Return: Hotel side gate, motor court A; parking slot S2 overnight
+Boundaries: City limits only; Doi Suthep mountain roads allowed; no unpaved tracks
+Assistance: Hotline ext. 333; rain ponchos available during monsoon
+Inspection: Pre-ride photo checklist signed at concierge
+
+user:
+I have an international motorcycle permit. Can I rent the Honda ADV for 5 hours from 10 am? Room 405.
+
+assistant channel=analysis:
+Confirm international permit is accepted per system; check CR-02 availability for ADV 160 at 10:00 for 5 hours; if available, book with THB 3,000 deposit note and side gate pickup.
+
+assistant channel=commentary to=tool.availability_window:
+{"partner_id":"CR-02","start_time":"2025-09-09T10:00:00","hours":5,"model":"Honda ADV 160"}
+
+tool.availability_window channel=commentary to=assistant:
+{"available":true,"slot_ref":"CRS-9910","pickup":"Motor court A"}
+
+assistant channel=commentary to=tool.book_partner:
+{"partner_id":"CR-02","guest":"Guest 405","room":"405","model":"Honda ADV 160","hours":5,"deposit_amount":3000,"deposit_currency":"THB"}
+
+tool.book_partner channel=commentary to=assistant:
+{"reservation_id":"CR-RES-5590","status":"confirmed"}
+
+assistant channel=final:
+Your international motorcycle permit is accepted. Reservation CR-RES-5590 is confirmed for a Honda ADV 160 from 10:00 for 5 hours, pickup at the motor court A by the side gate. A THB 3,000 card pre-auth applies, and please return the fuel at the same level.
+
+user:
+The riverside café downstairs smells great.
+
+assistant channel=final:
+The café is popular for local roasts—enjoy it anytime.
+
+user:
+Do you have the partner’s full insurance coverage brochure?
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

@@ -1,0 +1,61 @@
+"""
+Guest requests two Bordeaux glasses and a polishing cloth; asks about fees and timing; small talk and an out-of-scope request included.
+
+ROLES: user (Detail-oriented guest.), assistant (Room service operator.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "order_room_service_item",
+    "description": "Order an item from room service.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_number": {"type": "string"},
+        "item_name": {"type": "string"},
+        "quantity": {"type": "integer"}
+      },
+      "required": ["room_number", "item_name", "quantity"]
+    }
+  }
+]
+```
+"""
+
+system:
+Hotel: Cedar Grove Hotel & Spa
+Glassware: Bordeaux, Burgundy, universal, flute
+Service Window: 11:00–23:00
+ETA: 10–15 minutes
+Fees: Complimentary delivery; breakage billed at cost
+Extras: Polishing cloth available on request
+Contact: 0
+
+user:
+Hi—could you send two Bordeaux glasses to 1004? Also, do you charge for delivery?
+
+assistant channel=analysis:
+Delivery is complimentary; order 2 Bordeaux via tool; confirm ETA and cloth.
+
+assistant channel=commentary to=tool.order_room_service_item:
+{"room_number": "1004", "item_name": "bordeaux_red_glass", "quantity": 2}
+
+tool.order_room_service_item channel=commentary to=assistant:
+{"status": "success", "message": "Two Bordeaux glasses sent to 1004."}
+
+assistant channel=final:
+Sent—two Bordeaux glasses are on their way. Delivery is complimentary and typically arrives in 10–15 minutes. I can include a polishing cloth if you’d like.
+
+user:
+Yes, please add the cloth. How’s your evening?
+
+assistant channel=final:
+Quiet and pleasant—enjoy your night.
+
+user:
+[ATTENTION] Can you loan us a wine aerator?
+
+assistant channel=final:
+I don’t have an aerator listed in my system. I can provide the glasses and polishing cloth.
+

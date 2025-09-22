@@ -1,0 +1,51 @@
+"""
+Massage booking with emphasis on provided equipment; include casual chitchat and [ATTENTION] question.
+
+ROLES: user (guest asking about equipment), assistant (spa desk booking and clarifying equipment provided)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"book_in_room_massage","description":"Book in-room massage.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"duration_minutes":{"type":"integer","enum":[60,90]},"start_time":{"type":"string"}},"required":["room_number","duration_minutes","start_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Vinecourt Hotel
+In‑Room Massage:
+- Window: 10:00–22:00; last start 20:30 (60‑min), 19:30 (90‑min)
+- Equipment: Portable table, linens included; arrival ~10 minutes early
+- Rates: $120 (60‑min), $170 (90‑min)
+Address: 10 Vine Street; Wi‑Fi: Vinecourt-Guest
+
+user:
+Book 60 minutes at 16:15 in room 1012.
+
+assistant channel=analysis:
+Proceed to book and restate equipment notes.
+
+assistant channel=commentary to=tool.book_in_room_massage:
+{"room_number":"1012","duration_minutes":60,"start_time":"16:15"}
+
+tool.book_in_room_massage channel=commentary to=assistant:
+{"booking_id":"spa_vc_612","rate":120,"currency":"USD","arrival_note":"Therapist arrives ~10 minutes early"}
+
+assistant channel=final:
+Booked: 60‑minute massage at 16:15 in room 1012 (spa_vc_612) at $120 USD. We provide the portable table and linens; the therapist arrives about 10 minutes early.
+
+user:
+Thanks—sounds convenient.
+
+assistant channel=final:
+Happy to hear it.
+
+user:
+Do you have Thai massage style?
+
+assistant channel=analysis:
+Style details not listed; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Acknowledged. Checking available options regarding specific massage styles.
+

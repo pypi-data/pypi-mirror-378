@@ -1,0 +1,72 @@
+"""
+Guest asks for a dinner table and a starters preview; include small talk and one out-of-scope follow-up with the special flag.
+
+ROLES: user (guest planning dinner), assistant (restaurant concierge managing evening reservations)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"list_restaurants","description":"List on-property restaurants with cuisine and hours.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"meal_period":{"type":"string","enum":["breakfast","lunch","dinner","late_night"]}},"required":["hotel_id"]},"strict":true},
+  {"name":"check_table_availability","description":"Check table availability for a restaurant.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"party_size":{"type":"integer","minimum":1,"maximum":8},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","party_size","datetime"]},"strict":true},
+  {"name":"book_table","description":"Book a table when availability exists.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"guest_name":{"type":"string"},"contact":{"type":"string"},"party_size":{"type":"integer"},"datetime":{"type":"string","format":"date-time"}},"required":["restaurant_id","guest_name","contact","party_size","datetime"]},"strict":true},
+  {"name":"get_menu_section","description":"Fetch a menu section preview for a restaurant.","parameters":{"type":"object","additionalProperties":false,"properties":{"restaurant_id":{"type":"string"},"section":{"type":"string","enum":["starters","mains","desserts","beverages"]}},"required":["restaurant_id","section"]},"strict":true}
+]
+```
+"""
+
+system:
+Lakeside Manor (hotel_id: lakeside_manor_chi)
+Address: 500 Lakeshore Dr., Chicago, IL 60601
+Timezone: America/Chicago
+Dining Overview:
+  Pier 9 (restaurant_id: rest_pier9) — Dinner 17:30–22:30; lakeside views; seafood & grill.
+  Hearth & Oak (restaurant_id: rest_hearth_oak) — Breakfast/Lunch 07:00–14:30.
+Guest Services: Step-free promenade access; patio heaters available in cool weather.
+
+user:
+Could you book a dinner for two at 7:00 PM tomorrow at Pier 9 under Morgan Wu? Also, may I see some starters?
+
+assistant channel=analysis:
+List dinner venues, check Pier 9 at 19:00 for 2, book if available, then fetch starters preview.
+
+assistant channel=commentary to=tool.list_restaurants:
+{"hotel_id":"lakeside_manor_chi","meal_period":"dinner"}
+
+tool.list_restaurants channel=commentary to=assistant:
+{"restaurants":[{"restaurant_id":"rest_pier9","name":"Pier 9","hours":"17:30-22:30","cuisine":"seafood_grill"}]}
+
+assistant channel=commentary to=tool.check_table_availability:
+{"restaurant_id":"rest_pier9","party_size":2,"datetime":"2025-09-02T19:00:00"}
+
+tool.check_table_availability channel=commentary to=assistant:
+{"available":true,"tables":[{"table_id":"P15","hold_until":"2025-09-02T19:10:00"}]}
+
+assistant channel=commentary to=tool.book_table:
+{"restaurant_id":"rest_pier9","guest_name":"Morgan Wu","contact":"","party_size":2,"datetime":"2025-09-02T19:00:00"}
+
+tool.book_table channel=commentary to=assistant:
+{"status":"confirmed","confirmation_id":"P9-DIN-5621"}
+
+assistant channel=commentary to=tool.get_menu_section:
+{"restaurant_id":"rest_pier9","section":"starters"}
+
+tool.get_menu_section channel=commentary to=assistant:
+{"section":"starters","items":[{"name":"Lakeside Oysters"},{"name":"Roasted Beets & Burrata"},{"name":"Shrimp Cocktail"}]}
+
+assistant channel=final:
+Your 7:00 PM dinner for two at Pier 9 is confirmed (P9-DIN-5621). Starters preview: Lakeside Oysters, Roasted Beets & Burrata, Shrimp Cocktail.
+
+user:
+Sounds perfect—love that lakeside view at sunset.
+
+assistant channel=final:
+Appreciate it—enjoy your evening.
+
+user:
+Can you share the live music schedule on the patio this month?
+
+assistant channel=analysis:
+No tool or system data for entertainment schedules; use the neutral processing flag.
+
+assistant channel=final:
+[ATTENTION] Thanks for asking about the patio schedule. Checking available options.

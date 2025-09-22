@@ -1,0 +1,51 @@
+"""
+Guest asks how to transfer files; we confirm allowed methods via tool, include small talk, and handle an out‑of‑scope peer‑to‑peer request.
+
+ROLES: user (guest needing to move files), assistant (business center attendant listing allowed transfer methods)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_file_transfer_options","description":"List permitted file transfer methods at PCs.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"required":[]}
+]
+```
+"""
+
+system:
+Stonebridge Hotel — Business Center
+Overview:
+- Hours: 06:00–23:00 | Location: Level 2 foyer
+- Policies: USB allowed; files purged on logout; no local persistence
+- Printing: A4 mono/color at kiosk; post to room
+Support: Dial 0 for assistance
+
+user:
+What’s the best way to move a PDF to print—USB or email?
+
+assistant channel=analysis:
+List permitted transfer methods and answer from the tool.
+
+assistant channel=commentary to=tool.get_file_transfer_options:
+{}
+
+tool.get_file_transfer_options channel=commentary to=assistant:
+{"methods":["usb_drive","email_attachment","cloud_download"]}
+
+assistant channel=final:
+Permitted options are USB drive, email attachment, or downloading from cloud storage. Files are purged on logout.
+
+user:
+The Level 2 foyer is easy to find.
+
+assistant channel=final:
+Happy to hear that.
+
+user:
+Can I run a peer‑to‑peer file sharing app there?
+
+assistant channel=analysis:
+P2P apps aren’t defined; use the special flag.
+
+assistant channel=final:
+[ATTENTION] Peer‑to‑peer apps aren’t specified here. Verifying information.
+

@@ -1,0 +1,126 @@
+"""
+Mother and teenage daughter request salon services for quality bonding time together.
+
+ROLES: user (mother planning special mother-daughter salon experience), assistant (family-oriented salon coordinator specializing in bonding experiences)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_dual_availability",
+    "description": "Check availability for two people at the same time.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"date": {"type":"string","format":"date"}, "hotel_id": {"type":"string"}, "party_size": {"type":"integer"}},
+      "required": ["date","hotel_id","party_size"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_family_packages",
+    "description": "List family bonding salon packages.",
+    "parameters": {"type":"object","additionalProperties":false,"properties": {"hotel_id":{"type":"string"}, "age_appropriate": {"type":"boolean"}}, "required":["hotel_id"]},
+    "strict": true
+  },
+  {
+    "name": "book_family_experience",
+    "description": "Book mother-daughter salon bonding experience.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "family_package": {"type":"string"},
+        "appointment_date": {"type":"string","format":"date"},
+        "participants": {"type":"string"},
+        "special_occasion": {"type":"string"}
+      },
+      "required": ["hotel_id","family_package","appointment_date","participants"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Harmony Family Resort & Spa (hotel_id: harmony_family_denver)
+Location: 4150 E Mississippi Ave, Denver, CO 80246
+Timezone: America/Denver
+Family Bonding Beauty Lounge — Together Time Salon:
+  Family Packages (codes):
+    MOTHER_DAUGHTER_CLASSIC (side-by-side styling, 2h), TEEN_GLOW_UP (age-appropriate makeover, 90m)
+    GENERATIONS_TOGETHER (3-generation service, 3h), BONDING_BLOWOUT (matching styles, 75m)
+  Special Features: Side-by-side stations, teen-friendly music playlist, healthy snacks
+  Age-Appropriate Services: Natural makeup for teens, fun temporary hair colors, nail art
+  Hours: Wed-Sun 10:00-18:00, family hours 10:00-15:00 daily
+  Amenities: Photo booth for memories, complimentary mocktails, family robes
+  Staff: 5 stylists experienced with teens and family dynamics
+  Payment: Family package discounts, birthday specials available
+
+user:
+Hi there! My daughter Emma just turned 16, and I want to plan something special for us to do together. She's always admiring my hair and makeup, so I thought a salon day might be perfect. Do you have services for both of us at the same time?
+
+assistant channel=analysis:
+Mother planning sweet 16 celebration with daughter. Check dual availability and suggest age-appropriate family packages.
+
+assistant channel=commentary to=tool.check_dual_availability:
+{"date":"2025-09-12","hotel_id":"harmony_family_denver","party_size":2}
+
+tool.check_dual_availability channel=commentary to=assistant:
+{"available":true,"stations":"side_by_side","stylists_available":2,"recommended_time":"11:00"}
+
+assistant channel=commentary to=tool.get_family_packages:
+{"hotel_id":"harmony_family_denver","age_appropriate":true}
+
+tool.get_family_packages channel=commentary to=assistant:
+{"packages":[{"code":"MOTHER_DAUGHTER_CLASSIC","includes":"side_by_side_styling+age_appropriate_makeup+photo_session","duration_hours":2},{"code":"TEEN_GLOW_UP","teen_focused":"natural_makeup+fun_hair_styling","duration_minutes":90}]}
+
+assistant channel=analysis:
+Perfect timing available. MOTHER_DAUGHTER_CLASSIC package ideal for 16th birthday bonding with side-by-side stations.
+
+assistant channel=final:
+What a beautiful way to celebrate Emma's sweet 16! We specialize in mother-daughter bonding experiences. Our MOTHER_DAUGHTER_CLASSIC package includes side-by-side styling with age-appropriate makeup for Emma, plus a photo session to capture your special memories. When would you like to schedule this special day together?
+
+user:
+That sounds absolutely perfect! Emma would love the photo session. Can we do this Saturday around 11 AM? I'm Jessica Martinez, and this is for Emma's 16th birthday celebration.
+
+assistant channel=commentary to=tool.book_family_experience:
+{"hotel_id":"harmony_family_denver","family_package":"MOTHER_DAUGHTER_CLASSIC","appointment_date":"2025-09-06","participants":"Jessica Martinez and Emma Martinez","special_occasion":"Emma's 16th birthday"}
+
+tool.book_family_experience channel=commentary to=assistant:
+{"status":"confirmed","booking_id":"FAMILY-1647","stylists":"Maria and Sofia","special_perks":"birthday_tiara,complimentary_mocktails"}
+
+assistant channel=analysis:
+Booking confirmed with special birthday perks. Maria and Sofia are excellent with mother-daughter pairs.
+
+assistant channel=final:
+Happy early birthday to Emma! You're confirmed for Saturday 11:00 AM with stylists Maria and Sofia (FAMILY-1647). Since it's Emma's sweet 16, we'll include a birthday tiara and complimentary mocktails for both of you. This will be such a memorable bonding experience!
+
+user:
+Emma is going to be so surprised! She has no idea. Will the stylists be able to coordinate our looks so we complement each other?
+
+assistant channel=analysis:
+Mother planning surprise with coordinated styling request. Maria and Sofia are experienced with family coordination.
+
+assistant channel=final:
+What a wonderful surprise! Maria and Sofia are experts at creating complementary mother-daughter looks - they'll make sure you both look stunning together while maintaining your individual styles. Emma will absolutely love this special bonding surprise!
+
+user:
+I can already picture us taking selfies together! The lighting in here looks perfect for photos.
+
+assistant channel=analysis:
+Mother excited about photo opportunities. Respond enthusiastically about the photo session included in their package.
+
+assistant channel=final:
+The photo session will capture such beautiful memories! Our professional photo booth has perfect lighting, and we'll make sure you both have gorgeous hair and makeup for those special mother-daughter photos.
+
+user:
+Do you also offer pedicure services so we can have matching nail colors?
+
+assistant channel=analysis:
+Asking about pedicure services which aren't mentioned in the salon's family packages. This requires the ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] What a sweet idea for matching mother-daughter details! Exploring additional pampering services for your special day.

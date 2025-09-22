@@ -1,0 +1,59 @@
+"""
+Guest requests hangers late evening; asks about urgent window and makes small talk.
+
+ROLES: user (guest in room 2403 requesting hangers near close), assistant (night services arranging delivery and quoting urgent window)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```
+[
+  {"name":"check_amenity_availability","description":"Check availability","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]},"strict":true},
+  {"name":"request_amenity_delivery","description":"Request delivery","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Copperline Plaza — River Tower
+Room: 2403 (Grand King River)
+Policy: Extra hangers up to 10/night; mixed types allowed
+Hours: Normal 07:15–23:00; Urgent 23:00–01:00 (limited)
+Extensions: 0 Front; 7750 Guest; 7751 HK
+SLA floors 23–26: 14–20 minutes normal
+Logistics: Service Closet RT-24; use S2 elevators after 22:00
+
+user:
+Could I get 6 hangers up to 2403?
+
+assistant channel=analysis:
+Assume standard wooden hangers; verify stock for 6; schedule normal delivery to 2403.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"wooden hanger","quantity":6}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"wooden hanger","available":true,"in_stock":172}
+
+assistant channel=analysis:
+Create normal delivery.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"2403","amenity_name":"wooden hanger","quantity":6,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"HNG-2403-6610","eta_minutes":16}
+
+assistant channel=final:
+Confirmed—6 hangers are scheduled for room 2403 with an ETA of about 16 minutes.
+
+user:
+Thanks! Are you still in the urgent window later?
+
+assistant channel=final:
+Yes—urgent coverage runs 23:00–01:00 with limited staff.
+
+user:
+Are these cedar-lined?
+
+assistant channel=final:
+[ATTENTION] Working on your request.
+

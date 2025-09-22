@@ -1,0 +1,56 @@
+"""
+Guest checks weekend hours and asks to exchange JPY to EUR; include support list and small talk.
+
+ROLES: user (guest with JPY needing EUR on weekend), assistant (cashier confirming weekend service and quoting)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "quote_fx",
+    "description": "Quote a currency exchange with applied fee and total payout.",
+    "parameters": {"type":"object","additionalProperties":false,"properties":{"from":{"type":"string"},"to":{"type":"string"},"amount":{"type":"number"}},"required":["from","to","amount"]},
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Seaside Promenade Resort — FX Kiosk
+Hours: 10:00–18:00 Sat–Sun; 09:00–19:00 Mon–Fri
+Counter Location: Beside Concierge alcove, near ocean‑view elevators
+Supported: USD, EUR, GBP, JPY
+ID Threshold: Passport for any exchange ≥ USD 500 equivalent
+Handling Fee: Fixed per transaction
+Queue Policy: First‑come, first‑served
+Cash Only: No credit cards accepted
+Signage Code: KIOSK‑FX‑02
+
+user:
+Are you open on Sundays? I also want to convert 50,000 JPY to EUR.
+
+assistant channel=analysis:
+Confirm Sunday hours from system, then quote JPY→EUR with tool.
+
+assistant channel=commentary to=tool.quote_fx:
+{"from":"JPY","to":"EUR","amount":50000}
+
+tool.quote_fx channel=commentary to=assistant:
+{"rate":0.0062,"fee":"EUR 2.00","payout":"EUR 308.00"}
+
+assistant channel=final:
+Yes—on Sundays we operate 10:00–18:00 beside the Concierge alcove. For 50,000 JPY, the quote is EUR 308.00 after a EUR 2.00 fee (rate 0.0062).
+
+user:
+Great view from those ocean elevators.
+
+assistant channel=final:
+You’ll find the FX kiosk by the ocean‑view elevators, sign KIOSK‑FX‑02.
+
+user:
+Can you exchange cryptocurrencies to cash?
+
+assistant channel=final:
+[ATTENTION] Crypto exchange isn’t listed in our FX services. Checking available options.
+

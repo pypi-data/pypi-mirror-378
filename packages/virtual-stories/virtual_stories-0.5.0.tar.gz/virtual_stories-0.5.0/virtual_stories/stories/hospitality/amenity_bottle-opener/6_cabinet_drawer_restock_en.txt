@@ -1,0 +1,82 @@
+"""
+Guest wonders if rooms have built-in openers and asks for a loaner if not; confirm amenity placement and deliver.
+
+ROLES: user (first-time guest), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"room_opener_status","description":"Check if a room has an in-room opener placed.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string"},"required":["room"]}},
+  {"name":"send_loaner","description":"Send a loaner opener to the room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":"string","type":{"type":"string","enum":["cap_lifter","multitool"]}},"required":["room","type"]}}
+]
+```
+"""
+
+system:
+Aurora Fjord Hotel (hotel_id: afh_anc_09)
+Address: 401 Coastal Hwy, Anchorage, AK 99501
+Timezone: America/Anchorage
+Setting: Waterfront hotel with Nordic-inspired rooms
+
+In-Room Placement:
+- Standard rooms: no opener
+- Suites: cap lifter in minibar drawer
+
+Loaner Program:
+- Cap lifter or multitool on request
+- ETA: 10–20 minutes
+
+Sanitation & Safety:
+- Wiped with food-safe solution; sealed pouch
+- No sharp foil blades in cap-lifter option
+
+Policy:
+- No deposit; return at checkout
+
+Contact:
+- Front Desk ext. 0; In-Room Dining ext. 52
+
+user:
+Hi—does room 711 have an opener in the room, or could I borrow one?
+
+assistant channel=analysis:
+Check room status, then offer a loaner.
+
+assistant channel=commentary to=tool.room_opener_status:
+{"room":"711"}
+
+tool.room_opener_status channel=commentary to=assistant:
+{"room":"711","category":"standard","opener_present":false}
+
+assistant channel=final:
+Room 711 is a standard room, so no in-room opener. I can send a cap lifter or a multitool—ETA 10–20 minutes. Which do you prefer?
+
+user:
+Just the cap lifter, please. Thanks!
+
+assistant channel=commentary to=tool.send_loaner:
+{"room":"711","type":"cap_lifter"}
+
+tool.send_loaner channel=commentary to=assistant:
+{"ticket":"AFH-711-215","eta_minutes":14}
+
+assistant channel=final:
+All set—ticket AFH-711-215. Expect arrival in about 14 minutes.
+
+user:
+The Nordic decor is lovely!
+
+assistant channel=analysis:
+Small talk acknowledgement.
+
+assistant channel=final:
+Thank you—clean lines and warm woods are our signature.
+
+user:
+Could you stock our minibar with local craft beers?
+
+assistant channel=analysis:
+Outside opener scope; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll check on minibar stocking options for local craft selections.

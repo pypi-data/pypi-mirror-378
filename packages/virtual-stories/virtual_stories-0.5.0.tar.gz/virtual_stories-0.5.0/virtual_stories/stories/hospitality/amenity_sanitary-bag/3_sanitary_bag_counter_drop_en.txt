@@ -1,0 +1,71 @@
+"""
+Guest wants sanitary bags placed on the bathroom counter; confirm availability and deliver; include small talk and acknowledgment.
+
+ROLES: user (guest requesting sanitary bags), assistant (front desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bathroom_supplies","description":"Check availability for sanitary bags.","parameters":{"type":"object","additionalProperties":false,"properties":{"item_code":{"type":"string","enum":["sanitary_bag"]}},"required":["item_code"]},"strict":true},
+  {"name":"deliver_bathroom_supplies","description":"Deliver bathroom supplies to a room with placement.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"quantity":{"type":"integer","minimum":1},"placement":{"type":"string","enum":["bathroom_counter","under_sink"]}},"required":["room_number","item_code","quantity","placement"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seaside Promenade (hotel_id: sp_mia_14)
+Address: 1020 Ocean Dr, Miami Beach, FL 33139
+Bathroom supply hours: 07:00–23:30; ETA 9–15 minutes
+Pool: 07:00–20:00; towel hut on deck
+Wi‑Fi: 300/300 Mbps; beach chairs Wi‑Fi extender
+Dining: juice bar 07:00–13:00; seafood grill 17:00–22:00
+Scent: coconut-lime in lobby afternoons
+Check-in/out: 16:00 / 11:00
+
+Sanitary bag details:
+- Packaging: opaque sleeves; discreet emboss logo
+- Inventory: 175 sleeves
+- Placement: bathroom_counter or under_sink
+
+user:
+Please deliver two sanitary bags to 415 and leave them on the bathroom counter.
+
+assistant channel=analysis:
+Check stock; deliver 2 to counter for 415.
+
+assistant channel=commentary to=tool.check_bathroom_supplies:
+{"item_code":"sanitary_bag"}
+
+tool.check_bathroom_supplies channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_bag","on_hand":175}
+
+assistant channel=analysis:
+Proceed with delivery order.
+
+assistant channel=commentary to=tool.deliver_bathroom_supplies:
+{"room_number":"415","item_code":"sanitary_bag","quantity":2,"placement":"bathroom_counter"}
+
+tool.deliver_bathroom_supplies channel=commentary to=assistant:
+{"ticket_id":"BS-415-2190","eta_minutes":12}
+
+assistant channel=final:
+Certainly—two sanitary bag sleeves will be on your bathroom counter in 415. Ticket BS-415-2190, about 12 minutes.
+
+user:
+The coconut-lime scent is summery.
+
+assistant channel=analysis:
+Reply linking to scent detail.
+
+assistant channel=final:
+We diffuse coconut-lime in the afternoons—glad it brings a summery feel.
+
+user:
+Do you also have beach totes to borrow?
+
+assistant channel=analysis:
+Not specified; flag.
+
+assistant channel=final:
+[ATTENTION] I’ll check on beach totes. Reviewing amenity list.
+

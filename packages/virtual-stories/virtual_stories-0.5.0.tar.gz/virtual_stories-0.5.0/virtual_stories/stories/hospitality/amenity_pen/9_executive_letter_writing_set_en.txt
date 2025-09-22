@@ -1,0 +1,73 @@
+"""
+Guest requests an executive letter-writing set; asks about paper type and envelopes.
+Provide letter set details, paper options, and delivery.
+
+ROLES: user (guest composing formal letters), assistant (stationery concierge preparing letter-writing set)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_writing_instruments","description":"Check letter set components (paper/envelopes) and pen options.","parameters":{"type":"object","properties":{"pen_type":{"type":"string","enum":["ballpoint","rollerball","fountain_pen"]},"quality_tier":{"type":"string","enum":["premium","executive"]}},"required":["pen_type"]},"strict":true},
+  {"name":"deliver_writing_supplies","description":"Deliver letter-writing set to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"pen_selection":{"type":"array","items":{"type":"string"}},"accessories_included":{"type":"boolean"},"delivery_priority":{"type":"string","enum":["express"]}},"required":["room_number","pen_selection"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Royal Crescent Townhouse (hotel_id: rct_bah_98)
+Address: 16 Royal Cres, Bath BA1 2LS, United Kingdom
+Timezone: Europe/London
+
+Letter Set:
+- Paper: cotton rag 120 gsm (cream), linen 100 gsm (white)
+- Envelopes: matching lined; peel‑seal
+- Correspondence cards; deckle edge
+- Wax seal kit (hotel crest) on request
+- Fountain-safe; quick‑dry options
+
+Pen Options:
+- Premium rollerball; executive fountain (F nib)
+- Black or blue‑black ink cartridges
+- Presentation folder
+- Blotting sheets and guide line sheet
+- Complimentary for townhouse suites
+
+user:
+Hello, room 14. I’d like a letter‑writing set with cream paper and a fine fountain pen.
+
+assistant channel=analysis:
+Check letter set components and fountain pen; deliver express.
+
+assistant channel=commentary to=tool.check_writing_instruments:
+{"pen_type":"fountain_pen","quality_tier":"executive"}
+
+tool.check_writing_instruments channel=commentary to=assistant:
+{"available":true,"paper":["cotton_rag_120gsm_cream","linen_100gsm_white"],"envelopes":"lined_peel_seal","pens":["executive_fountain_F"],"inks":["black","blue_black"]}
+
+assistant channel=commentary to=tool.deliver_writing_supplies:
+{"room_number":"14","pen_selection":["executive_fountain_F","cotton_rag_120gsm_cream","envelopes_lined"],"accessories_included":true,"delivery_priority":"express"}
+
+tool.deliver_writing_supplies channel=commentary to=assistant:
+{"delivery_confirmed":true,"eta_minutes":10,"items":["F fountain pen","cream paper","lined envelopes","blotter","guide sheet"],"runner":"Oliver"}
+
+assistant channel=final:
+Certainly—an executive fine‑nib fountain pen with cream cotton rag paper and lined envelopes will arrive at room 14 in about 10 minutes.
+
+user:
+Do you offer a wax seal kit?
+
+assistant channel=analysis:
+Answer from Letter Set details.
+
+assistant channel=final:
+Yes—a wax seal kit with the hotel crest is available on request.
+
+user:
+Any Roman baths tours today?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Working on your request.
+

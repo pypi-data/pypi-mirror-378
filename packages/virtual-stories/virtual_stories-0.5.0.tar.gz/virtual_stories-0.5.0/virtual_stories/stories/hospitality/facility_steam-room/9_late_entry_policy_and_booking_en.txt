@@ -1,0 +1,71 @@
+"""
+Guest checks last entry policy and books near closing.
+
+ROLES: user (guest finishing dinner and hoping for a late steam), assistant (evening spa attendant confirming policy and holding a slot)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"hours_with_last_entry","description":"Return closing time and last permissible entry.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"find_last_slot","description":"Find the latest available 20-min window tonight.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]},"strict":true},
+  {"name":"reserve_window","description":"Reserve found window for one.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"window_id":{"type":"string"}},"required":["hotel_id","window_id"]},"strict":true}
+]
+```
+"""
+
+system:
+Convention Hotel: Harborline Convention Hotel (hotel_id: harborline_san)
+Address: 900 Pierpoint Blvd, San Diego, CA 92101 | TZ: America/Los_Angeles
+Steam Room “Pier Mist”
+  Location: Spa Concourse; follow terrazzo floor markers to frosted doors
+  Hours: 10:00–22:00; Last Entry: 21:40
+  Capacity: 2; Window: 20 minutes; UV lockouts at :15/:45 (5 min)
+  Amenities: Eucalyptus steam; lemon water; striped towels
+  Policy: Co-ed; swimwear required; quiet voices; no phones
+  Payment: Room charge and cards
+
+user:
+What’s your last entry? Can I grab the latest possible slot for one?
+
+assistant channel=analysis:
+Return last entry and locate the last slot; then reserve it.
+
+assistant channel=commentary to=tool.hours_with_last_entry:
+{"hotel_id":"harborline_san"}
+
+tool.hours_with_last_entry channel=commentary to=assistant:
+{"hours":"10:00-22:00","last_entry":"21:40"}
+
+assistant channel=commentary to=tool.find_last_slot:
+{"hotel_id":"harborline_san"}
+
+tool.find_last_slot channel=commentary to=assistant:
+{"window_id":"PM-2120-2140"}
+
+assistant channel=commentary to=tool.reserve_window:
+{"hotel_id":"harborline_san","window_id":"PM-2120-2140"}
+
+tool.reserve_window channel=commentary to=assistant:
+{"status":"reserved","window_id":"PM-2120-2140"}
+
+assistant channel=final:
+Last entry is 9:40 PM, and I’ve reserved 9:20–9:40 PM for you (PM-2120-2140). Swimwear required; lemon water and towels are ready.
+
+user:
+The terrazzo floor looks cool.
+
+assistant channel=analysis:
+Respond with a brief acknowledgment.
+
+assistant channel=final:
+Thanks—those markers guide the way to the spa.
+
+user:
+Can you extend one more window after 9:40 PM?
+
+assistant channel=analysis:
+Extending beyond last entry isn’t described; use the attention flag.
+
+assistant channel=final:
+[ATTENTION] Noted the request about extending hours. Evaluating constraints.
+

@@ -1,0 +1,69 @@
+"""
+A guest requests a fork for their in-room meal.
+
+ROLES: user (hotel guest), assistant (a helpful hotel concierge)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+    {
+        "name": "request_amenity",
+        "description": "Request a hotel amenity for a guest.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "amenity_name": {
+                    "type": "string",
+                    "description": "The name of the amenity to request."
+                },
+                "room_number": {
+                    "type": "string",
+                    "description": "The guest's room number."
+                },
+                "quantity": {
+                    "type": "integer",
+                    "description": "The number of amenities to request."
+                }
+            },
+            "required": ["amenity_name", "room_number", "quantity"]
+        }
+    }
+]
+```
+"""
+
+system:
+You are a concierge at The Grand Budapest Hotel. Your goal is to assist guests with their requests promptly and efficiently.
+
+Hotel Information:
+- Hotel Name: The Grand Budapest Hotel
+- Location: Republic of Zubrowka
+- Amenities available: fork, spoon, knife, plate, bowl, glass, etc.
+- Room service hours: 24/7
+
+user:
+Hi, I just ordered some food to my room, but I don't have a fork. Can you send one up? My room number is 123.
+
+assistant channel=analysis:
+The user is requesting a fork for their room. I should use the `request_amenity` tool to fulfill this request. I will need to confirm the amenity name, room number, and quantity. The user has provided all of this information.
+
+assistant channel=commentary to=tool.request_amenity:
+{"amenity_name": "fork", "room_number": "123", "quantity": 1}
+
+tool.request_amenity channel=commentary to=assistant:
+{"status": "success", "message": "A fork has been dispatched to room 123."}
+
+assistant channel=analysis:
+The tool call was successful. I should now inform the user that a fork is on its way. I can also add a small chitchat to be more friendly.
+
+assistant channel=final:
+Of course! A fork is on its way to your room right now. I hope you are enjoying your meal!
+
+user:
+Thank you! By the way, do you know if the hotel has a swimming pool?
+
+assistant channel=analysis:
+The user is asking about a swimming pool. This information is not available in my system prompt or tools. I will have to use the `ACKNOWLEDGE_AND_PASS_TO_BACKGROUND_AGENT` flag.
+
+assistant channel=final:
+[ATTENTION] I'm looking into this.

@@ -1,0 +1,52 @@
+"""
+Guest asks about e‑cigarettes/vaping; property prohibits all forms of smoking indoors; include small talk and an out‑of‑scope request for sensor thresholds.
+
+ROLES: user (guest), assistant (concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```
+[
+  {"name":"get_policy","description":"Retrieve policy details for a given category.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["smoking"]}},"required":["category"]},"strict":true}
+]
+```
+"""
+
+system:
+PROPERTY: The Cedar Promenade
+SMOKING/VAPING: All forms (including e‑cigarettes and heated tobacco) are prohibited indoors; designated outdoor zone only at South Courtyard
+FEE: Indoor evidence incurs a cleaning fee of USD 300
+AMENITIES: Evening tea 20:30; Promenade bikes; Rooftop lookout 18:00–22:00.
+
+user:
+Is vaping allowed in the room?
+
+assistant channel=analysis:
+Answer via smoking policy—no vaping indoors.
+
+assistant channel=commentary to=tool.get_policy:
+{"category":"smoking"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"smoking","allowed":false,"summary":"All smoking forms—including e‑cigs—are prohibited indoors. Use the outdoor zone only."}
+
+assistant channel=final:
+Vaping isn’t permitted indoors. Please use the outdoor designated zone at the South Courtyard.
+
+user:
+The rooftop lookout was great at dusk.
+
+assistant channel=analysis:
+Small talk acknowledgment.
+
+assistant channel=final:
+It’s lovely between 18:00–22:00—glad you enjoyed it.
+
+user:
+What PM or VOC sensor thresholds do you trigger on?
+
+assistant channel=analysis:
+Out of scope—no thresholds listed in system/tools.
+
+assistant channel=final:
+[ATTENTION] Specific sensor thresholds aren’t available within the provided resources.
+

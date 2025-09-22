@@ -1,0 +1,78 @@
+"""
+Guest requests slim portfolio cases with inner pockets and card sleeves.
+Provide inventory confirmation and delivery.
+
+ROLES: user (sales director), assistant (executive services attendant managing premium supplies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_office_supply_inventory","description":"Check premium portfolio cases.","parameters":{"type":"object","additionalProperties":false,"properties":{"supply_category":{"type":"string","enum":["portfolio_cases"]},"quantity_needed":{"type":"number"}},"required":["supply_category"]},"strict":true},
+  {"name":"deliver_office_supplies","description":"Deliver premium supplies to guest room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"delivery_location":{"type":"string","enum":["guest_room","business_center"]}},"required":["room_number","items","delivery_location"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Pacific Crest Club (hotel_id: pcc_09)
+Address: 300 Ocean Promenade, Santa Monica, CA 90401
+Timezone: America/Los_Angeles
+
+Premium Stationery:
+- Slim portfolio cases (A4) with inner pockets and card sleeves
+- Colors: charcoal, oxford blue
+- Limited-run leatherette with magnetic closure
+- Delivery SLA: 10–15 minutes
+- Price: $22 each (complimentary for PCC Elite)
+
+Inventory JSON:
+{"portfolio_cases":{"charcoal":28,"oxford_blue":16}}
+
+user:
+Do you have 3 slim portfolio cases in charcoal for room 705?
+
+assistant channel=analysis:
+Check portfolio case availability; if available, deliver to room 705.
+
+assistant channel=commentary to=tool.check_office_supply_inventory:
+{"supply_category":"portfolio_cases","quantity_needed":3}
+
+tool.check_office_supply_inventory channel=commentary to=assistant:
+{"available":true,"colors":["charcoal","oxford_blue"],"quantities":{"charcoal":28}}
+
+assistant channel=commentary to=tool.deliver_office_supplies:
+{"room_number":"705","items":["portfolio_charcoal_3"],"delivery_location":"guest_room"}
+
+tool.deliver_office_supplies channel=commentary to=assistant:
+{"delivered":true,"eta":"11 minutes","ticket":"PCC-705-311"}
+
+assistant channel=final:
+Yes—three charcoal portfolio cases are on the way to room 705 (ticket PCC-705-311). ETA about 11 minutes.
+
+user:
+Is there a charge?
+
+assistant channel=analysis:
+Use pricing note.
+
+assistant channel=final:
+They’re $22 each, and complimentary if you’re on PCC Elite.
+
+user:
+The ocean breeze here is fantastic.
+
+assistant channel=analysis:
+Chit-chat.
+
+assistant channel=final:
+It really is—sunsets on the promenade are special.
+
+user:
+Can you rent me a projector tonight?
+
+assistant channel=analysis:
+Out of scope per tools—use attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

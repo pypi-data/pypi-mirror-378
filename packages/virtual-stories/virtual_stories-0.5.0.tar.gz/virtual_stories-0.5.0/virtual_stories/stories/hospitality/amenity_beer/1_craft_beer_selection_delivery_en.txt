@@ -1,0 +1,179 @@
+"""
+Guest requests beer selection, craft beer recommendations, and in-room delivery service.
+Provide beer amenities with age verification, local brewery options, and temperature preferences.
+
+ROLES: user (guest requesting beer service), assistant (beverage services coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "verify_drinking_age",
+    "description": "Verify legal drinking age for alcohol service.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string", "description": "Room number for guest verification" }
+      },
+      "required": ["room_number"]
+    },
+    "strict": true
+  },
+  {
+    "name": "get_beer_selection",
+    "description": "Get available beer inventory and recommendations.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "beer_type": { "type": "string", "enum": ["lager", "ipa", "stout", "wheat", "pilsner", "sour", "local_craft", "international", "all"] },
+        "region_preference": { "type": "string", "enum": ["local", "domestic", "imported", "no_preference"] },
+        "alcohol_content": { "type": "string", "enum": ["light", "standard", "strong", "no_preference"] }
+      },
+      "required": ["beer_type"]
+    },
+    "strict": true
+  },
+  {
+    "name": "place_beer_order",
+    "description": "Place beer delivery order for in-room service.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "beer_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "beer_sku": { "type": "string" },
+              "quantity": { "type": "integer" },
+              "temperature": { "type": "string", "enum": ["ice_cold", "chilled", "cellar_temp"] }
+            },
+            "required": ["beer_sku", "quantity"],
+            "additionalProperties": false
+          }
+        },
+        "delivery_instructions": { "type": "string" }
+      },
+      "required": ["room_number", "beer_items"]
+    },
+    "strict": true
+  },
+  {
+    "name": "check_service_hours",
+    "description": "Check alcohol service hours and availability.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_type": { "type": "string", "enum": ["room_service", "bar_delivery", "minibar_stocking"] }
+      },
+      "required": ["service_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Mountain Vista Lodge & Craft Beer Cellar (hotel_id: mvl_denver_co_01)
+Address: 1892 Larimer Street, Denver, CO 80202
+Timezone: America/Denver
+
+Craft Beer Collection:
+- Local Colorado breweries: Great Divide, Odell, New Belgium, Left Hand, Avery
+- Hotel exclusive: Mountain Vista Amber Ale (brewed by Wynkoop Brewing)
+- Import selection: German lagers, Belgian ales, British IPAs, Czech pilsners
+- Specialty: Seasonal rotations, limited releases, barrel-aged varieties
+
+Beer Service Details:
+- Legal service hours: 8:00 AM - 2:00 AM daily (Colorado state law)
+- Room service delivery includes proper glassware and brewery information cards
+- Temperature options: Ice cold (32-35°F), Chilled (38-42°F), Cellar temp (50-55°F)
+- Complimentary beer flight tastings available for multi-bottle orders
+
+Popular SKU Codes:
+COLO_GREAT_DIVIDE_IPA, COLO_ODELL_90_SHILLING, MVLA_EXCLUSIVE_AMBER,
+GERM_WEIHENSTEPHANER, BELG_CHIMAY_BLUE, BRIT_FULLER_ESB, CZECH_PILSNER_URQUELL
+
+user:
+Hi! I'm in room 1647 and would love to try some local Colorado craft beers. What do you recommend?
+
+assistant channel=analysis:
+Guest wants local Colorado craft beer recommendations. First verify drinking age, then get local beer selection.
+
+assistant channel=commentary to=tool.verify_drinking_age:
+{"room_number":"1647"}
+
+tool.verify_drinking_age channel=commentary to=assistant:
+{"room_number":"1647","guest_age_verified":true,"legal_drinking_age_met":true}
+
+assistant channel=commentary to=tool.get_beer_selection:
+{"beer_type":"local_craft","region_preference":"local","alcohol_content":"no_preference"}
+
+tool.get_beer_selection channel=commentary to=assistant:
+{"selections":[{"sku":"COLO_GREAT_DIVIDE_IPA","name":"Great Divide Titan IPA","abv":"7.1%","style":"American IPA","notes":"Citrusy hops, pine finish"},{"sku":"COLO_ODELL_90_SHILLING","name":"Odell 90 Shilling","abv":"5.3%","style":"Scottish Ale","notes":"Malty sweetness, caramel notes"},{"sku":"MVLA_EXCLUSIVE_AMBER","name":"Mountain Vista Amber Ale","abv":"5.8%","style":"American Amber","notes":"Hotel exclusive, balanced malt and hop profile"},{"sku":"COLO_LEFT_HAND_MILK_STOUT","name":"Left Hand Milk Stout Nitro","abv":"6.0%","style":"Sweet Stout","notes":"Creamy nitrogen pour, chocolate notes"},{"sku":"COLO_NEW_BELGIUM_FAT_TIRE","name":"New Belgium Fat Tire","abv":"5.2%","style":"Amber Ale","notes":"Toasty malt, crisp finish"}]}
+
+assistant channel=final:
+Excellent choice! You're verified for service. Our local Colorado craft selection includes Great Divide Titan IPA (citrusy and bold), Odell 90 Shilling (malty Scottish ale), our hotel exclusive Mountain Vista Amber Ale, Left Hand Milk Stout Nitro (creamy and rich), and New Belgium Fat Tire. Which styles sound most appealing to you?
+
+user:
+The Mountain Vista exclusive sounds intriguing, and I'd love to try the IPA too. Could I get both delivered to my room?
+
+assistant channel=analysis:
+Guest wants hotel exclusive amber ale and the IPA. Place order for both beers with room delivery.
+
+assistant channel=commentary to=tool.place_beer_order:
+{"room_number":"1647","beer_items":[{"beer_sku":"MVLA_EXCLUSIVE_AMBER","quantity":1,"temperature":"chilled"},{"beer_sku":"COLO_GREAT_DIVIDE_IPA","quantity":1,"temperature":"chilled"}],"delivery_instructions":"Include brewery information cards and proper glassware"}
+
+tool.place_beer_order channel=commentary to=assistant:
+{"order_id":"BEER-DEL-5821","estimated_delivery_minutes":18,"items_confirmed":"Mountain Vista Amber Ale, Great Divide Titan IPA","includes":"Proper beer glasses, brewery cards, bottle opener","complimentary_flight_tasting":"eligible"}
+
+assistant channel=final:
+Perfect selections! Order BEER-DEL-5821 is confirmed - one Mountain Vista Amber Ale and one Great Divide Titan IPA, both chilled. They'll arrive within 18 minutes with proper glassware and brewery information cards. Since you ordered multiple bottles, you're eligible for our complimentary beer flight tasting experience!
+
+user:
+That sounds fantastic! I love craft beer culture here in Colorado. How's the skiing been this season?
+
+assistant channel=analysis:
+Guest making small talk about local skiing conditions. This is conversational but not related to beer service tools.
+
+assistant channel=final:
+Colorado definitely has an amazing craft beer scene! The combination of mountain culture and brewing innovation here is really special.
+
+user:
+Absolutely! Could you also recommend some good hiking trails near Denver for tomorrow?
+
+assistant channel=analysis:
+Hiking trail recommendations are outside my beverage service tools and capabilities. Use the special flag.
+
+assistant channel=final:
+[ATTENTION] I'd be happy to help research hiking options for you. Compiling available data.
+
+user:
+No worries, I'll figure that out later. I'm just excited to try that exclusive amber ale!
+
+assistant channel=analysis:
+Guest expressing enthusiasm about the beer order. Simple positive acknowledgment about the delivery.
+
+assistant channel=final:
+You're going to love the Mountain Vista Amber Ale - it's brewed exclusively for us by Wynkoop Brewing and perfectly captures Colorado's craft beer spirit. Your beers should be arriving any moment!
+
+user:
+Actually, do you still serve beer this late at night? I realized I might want another round later.
+
+assistant channel=analysis:
+Guest asking about late night service hours. Check alcohol service availability for room service.
+
+assistant channel=commentary to=tool.check_service_hours:
+{"service_type":"room_service"}
+
+tool.check_service_hours channel=commentary to=assistant:
+{"service_type":"room_service","current_time":"21:30","service_until":"02:00","hours_remaining":"4.5_hours","next_day_service_starts":"08:00"}
+
+assistant channel=final:
+Yes! Our room service beer delivery continues until 2:00 AM, so you have about 4.5 hours if you'd like to order another round later tonight. Service resumes again at 8:00 AM tomorrow morning.

@@ -1,0 +1,59 @@
+"""
+Guest confirms hours and mixed-gender policy; includes small talk and an out-of-scope query.
+
+ROLES: user (guest coordinating visit timing), assistant (spa reception clarifying schedule/policies)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_sauna_hours","description":"Return sauna opening hours for a given date.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"date":{"type":"string","format":"date"}},"required":["hotel_id","date"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seaside Boardwalk Inn (hotel_id: sbi_sfo_09)
+Address: 901 Ocean Esplanade, San Francisco, CA 94123, USA
+Timezone: America/Los_Angeles
+Sauna Type: Dry, hemlock benches
+Hours: Weekdays 06:30–22:00; Weekends 07:30–23:00
+Mixed-Gender Windows: All day; swimwear required
+Capacity: 3 guests; 25-minute limit per sitting
+Cooldown: Patio breeze zone with misting fans
+Hydration: Bottle filling station at entrance
+Rules: Towel on bench; quiet conversations only
+Emergency: Wall button links to security; AED at fitness desk
+
+user:
+Are you open tonight? And is it mixed-gender?
+
+assistant channel=analysis:
+Use hours tool to confirm tonight, then restate mixed-gender policy from system.
+
+assistant channel=commentary to=tool.get_sauna_hours:
+{"hotel_id":"sbi_sfo_09","date":"2025-08-29"}
+
+tool.get_sauna_hours channel=commentary to=assistant:
+{"hours":"06:30-22:00"}
+
+assistant channel=final:
+Tonight’s window is 06:30–22:00, and the sauna is mixed-gender all day with swimwear required.
+
+user:
+The patio breeze is lovely.
+
+assistant channel=analysis:
+Provide a friendly note.
+
+assistant channel=final:
+The misting fans help keep that area extra refreshing.
+
+user:
+Do you use HEPA filtration inside the cabin?
+
+assistant channel=analysis:
+Filtration details aren’t provided; reply with the attention flag.
+
+assistant channel=final:
+[ATTENTION] Your filtration question is noted. Reviewing available resources.
+

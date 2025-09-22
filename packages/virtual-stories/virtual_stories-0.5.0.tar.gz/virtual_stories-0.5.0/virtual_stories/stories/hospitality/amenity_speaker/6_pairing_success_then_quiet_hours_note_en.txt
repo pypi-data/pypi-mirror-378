@@ -1,0 +1,68 @@
+"""
+Guest pairs successfully and asks about quiet hours and volume.
+
+ROLES: user (music listener), assistant (tech concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_room_audio_status","description":"Check speaker status and pairing name.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"pair_bluetooth","description":"Pair device to speaker.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"device_name":{"type":"string"}},"required":["room_number","device_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Redwood Plaza (hotel_id: rwp_sfo_22)
+Address: 345 Pine St, San Francisco, CA 94104
+Timezone: America/Los_Angeles
+
+Audio:
+- Speaker: RedwoodNote; name pattern "RWP-ROOM-<room>"
+- Pairing: hold power 3s; timeout 120s
+- Quiet hours: 22:00–07:00; keep volume low
+- AUX available on request via x0
+- Lobby evening playlist: “Market Street Glow”
+
+user:
+Need help pairing in 905.
+
+assistant channel=analysis:
+Check status; guide pairing; pair to device if asked.
+
+assistant channel=commentary to=tool.check_room_audio_status:
+{"room_number":"905"}
+
+tool.check_room_audio_status channel=commentary to=assistant:
+{"room_number":"905","speaker_online":true,"pairing_mode":true,"display_name":"RWP-ROOM-905"}
+
+assistant channel=final:
+Please select “RWP-ROOM-905” from your Bluetooth list to connect.
+
+user:
+Paired to “Nina’s iPhone.” How late can I play music?
+
+assistant channel=analysis:
+No tool needed; answer with quiet hours policy from system.
+
+assistant channel=final:
+Thanks for pairing—during quiet hours (22:00–07:00), please keep volume low.
+
+user:
+What’s the evening lobby playlist?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+“Market Street Glow.”
+
+user:
+Could you queue a specific song for me in the lobby?
+
+assistant channel=analysis:
+Not in system/tools.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your lobby song request. Evaluating options.
+

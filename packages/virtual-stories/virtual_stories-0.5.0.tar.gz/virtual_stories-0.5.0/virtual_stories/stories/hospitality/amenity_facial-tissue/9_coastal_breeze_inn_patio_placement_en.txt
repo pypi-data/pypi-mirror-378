@@ -1,0 +1,76 @@
+"""
+Guest requests tissues including one on a private patio table.
+Provide check and delivery.
+
+ROLES: user (coastal guest), assistant (amenity coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  { "name": "check_tissue_inventory", "description": "Verify standard stock.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "tissue_type": { "type": "string", "enum": ["standard"] }, "brand_preference": { "type": "string", "enum": ["any"] }, "quantity_boxes": { "type": "number" } }, "required": ["tissue_type"] }, "strict": true },
+  { "name": "deliver_tissue_amenity", "description": "Deliver to vanity and patio table.", "parameters": { "type": "object", "additionalProperties": false, "properties": { "room_number": { "type": "string" }, "tissue_products": { "type": "array", "items": { "type": "string" } }, "delivery_priority": { "type": "string", "enum": ["standard"] }, "special_placement": { "type": "string" } }, "required": ["room_number", "tissue_products"] }, "strict": true }
+]
+```
+"""
+
+system:
+Hotel: Coastal Breeze Inn (hotel_id: cbi_sd_02)
+Address: 44 Shoreline Ct, San Diego, CA 92106
+Timezone: America/Los_Angeles
+
+Amenity Highlights:
+- Standard 2‑ply boxes
+- Delivery 10–16 minutes
+- Patio placement on request (private patios only)
+- Quiet hours 22:00–7:00
+- Breakfast 7:00–10:00
+
+user:
+Hi—room 118. Two standard boxes please; one for the bath vanity and one on the patio table.
+
+assistant channel=analysis:
+Check standard stock; deliver 2 boxes with specified placements.
+
+assistant channel=commentary to=tool.check_tissue_inventory:
+{"tissue_type":"standard","brand_preference":"any","quantity_boxes":2}
+
+tool.check_tissue_inventory channel=commentary to=assistant:
+{"available_products":["Hotel Standard 2-ply"],"stock_levels":{"std":180}}
+
+assistant channel=commentary to=tool.deliver_tissue_amenity:
+{"room_number":"118","tissue_products":["2 boxes Hotel Standard 2-ply"],"delivery_priority":"standard","special_placement":"bath vanity + patio table"}
+
+tool.deliver_tissue_amenity channel=commentary to=assistant:
+{"delivery_scheduled":true,"estimated_arrival":"12 minutes","placement_confirmed":"vanity + patio table","tracking_id":"CBI118_S2"}
+
+assistant channel=final:
+Will do—2 standard boxes to 118 in ~12 minutes: one on your bath vanity and one on your patio table.
+
+user:
+Breakfast runs until 10, right?
+
+assistant channel=analysis:
+From system: 7:00–10:00.
+
+assistant channel=final:
+Correct—7:00 to 10:00.
+
+user:
+Sea breeze is perfect tonight.
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+It’s lovely at dusk on the patios here.
+
+user:
+Can you set up a beach bonfire permit?
+
+assistant channel=analysis:
+Outside amenity scope; flag.
+
+assistant channel=final:
+[ATTENTION] Checking with the front desk on bonfire permit assistance.
+"""
+

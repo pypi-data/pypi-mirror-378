@@ -1,0 +1,74 @@
+"""
+Guest asks for a fresh fruit platter to be sent early morning.
+Confirm availability and pre-schedule delivery.
+
+ROLES: user (early riser), assistant (breakfast pre-order coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_available_menu_items","description":"List breakfast fruit options.","parameters":{"type":"object","additionalProperties":false,"properties":{"menu_type":{"type":"string","enum":["breakfast"]},"dietary_restrictions":{"type":"array","items":{"type":"string","enum":["none","vegan","vegetarian"]}}},"required":["menu_type"]},"strict":true},
+  {"name":"place_food_order","description":"Schedule breakfast delivery.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},"estimated_delivery":{"type":"string"},"special_instructions":{"type":"string"},"total_cost":{"type":"number"}},"required":["room_number","items"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Pinecrest Mountain Lodge (hotel_id: pml_02)
+Address: 12 Summit Rd, Aspen, CO 81611
+Timezone: America/Denver
+
+Breakfast Service:
+- Start time: 5:30 AM
+- Fruit platters: seasonal berries, melon, pineapple, citrus ($24)
+- Add-ons: yogurt ($6), granola ($6), local honey ($3)
+- Average delivery: 15–25 minutes from kitchen open
+
+user:
+Can I pre-order a fruit platter for 6 AM to room 207?
+
+assistant channel=analysis:
+List fruit options and schedule a 6 AM delivery.
+
+assistant channel=commentary to=tool.get_available_menu_items:
+{"menu_type":"breakfast","dietary_restrictions":["none"]}
+
+tool.get_available_menu_items channel=commentary to=assistant:
+{"menu_items":[{"name":"fruit_platter","price":24},{"name":"yogurt","price":6},{"name":"granola","price":6},{"name":"local_honey","price":3}]}
+
+assistant channel=commentary to=tool.place_food_order:
+{"room_number":"207","items":["fruit_platter"],"estimated_delivery":"6:00 AM","special_instructions":"pre-order for 6 AM","total_cost":24}
+
+tool.place_food_order channel=commentary to=assistant:
+{"order_confirmed":true,"order_id":"PML-207-BK01","eta":"6:00 AM","items":["fruit_platter"],"total":24}
+
+assistant channel=final:
+Pre-order PML-207-BK01 is set—a fresh fruit platter will arrive at 6:00 AM.
+
+user:
+Do you start breakfast at 5:30?
+
+assistant channel=analysis:
+Answer from system.
+
+assistant channel=final:
+Yes—breakfast service begins at 5:30 AM.
+
+user:
+The mountain air is crisp tonight.
+
+assistant channel=analysis:
+Chit-chat response.
+
+assistant channel=final:
+Perfect for an early start—sunrise over the ridge is beautiful.
+
+user:
+Can you arrange ski lift passes?
+
+assistant channel=analysis:
+Out of scope—attention flag.
+
+assistant channel=final:
+[ATTENTION] Checking available options.
+

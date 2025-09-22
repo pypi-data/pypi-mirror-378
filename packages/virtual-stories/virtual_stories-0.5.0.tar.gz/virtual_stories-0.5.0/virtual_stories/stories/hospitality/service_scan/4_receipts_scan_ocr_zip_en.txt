@@ -1,0 +1,50 @@
+"""
+Guest wants multiple receipts scanned with OCR and zipped; include in-context capability and [ATTENTION] tool actions.
+
+ROLES: user, assistant
+CHANNELS: analysis, commentary, final.
+TOOLS:
+[
+  {"name":"scan_document","description":"Scan","parameters":{"type":"object","properties":{"pages":{"type":"integer"},"dpi":{"type":"integer"},"color":{"type":"string","enum":["b&w","color"]},"duplex":{"type":"boolean"},"ocr":{"type":"boolean"}},"required":["pages","dpi","color","duplex","ocr"]}}
+]
+"""
+
+system:
+Business Center – Maple Crown Lodge (hotel_id: maple_crown_tor)
+Hours: 06:00–23:00. Max 50 pages per job. OCR supported for searchable PDFs.
+Formats: single PDF per job; we can also provide separate PDFs if loaded one by one.
+Recommended: 300 dpi color for receipts with stamps.
+
+user:
+Can you scan 8 receipts with OCR and give me a zipped folder?
+
+assistant channel=analysis:
+We can scan to PDFs with OCR; zipping is not a desktop service unless specified—system doesn’t mention zip service, so avoid claiming. Offer single PDF or separate PDFs.
+
+assistant channel=final:
+We can scan with OCR to PDF. We can do one combined PDF for 8 pages or separate PDFs if scanned one by one. Which would you prefer?
+
+user:
+Let’s do one combined PDF in color.
+
+assistant channel=analysis:
+Proceed to scan 8 pages color 300 dpi with OCR.
+
+assistant channel=commentary to=scan_document:
+{"pages":8,"dpi":300,"color":"color","duplex":false,"ocr":true}
+
+tool.scan_document:
+{"status":"scanned","filename":"receipts_color_ocr_8pp.pdf"}
+
+assistant channel=final:
+Done—scanned to receipts_color_ocr_8pp.pdf with OCR at 300 dpi.
+
+user:
+[ATTENTION] Can you also ZIP it?
+
+assistant channel=analysis:
+System doesn’t state ZIP service; we must avoid adding unsupported services. Politely decline and offer to email the PDF.
+
+assistant channel=final:
+I’m not able to create ZIP archives here, but I can email the PDF to you or copy it to your USB drive.
+

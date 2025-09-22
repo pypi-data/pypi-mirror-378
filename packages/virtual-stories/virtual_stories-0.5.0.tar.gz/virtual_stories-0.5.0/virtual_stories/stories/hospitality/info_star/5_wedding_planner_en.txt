@@ -1,0 +1,68 @@
+"""
+Wedding planner needs star rating for venue selection; includes event planning discussion and ATTENTION case.
+
+ROLES: user (wedding planner selecting luxury venues), assistant (guest services with venue classification)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "get_hotel_classification",
+    "description": "Return hotel star rating and classification details.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hotel_id": {"type":"string"},
+        "classification_type": {"type":"string","enum":["star_rating","diamond_rating","luxury_level"]}
+      },
+      "required": ["hotel_id","classification_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Grand Meridian Portside (hotel_id: grand_meridian_portside)
+Classification details:
+  STAR_RATING=5 stars
+  DIAMOND_RATING=AAA Five Diamond
+  LUXURY_LEVEL=Ultra-luxury
+  CERTIFICATION_BODY=Forbes Travel Guide
+  AWARD_YEAR=2024
+  RENEWAL_STATUS=Current
+  QUALITY_STANDARDS=International luxury hospitality standards
+  SERVICE_LEVEL=Personalized butler service, 24/7 concierge
+  AMENITIES_RATING=Premium facilities, Michelin-starred dining
+  LOCATION_ADVANTAGE=Prime waterfront location, private beach access
+  GUEST_EXPERIENCE=Exceptional service, exclusive experiences
+  SUSTAINABILITY=Eco-luxury practices, ocean conservation partnerships
+
+user:
+I'm planning a luxury wedding and need to know your hotel's star rating for the venue selection process.
+
+assistant channel=analysis:
+Wedding planner needs the star rating for venue evaluation. I'll retrieve the official classification using the hotel classification tool.
+
+assistant channel=commentary to=tool.get_hotel_classification:
+{"hotel_id":"grand_meridian_portside","classification_type":"star_rating"}
+
+tool.get_hotel_classification channel=commentary to=assistant:
+{"star_rating":"5 stars","certification_body":"Forbes Travel Guide","award_year":"2024"}
+
+assistant channel=final:
+Grand Meridian Portside is a 5-star luxury hotel, certified by Forbes Travel Guide in 2024. Our ultra-luxury setting provides an exceptional backdrop for your clients' special day.
+
+user:
+Perfect! The oceanfront setting will be absolutely stunning for the ceremony.
+
+assistant channel=final:
+Absolutely! Our prime waterfront location offers breathtaking ocean views and creates unforgettable wedding memories.
+
+user:
+Wonderful! Do you have the venue's wedding package pricing and seasonal availability calendar?
+
+assistant channel=final:
+[ATTENTION] Wedding package pricing and availability calendars aren't available in the provided resources. Checking available information.

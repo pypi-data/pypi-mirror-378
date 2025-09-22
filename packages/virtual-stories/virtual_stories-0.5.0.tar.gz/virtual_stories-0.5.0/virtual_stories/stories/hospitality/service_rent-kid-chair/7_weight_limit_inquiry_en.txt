@@ -1,0 +1,55 @@
+"""
+Guest asks about weight limits and requests a high chair; confirm policy and arrange delivery.
+
+ROLES: user (guest confirming safety), assistant (guest services providing details and arranging delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"hold_and_dispatch","description":"Hold one chair and dispatch with ETA","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"}},"required":["hotel_id","room"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Desert Bloom Phoenix (DBPH-12)
+Address: 401 W Camelback Rd, Phoenix, AZ 85013, USA
+Kids’ High Chairs: 11 units; complimentary; weight limit 16 kg; harness required during use; indoor only.
+Delivery: ETA 12–18 minutes; service elevators used during peak times.
+Sanitization: Wiped with food-safe cleaner after each return; deep-clean at 02:00 nightly.
+Other: Stroller storage available by bell desk; microwave on request.
+
+user:
+What’s the weight limit? Also, please send one to 927.
+
+assistant channel=analysis:
+Answer weight limit from system, then hold and dispatch.
+
+assistant channel=commentary to=tool.hold_and_dispatch:
+{"hotel_id":"DBPH-12","room":"927"}
+
+tool.hold_and_dispatch channel=commentary to=assistant:
+{"order_id":"DB-927-663","eta_minutes":13}
+
+assistant channel=final:
+The weight limit is 16 kg. One high chair is on the way (DB-927-663) with an ETA of about 13 minutes.
+
+user:
+Thanks! The cactus garden is lovely.
+
+assistant channel=analysis:
+Friendly acknowledgment.
+
+assistant channel=final:
+It’s a guest favorite—glad you enjoyed it.
+
+user:
+Do you have the product’s ASTM certification ID?
+
+assistant channel=analysis:
+Not in system—respond with ATTENTION.
+
+assistant channel=final:
+[ATTENTION] Looking up the latest information.
+

@@ -1,0 +1,73 @@
+"""
+Guest requests ergonomic clippers due to arthritis; seeks easy-grip option.
+Provide ergonomic model availability and delivery.
+
+ROLES: user (guest with limited grip strength), assistant (guest services offering ergonomic grooming tools)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_grooming_supplies","description":"Check ergonomic clipper models.","parameters":{"type":"object","properties":{"tool_type":{"type":"string","enum":["nail_clippers"]},"quality_level":{"type":"string","enum":["premium"]}},"required":["tool_type"]},"strict":true},
+  {"name":"deliver_grooming_tools","description":"Deliver ergonomic clippers to room.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"tools_requested":{"type":"array","items":{"type":"object","properties":{"tool_name":{"type":"string"},"quality":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_priority":{"type":"string","enum":["standard"]}},"required":["room_number","tools_requested"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Marina View Hotel (hotel_id: mvh_syd_72)
+Address: 161 Sussex St, Sydney NSW 2000, Australia
+Timezone: Australia/Sydney
+
+Accessible Grooming:
+- Ergonomic easy‑grip clippers; wide lever; reduced force
+- Non‑slip silicone sleeve
+- Optional magnifying mirror
+- UV‑C sanitized; sealed pouch
+- Complimentary upon request
+
+Delivery:
+- Rooms serviced within 10–14 minutes
+- Quiet handoff; can place on desk
+- Tool swap available
+- Microfiber wipe included
+- Availability posted nightly
+
+user:
+Hi, room 1110. Do you have an easy‑grip clipper? My hands get stiff.
+
+assistant channel=analysis:
+Check ergonomic clipper availability; deliver to 1110.
+
+assistant channel=commentary to=tool.check_grooming_supplies:
+{"tool_type":"nail_clippers","quality_level":"premium"}
+
+tool.check_grooming_supplies channel=commentary to=assistant:
+{"available_tools":["ergonomic_easy_grip_sleeve"],"extras":["magnifying_mirror"],"sanitized":"UV-C"}
+
+assistant channel=commentary to=tool.deliver_grooming_tools:
+{"room_number":"1110","tools_requested":[{"tool_name":"ergonomic_easy_grip_sleeve","quality":"premium","quantity":1}],"delivery_priority":"standard"}
+
+tool.deliver_grooming_tools channel=commentary to=assistant:
+{"service_id":"MVH-SYD-ERG-02","eta":"12 minutes","staff":"Imogen","items":["ergonomic_easy_grip_sleeve","microfiber_wipe"],"sealed":true}
+
+assistant channel=final:
+Yes—an ergonomic easy‑grip clipper is available. Imogen will bring a sealed set to 1110 in about 12 minutes.
+
+user:
+Could I get a magnifying mirror too?
+
+assistant channel=analysis:
+Answer from Accessible Grooming extras.
+
+assistant channel=final:
+Certainly—an optional magnifying mirror is available on request; I can include it with the delivery.
+
+user:
+Any harbor walks you recommend?
+
+assistant channel=analysis:
+Out of scope; ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Examining various angles.
+

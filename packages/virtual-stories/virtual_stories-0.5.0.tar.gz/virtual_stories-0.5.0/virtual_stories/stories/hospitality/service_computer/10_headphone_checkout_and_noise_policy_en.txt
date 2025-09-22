@@ -1,0 +1,52 @@
+"""
+Guest asks about loaner headphones and noise policy; we check out an accessory via tool, include small talk, and handle an out‑of‑scope recording request.
+
+ROLES: user (guest wanting headphones), assistant (business center attendant handling accessory checkout)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"checkout_accessory","description":"Check out an accessory to a room.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"item":{"type":"string","enum":["headphones"]}},"required":["room","item"]}}
+]
+```
+"""
+
+system:
+Hillcrest Hotel — Business Center
+Quick sheet:
+- Hours 07:15–22:45 | Location: Level M
+- Noise: Please use headphones for media; phone calls in lobby
+- Accessories: Loaner headphones available at desk
+- Printing: A4 mono/color; post to room
+Desk line: 2100
+
+user:
+Can I borrow headphones for room 622?
+
+assistant channel=analysis:
+Use tool to check out headphones to room 622 and confirm.
+
+assistant channel=commentary to=tool.checkout_accessory:
+{"room":"622","item":"headphones"}
+
+tool.checkout_accessory channel=commentary to=assistant:
+{"loan_id":"acc_622_hph","item":"headphones"}
+
+assistant channel=final:
+Headphones are checked out for room 622 (loan acc_622_hph). In the Business Center, please keep media audio on headphones; phone calls are best in the lobby.
+
+user:
+Level M is convenient.
+
+assistant channel=final:
+Glad it’s close by.
+
+user:
+Can I record a podcast in there after hours?
+
+assistant channel=analysis:
+After‑hours recording isn’t covered; use the special flag.
+
+assistant channel=final:
+[ATTENTION] After‑hours recording isn’t described here. Reviewing available resources.
+

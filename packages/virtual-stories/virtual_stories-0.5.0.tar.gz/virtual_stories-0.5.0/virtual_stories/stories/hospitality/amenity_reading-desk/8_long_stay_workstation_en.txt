@@ -1,0 +1,67 @@
+"""
+Long-stay guest requests a desk-equipped room; confirms lighting options and quiet policy, includes chit-chat and a beyond-scope ask.
+
+ROLES: user (Long-stay guest.), assistant (Front desk manager providing workspace details.)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {
+    "name": "find_available_room",
+    "description": "Finds an available room with specific features.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "feature": {"type": "string"},
+        "start_date": {"type": "string", "format": "date"},
+        "end_date": {"type": "string", "format": "date"}
+      },
+      "required": ["feature", "start_date", "end_date"]
+    }
+  }
+]
+```
+"""
+
+system:
+Residence: Horizon Workstay
+Desk Rooms: Studio Work, One-Bedroom Work, Executive Work Suite
+Lighting: Warm, dimmable; task lamp available
+Chair: Adjustable ergonomic
+Upgrade: Complimentary if desk is required
+Quiet Floors: 11–13
+Contact: 0
+
+user:
+I’m staying two weeks—need a room with a proper reading desk.
+
+assistant channel=analysis:
+Run a search for reading_desk across the long dates; then confirm lighting, chair, upgrade, quiet floors.
+
+assistant channel=commentary to=tool.find_available_room:
+{"feature": "reading_desk", "start_date": "2025-09-03", "end_date": "2025-09-17"}
+
+tool.find_available_room channel=commentary to=assistant:
+{"rooms": [{"room_number": "1209", "room_type": "One-Bedroom Work", "features": ["reading_desk", "quiet_floor"]}]}
+
+assistant channel=final:
+One-Bedroom Work 1209 is available on a quiet floor and includes a reading desk, dimmable warm lamp, and an ergonomic adjustable chair. If the desk is required for work, an upgrade is complimentary.
+
+user:
+Sounds good. Lamp bright enough?
+
+assistant channel=final:
+Yes—it’s dimmable warm light, and we can add a task lamp if you’d like.
+
+user:
+How’s the weather there?
+
+assistant channel=final:
+I don’t have weather details in my system, but I can finalize your desk-equipped room.
+
+user:
+[ATTENTION] Could you get me a library card in town?
+
+assistant channel=final:
+I don’t have external library arrangements in my system. I can confirm your workstation setup here.
+

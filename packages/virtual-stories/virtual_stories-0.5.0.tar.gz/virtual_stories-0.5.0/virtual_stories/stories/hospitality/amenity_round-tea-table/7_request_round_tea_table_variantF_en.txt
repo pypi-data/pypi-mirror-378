@@ -1,0 +1,74 @@
+"""
+Guest requests an 80 cm birch round tea table in the center; confirm inventory and arrange; include small talk and an out-of-scope question flagged.
+
+ROLES: user (guest), assistant (guest experience)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_furniture_inventory","description":"Verify round tea table stock.","parameters":{"type":"object","properties":{"item_code":{"type":"string","enum":["round_tea_table"]},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]}},"required":["item_code","size_cm","finish"],"additionalProperties":false},"strict":true},
+  {"name":"request_in_room_setup","description":"Place furniture in-room with protectors.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"item_code":{"type":"string"},"size_cm":{"type":"integer","enum":[60,80]},"finish":{"type":"string","enum":["walnut","birch"]},"placement":{"type":"string","enum":["near_window","center","sofa_side"]},"surface_protectors":{"type":"boolean"},"priority":{"type":"string","enum":["normal","high"]}},"required":["room_number","item_code","size_cm","finish","placement","surface_protectors","priority"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel ID: vrn_mil_05 (Verona Milano House)
+Address: Via Santa Sofia 12, Milan 20122
+Service band: 08:00–21:30; ETA 12–18 minutes
+
+Round tea table summary
+• 60/birch: 3 | 60/walnut: 2
+• 80/birch: 3 | 80/walnut: 1
+• Center placement: use felt pads for marble floors
+
+Key operations
+- Check-in 14:00; Check-out 11:00
+- Porter service until 22:00
+- Parking lift height limit: 1.9 m
+- In-room kettle: all floors
+- Night light in corridors after 23:00
+- Complimentary sparkling water on request
+
+user:
+Could you set an 80 cm birch tea table in the center of room 508?
+
+assistant channel=analysis:
+Confirm 80/birch stock, then center placement with protectors for 508.
+
+assistant channel=commentary to=tool.check_furniture_inventory:
+{"item_code":"round_tea_table","size_cm":80,"finish":"birch"}
+
+tool.check_furniture_inventory channel=commentary to=assistant:
+{"available":true,"on_hand":3,"item_code":"round_tea_table","size_cm":80,"finish":"birch"}
+
+assistant channel=analysis:
+Place request with normal priority and protectors.
+
+assistant channel=commentary to=tool.request_in_room_setup:
+{"room_number":"508","item_code":"round_tea_table","size_cm":80,"finish":"birch","placement":"center","surface_protectors":true,"priority":"normal"}
+
+tool.request_in_room_setup channel=commentary to=assistant:
+{"ticket_id":"FN-508-2243","eta_minutes":16}
+
+assistant channel=final:
+Booked—80 cm birch table to the center of 508 with felt protectors. Ticket FN-508-2243, ETA about 16 minutes.
+
+user:
+Is sparkling water complimentary?
+
+assistant channel=analysis:
+Answer per key operations.
+
+assistant channel=final:
+Yes—complimentary sparkling water is available on request.
+
+user:
+Can the table be marble instead of wood?
+
+assistant channel=analysis:
+Catalog lists birch and walnut only; marble isn’t covered—flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking if marble tops are available. Confirming options.
+

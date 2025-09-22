@@ -1,0 +1,64 @@
+"""
+Guest requests room delivery from midnight snack menu and asks for last order time.
+
+ROLES: user (hungry guest past midnight), assistant (night concierge coordinating late-night room service)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_late_night_menu","description":"Fetch midnight snack room service menu.","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"}},"required":["hotel_id"]}},
+  {"name":"place_room_service_order","description":"Place a room service order from late-night menu.","parameters":{"type":"object","additionalProperties":false,"properties":{"room":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"required":["room","items"]}}
+]
+```
+"""
+
+system:
+Property Card
+- Name: Skyline Loft Hotel
+- Hotel ID: sk_loft_nyc
+- Address: 310 W 39th St, New York, NY 10018
+- Timezone: America/New_York
+
+Midnight Snacks (Room Service):
+- Hours: 23:30–02:30 (last order 02:15)
+- Delivery Window: 25–35 minutes
+- Menu Highlights: grilled cheese, tomato soup, chicken tenders, Caesar salad, fruit plate
+- Fees: $5 tray fee included; prices include tax
+- Payment: charge to room only during overnight
+
+user:
+Can I get a grilled cheese and tomato soup to room 2410? Also, what’s the last order time?
+
+assistant channel=analysis:
+Answer last order from system (02:15). Fetch menu to ensure items exist, then place order.
+
+assistant channel=commentary to=tool.get_late_night_menu:
+{"hotel_id":"sk_loft_nyc"}
+
+tool.get_late_night_menu channel=commentary to=assistant:
+{"items":["grilled cheese","tomato soup","chicken tenders","Caesar salad","fruit plate"]}
+
+assistant channel=commentary to=tool.place_room_service_order:
+{"room":"2410","items":["grilled cheese","tomato soup"]}
+
+tool.place_room_service_order channel=commentary to=assistant:
+{"order_id":"RS-MID-8821","eta_minutes":30}
+
+assistant channel=final:
+Order RS-MID-8821 is in—grilled cheese and tomato soup to room 2410 in about 30 minutes. Last order is 02:15, with delivery until 02:30.
+
+user:
+The city sounds lively tonight.
+
+assistant channel=final:
+It sure does—enjoy your snack.
+
+user:
+Can you add a beer to that order?
+
+assistant channel=analysis:
+Alcohol availability wasn’t listed in the midnight menu. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Request noted. Checking available options.
+

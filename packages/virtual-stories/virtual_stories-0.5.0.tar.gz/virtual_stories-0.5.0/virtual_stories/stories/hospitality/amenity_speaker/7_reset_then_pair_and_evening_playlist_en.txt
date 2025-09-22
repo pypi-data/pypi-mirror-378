@@ -1,0 +1,68 @@
+"""
+Guest requests reset steps then pairing; confirm with system info and tools.
+
+ROLES: user (guest), assistant (tech concierge)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_room_audio_status","description":"Check speaker status.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"}},"required":["room_number"]},"strict":true},
+  {"name":"pair_bluetooth","description":"Pair device to room speaker.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"device_name":{"type":"string"}},"required":["room_number","device_name"]},"strict":true}
+]
+```
+"""
+
+system:
+Grand Arcade Hotel (hotel_id: gah_atl_16)
+Address: 200 Peachtree St NW, Atlanta, GA 30303
+Timezone: America/New_York
+
+Audio:
+- Speaker: ArcadeSound Mini; name pattern "GAH-ROOM-<room>"
+- Pairing steps: hold power 3s; if needed, power cycle then retry
+- Timeout: 120s
+- AUX available via Services x9
+- Quiet hours: 22:00–07:00
+
+Ambience:
+- Evening lobby playlist: “Peachtree After Dark”
+
+user:
+How do I reset the speaker in 1516? It won’t show up.
+
+assistant channel=analysis:
+Check status; provide reset guidance; pair to device afterwards.
+
+assistant channel=commentary to=tool.check_room_audio_status:
+{"room_number":"1516"}
+
+tool.check_room_audio_status channel=commentary to=assistant:
+{"room_number":"1516","speaker_online":true,"pairing_mode":false,"display_name":"GAH-ROOM-1516"}
+
+assistant channel=final:
+Please toggle the speaker off and back on, then hold power ~3 seconds until the LED blinks. Look for “GAH-ROOM-1516” in your Bluetooth list.
+
+user:
+Okay—pair to “Jordan iPhone 15”. Also, what’s tonight’s lobby playlist?
+
+assistant channel=analysis:
+Pair to given device, then answer playlist from system.
+
+assistant channel=commentary to=tool.pair_bluetooth:
+{"room_number":"1516","device_name":"Jordan iPhone 15"}
+
+tool.pair_bluetooth channel=commentary to=assistant:
+{"paired":true,"room_number":"1516","device_name":"Jordan iPhone 15"}
+
+assistant channel=final:
+Paired—“Jordan iPhone 15” is connected to GAH-ROOM-1516. Tonight’s lobby soundtrack is “Peachtree After Dark.”
+
+user:
+Could you also mirror my laptop audio wirelessly?
+
+assistant channel=analysis:
+Laptop mirroring not defined.
+
+assistant channel=final:
+[ATTENTION] I acknowledge your laptop audio mirroring request. Assessing options.
+

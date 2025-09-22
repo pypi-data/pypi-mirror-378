@@ -1,0 +1,51 @@
+"""
+Massage booking with e‑receipt note; small talk and [ATTENTION] request.
+
+ROLES: user (guest preferring digital receipt), assistant (spa desk booking and reminding about e‑receipt availability)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"book_in_room_massage","description":"Book an in-room massage.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"duration_minutes":{"type":"integer","enum":[60,90]},"start_time":{"type":"string"}},"required":["room_number","duration_minutes","start_time"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Willowbend Inn
+Massage Window: 10:00–22:00; last start 20:30 (60‑min)
+Rates: $118 (60‑min), $168 (90‑min)
+Arrival: ~10 minutes early; equipment provided
+Admin: E‑receipts available by email
+Address: 2 Willow Lane; Wi‑Fi: Willowbend-Guest
+
+user:
+Please book 60 minutes at 15:45 in room 512.
+
+assistant channel=analysis:
+Book and mention e‑receipt option.
+
+assistant channel=commentary to=tool.book_in_room_massage:
+{"room_number":"512","duration_minutes":60,"start_time":"15:45"}
+
+tool.book_in_room_massage channel=commentary to=assistant:
+{"booking_id":"spa_wb_345","rate":118,"currency":"USD","arrival_note":"Therapist arrives ~10 minutes early"}
+
+assistant channel=final:
+Confirmed: 60‑minute in‑room massage at 15:45 in room 512 (spa_wb_345) at $118 USD. Equipment is provided, and the therapist arrives ~10 minutes early. E‑receipts are available by email on request.
+
+user:
+Great—thank you.
+
+assistant channel=final:
+You’re welcome.
+
+user:
+Can I bill this to a corporate account number now?
+
+assistant channel=analysis:
+No billing tool; use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Checking available options regarding corporate billing.
+

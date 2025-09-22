@@ -1,0 +1,89 @@
+"""
+Guest requests body lotion suitable for after-sun recovery; verify hypoallergenic options and arrange delivery.
+
+ROLES: user (leisure guest after pool time), assistant (spa amenities coordinator)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_skincare_inventory","description":"Retrieve spa skincare products","parameters":{"type":"object","properties":{"product_type":{"type":"string","enum":["body_lotion","moisturizer","all"]},"skin_type":{"type":"string","enum":["sensitive","dry","oily","combination","all"]}},"required":["product_type"],"additionalProperties":false},"strict":true},
+  {"name":"check_ingredient_allergies","description":"Check allergens","parameters":{"type":"object","properties":{"product_id":{"type":"string"},"allergen_concerns":{"type":"array","items":{"type":"string"}}},"required":["product_id","allergen_concerns"],"additionalProperties":false},"strict":true},
+  {"name":"deliver_spa_amenities","description":"Deliver products to room","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"products":{"type":"array","items":{"type":"object","properties":{"product_id":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_time":{"type":"string","enum":["immediate","evening_turndown","morning_refresh"]}},"required":["room_number","products"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Coral Key Beach Resort & Spa (hotel_id: ckbr_mia_01)
+Address: 455 Ocean Dr, Miami Beach, FL 33139
+Timezone: America/New_York
+
+Spa Program (bulleted):
+- After-sun care line: Sea Aloe Soothing Lotion, Reef Calm Repair, Coral Oat Recovery
+- Hypoallergenic selections available for sensitive skin
+- Delivery windows: immediate, evening turndown, morning refresh
+- Pool towel hut stocks sample sachets mid-day
+- Vitamin E and oat complexes featured in recovery range
+
+Service Grid (table):
+| Service | Hours | Location |
+| Amenity Delivery | 09:00–22:00 | Spa Desk L1 |
+| Skin Consult | 11:00–18:00 | Treatment Rooms |
+
+JSON Notes:
+{"complimentary_sample":"1 per guest/day","contact_ext":61}
+
+user:
+Hi—got a bit too much sun. Do you have a gentle body lotion for after-sun? I’ve got sensitive skin.
+
+assistant channel=analysis:
+Confirm inventory for body lotions for sensitive skin.
+
+assistant channel=commentary to=tool.get_skincare_inventory:
+{"product_type":"body_lotion","skin_type":"sensitive"}
+
+tool.get_skincare_inventory channel=commentary to=assistant:
+{"available_products":[{"id":"SEA_ALOE","name":"Sea Aloe Soothing Lotion","description":"Cooling, fragrance-free recovery"},{"id":"CORAL_OAT","name":"Coral Oat Recovery","description":"Colloidal oatmeal comfort"}]}
+
+assistant channel=final:
+Two gentle options are available: Sea Aloe Soothing Lotion (cooling, fragrance-free) and Coral Oat Recovery (colloidal oatmeal comfort). Do you have any ingredient allergies I should check?
+
+user:
+I’m allergic to fragrances and nuts. I’m in room 718. Also, can you deliver at evening turndown?
+
+assistant channel=analysis:
+Answer delivery window from system; check allergens for Sea Aloe; then arrange delivery.
+
+assistant channel=final:
+Yes—delivery can be scheduled for evening turndown. I’ll verify Sea Aloe against your allergies now.
+
+assistant channel=commentary to=tool.check_ingredient_allergies:
+{"product_id":"SEA_ALOE","allergen_concerns":["fragrances","nuts"]}
+
+tool.check_ingredient_allergies channel=commentary to=assistant:
+{"product_id":"SEA_ALOE","allergen_status":"safe","ingredients_summary":"fragrance-free base with aloe vera, vitamin E (non-nut source)","suitable_for_sensitive_skin":true}
+
+assistant channel=commentary to=tool.deliver_spa_amenities:
+{"room_number":"718","products":[{"product_id":"SEA_ALOE","quantity":1}],"delivery_time":"evening_turndown"}
+
+tool.deliver_spa_amenities channel=commentary to=assistant:
+{"ticket_id":"SPA-718-913","scheduled":"evening_turndown","items":["Sea Aloe Soothing Lotion x1"],"charge":"complimentary_sample"}
+
+assistant channel=final:
+All set—Sea Aloe Soothing Lotion is scheduled for evening turndown under SPA-718-913 (complimentary sample). 
+
+user:
+Thanks! The pool towel hut was super convenient today.
+
+assistant channel=final:
+Glad it helped—mid-day we stock sample sachets there as well.
+
+user:
+Any beach bars you recommend on Ocean Drive?
+
+assistant channel=analysis:
+Out of scope—flag ATTENTION.
+
+assistant channel=final:
+[ATTENTION] I’ll check with the concierge for beach bar suggestions.
+

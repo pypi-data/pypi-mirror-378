@@ -1,0 +1,48 @@
+"""
+Guest checks luggage allowance for airport run before booking.
+
+ROLES: user (guest with many bags), assistant (concierge clarifying inclusions)
+CHANNELS: analysis, commentary, final
+TOOLS:
+```json
+[
+  {"name":"get_luggage_policy","description":"Return the luggage policy for flat transfers.","parameters":{"type":"object","additionalProperties":false,"properties":{}},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Coral Key Beach Resort (hotel_id: ck_mia_02)
+Address: 540 Ocean Dr, Miami Beach, FL 33139
+Timezone: America/New_York
+
+Transfers:
+- Airport Flat: $85 each way
+- Included Luggage: 2 checked + 2 carry‑ons
+- Extra Luggage: Available by request
+- Billing: Room or card
+
+user:
+We have 3 big suitcases and 2 carry‑ons. Is that okay for the airport ride?
+
+assistant channel=analysis:
+Policy says included is 2 checked + 2 carry‑ons. 3 checked is beyond included; answer with facts and mention extra by request.
+
+assistant channel=commentary to=tool.get_luggage_policy:
+{}
+
+tool.get_luggage_policy channel=commentary to=assistant:
+{"included_checked":2,"included_carry_on":2,"extra_by_request":true}
+
+assistant channel=final:
+The flat transfer includes 2 checked bags and 2 carry‑ons. Since you have 3 checked bags, we can accommodate the extra by request—just let me note it on the booking.
+
+user:
+Can you store one bag overnight?
+
+assistant channel=analysis:
+Bag storage isn’t defined here. Use [ATTENTION].
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available resources.
+

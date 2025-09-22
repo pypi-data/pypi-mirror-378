@@ -1,0 +1,73 @@
+"""
+Guest requests cooling pillowcase swap for existing pillows.
+Provide case options, availability, and swap timing.
+
+ROLES: user (guest seeking cooler pillowcases), assistant (sleep concierge coordinating linens)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_case_options","description":"Check cooling pillowcase inventory by size.","parameters":{"type":"object","properties":{"size":{"type":"string","enum":["standard","queen","king"]}},"required":["size"]},"strict":true},
+  {"name":"swap_pillowcases","description":"Swap cases on existing pillows in-room.","parameters":{"type":"object","properties":{"room":{"type":"string"},"size":{"type":"string"},"case_type":{"type":"string","enum":["percale","bamboo","phase_change"]},"count":{"type":"integer"}},"required":["room","size","case_type","count"]},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Coral Reef Eco-Resort (hotel_id: cre_mau_14)
+Address: 2250 Honoapiilani Hwy, Lahaina, HI 96761
+Timezone: America/Honolulu
+
+Cooling Case Options:
+- Percale (crisp/cool), Bamboo (silky/breathable), Phase‑change (cool‑touch)
+- Sizes: standard/queen/king; zipper or envelope closure
+- Laundry: eco-certified cold rinse; solar-powered dryers
+- Stocking: refreshed at 2 PM daily; reef-safe detergents
+- Ocean humidity tips card included
+
+Service Window:
+- Swap service 10 AM–10 PM
+- Typical on-floor ETA 6–9 minutes
+- Quiet swap; original cases bagged
+- Complimentary for all guests
+- Inventory posted nightly by housekeeping
+
+user:
+Hi, room 605. Can you swap my two queen cases to phase‑change cool‑touch ones?
+
+assistant channel=analysis:
+Check queen case availability; arrange swap for count 2.
+
+assistant channel=commentary to=tool.check_case_options:
+{"size":"queen"}
+
+tool.check_case_options channel=commentary to=assistant:
+{"available":true,"types":["percale","bamboo","phase_change"],"stock":{"percale":38,"bamboo":42,"phase_change":27}}
+
+assistant channel=commentary to=tool.swap_pillowcases:
+{"room":"605","size":"queen","case_type":"phase_change","count":2}
+
+tool.swap_pillowcases channel=commentary to=assistant:
+{"scheduled":true,"eta_minutes":7,"attendant":"Keoni","bagged_originals":true}
+
+assistant channel=final:
+Yes—phase‑change cool‑touch queen cases are available. Keoni will be there in about 7 minutes to swap both and bag the originals.
+
+user:
+Is the service complimentary?
+
+assistant channel=analysis:
+Answer from system Service Window.
+
+assistant channel=final:
+Yes—case swaps are complimentary for all guests.
+
+user:
+Any surf lessons you’d suggest?
+
+assistant channel=analysis:
+Out of scope; use ATTENTION flag.
+
+assistant channel=final:
+[ATTENTION] Exploring different approaches.
+

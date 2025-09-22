@@ -1,0 +1,101 @@
+"""
+Guest requests sanitary pads with specific absorbency and style; confirm availability and deliver discreetly; include small talk and one background-acknowledgment message.
+
+ROLES: user (guest requesting personal care items), assistant (front desk arranging personal care delivery)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {
+    "name": "check_personal_care_inventory",
+    "description": "Check availability for sanitary pads by absorbency and wings style.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_code": { "type": "string", "enum": ["sanitary_pad"] },
+        "absorbency": { "type": "string", "enum": ["light", "regular", "super"] },
+        "with_wings": { "type": "boolean" }
+      },
+      "required": ["item_code", "absorbency", "with_wings"]
+    },
+    "strict": true
+  },
+  {
+    "name": "deliver_personal_care",
+    "description": "Deliver personal care items discreetly in a paper bag.",
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "room_number": { "type": "string" },
+        "item_code": { "type": "string" },
+        "absorbency": { "type": "string", "enum": ["light", "regular", "super"] },
+        "with_wings": { "type": "boolean" },
+        "quantity": { "type": "integer", "minimum": 1 },
+        "bag_type": { "type": "string", "enum": ["discreet_paper"] }
+      },
+      "required": ["room_number", "item_code", "absorbency", "with_wings", "quantity", "bag_type"]
+    },
+    "strict": true
+  }
+]
+```
+"""
+
+system:
+Hotel: Cedar Grove Hotel (hotel_id: cg_sea_10)
+Address: 640 Pine Terrace, Seattle, WA 98101
+Personal care coverage: 24 hours; typical delivery ETA 10–20 minutes
+
+Sanitary pads:
+- Absorbency options: light, regular, super
+- With wings: available yes/no
+- Current snapshot: super/with_wings(26 packs), regular/with_wings(34), light/no_wings(18)
+- Packaging: discreet_paper bag for deliveries
+
+Scent detail:
+- The lobby features a faint cedar aroma in the evenings.
+
+user:
+Could I get two packs of super pads with wings to room 830?
+
+assistant channel=analysis:
+Check super with wings availability, then deliver 2 packs in a discreet paper bag to room 830.
+
+assistant channel=commentary to=tool.check_personal_care_inventory:
+{"item_code":"sanitary_pad","absorbency":"super","with_wings":true}
+
+tool.check_personal_care_inventory channel=commentary to=assistant:
+{"available":true,"item_code":"sanitary_pad","absorbency":"super","with_wings":true,"on_hand_packs":26}
+
+assistant channel=analysis:
+Proceed with delivery order.
+
+assistant channel=commentary to=tool.deliver_personal_care:
+{"room_number":"830","item_code":"sanitary_pad","absorbency":"super","with_wings":true,"quantity":2,"bag_type":"discreet_paper"}
+
+tool.deliver_personal_care channel=commentary to=assistant:
+{"ticket_id":"PC-830-6422","eta_minutes":13}
+
+assistant channel=final:
+Certainly—two packs of super pads with wings will arrive at 830 in a discreet paper bag. Ticket PC-830-6422, ETA about 13 minutes.
+
+user:
+The cedar scent in the lobby is calming.
+
+assistant channel=analysis:
+Reply with a brief acknowledgment tied to the scent detail.
+
+assistant channel=final:
+We keep a light cedar aroma in the evenings—glad it feels calming.
+
+user:
+Do you carry an organic cotton option?
+
+assistant channel=analysis:
+Organic option isn’t specified in system or tools; use the flag.
+
+assistant channel=final:
+[ATTENTION] I’ll look into availability. Checking available options.
+

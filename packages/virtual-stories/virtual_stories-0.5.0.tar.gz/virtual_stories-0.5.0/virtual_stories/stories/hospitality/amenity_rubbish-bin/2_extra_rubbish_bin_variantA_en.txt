@@ -1,0 +1,74 @@
+"""
+Guest requests a compact 6 L bin for the bathroom with compostable liner; confirm availability and arrange delivery; include small talk and one [ATTENTION] question.
+
+ROLES: user (guest), assistant (front desk coordinating housekeeping)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"check_bin_availability","description":"Check availability for rubbish bin types.","parameters":{"type":"object","properties":{"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]}},"required":["bin_type"],"additionalProperties":false},"strict":true},
+  {"name":"request_additional_bin","description":"Deliver an additional bin with placement and liner selection.","parameters":{"type":"object","properties":{"room_number":{"type":"string"},"bin_type":{"type":"string","enum":["compact_6L_lid","standard_12L_open"]},"placement":{"type":"string","enum":["bathroom","bedside","desk"]},"liner_type":{"type":"string","enum":["standard","compostable"]}},"required":["room_number","bin_type","placement","liner_type"],"additionalProperties":false},"strict":true}
+]
+```
+"""
+
+system:
+Hotel: Seabreeze Overlook (hotel_id: so_cpt_09)
+Address: 3 Breakwater Rd, Cape Town 8001
+Housekeeping window: 08:00–21:00; deliveries ETA 10–18 minutes
+
+Bin catalog
+• Types: compact_6L_lid, standard_12L_open
+• Today: compact_6L_lid(10), standard_12L_open(7)
+• Liners: standard, compostable
+
+Extra property info
+- Check-in 15:00; Check-out 11:00
+- Towel exchange 07:00–20:30
+- Ocean wing corridors at 45 lux after 22:00
+- Lobby diffuser: sea salt & sage
+- Elevator service pause 00:30–04:30
+- Languages: EN, AF
+
+user:
+Could I get a compact bin with lid for the bathroom in 836, with a compostable liner?
+
+assistant channel=analysis:
+Check compact_6L_lid availability, then request delivery to bathroom with compostable liner.
+
+assistant channel=commentary to=tool.check_bin_availability:
+{"bin_type":"compact_6L_lid"}
+
+tool.check_bin_availability channel=commentary to=assistant:
+{"available":true,"bin_type":"compact_6L_lid","on_hand":10}
+
+assistant channel=analysis:
+Create delivery request to room 836.
+
+assistant channel=commentary to=tool.request_additional_bin:
+{"room_number":"836","bin_type":"compact_6L_lid","placement":"bathroom","liner_type":"compostable"}
+
+tool.request_additional_bin channel=commentary to=assistant:
+{"ticket_id":"HK-836-1180","eta_minutes":13}
+
+assistant channel=final:
+Added—a compact 6 L lidded bin with a compostable liner will be placed in the bathroom for 836. Ticket HK-836-1180, ETA about 13 minutes.
+
+user:
+The sea salt scent in the lobby is nice.
+
+assistant channel=analysis:
+Respond using diffuser info.
+
+assistant channel=final:
+It’s our sea salt & sage diffuser in the lobby.
+
+user:
+Can someone collect recycling at 22:00?
+
+assistant channel=analysis:
+Housekeeping window ends 21:00; 22:00 not defined—flag it.
+
+assistant channel=final:
+[ATTENTION] I’m checking if a 22:00 recycling collection is possible. Coordinating with housekeeping.
+

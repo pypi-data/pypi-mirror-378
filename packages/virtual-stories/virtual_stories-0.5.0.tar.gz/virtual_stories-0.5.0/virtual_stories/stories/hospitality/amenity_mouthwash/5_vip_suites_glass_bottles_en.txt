@@ -1,0 +1,64 @@
+"""
+VIP suite guest inquires about glass bottle variant and requests delivery; assistant confirms and dispatches; includes small talk and an out-of-scope query.
+
+ROLES: user (guest in suite 3201 asking for glass-bottled mouthwash), assistant (butler service coordinating VIP amenity)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"check_amenity_availability","description":"Check amenity variant availability","parameters":{"type":"object","additionalProperties":false,"properties":{"amenity_name":{"type":"string"},"variant":{"type":"string"},"quantity":{"type":"integer","minimum":1}},"required":["amenity_name","quantity"]}},
+  {"name":"request_amenity_delivery","description":"Deliver amenity to suite","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"variant":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Grand Meridian — Royal Sky Tower
+Suite 3201: Skyline Suite with butler
+Mouthwash: Brand "Meridian Care"; VIP glass bottle 60 ml; standard 30 ml plastic
+Variants: Regular and alcohol-free
+Policy: VIP suites may request up to 5 bottles/day
+Delivery window: 24/7 butler
+Contacts: Butler 8; Housekeeping 700
+Note: Royal Sky express lift R1 to 32nd floor
+Safety: Do not swallow; keep capped
+
+user:
+Do you have the mouthwash in glass bottles? Please send two to 3201.
+
+assistant channel=analysis:
+Check availability for VIP glass bottle variant, 2 units, deliver to 3201.
+
+assistant channel=commentary to=tool.check_amenity_availability:
+{"amenity_name":"mouthwash","variant":"VIP glass 60 ml","quantity":2}
+
+tool.check_amenity_availability channel=commentary to=assistant:
+{"amenity_name":"mouthwash","variant":"VIP glass 60 ml","available":true,"in_stock":16}
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"3201","amenity_name":"mouthwash","variant":"VIP glass 60 ml","quantity":2,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MW-3201-7002","eta_minutes":6}
+
+assistant channel=final:
+Yes—VIP glass 60 ml bottles are available. Two are on the way to 3201 with an ETA of about 6 minutes.
+
+user:
+Thanks. Can you also send alcohol-free next time?
+
+assistant channel=final:
+We carry both regular and alcohol-free variants—happy to arrange on request.
+
+user:
+How’s your evening?
+
+assistant channel=final:
+Quite good—thank you for asking.
+
+user:
+Could you recommend a rooftop bar nearby?
+
+assistant channel=final:
+[ATTENTION] Off-property bar recommendations are outside the system context.
+

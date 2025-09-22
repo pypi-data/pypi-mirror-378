@@ -1,0 +1,85 @@
+"""
+Guest asks about using sparklers on the balcony and alternatives.
+
+ROLES: user (guest celebrating birthday on balcony), assistant (concierge ensuring safety compliance and suggesting non-pyrotechnic options)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"get_policy","description":"Retrieve policy details for a given category.","parameters":{"type":"object","additionalProperties":false,"properties":{"category":{"type":"string","enum":["fireworks","fire","smoking","pets"]}},"required":["category"]},"strict":true},
+  {"name":"list_alternatives","description":"List hotel-approved celebration alternatives.","parameters":{"type":"object","additionalProperties":false,"properties":{"occasion":{"type":"string"}},"required":["occasion"]},"strict":true},
+  {"name":"get_property_map","description":"Get a brief map reference for venues.","parameters":{"type":"object","additionalProperties":false,"properties":{"zone":{"type":"string"}},"required":["zone"]},"strict":true}
+]
+```
+"""
+
+system:
+PROPERTY: Harborlight Marina Hotel
+ADDRESS: 19 Wharfside Quay, Port District
+RATING: 4-Star Urban Waterfront Boutique
+QUIET HOURS: 22:00–07:00
+FIREWORKS RULES:
+- No pyrotechnics anywhere on premises: rooms, balconies, rooftop, boardwalk, parking deck, or adjacent public promenade
+- Items banned: sparklers, fountains, roman candles, smoke devices, explosive confetti
+- Security may intervene and alarms may trigger on detection
+CELEBRATION ALTERNATIVES:
+- Programmable LED candles and table runners
+- Paper confetti (spring-loaded, non-explosive) with housekeeping cleanup add-on
+- Drone photography with ambient light rings (visual-only, no pyrotechnics)
+- Projection of custom message on Marina Deck LED wall
+GUEST PERKS:
+- Lobby scent: “Sea Salt & Vetiver”
+- Iced oolong welcome tea 14:00–17:00 in Harbor Atrium
+- Marina Deck event capacity: 120 standing (load limit 3.5 kPa)
+- EV chargers: 8 Tesla, 4 J1772 on B2 level
+- Typical room acoustics: 35–40 dBA at night
+WAYFINDING:
+- Zones A1–A6 (waterfront); B1–B4 (lobby/amenities). Marina Deck is Zone A4.
+
+user:
+We have a small birthday tonight—are handheld sparklers okay on the balcony?
+
+assistant channel=analysis:
+Confirm fireworks policy via tool, then offer listed alternatives and keep answer concise.
+
+assistant channel=commentary to=tool.get_policy:
+{"category":"fireworks"}
+
+tool.get_policy channel=commentary to=assistant:
+{"category":"fireworks","allowed":false,"summary":"All pyrotechnics, including sparklers, are prohibited on premises and adjacent promenade."}
+
+assistant channel=commentary to=tool.list_alternatives:
+{"occasion":"birthday"}
+
+tool.list_alternatives channel=commentary to=assistant:
+{"options":["Programmable LED candles","Non-explosive paper confetti","Drone photography with ambient light rings","LED wall custom message on Marina Deck"]}
+
+assistant channel=final:
+Sparklers aren’t permitted anywhere on-site, including balconies. Approved options include programmable LED candles, non‑explosive paper confetti, a drone photo session with ambient light rings, or a custom message on the Marina Deck LED wall.
+
+user:
+By the way, the lobby smells nice.
+
+assistant channel=analysis:
+Acknowledge with system perk details—mention scent and tea service.
+
+assistant channel=final:
+Thanks! That’s our “Sea Salt & Vetiver” scent—there’s also iced oolong welcome tea in the Harbor Atrium from 14:00 to 17:00.
+
+user:
+What time are your quiet hours?
+
+assistant channel=analysis:
+Answer directly from system context.
+
+assistant channel=final:
+Quiet hours are 22:00–07:00.
+
+user:
+Which municipal fireworks ordinance number do you follow specifically?
+
+assistant channel=analysis:
+No ordinance codes in system or tools—respond with the special flag.
+
+assistant channel=final:
+[ATTENTION] Understood. Reviewing available resources for the specific ordinance number.

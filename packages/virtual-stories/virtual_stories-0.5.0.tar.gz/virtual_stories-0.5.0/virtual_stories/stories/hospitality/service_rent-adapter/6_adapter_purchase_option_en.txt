@@ -1,0 +1,58 @@
+"""
+Guest asks if adapters can be purchased instead of rented; clarify policy and proceed with rental.
+
+ROLES: user (guest preferring to buy), assistant (front desk explaining rental-only policy and arranging order)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+
+TOOLS:
+```
+[
+  {"name":"check_inventory","description":"Check adapter availability","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"item":{"type":"string"},"quantity":{"type":"integer"},"room":{"type":"string"}},"required":["hotel_id","item","quantity","room"]},"strict":true},
+  {"name":"create_rental_order","description":"Create rental (purchase not supported)","parameters":{"type":"object","additionalProperties":false,"properties":{"hotel_id":{"type":"string"},"room":{"type":"string"},"item":{"type":"string"},"duration_hours":{"type":"integer"},"charge_code":{"type":"string"},"delivery_option":{"type":"string","enum":["room_drop","pick_up_at_desk"]}},"required":["hotel_id","room","item","duration_hours","charge_code","delivery_option"]},"strict":true}
+]
+```
+"""
+
+system:
+Cedar & Stone Toronto (CSTO-19)
+Location: 180 University Ave, Toronto, ON M5H 0A3, Canada
+Profile: Luxury high-rise; UHN vicinity; Timezone ET
+Electrical: 120V/60Hz; house offers universal adapters for international plugs
+Policy: Rental only; purchase not available; 22 units; CAD 4/night; no deposit; folio code RENT-ADPT
+Hours: Front Desk 24/7; Concierge 07:00–23:00
+Facilities: Spa 10:00–21:00; Bar 16:00–01:00
+Only services listed are available.
+
+user:
+Can I buy an adapter instead of renting? I'm in 2304.
+
+assistant channel=analysis:
+Explain rental-only rule, then check stock and create a standard 24-hour rental for room 2304.
+
+assistant channel=commentary to=tool.check_inventory:
+{"hotel_id":"CSTO-19","item":"universal_power_adapter","quantity":1,"room":"2304"}
+
+tool.check_inventory channel=commentary to=assistant:
+{"available":true}
+
+assistant channel=commentary to=tool.create_rental_order:
+{"hotel_id":"CSTO-19","room":"2304","item":"universal_power_adapter","duration_hours":24,"charge_code":"RENT-ADPT","delivery_option":"pick_up_at_desk"}
+
+tool.create_rental_order channel=commentary to=assistant:
+{"order_id":"ORD-CSTO-6641","status":"created","rate":"CAD 4/night"}
+
+assistant channel=final:
+Adapters are rental only. I’ve created order ORD-CSTO-6641 at CAD 4 per night—please pick it up at the Front Desk when convenient.
+
+user:
+When does the bar close?
+
+assistant channel=final:
+The bar runs 16:00 to 01:00.
+
+user:
+Could you share procurement discount tiers for bulk adapter purchases?
+
+assistant channel=final:
+[ATTENTION] Processing your request.
+

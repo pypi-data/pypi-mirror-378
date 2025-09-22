@@ -1,0 +1,54 @@
+"""
+Suite with two king beds requests two covers; include tools, chat, and attention case.
+
+ROLES: user (guest in 2501), assistant (linen ops)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_linen_delivery","description":"Deliver multiple duvet covers.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"linen_type":{"type":"string","enum":["duvet_cover"]},"size":{"type":"string","enum":["king"]},"quantity":{"type":"integer","minimum":1}},"required":["room_number","linen_type","size","quantity"]},"strict":true}
+]
+```
+"""
+
+system:
+Marina Grand Suites (hotel_id: mgs_mia)
+Address: 200 Bayfront Dr, Miami, FL 33139
+Timezone: America/New_York
+Suite 2501 Layout:
+- Two king beds, ocean view
+- Balcony doors; salt-air sealing for linens
+Service Facts:
+- Delivery core: 09:00–22:00
+- King cover stock: 28
+- Typical ETA: 15–25 min
+- Contact: Service x700
+JSON Hint: {"salt_air_note": "store in room sealed until use"}
+
+user:
+Could we get two king duvet covers in 2501?
+
+assistant channel=analysis:
+Deliver two king covers.
+
+assistant channel=commentary to=tool.request_linen_delivery:
+{"room_number":"2501","linen_type":"duvet_cover","size":"king","quantity":2}
+
+tool.request_linen_delivery channel=commentary to=assistant:
+{"ticket":"MGS-DC-2501-09","eta_minutes":17}
+
+assistant channel=final:
+Done—two king duvet covers are on their way to 2501, ETA about 17 minutes. Ref MGS-DC-2501-09.
+
+user:
+The ocean breeze is strong tonight.
+
+assistant channel=final:
+We’ll keep the covers sealed in-room until you’re ready.
+
+user:
+Are these made locally?
+
+assistant channel=final:
+[ATTENTION] I’ll check sourcing details.
+

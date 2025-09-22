@@ -1,0 +1,42 @@
+"""
+Guest requests a discreet note wording and non-descriptive receipt.
+
+ROLES: user (privacy request), assistant (wellness concierge)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"arrange_wellness_delivery","description":"Arrange discreet delivery of personal wellness amenities.","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"items":{"type":"array","items":{"type":"object","properties":{"sku":{"type":"string"},"quantity":{"type":"integer"}}}},"delivery_method":{"type":"string","enum":["room_service_tray","housekeeping_supplies","front_desk_envelope"]},"delivery_timing":{"type":"string","enum":["immediate","evening_turndown","next_housekeeping","specific_time"]}},"required":["room_number","items","delivery_method","delivery_timing"]},"strict":true}
+]
+```
+"""
+
+system:
+Monarch City Hotel (hotel_id: mch_new_york)
+Address: 455 7th Ave, New York, NY
+Timezone: America/New_York
+
+Inventory:
+- WELLNESS_PROTECTION_PREMIUM
+
+user:
+Could the delivery note just say “amenity request,” and no line item text?
+
+assistant channel=analysis:
+Confirm discreet note request in the order.
+
+assistant channel=commentary to=tool.arrange_wellness_delivery:
+{"room_number":"2311","items":[{"sku":"WELLNESS_PROTECTION_PREMIUM","quantity":1}],"delivery_method":"room_service_tray","delivery_timing":"immediate"}
+
+tool.arrange_wellness_delivery channel=commentary to=assistant:
+{"delivery_id":"MCH-2311-DN-02","note":"receipt non-descriptive; note reads 'amenity request'","eta_minutes":15}
+
+assistant channel=final:
+Done—MCH-2311-DN-02 will arrive in ~15 minutes with a discreet note and non‑descriptive receipt.
+
+user:
+Thanks! Also, do you validate gym day passes for visitors?
+
+assistant channel=final:
+[ATTENTION] Checking gym pass policy.
+

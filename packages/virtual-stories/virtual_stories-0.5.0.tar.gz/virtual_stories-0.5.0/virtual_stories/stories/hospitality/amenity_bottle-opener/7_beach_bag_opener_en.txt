@@ -1,0 +1,79 @@
+"""
+Guest wants an opener added to a beach tote along with napkins; confirm delivery point and policy.
+
+ROLES: user (beach-going guest), assistant (concierge desk)
+CHANNELS: analysis, commentary, final.
+TOOLS:
+```json
+[
+  {"name":"concierge_kits","description":"Return items suitable for beach tote.","parameters":{"type":"object","additionalProperties":false}},
+  {"name":"prepare_beach_tote","description":"Prepare a tote with specified items and deliver to a pickup point.","parameters":{"type":"object","additionalProperties":false,"properties":{"pickup":"string","items":{"type":"array","items":{"type":"string"}}},"required":["pickup","items"]}}
+]
+```
+"""
+
+system:
+Riviera Harbor Hotel (hotel_id: rhh_mia_18)
+Address: 600 Ocean Dr, Miami Beach, FL 33139
+Timezone: America/New_York
+Setting: Art Deco beachfront property with private boardwalk access
+
+Beach Tote Options:
+- Cap lifter (compact)
+- Cloth napkins (2)
+- Water-resistant pouch
+
+Pick-up Points:
+- Boardwalk Gate A kiosk
+- Lobby concierge desk
+
+Timing:
+- Prep time: 8–12 minutes
+
+Policy:
+- Tools loaned to registered guests only; no deposit
+
+Contact:
+- Boardwalk kiosk ext. 41; Concierge ext. 0
+
+user:
+Could you pop a small bottle opener and a couple napkins into a beach tote for us? We’ll grab it at Gate A.
+
+assistant channel=analysis:
+Confirm availability and prepare tote for Gate A pick-up.
+
+assistant channel=commentary to=tool.concierge_kits:
+{}
+
+tool.concierge_kits channel=commentary to=assistant:
+{"available":["cap_lifter_compact","cloth_napkins_pair","water_pouch"]}
+
+assistant channel=final:
+We can include a compact cap lifter and two cloth napkins. I’ll prep the tote for Gate A pickup.
+
+assistant channel=commentary to=tool.prepare_beach_tote:
+{"pickup":"Boardwalk Gate A kiosk","items":["cap_lifter_compact","cloth_napkins_pair"]}
+
+tool.prepare_beach_tote channel=commentary to=assistant:
+{"ref":"TOTE-A-612","ready_in_minutes":9}
+
+assistant channel=final:
+Ready in about 9 minutes at Gate A kiosk—ref TOTE-A-612.
+
+user:
+The Art Deco details are gorgeous!
+
+assistant channel=analysis:
+Small talk.
+
+assistant channel=final:
+We love the pastel facades and neon script—classic South Beach.
+
+user:
+Do you deliver directly to the public beach area too?
+
+assistant channel=analysis:
+Beyond stated pick-up points; attention.
+
+assistant channel=final:
+[ATTENTION] I’ll verify options beyond our Gate A and lobby pickup points.

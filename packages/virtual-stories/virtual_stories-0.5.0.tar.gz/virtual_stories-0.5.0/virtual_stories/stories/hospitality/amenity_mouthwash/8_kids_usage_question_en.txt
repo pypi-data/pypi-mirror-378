@@ -1,0 +1,58 @@
+"""
+Guest asks about kids using mouthwash and requests one bottle; assistant answers policy and delivers; includes small talk and out-of-scope query.
+
+ROLES: user (parent in room 734 asking if a child can use mouthwash), assistant (housekeeping clarifying safety and sending bottle)
+CHANNELS: analysis, commentary, final. Channel must be included for every message.
+TOOLS:
+```json
+[
+  {"name":"request_amenity_delivery","description":"Deliver amenity","parameters":{"type":"object","additionalProperties":false,"properties":{"room_number":{"type":"string"},"amenity_name":{"type":"string"},"quantity":{"type":"integer","minimum":1},"priority":{"type":"string","enum":["normal","urgent"]}},"required":["room_number","amenity_name","quantity","priority"]}}
+]
+```
+"""
+
+system:
+Hotel: Parkline Hotel — Oak Tower
+Room 734: Deluxe Twin
+Mouthwash: Brand "OakFresh"; 25 ml; alcohol-free
+Policy: Not for children under 6; up to 2 per night
+Delivery hours: 07:00–22:30
+Contacts: Housekeeping 410; Front Desk 0
+Notes: Oak Tower elevator O2 to 7th floor; vending near 733
+
+user:
+Is your mouthwash safe for kids? And please send one to 734.
+
+assistant channel=analysis:
+Answer safety per system (not for under 6) and deliver 1 bottle.
+
+assistant channel=final:
+Mouthwash isn’t for children under 6. I’ll send one bottle to 734 now.
+
+assistant channel=commentary to=tool.request_amenity_delivery:
+{"room_number":"734","amenity_name":"mouthwash","quantity":1,"priority":"normal"}
+
+tool.request_amenity_delivery channel=commentary to=assistant:
+{"request_id":"MW-734-2244","eta_minutes":10}
+
+assistant channel=final:
+Confirmed—one bottle is on the way with an ETA of about 10 minutes.
+
+user:
+Thanks! Until what time do you deliver?
+
+assistant channel=final:
+We deliver 07:00–22:30.
+
+user:
+How’s your evening?
+
+assistant channel=final:
+Nice and calm—thank you!
+
+user:
+Could you recommend a pediatrician nearby?
+
+assistant channel=final:
+[ATTENTION] External medical recommendations aren’t in the provided system context.
+
