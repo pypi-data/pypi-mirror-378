@@ -1,0 +1,105 @@
+Metadata-Version: 2.4
+Name: pyloid-server-adapter
+Version: 0.1.7
+Summary: PyLoid Server Adapter
+Author-email: hyeonho cho <111675679+aesthetics-of-record@users.noreply.github.com>
+Requires-Python: >=3.9
+Provides-Extra: fastapi
+Requires-Dist: fastapi; extra == 'fastapi'
+Requires-Dist: pydantic; extra == 'fastapi'
+Provides-Extra: flask
+Requires-Dist: flask; extra == 'flask'
+Requires-Dist: flask-cors; extra == 'flask'
+Description-Content-Type: text/markdown
+
+# Pyloid Server Adapter
+
+Pyloid Server Adapter는 Pyloid 애플리케이션과 웹 서버(FastAPI, Flask) 간의 원활한 통합을 위한 어댑터입니다.
+
+## 기능
+
+- Pyloid 인스턴스 및 브라우저 창 관리
+- HTTP 요청에서 자동 컨텍스트 생성
+- FastAPI 및 Flask와의 통합
+- 서버 라이프사이클 관리
+
+## 설치
+
+```bash
+pip install pyloid-server-adapter
+```
+
+## FastAPI 사용법
+
+### 방법 1: 어댑터 인스턴스 사용
+
+```python
+from fastapi import FastAPI, Depends
+from pyloid_server_adapter import FastAPIAdapter, PyloidContext
+
+app = FastAPI()
+adapter = FastAPIAdapter(app=app, start_function=start_server)
+
+# Pyloid 인스턴스 설정
+adapter.pyloid = pyloid_instance
+
+# 의존성 주입을 통한 컨텍스트 사용
+@app.get("/api/test")
+async def test_endpoint(ctx: PyloidContext = Depends(adapter.get_pyloid_dependency)):
+    return {
+        "pyloid": ctx.pyloid is not None,
+        "window": ctx.window is not None
+    }
+```
+
+### 방법 2: 전역 인스턴스 사용 (권장)
+
+```python
+from fastapi import FastAPI, Depends
+from pyloid_server_adapter import set_global_pyloid_instance, get_global_pyloid_context, PyloidContext
+
+app = FastAPI()
+
+# Pyloid 인스턴스 전역 설정
+set_global_pyloid_instance(pyloid_instance)
+
+# 전역 의존성 함수 사용
+@app.get("/api/test")
+async def test_endpoint(ctx: PyloidContext = Depends(get_global_pyloid_context)):
+    return {
+        "pyloid": ctx.pyloid is not None,
+        "window": ctx.window is not None
+    }
+```
+
+## Flask 사용법
+
+```python
+from flask import Flask
+from pyloid_server_adapter import FlaskAdapter, PyloidContext
+
+app = Flask(__name__)
+adapter = FlaskAdapter(app=app, start_function=start_server)
+
+# Pyloid 인스턴스 설정
+adapter.pyloid = pyloid_instance
+
+# 데코레이터를 통한 컨텍스트 사용
+@app.route("/api/test")
+@adapter.pyloid_context
+def test_endpoint(ctx: PyloidContext):
+    return {
+        "pyloid": ctx.pyloid is not None,
+        "window": ctx.window is not None
+    }
+```
+
+Flask는 FastAPI와 달리 의존성 주입 시스템이 없기 때문에 데코레이터 방식을 사용합니다.
+
+## 요구사항
+
+- Python 3.8+
+- FastAPI (FastAPI 어댑터 사용 시)
+- Flask (Flask 어댑터 사용 시)
+- pyloid
+
