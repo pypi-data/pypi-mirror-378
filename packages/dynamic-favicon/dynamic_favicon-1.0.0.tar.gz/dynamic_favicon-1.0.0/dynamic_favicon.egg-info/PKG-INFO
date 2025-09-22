@@ -1,0 +1,268 @@
+Metadata-Version: 2.4
+Name: dynamic-favicon
+Version: 1.0.0
+Summary: A Python module for automatically rotating website favicons based on time intervals
+Author-email: Sanjay Choudhary <sanjay@mailchat.me>
+License: MIT
+Project-URL: Homepage, https://github.com/cu-sanjay/DynamicFavicon
+Project-URL: Bug Reports, https://github.com/cu-sanjay/DynamicFavicon/issues
+Project-URL: Source, https://github.com/cu-sanjay/DynamicFavicon
+Project-URL: Documentation, https://github.com/cu-sanjay/DynamicFavicon#readme
+Keywords: favicon,dynamic,rotation,website,emoji,icons
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: schedule>=1.2.0
+Requires-Dist: Pillow>=9.1.0
+Requires-Dist: requests>=2.25.0
+Provides-Extra: dev
+Requires-Dist: flask>=2.0.0; extra == "dev"
+Requires-Dist: build>=0.8.0; extra == "dev"
+Requires-Dist: setuptools>=61.0; extra == "dev"
+Requires-Dist: wheel>=0.37.0; extra == "dev"
+Requires-Dist: twine>=4.0.0; extra == "dev"
+Dynamic: license-file
+
+# Dynamic Favicon
+
+A Python module for automatically rotating website favicons based on configurable time intervals. Perfect for adding dynamic visual elements to your web applications without any external API dependencies.
+
+## Features
+
+- **Time-based favicon rotation** (1 hour, 1 day, custom intervals)
+- **Multiple favicon sources**:
+  - Unicode emojis
+  - Twemoji (Twitter's emoji set)
+  - Geometric icons (circles, squares, triangles, diamonds, stars)
+- **No API keys required** - works offline with automatic fallback to geometric icons
+- **Robust error handling** - never breaks your website
+- **Simple integration** - just a few lines of code
+- **Automatic ICO generation** with multiple sizes (16x16, 32x32, 48x48)
+
+## Installation
+
+```bash
+pip install dynamic-favicon
+```
+
+## Quick Start
+
+### Basic Usage
+
+```python
+from dynamic_favicon import FaviconRotator, FaviconScheduler
+
+# Initialize the favicon rotator
+rotator = FaviconRotator(output_dir="static", favicon_name="favicon.ico")
+
+# Create a favicon from an emoji
+rotator.create_emoji_favicon("🚀")
+
+# Or create a random geometric icon
+rotator.create_icon_favicon()
+```
+
+### Automated Rotation
+
+```python
+from dynamic_favicon import FaviconRotator, FaviconScheduler
+
+# Setup favicon rotation
+rotator = FaviconRotator(output_dir="static")
+scheduler = FaviconScheduler(rotator)
+
+# Rotate emoji favicons every hour
+scheduler.schedule_rotation(interval="1hour", rotation_type="emoji", category="nature")
+
+# Start the scheduler (runs in background)
+scheduler.start()
+
+# Your web server code here...
+# The favicon will automatically update every hour
+
+# Stop when needed
+scheduler.stop()
+```
+
+### Flask Integration
+
+```python
+from flask import Flask
+from dynamic_favicon import FaviconRotator, FaviconScheduler
+
+app = Flask(__name__)
+
+# Setup favicon rotation
+rotator = FaviconRotator(output_dir="static")
+scheduler = FaviconScheduler(rotator)
+
+# Rotate every 30 minutes with random icons
+scheduler.schedule_rotation(interval="30min", rotation_type="icon")
+scheduler.start()
+
+@app.route('/')
+def home():
+    return '<html><head><link rel="icon" href="/static/favicon.ico"></head><body><h1>Dynamic Favicon Demo</h1></body></html>'
+
+if __name__ == '__main__':
+    app.run()
+```
+
+## API Reference
+
+### FaviconRotator
+
+Main class for creating and managing favicons.
+
+```python
+FaviconRotator(output_dir="static", favicon_name="favicon.ico")
+```
+
+**Methods:**
+- `create_emoji_favicon(emoji, size=32)` - Create favicon from emoji
+- `create_icon_favicon(size=32)` - Create random geometric icon favicon
+- `rotate_emoji_favicon(category=None)` - Rotate to random emoji
+- `rotate_icon_favicon()` - Rotate to random icon
+- `get_favicon_data_url()` - Get base64 data URL of current favicon
+
+### FaviconScheduler
+
+Handles automatic favicon rotation on time intervals.
+
+```python
+FaviconScheduler(favicon_rotator)
+```
+
+**Methods:**
+- `schedule_rotation(interval, rotation_type, category=None)` - Setup rotation schedule (triggers immediate rotation)
+- `start()` - Start background scheduler
+- `stop()` - Stop scheduler
+- `is_running()` - Check if scheduler is active
+
+**Intervals:**
+- `"1hour"` or `"hourly"` - Every hour
+- `"1day"` or `"daily"` - Every day
+- `"30min"` - Every 30 minutes
+- `"15min"` - Every 15 minutes
+- `"5min"` - Every 5 minutes
+- `"10s"`, `"30s"` etc. - Custom seconds (append 's')
+- Integer < 60 - Seconds interval
+- Integer >= 60 - Minutes interval
+
+**Rotation Types:**
+- `"emoji"` - Use emoji favicons
+- `"icon"` - Use geometric icons
+
+**Emoji Categories:**
+- `"nature"` - Nature emojis (🌟, 🌙, ☀️, etc.)
+- `"objects"` - Object emojis (⚽, 🎮, 📱, etc.)
+- `"faces"` - Face emojis (😊, 😎, 🤔, etc.)
+- `"symbols"` - Symbol emojis (❤️, ⭐, 💎, etc.)
+- `None` - Random from all categories
+
+## Advanced Usage
+
+### Custom Favicon from Image
+
+```python
+rotator = FaviconRotator()
+rotator.create_custom_favicon("path/to/your/image.png")
+```
+
+### Multiple Scheduled Rotations
+
+```python
+scheduler = FaviconScheduler(rotator)
+
+# Nature emojis every hour
+scheduler.schedule_rotation("1hour", "emoji", "nature")
+
+# Geometric icons every 30 minutes  
+scheduler.schedule_rotation("30min", "icon")
+
+scheduler.start()
+```
+
+### Get Favicon as Data URL
+
+```python
+data_url = rotator.get_favicon_data_url()
+# Returns: "data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAA..."
+
+# Use in HTML
+html = f'<link rel="icon" href="{data_url}">'
+```
+
+## Error Handling
+
+The module is designed with robust error handling to ensure your website never breaks:
+
+- All methods return `True`/`False` to indicate success
+- Failed favicon creation falls back gracefully
+- Network errors (for Twemoji) don't crash the application
+- Scheduler continues running even if individual rotations fail
+
+```python
+# Safe error handling example
+if not rotator.create_emoji_favicon("🚀"):
+    # Fallback to geometric icon
+    rotator.create_icon_favicon()
+```
+
+## Requirements
+
+- Python 3.8+
+- Pillow (PIL) for image processing
+- requests for fetching Twemoji images
+- schedule for time-based automation
+
+## Publishing to PyPI
+
+### Build the Package
+
+```bash
+python -m build
+```
+
+### Upload to PyPI
+
+```bash
+pip install twine
+twine upload dist/*
+```
+
+### Test Installation
+
+```bash
+pip install dynamic-favicon
+```
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## Support
+
+For issues and questions:
+- Create an issue on GitHub
+- Check existing documentation
+- Review the examples above
