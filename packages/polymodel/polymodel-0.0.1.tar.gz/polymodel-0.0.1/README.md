@@ -1,0 +1,147 @@
+# PolyModel
+
+An awesomely simple Python ORM built on SQLModel's foundation, with polymorphic inheritance and active maintenance.
+
+**IMPORTANT**: PolyModel is still under heavy development and IS NOT READY for production usage**
+
+**Documentation**: https://docs.polymodel.dev
+**Source Code**: https://github.com/rmonvfer/polymodel
+
+## Why PolyModel?
+
+PolyModel extends SQLModel with essential features for production applications:
+
+- **Polymorphic inheritance** - Full support for joined table inheritance patterns
+- **Community-driven** - Pull requests reviewed within days, not months
+- **Production-tested** - Currently running in production systems
+- **Drop-in replacement** - Fully compatible with existing SQLModel code
+
+We deeply appreciate SQLModel's innovative approach to combining SQLAlchemy and Pydantic. PolyModel builds on this
+foundation while ensuring the features and maintenance that production applications require.
+
+## Installation
+
+```bash
+pip install polymodel
+```
+
+## Migration from SQLModel
+
+Simply change your imports:
+
+```python
+# Before
+from sqlmodel import Field, SQLModel, Session
+
+# After
+from polymodel import Field, Model, Session
+```
+
+All your existing code continues to work.
+
+## Key Features
+
+PolyModel supports all the same features as SQLModel but we've added some new features on top, the
+most important one is comprehensive support for polymorphic inheritance.
+
+### Polymorphic Inheritance
+
+```python
+from polymodel import Field, Model
+
+
+class User(Model, table=True):
+    id: int = Field(primary_key=True)
+    name: str
+    type: str
+
+    __mapper_args__ = {
+        "polymorphic_on": "type",
+        "polymorphic_identity": "user"
+    }
+
+
+class Customer(User, table=True):
+    __mapper_args__ = {
+        "polymorphic_identity": "customer"
+    }
+
+    credit_limit: float
+
+
+class Employee(User, table=True):
+    __mapper_args__ = {
+        "polymorphic_identity": "employee"
+    }
+
+    department: str
+```
+
+### Standard SQLModel Features
+
+All the SQLModel features you know and love:
+
+- Python type annotations
+- Pydantic validation
+- SQLAlchemy power
+- FastAPI integration
+- Editor support with autocompletion
+
+## Roadmap
+
+I am very aware of the multiple issues regarding the maintenance of SQLModel and I've been keeping track of the most requested features (polymorphic inheritance was one of them) in order to include them in our Roadmap.
+
+Some of them are:
+
+ - Support for Alembic migrations
+ - Full compatibility with Pydantic v2
+ - Full support for Pydantic types (like date)
+ - Support for Requirement Annotations
+ - Support for `Annotated`-based column definitions
+ - Proper documentation (not tutorials)
+
+And many, many more which I will prioritize based on the sqlmodel issue tracker and pull requests.
+
+## Example
+
+```python
+from polymodel import Field, Session, Model, create_engine
+
+class Hero(Model, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    secret_name: str
+    age: int | None = None
+
+
+hero = Hero(name="Deadpond", secret_name="Dive Wilson")
+
+engine = create_engine("sqlite:///database.db")
+Model.metadata.create_all(engine)
+
+with Session(engine) as session:
+    session.add(hero)
+    session.commit()
+```
+
+## Community and Support
+
+PolyModel is independently maintained by the Python community. While used in production at some companies, it remains an independent project focused on serving the broader Python ecosystem.
+
+We commit to:
+
+- Reviewing pull requests within a reasonable time-frame.
+- Monthly releases for non-critical updates
+- Immediate patches for security issues
+- Clear communication on breaking changes
+- Maintaining compatibility with SQLAlchemy and Pydantic updates
+
+## Contributing
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the MIT license, maintaining the same license as SQLModel.
+
+PolyModel is based on SQLModel, created by Sebastián Ramírez (tiangolo).
