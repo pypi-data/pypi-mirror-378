@@ -1,0 +1,123 @@
+Metadata-Version: 2.4
+Name: rdkit_buildutils
+Version: 0.3.0
+Summary: RDKit utilities: placeholder substitution, matching, R-group decomposition, scaffold normalization
+Author: Fabio Nelli
+License: MIT License
+        
+        Copyright (c) 2025 Fabio Nelli
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to do so, subject to the
+        following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Project-URL: Homepage, https://github.com/nelli-datascience/rdkit_buildutils
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: rdkit-pypi>=2022.9; platform_system != "Linux" or platform_machine != "x86_64"
+Requires-Dist: rdkit; platform_system == "Linux" and platform_machine == "x86_64"
+Provides-Extra: pandas
+Requires-Dist: pandas>=1.5; extra == "pandas"
+Provides-Extra: db
+Requires-Dist: sqlalchemy>=2.0; extra == "db"
+Requires-Dist: psycopg2-binary>=2.9; extra == "db"
+Dynamic: license-file
+
+# rdkit_buildutils
+
+Utilities built on top of [RDKit](https://www.rdkit.org/) for constructing, normalizing and decomposing molecules with placeholder substitution.
+
+The package supports workflows involving **monomers**, **R-group decomposition**, **query matching**, and **scaffold normalization**. All helpers are **general-purpose** and RDKit-only.
+
+> ⚠️ Developed in a personal context for scientific support. Not affiliated with RDKit or any specific organization.
+
+---
+
+## ✨ Features
+
+### Core (`rdkit_buildutils/core.py`)
+- `convert_r_to_atom_map(smiles_r)`: `[R1]` → `[*:1]`.
+- `build_molecule_final(base_smiles, **substituents)`: substitute placeholders (`r1="CC"`, …).
+
+### R-group (`rdkit_buildutils/rgroup_core.py`)
+- `to_core`, `normalize_rgroup_smiles`, `to_peptidic_scaffold`.
+- `anchored_smiles`, `build_code_map`.
+- `decompose_with_cores`, `decompose_for_monomer`.
+
+### Scaffold normalization (`rdkit_buildutils/scaffold_normalize.py`)
+- `canonical_ranks`, `r_to_atommap`, `relabel_dummies_canonically`.
+- `normalize_scaffold_chiral` (D/L preserving).
+
+### New in **0.3**
+- **Logging**: `silence_rdkit`, `silence_rdkit_all`
+- **Standardization**: `standardize_for_matching`
+- **HELM**: `helm_to_query_mol`
+- **Query variants**: `make_scaffold_variants` (strict/nostereo/kekule/dropR/peptidic*)
+- **R-group extraction**: `extract_rgroup_smiles`
+- **Filters**: `is_aminoacid_like_scaffold`, `keep_targets_with_single_aa_core`
+- **Matching**: `prepare_targets`, `find_monomer_matches`
+- **RGD assign**: `assign_rgroups_for_matches`, `build_code_map_from_table`
+- **Datatypes**: `MonomerScaffold`, `MatchRecord`, `RAssignment`
+
+---
+
+## 📦 Installation
+
+```bash
+# pip-only (uses rdkit-pypi)
+pip install rdkit_buildutils
+# or, if you install RDKit via conda-forge, install rdkit separately and then:
+pip install rdkit_buildutils
+```
+
+Optional extras:
+```bash
+pip install rdkit_buildutils[pandas]   # pandas helpers
+pip install rdkit_buildutils[db]       # adapters you may write externally
+```
+
+---
+
+## 🔬 Examples
+
+```python
+from rdkit_buildutils import convert_r_to_atom_map, build_molecule_final
+from rdkit import Chem
+
+scaffold = "[R1]NCC(=O)[R2]"
+core = convert_r_to_atom_map(scaffold)  # -> [*:1]NCC(=O)[*:2]
+mol = build_molecule_final(core, r1="C", r2="OC")
+print(Chem.MolToSmiles(mol))
+```
+
+R-group assignment with matching (sketch):
+```python
+from rdkit_buildutils import (
+  helm_to_query_mol, MonomerScaffold, prepare_targets, find_monomer_matches,
+  assign_rgroups_for_matches
+)
+# build MonomerScaffold list...
+# prepare targets...
+# matches = find_monomer_matches(...)
+# assignments = assign_rgroups_for_matches(...)
+```
+
+---
+
+## ✅ License
+MIT © 2025 Fabio Nelli
