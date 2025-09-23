@@ -1,0 +1,59 @@
+# DataGuild Snowflake Configuration
+source:
+  type: "dataguild.ingestion.source.snowflake.SnowflakeV2Source"
+  config:
+    # Snowflake connection (configure these with your actual values)
+    account_identifier: "your-account-identifier"
+    username: "your-username"
+    password: "your-password"  # Or use env variable: ${SNOWFLAKE_PASSWORD}
+    warehouse: "COMPUTE_WH"
+    role: "ACCOUNTADMIN"
+
+    # Optional connection settings
+    database: "ANALYTICS"
+    schema: "PUBLIC"
+
+    # Ingestion settings
+    include_table_lineage: true
+    include_column_lineage: true
+    include_usage_stats: true
+    include_technical_schema: true
+    include_view_definitions: true
+
+    # Time window for usage data
+    start_time: "2025-01-01T00:00:00Z"
+    end_time: "2025-01-31T23:59:59Z"
+
+    # Filtering patterns
+    database_pattern:
+      allow:
+        - "ANALYTICS.*"
+        - "PROD.*"
+      deny:
+        - ".*_TEST$"
+        - ".*_TEMP$"
+
+    schema_pattern:
+      allow:
+        - ".*"
+      deny:
+        - ".*INFORMATION_SCHEMA$"
+
+    # Tag extraction
+    extract_tags: "skip"  # or "with_lineage" or "without_lineage"
+    extract_tags_as_structured_properties: false
+
+    # Performance settings
+    use_queries_v2: true
+    lazy_schema_resolver: true
+
+    # Profiling (optional)
+    profiling:
+      enabled: false
+      profile_table_level_only: true
+
+# Output configuration
+sink:
+  type: "console"  # or "file" or custom sink
+  config:
+    filename: "output/snowflake_metadata.json"
