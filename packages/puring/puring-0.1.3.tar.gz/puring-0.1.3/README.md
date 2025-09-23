@@ -1,0 +1,142 @@
+# puring
+
+[![PyPI version](https://badge.fury.io/py/puring.svg)](https://badge.fury.io/py/puring)
+[![Build Status](https://github.com/mctood/turing/actions/workflows/python-package.yml/badge.svg)](https://github.com/mctood/turing/actions/workflows/python-package.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A simple and intuitive object-oriented Turing machine emulator in Python.
+
+## About The Project
+
+`puring` provides a clean API to define states, alphabets, transition tables, and run simulations on an infinite tape. It's designed to be a straightforward and educational tool for anyone interested in the theory of computation or looking to experiment with Turing machines.
+
+The core of the library is built around three main classes: `Turing`, `Tape`, and `State`, which provide a clear and modular way to represent the components of a Turing machine.
+
+### Features
+
+*   **Object-Oriented Design**: Model Turing machines with clear `Turing`, `Tape`, and `State` classes.
+*   **Flexible Initialization**: Create a `Tape` from a list or directly from a string.
+*   **Infinite Tape**: The tape dynamically expands in both directions as needed during simulation.
+*   **Flexible Transition Rules**: Define complex transition rules, including matching a group of symbols for a single rule.
+*   **Chaining Operations**: Easily run machines sequentially on a tape using `run_after` and `run_before` methods.
+*   **Simple API**: Get started quickly with a minimal and expressive API.
+*   **Type-Hinted**: Modern Python code with full type hints for a better developer experience and code analysis.
+
+## Getting Started
+
+To get a local copy up and running, follow these simple steps.
+
+### Prerequisites
+
+You need to have Python 3.7+ installed on your machine.
+
+### Installation
+
+1.  **Install from PyPI**
+
+    ```sh
+    pip install puring
+    ```
+
+2.  **Install from Source**
+
+    ```sh
+    git clone https://github.com/mctood/turing.git
+    cd turing
+    pip install .
+    ```
+
+## Usage
+
+Using `puring` is simple. Let's create a Turing machine that inverts the bits on a tape (flips `0`s to `1`s and `1`s to `0`s).
+
+```python
+from puring import Turing, Tape, States, R, S
+
+# 1. Define states
+# States() is a helper function to create one or more unique states.
+q0, = States(1)
+
+# 2. Define the alphabet
+# The alphabet includes all symbols the machine can read/write.
+# `None` is reserved for representing a blank cell on the tape.
+alphabet = [0, 1, None]
+
+# 3. Define the transition table
+# The table is a dictionary mapping a state to its transitions.
+# Each transition maps a symbol to an instruction list:
+# [new_symbol, move_direction, new_state (optional, defaults to current state)]
+table = {
+    q0: {
+        0: [1, R],      # If in state q0 and read 0, write 1 and move Right.
+        1: [0, R],      # If in state q0 and read 1, write 0 and move Right.
+        None: [None, S] # If read a blank cell, do nothing and Stop the machine.
+    }
+}
+
+# 4. Create the Turing machine instance
+# The initial state defaults to the first state in the table (q0).
+turing_machine = Turing(alphabet, table)
+
+# 5. Create a tape with an initial sequence
+tape = Tape([1, 0, 1, 1, 0])
+print(f"Initial tape: {tape.tape}")
+
+# 6. Run the simulation
+# Provide the Turing machine and the starting head position.
+tape.run(turing_machine, index=0)
+
+# 7. Check the result
+# The tape is automatically cleaned of leading/trailing blank symbols.
+print(f"Final tape:   {tape.tape}")
+
+# Expected output:
+# Initial tape: [1, 0, 1, 1, 0]
+# Final tape:   [0, 1, 0, 0, 1]
+```
+
+> **Note**: To prevent accidental infinite loops, the simulation will stop after 100,000 iterations and raise a `RuntimeError`.
+
+## API Overview
+
+### `States(n: int) -> tuple[State, ...]`
+A factory function that returns a tuple of `n` unique `State` objects.
+
+### `Turing(alphabet, table, state=None)`
+Represents the machine's logic.
+*   `alphabet`: A list of valid symbols.
+*   `table`: The transition function, defined as a nested dictionary.
+*   `state`: The initial state of the machine. Defaults to the first state defined in the table.
+
+### `Tape(initial_tape: list)`
+Represents the data tape. It automatically expands when the head moves into blank territory.
+*   `run(turing: Turing, index: int)`: Starts the simulation with the head at the given `index`.
+*   `get(position: int)`: Reads the value at a specific position.
+*   `set(position: int, value: Any)`: Writes a value to a specific position.
+
+### Actions
+Constants used in the transition table to specify the head's movement.
+*   `L`: Move Left
+*   `R`: Move Right
+*   `N`: No movement (stay)
+*   `S`: Stop the simulation
+
+## Contributing
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+## License
+
+Distributed under the MIT License. See `LICENSE` file for more information.
+
+## Contact
+
+rogatka - petfert405@gmail.com
+
+Project Link: https://github.com/mctood/turing
