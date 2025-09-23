@@ -1,0 +1,81 @@
+Metadata-Version: 2.4
+Name: climemu
+Version: 0.1.7
+Summary: Score-based generative emulation of impact-relevant earth system model outputs
+Author-email: Shahine Bouabid <shahineb@mit.edu>
+License: MIT
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: diffrax>=0.7.0
+Requires-Dist: einops>=0.8.1
+Requires-Dist: equinox>=0.13.0
+Requires-Dist: huggingface-hub>=0.35.0
+Requires-Dist: jax>=0.7.1
+Requires-Dist: netcdf4>=1.7.2
+Requires-Dist: numpy>=2.3.2
+Requires-Dist: xarray>=2025.9.0
+Provides-Extra: gpu
+Requires-Dist: jax[cuda12]>=0.7.1; extra == "gpu"
+Provides-Extra: train
+Requires-Dist: dask>=2025.7.0; extra == "train"
+Requires-Dist: torch>=2.8.0; extra == "train"
+Requires-Dist: healpy>=1.18.1; extra == "train"
+Requires-Dist: optax>=0.2.5; extra == "train"
+Requires-Dist: scikit-learn>=1.7.1; extra == "train"
+Requires-Dist: scipy>=1.16.1; extra == "train"
+Requires-Dist: tqdm>=4.67.1; extra == "train"
+Requires-Dist: wandb>=0.21.3; extra == "train"
+Provides-Extra: plots
+Requires-Dist: matplotlib>=3.10.6; extra == "plots"
+Requires-Dist: seaborn>=0.13.2; extra == "plots"
+Requires-Dist: cartopy>=0.25.0; extra == "plots"
+Requires-Dist: regionmask>=0.13.0; extra == "plots"
+Requires-Dist: pandas>=2.3.2; extra == "plots"
+Requires-Dist: pyshtools>=4.13.1; extra == "plots"
+Provides-Extra: test
+Requires-Dist: pytest>=8.0.0; extra == "test"
+Requires-Dist: pytest-cov>=4.0.0; extra == "test"
+Requires-Dist: pytest-mock>=3.10.0; extra == "test"
+Requires-Dist: jaxlib>=0.4.0; extra == "test"
+Dynamic: license-file
+
+[![image](https://github.com/shahineb/climemu/actions/workflows/ci.yml/badge.svg)](https://github.com/shahineb/climemu/actions/workflows/ci.yml)
+[![image](https://img.shields.io/pypi/v/climemu)](https://pypi.org/project/climemu/) 
+
+# ESM Emulation with diffusion models in JAX
+
+This repository contains the implementation for the paper **"Score-based generative emulation of impact-relevant earth system model outputs"**. Codebase allows to run emulators of monthly averaged near-surface temperature, precipitation, relative humidity, windspeed for MPI-ESM1-2-LR, MIROC6, ACCESS-ESM1-5.
+
+
+## Installation
+
+Code tested on Python 3.10, 3.11, 3.12. GPU support is required for efficient usage. Install from PyPI:
+```bash
+pip install climemu
+```
+
+## Usage
+
+```python
+import climemu
+
+# Instantiate emulator
+emulator = climemu.build_emulator("MPI-ESM1-2-LR")
+
+# Download pretrained weights and compile (~1min)
+emulator.load()
+emulator.compile(n_samples=5)   # Nb of samples generated at each function call
+
+# Generate 5 samples for a given gmst and month
+samples = emulator(gmst=2,       # GMST anomaly wrt piControl (°C)
+                   month=3,      # Month index (1-12)
+                   seed=0,       # Random seed
+                   xarray=True)  # Return xr.Dataset
+```
+
+:warning: _Default model files for usage are trained on the full set of Tier I SSP simulations. To reproduce the paper results follow [instructions](docs/reproducepaper.md)_.
+
+
+## Citation
+_add_
