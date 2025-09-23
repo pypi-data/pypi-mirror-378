@@ -1,0 +1,79 @@
+[project]
+name = "aws-blackbelt-mcp-server"
+description = "Model Context Protocol (MCP) server for AWS Black Belt Online Seminar"
+authors = [
+    { name = "Konippi", email = "konippi@amazon.co.jp" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+dynamic = ["version"]
+dependencies = [
+    "fastmcp>=2.12.3",
+    "loguru>=0.7.3",
+    "httpx>=0.27.0",
+]
+
+[dependency-groups]
+dev = [
+    "bandit>=1.8.6",
+    "pre-commit>=4.3.0",
+    "pyright>=1.1.405",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
+    "ruff>=0.13.1",
+]
+
+[project.scripts]
+"aws-blackbelt-mcp-server" = "aws_blackbelt_mcp_server.server:main"
+"inspect" = "aws_blackbelt_mcp_server.scripts.inspect:main"
+
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.uv-dynamic-versioning]
+vcs = "git"
+style = "pep440"
+metadata = false
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aws_blackbelt_mcp_server"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.ruff]
+line-length = 120
+include = ["src/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+select = [
+  "B",   # flake8-bugbear
+  "D",   # pydocstyle
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "G",   # logging format
+  "I",   # isort
+  "LOG", # logging
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["D"]
+"!src/**/*.py" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests"
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "src/aws_blackbelt_mcp_server/scripts/inspect.py"]
