@@ -1,0 +1,124 @@
+<div align="center">    
+<h1>SimCalibration — Meta-Simulation benchmarking in Python</h1>
+</div>
+</br>
+SimCal is a Python library for building, testing and calibrating simulation outcomes using [Bayesian Network Structure Learning](https://ermongroup.github.io/cs228-notes/learning/structure/) to help practitioners identify if inferences of ML method selection on real-world data is reflected within learned synthetic datasets.  
+</br>  
+</br>  
+The main goal of this project is to bring empirical understanding to practitioners in environments in which the accuracy of inferences surrounding picking the best ML method for a problem is based on a small number of samples. This uncertainty of representativeness to an underlying distribution is common as most custodians of data only have availablity to the problem via a rich and specific dataset. The traditional approach to ML method selection which is constrained to real-world data, posits to select the problem-method which performs best given what is observable. This however assumes that limited-data captures the underlying complexity of a domain, leading to the risk of drawing conclusions that are not representative of the larger population. What we instead propose is a meta-simulation to extend ML method selection to circumvent limitations arising from constrained data. With SimCal, we designed a framework to help orchestrate meta-simulations and allow custodians of data to build and test the utility of calibrated simulations within ML method selection. Central to this approach is the integration of Structural Learners (SLs) which interprets underlying relationships in data and estimates Directed Acyclic Graphs (DAGs) which depict the characteristics of the domain, this then can be the basis of producing synthetic observations which differ in their alginment to the real-world. This tool makes available to the practitioner the ability to configure the different levels of the meta-simulation environment by selecting ML estimator parameters, SL hyperparameters and the specification of the Bayesian Network used to represent the real-world. 
+
+## Table of contents
+
+- [Table of contents](#table-of-contents)
+- [⚙️ Download](#download)
+- [📜 Usage](#usage)
+  - [👀 Quickstart](#-quickstart)
+  - [📦 Define SLs](#-define-sl-learners)
+    - [🎯 Score-based - Hill-Climbing](#-sl-hc)
+    - [🎯 Score-based - Tabu List](#-sl-tabu)
+    - [🕸️ Constraint-based - PC.stable](#-sl-pc)
+    - [🕸️ Constraint-based - Grow-Shrink](#-sl-gs)
+    - [🎨 Hybrid-based - Max-Min Hill-Climbing](#-sl-mmhc)
+    - [🎨 Hybrid-based - RSMAX2](#-sl-rsmax2)
+    - [🎨 Hybrid-based - Hybrid HPC](#-sl-h2pc)
+  - [📊 Define ML estimator](#-define-ml-problem)
+    - [🏷️ Binary Classification](#-ml-binary)
+  - [📈 Outputs & Visualization](#-visualization)
+- [License](#license)
+
+
+## Installation
+
+Simcalibration is a Python package for simulation-based calibration with R integration.
+It requires:
+- Python >= 3.9
+- R (>= 4.3)
+- Graphviz
+
+⚠️ Note: This package is only compatible on **Linux** and **macOS**.
+Windows users should install VirtualBox and Ubuntu 20.04 for a compatible environment:
+
+```bash
+sudo apt update
+sudo apt install -y python3-pip
+python3 -m pip install --upgrade pip setuptools wheel
+sudo apt install -y software-properties-common dirmngr gnupg apt-transport-https ca-certificates
+
+# 1. Add CRAN repository for R
+CODENAME=$(lsb_release -cs)
+wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+echo "deb https://cloud.r-project.org/bin/linux/ubuntu $CODENAME-cran40/" | sudo tee /etc/apt/sources.list.d/cran-r.list
+
+# 2. Install R
+sudo apt update
+sudo apt-get install -y r-base r-base-dev
+Rscript -e 'install.packages(c("bnlearn", "plyr"), repos="https://cloud.r-project.org")'
+
+# 3. Install SimCalibraiton
+export SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True
+pip install simcalibration
+```
+
+## Usage
+
+SimCalibration has been tested on Python 3.8 and R 4.3.2. To setup a meta-simulation, three components (Bayesian Network, Structural Learners and ML estimators) need to be specified. 
+The first component is for the user of the framework to provide the structure and parameters of their real-world model. 
+Depending on the nature of the problem the Structure (i.e., variables) and Conditional Probability Table (i.e., discrete measure of relationships) may be well or partially known, in this circumstance it is best to import this Bayesian Network as a DagsimModel. Alternativelly if data of the domain is available then it is possible to estimate the structure and parameters and use learning methods offered by Bayesian Network packages (e.g., bnlearn)
+The second component is for the user of the framework to provide the SL learners to be used to estimate structural models and perform ML benchmarking. This dictates the algorithms which will function inside the meta-simulation to learn underlying relationships and output DAGs which embody the data-generating process which is of interest.
+The third component is for the user of the framework to provide their selection of ML estimator and therefore the shape of the ML problem. The most popular kinds of ML problem are regression and classification. The ML estimators selected for the meta-simulation will be tested in the data environments relevant to the custodian, including in benchmarks of the true real-world, limited real-world and learned calibrated worlds. 
+
+## [👀 Quickstart](#-quickstart)
+To begin running a simple meta-simulation with default settings:
+```bash
+simcalibration
+```
+
+To customise parameters, specify them as flags. For example:
+```bash
+simcalibration --n_train 200 --n_test 200 --n_true_repetitions 50 --n_practitioner_repetitions 5 --n_sl_repetitions 10 --kfolds 2
+```
+
+## [📦 Define SLs](#-define-sl-learners)
+The following are a selection of SL algorithms available for the meta-simulation. Each can be configured with hyperparameters for extended configuration.
+
+## [🎯 Score-based - Hill-Climbing](#-sl-hc)
+Hill climbing is a local search algorithm which begins with an initial solution and iteratively makes small changes to enhance it, guided by a heuristic function that assesses solution quality. The process continues until a local maximum is reached, indicating that further improvement is not possible with the current set of moves.
+
+## [🎯 Score-based - Tabu List](#-sl-tabu)
+Tabu search is a greedy search algorithm similar to HC, it specifically addresses the tendency of local searches to get stuck in suboptimal regions. Tabu relaxes traditional rules by allowing worsening moves when no improvement is available and introduces prohibitions (tabu) to discourage revisiting previous solutions. Memory structures are employed to track visited solutions or user-defined rules, marking potential solutions as "tabu" if recently visited or violating a rule. The algorithm iteratively explores the neighborhood of each solution, progressing towards an improved solution until a stopping criterion is met.
+
+## [🕸️ Constraint-based - PC.stable](#-sl-pc)
+The PC (Peter and Clark) algorithm initiates with a complete graph, where all nodes are connected. In the first step, pairs of nodes undergo conditional independence tests with a specified threshold (i.e., p-value). If the test results indicate conditional independence between node pairs, the corresponding edges are removed from the complete graph. Subsequent steps in the algorithm are primarily focused on orienting the remaining edges. 
+
+## [🕸️ Constraint-based - Grow-Shrink](#-sl-gs)
+The Grow-Shrink algorithm is a constraint-based approach which iteratively grows and shrinks a set of candidate edges based on conditional independence tests. It iteratively refines the graph through a two-phase process. In the growing phase, candidate edges are systematically added based on conditional independence tests. Each potential edge is subjected to a statistical evaluation, and if justified by the data, it is incorporated into the evolving graph. Subsequently, the shrinking phase commences, during which existing edges are assessed for removal based on similar conditional independence tests. Edges passing the removal criteria are pruned from the graph.
+
+## [🎨 Hybrid-based - Max-Min Hill-Climbing](#-sl-mmhc)
+The Max-Min Hill-Climbing (MMHC) algorithm is a hybrid-based learning method. It begins with an empty graph and employs a two-phase approach. First, it conducts a score-based search resembling hill-climbing, incrementally adding and removing edges based on a chosen scoring metric (e.g., Bayesian Information Criterion (BIC)). Next, MMHC integrates constraint-based techniques, using conditional independence tests to validate and refine the network structure. It iteratively combines score-based and constraint-based strategies, dynamically adjusting the network until the process meets convergence, where no further modifications improve the model fit or meet constraints.
+
+## [🎨 Hybrid-based - RSMAX2](#-sl-rsmax2)
+The Restricted Maximisation (RSMAX2) algorithm employs an iterative process that narrows down the search space by restricting the potential parents of each variable to a smaller subset of candidates. This restriction is based on statistical measures, such as mutual information, to identify promising candidate parents for each variable. The algorithm then searches for the network that satisfies these constraints, and the learned network is utilized to refine candidate selections for subsequent iterations. The iterative process continues until convergence, with each iteration refining the candidate parent sets based on the learned network from the previous iteration.
+
+## [🎨 Hybrid-based - Hybrid HPC](#-sl-h2pc)
+The Hybrid 2-Phase Construction (H2PC) algorithm combines constraint-based and score-based techniques to enhance the efficiency and accuracy of structure learning. It involves two main phases: a constraint-based phase and a score-based phase. In the first phase, the algorithm utilizes conditional independence tests on the data to identify potential relationships among variables, constructing an initial Bayesian network skeleton. This phase emphasizes exploring conditional dependencies. Moving to the score-based phase, the algorithm employs a scoring metric to evaluate and refine the structure. It considers different candidate structures, assigning scores based on statistical measures to assess their fitness to the observed data. The scoring function aids in selecting the optimal structure by optimizing a predefined criterion, such as BIC.
+
+## [📊 Define ML estimator](#-define-ml-problem)
+The choice of estimator determines the shape of the ML problem.
+Classification and regression tasks are the most widespread problems in ML.
+* Classification: Suitable when the target variable is categorical. Estimators vary in complexity and efficiency, providing a diverse set of trade-offs for benchmarking.
+## [🏷️ Binary Classification](#-ml-binary)
+In binary classification, the target variable has two possible states. Different estimators (e.g., logistic regression, decision trees, random forests) can be benchmarked to compare their performance across simulation environments.
+
+## [📈 Outputs & Visualization](#-visualization)
+All results from a meta-simulation are stored in the results/ folder. The visualisations provided in postprocessing, present a number of perspectives to the data. 
+Key outputs include:
+* Scatterplots: Estimator performance vs. the true real-world benchmark. The closer results align to the identity line, the more realistic the method.
+* Boxplots: Distribution of SL estimates compared to true results, highlighting learner bias.
+* Violin plots: Rank-order consistency of SLs, with density indicating how often learners achieve particular ranks.
+* DAG fidelity measures: Quantitative metrics comparing learned structures to the true underlying DAG.
+* Distribution fidelity measures: Evaluations of how closely the simulated distributions align with the true data-generating distribution.
+These outputs collectively allow users to assess both predictive accuracy and structural realism in simulations.
+
+## License 
+
+This project is licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file for details.
