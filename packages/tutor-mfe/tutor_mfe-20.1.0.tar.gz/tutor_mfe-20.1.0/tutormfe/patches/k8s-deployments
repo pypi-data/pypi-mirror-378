@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mfe
+  labels:
+    app.kubernetes.io/name: mfe
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mfe
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mfe
+    spec:
+      containers:
+        - name: mfe
+          image: {{ MFE_DOCKER_IMAGE }}
+          ports:
+            - containerPort: 8002
+          volumeMounts:
+            - mountPath: /etc/caddy/
+              name: config
+          {%- if MFE_HOST_EXTRA_FILES %}
+            {{ patch("mfe-k8s-volume-mounts") | indent(12) }}
+          {%- endif %}
+      volumes:
+        - name: config
+          configMap:
+            name: mfe-caddy-config
+      {%- if MFE_HOST_EXTRA_FILES %}
+        {{ patch("mfe-k8s-volumes") | indent(8) }}
+      {%- endif %}
