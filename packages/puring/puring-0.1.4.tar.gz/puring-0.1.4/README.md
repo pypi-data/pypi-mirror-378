@@ -1,0 +1,141 @@
+# puring
+
+[![PyPI version](https://img.shields.io/pypi/v/puring.svg)](https://pypi.org/project/puring/)
+[![Python versions](https://img.shields.io/pypi/pyversions/puring.svg)](https://pypi.org/project/puring/)
+[![License](https://img.shields.io/pypi/l/puring.svg)](https://github.com/mctood/puring/blob/main/LICENSE)
+
+An elegant, object-oriented Turing machine emulator in Python.
+
+`puring` provides a simple and intuitive API for defining and running Turing machines, making it ideal for educational purposes, theoretical computer science explorations, and algorithmic experiments.
+
+## Features
+
+- **Object-Oriented Design**: Define states, tapes, and machines as distinct objects.
+- **Infinite Tape**: The tape is implemented as a sparse array, dynamically growing in either direction as needed.
+- **Flexible Alphabet**: Use strings, numbers, or any other Python object as symbols on the tape.
+- **Clear Transition Rules**: The transition table is a clean, readable Python dictionary.
+- **Helper Utilities**: Quickly generate unique states and control machine execution.
+
+## Installation
+
+Install `puring` directly from PyPI:
+
+```bash
+pip install puring
+```
+
+## Quick Start
+
+Let's create a simple Turing machine that inverts a binary string (flips 0s to 1s and 1s to 0s).
+
+```python
+from puring import Turing, Tape, States, R, S
+
+# 1. Define states for the machine.
+# We need one main state. The halt condition is handled by the 'S' (Stop) action.
+q0, = States(1)
+
+# 2. Define the machine's alphabet.
+alphabet = [0, 1]
+
+# 3. Create the transition table (the machine's "program").
+# The structure is: {state: {read_symbol: [write_symbol, move_direction, next_state]}}
+table = {
+    q0: {
+        # If we read a 0, write a 1, move Right, and stay in state q0.
+        0: [1, R, q0],
+        # If we read a 1, write a 0, move Right, and stay in state q0.
+        1: [0, R, q0],
+        # If we read a blank symbol (None), Stop the machine.
+        None: [None, S, q0]
+    }
+}
+
+# 4. Instantiate the Turing machine.
+# The initial state is automatically inferred from the first key in the table.
+turing_machine = Turing(alphabet=alphabet, table=table)
+
+# 5. Create a tape with an initial sequence.
+# The input is a string, but we process each character as an integer.
+tape = Tape("1101001", process_as=int)
+
+# 6. Run the machine on the tape, starting from the beginning.
+print(f"Initial tape: {tape}")
+tape.run_at_start(turing_machine)
+print(f"Final tape:   {tape}")
+
+# Expected output:
+# Initial tape: 1 1 0 1 0 0 1
+# Final tape:   0 0 1 0 1 1 0
+```
+
+## Core Concepts
+
+### `States(n)`
+A convenience function that returns a tuple of `n` unique `State` objects. These objects act as keys in the transition table.
+
+```python
+q0, q1, q_accept = States(3)
+```
+
+### `Turing(alphabet, table, ...)`
+The main machine class.
+- `alphabet`: A list of valid symbols the machine can read and write.
+- `table`: A dictionary defining the transition function. Its keys are `State` objects.
+- `state`: (Optional) The initial state. Defaults to the first state found in the table.
+- `iteration_limit`: (Optional) A safety limit to prevent true infinite loops and raise a `RuntimeError`. Defaults to `100000`.
+
+### `Tape(tape, process_as)`
+Represents the machine's tape.
+- `tape`: A `list` or `str` containing the initial symbols.
+- `process_as`: A function (like `int` or `str`) to apply to each item in the initial tape sequence.
+- `run(turing, index)`: Runs the machine starting at a specific `index`.
+- `run_at_start(turing, offset=0)`: A helper to run from the start of the written tape.
+- `run_at_end(turing, offset=0)`: A helper to run from the end of the written tape.
+
+### The Transition Table
+The table is a nested dictionary with the following structure:
+
+`{ state: { read_symbol: [write_symbol, move_action, next_state] } }`
+
+### Actions
+Actions control the machine's movement and execution.
+
+- `R`: Move the tape head one cell to the **Right**.
+- `L`: Move the tape head one cell to the **Left**.
+- `N`: Do **Not** move the tape head.
+- `S`: **Stop** the machine execution successfully.
+- `Let`: A special symbol for the "write" instruction. It means **Let** the symbol on the tape remain unchanged, which is useful if you only want to move the head or change state.
+
+## Advanced Usage
+
+### Matching Multiple Symbols
+
+You can use a `tuple` of symbols as a key in the transition table to match any symbol within that tuple. This is a convenient way to group transitions that share the same outcome.
+
+Here's a machine that moves right until it finds a `0`.
+
+```python
+from puring import *
+
+q0, = States(1)
+
+# If the machine reads a 1 or a 2, it will perform the same action.
+table = {
+    q0: {
+        (1, 2): [Let, R, q0], # If 1 or 2, leave it, move Right, stay in q0
+        0: [Let, S, q0],      # If 0, leave it and Stop
+    }
+}
+
+turing_machine = Turing(alphabet=[0, 1, 2], table=table)
+tape = Tape([1, 2, 1, 2, 2, 1, 0, 1, 2], process_as=int)
+
+tape.run_at_start(turing_machine)
+
+# The machine will stop when the head is over the '0'.
+```
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
