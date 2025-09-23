@@ -1,0 +1,145 @@
+[build-system]
+requires = ["hatchling>=1.18.0", "hatch-vcs>=0.4.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "teds"
+description = "TeDS (Test-Driven Schema Development Tool) - CLI for verifying JSON Schema contracts using YAML test specifications"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "TeDS Authors" }
+]
+keywords = ["jsonschema", "yaml", "testing", "cli"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Environment :: Console",
+  "Topic :: Software Development :: Testing",
+]
+dependencies = [
+  "semver>=3.0.0",
+  "jsonschema[format-nongpl]>=4.22.0",
+  "referencing>=0.35.0",
+  "ruamel.yaml>=0.18.6",
+  "Jinja2>=3.1",
+  "jsonpath-ng>=1.6.0",
+]
+dynamic = ["version"]
+
+[project.scripts]
+teds = "teds_core.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yaccob/teds"
+Repository = "https://github.com/yaccob/teds.git"
+Issues = "https://github.com/yaccob/teds/issues"
+Changelog = "https://github.com/yaccob/teds/releases"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["teds_core"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"spec_schema.yaml" = "teds_core/spec_schema.yaml"
+"teds_compat.yaml" = "teds_core/teds_compat.yaml"
+"templates" = "teds_core/templates"
+"template_map.yaml" = "teds_core/template_map.yaml"
+
+[tool.hatch.envs.test]
+dependencies = [
+  "pytest>=7.0",
+  "pytest-cov>=4.0",
+  "pytest-bdd>=6.0",
+]
+pre-install-commands = [
+  "python -m pip install -r requirements.txt",
+]
+
+[tool.hatch.envs.test.scripts]
+test = "pytest -q"
+
+[tool.coverage.run]
+branch = true
+source = ["teds_core", "teds"]
+omit = [
+  "tests/*",
+  "demo/*",
+  "dist/*",
+  "scripts/*",
+  "teds_core/cli.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 1
+
+# Ruff linting and formatting
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by black)
+    "B008",   # do not perform function calls in argument defaults
+    "C901",   # too complex
+    "RUF012", # mutable class attributes should be annotated with `ClassVar`
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["ARG", "SIM"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+# Configure isort to match ruff's import sorting behavior
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
