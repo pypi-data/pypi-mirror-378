@@ -1,0 +1,97 @@
+from pydantic import BaseModel, Field
+from typing import Literal, Optional, TypeVar, Union, overload
+from maleo.enums.expiration import Expiration
+from maleo.types.string import OptionalString
+from ..enums import CacheOrigin, CacheLayer
+from ..utils import build_cache_namespace
+
+
+class BaseAdditionalConfig(BaseModel):
+    """Base additional configuration class for database."""
+
+
+AdditionalConfigT = TypeVar("AdditionalConfigT", bound=Optional[BaseAdditionalConfig])
+
+
+class RedisAdditionalConfig(BaseAdditionalConfig):
+    ttl: Union[float, int] = Field(
+        Expiration.EXP_15MN.value, description="Time to live"
+    )
+    base_namespace: str = Field(..., description="Base namespace")
+
+    @overload
+    def build_namespace(
+        self,
+        *ext: str,
+        use_self_base: Literal[False],
+        base: OptionalString = None,
+        origin: Literal[CacheOrigin.SERVICE],
+        layer: CacheLayer,
+        sep: str = ":",
+    ) -> str: ...
+    @overload
+    def build_namespace(
+        self,
+        *ext: str,
+        use_self_base: Literal[False],
+        base: OptionalString = None,
+        client: str,
+        origin: Literal[CacheOrigin.CLIENT],
+        layer: CacheLayer,
+        sep: str = ":",
+    ) -> str: ...
+    @overload
+    def build_namespace(
+        self,
+        *ext: str,
+        use_self_base: Literal[True],
+        origin: Literal[CacheOrigin.SERVICE],
+        layer: CacheLayer,
+        sep: str = ":",
+    ) -> str: ...
+    @overload
+    def build_namespace(
+        self,
+        *ext: str,
+        use_self_base: Literal[True],
+        client: str,
+        origin: Literal[CacheOrigin.CLIENT],
+        layer: CacheLayer,
+        sep: str = ":",
+    ) -> str: ...
+    def build_namespace(
+        self,
+        *ext: str,
+        use_self_base: bool = True,
+        base: OptionalString = None,
+        client: OptionalString = None,
+        origin: CacheOrigin,
+        layer: CacheLayer,
+        sep: str = ":",
+    ) -> str:
+        if use_self_base:
+            final_base = self.base_namespace
+        else:
+            final_base = base
+        if origin is CacheOrigin.CLIENT:
+            if client is None:
+                raise ValueError(
+                    "Argument 'client' can not be None if origin is client"
+                )
+
+            return build_cache_namespace(
+                *ext,
+                base=final_base,
+                client=client,
+                origin=origin,
+                layer=layer,
+                sep=sep,
+            )
+
+        return build_cache_namespace(
+            *ext,
+            base=final_base,
+            origin=origin,
+            layer=layer,
+            sep=sep,
+        )
