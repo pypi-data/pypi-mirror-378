@@ -1,0 +1,204 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Configuration for torch-diode package (includes all code + self-registers to inductor)
+[project]
+name = "torch-diode"
+version = "0.1.1"
+description = "A toolkit for matrix multiplication data collection, model training, and evaluation with PyTorch Inductor integration"
+readme = "README.md"
+license = "MIT"
+authors = [
+    {name = "Gabriel Ferns", email = "gabeferns@meta.com"},
+]
+requires-python = ">=3.8"
+keywords = ["machine-learning", "pytorch", "torch", "matrix-multiplication", "heuristics", "optimization", "hardware", "inductor"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "torch>=2.9.0.dev",
+    "msgpack>=1.0.0",
+    "pandas>=1.5.0",
+    "numpy>=1.21.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/exclamaforte/diode"
+Repository = "https://github.com/exclamaforte/diode.git"
+Documentation = "https://exclamaforte.github.io/diode/"
+"Bug Tracker" = "https://github.com/exclamaforte/diode/issues"
+
+[project.optional-dependencies]
+lint = [
+    "lintrunner>=0.12.0",
+    "matplotlib>=3.5.0",
+    "tqdm>=4.62.0",
+    "flake8==6.1.0",
+    "flake8-bugbear==23.3.23",
+    "flake8-comprehensions==3.15.0",
+    "flake8-executable==2.1.3",
+    "flake8-logging-format==0.9.0",
+    "flake8-pyi==23.3.1",
+    "flake8-simplify==0.19.3",
+    "mccabe==0.7.0",
+    "pycodestyle==2.11.1",
+    "pyflakes==3.1.0",
+    "mypy==1.16.0",
+    "types-requests==2.27.25",
+    "types-pyyaml==6.0.1",
+    "types-setuptools==79.0.0.20250422",
+    "ruff==0.12.2",
+    "black==23.12.1",
+    "usort==1.0.8.post1",
+    "isort==6.0.1",
+    "codespell[toml]==2.4.1",
+    "packaging==25.0",
+    "tomli==2.2.1 ; python_version < '3.11'",
+]
+test = [
+    "pytest>=6.0.0",
+    "pytest-cov>=4.0.0",
+    "coverage[toml]>=6.0.0",
+]
+
+[tool.setuptools]
+packages = {find = {include = ["torch_diode", "torch_diode.*"], exclude = ["tests", "tests.*"]}}
+include-package-data = true
+
+[tool.setuptools.package-data]
+torch_diode = ["trained_models/**/*.pt", "trained_models/**/*.json"]
+
+[tool.ruff]
+target-version = "py38"
+line-length = 88
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]  # unused imports in __init__.py
+"tests/**/*.py" = ["B011"]  # assert False
+
+[tool.ruff.isort]
+known-first-party = ["torch_diode"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+known_first_party = ["torch_diode"]
+line_length = 88
+
+[tool.codespell]
+skip = "*.git,*.pdf,*.svg"
+check-hidden = true
+
+[tool.coverage.run]
+source = ["torch_diode"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/.*",
+    "setup.py",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/virtualenv/*",
+    "*/site-packages/*",
+    "*/dist-packages/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+ignore_errors = true
+show_missing = true
+precision = 2
+skip_covered = false
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--disable-warnings",
+    "-ra",
+    "--cov=torch_diode",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "--cov-fail-under=80",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Tests that take a long time to run",
+    "mock: Tests that use mocking extensively",
+    "inductor: Tests specifically for PyTorch Inductor integration",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::UserWarning:torch.*",
+    "ignore::UserWarning:numpy.*",
+]
