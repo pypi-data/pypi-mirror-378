@@ -1,0 +1,209 @@
+# Salesforce Connector – README
+
+## 📌 Overview
+The **SalesforceConnector** class is a Python-based integration utility for **Salesforce REST API** that allows you to:
+
+- **Authenticate** and connect with Salesforce.
+- Perform **CRUD operations** on leads.
+- Fetch leads by email
+- Update the lead by main
+- Export all leads into a **CSV file**.
+
+This connector is designed with **robust logging**, **error handling**, and **reusable methods**.
+
+---
+
+## 🚀 Features
+- Create new leads  
+- Update leads by email  
+- Fetch lead details by email  
+- Delete leads by email  
+- Fetch all leads List  
+- Export all leads to **CSV**  
+
+
+---
+
+## 📂 Project Structure
+```
+salesforce/
+│── script.py                   # Building wheel and Pushings Script
+│── salesforce_connector.py      # Main connector file
+│── README.md                   # Project documentation
+│── requirements.txt            # Python dependencies
+│── setup.py                    # Build & packaging file
+│── LICENSE.txt                 # License file
+```
+
+---
+
+## 🔧 Installation
+
+### 1️⃣ Clone the repository
+```bash
+git clone origin https://github.com/DanishRather/salesforce_cloud.git
+cd salesforce_cloud
+```
+
+
+```Python Virtual Environment Setup: Ubuntu,Linux,macOS/Windows```
+
+```Creating a virtual environment helps you manage project-specific dependencies without affecting the global Python installation.```
+
+```Use the commands below to create, activate, and deactivate a venv on both Ubuntu and Windows.```
+
+```Platform	        Create venv	      Activate venv	      Deactivate```
+   ----------------------------------------------------------------------------
+Ubuntu/Linux/macOS	 python3 -m venv venv	source venv/bin/activate  deactivate
+Windows (CMD)	     python -m venv venv	venv\Scripts\activate	   deactivate
+Windows (PowerShell) python -m venv venv	venv\Scripts\Activate.ps1  deactivate
+
+
+
+### How to Use / Test This Class with `.env`
+
+1. Create a `.env` file in the project root and add your Salesforce credentials:
+        and make sure you have fallow the (### 2️⃣ Install dependencies) step
+
+    ```env
+    CLIENT_ID=YOUR_CLIENT_ID
+    CLIENT_SECRET=YOUR_CLIENT_SECRET
+    ACCESS_TOKEN=YOUR_ACCESS_TOKEN
+    REFRESH_TOKEN=YOUR_REFRESH_TOKEN
+    INSTANCE_URL = INSTANCE_URL
+    ```
+
+2. In your test file or script, import the class and create an object:
+
+    ```python
+    from salesforce_connector import SalesforceConnector
+
+    salesforce = SalesforceConnector(
+     client_id = os.getenv("SF_CLIENT_ID")
+    client_secret = os.getenv("SF_CLIENT_SECRET")
+    refresh_token = os.getenv("SF_REFRESH_TOKEN")
+    access_token = os.getenv("SF_ACCESS_TOKEN")
+    instance_url =os.getenv("SF_INSTANCE_URL")
+
+    )
+    ```
+
+3. Use the created object to call any function from the class or shown in the (## 🧩 Usage Examples):
+
+
+
+
+### 2️⃣ Install dependencies
+```bash
+### For Ubuntu / Linux / macOS
+
+pip install -r requirements.txt 
+
+
+### 3️⃣ Initialize the Connector
+```python
+from salesforce_connector import SalesforceConnector
+
+salesforce = SalesforceConnector(
+    client_id="YOUR_CLIENT_ID",
+    client_secret="YOUR_CLIENT_SECRET",
+    access_token="YOUR_ACCESS_TOKEN",
+    refresh_token="YOUR_REFRESH_TOKEN",
+    instance_url ="YOUR_INSTANCE_URL"
+)
+```
+
+---
+
+## 🧩 Usage Examples
+
+### ✅ Create a New Lead
+```python
+lead_data = {
+    "FirstName": "Farooq",
+    "LastName": "Ahmad",
+    "Company": "WhatLabs",
+    "Email": "yakoom@example.com"
+}
+
+created_lead = salesforce.create_lead(lead_data)
+print(created_lead)
+```
+
+---
+
+### ✏️ Update a Lead by Email
+```python
+update_data = {"Phone": "9697767717"}
+updated_lead = salesforce.update_lead_by_email("example@example.com", update_data)
+print(updated_lead)
+```
+
+---
+
+
+### 🔍 Fetch All Leads
+```python
+lead_list= salesforce.get_all_lead()
+for lead in lead_list:
+print(f'Email: {lead["Email"]}, Name: {lead["Name"]}')
+```
+
+
+---
+### 🔍 Fetch Lead by Email
+```python
+search_ld = salesforce.get_lead_by_email(email="danish@example.com")
+print(f'Email: {search_ld["Email"]}, Name: {search_ld["FirstName"]}')
+```
+
+---
+
+### 🗑️ Delete Lead by Email
+```python
+delete_status = salesforce.delete_lead_by_email("yakoom@example.com")
+print(delete_status)
+```
+
+---
+
+
+### 📄 Export All Leads to CSV
+```python
+salesforce.get_all_leads_and_save_csv("all_leads.csv")
+```
+
+---
+
+### 🔁 Create Multiple Dummy Leads
+```python
+dummy_leads = [
+    {
+        "FirstName": "John",
+        "LastName": "Doe",
+        "Company": "ABC Corp",
+        "Email": "john@example.com"
+    },
+    {
+        "FirstName": "Jane",
+        "LastName": "Smith",
+        "Company": "XYZ Ltd",
+        "Email": "jane@example.com"
+    }
+]
+
+for each_lead in dummy_leads:
+    created_lead = salesforce.create_lead(each_lead)
+    print(created_lead)
+```
+
+---
+
+## 📦 Build & Upload Wheel File (Optional)
+If you want to build and upload the package to GitHub or PyPI:
+
+Make sure to update your **email, name** in the connector before building the wheel file.
+
+```bash
+python setup.py sdist bdist_wheel
+```
