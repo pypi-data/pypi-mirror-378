@@ -1,0 +1,1 @@
+This package implements a decision tree, permitting the use of the ID3, C4.5 and CART alghoritms.
