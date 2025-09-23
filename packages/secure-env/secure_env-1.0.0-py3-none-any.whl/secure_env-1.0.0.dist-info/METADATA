@@ -1,0 +1,471 @@
+Metadata-Version: 2.4
+Name: secure-env
+Version: 1.0.0
+Summary: A simple and secure way to manage environment variables with AES encryption
+Home-page: https://github.com/Moesthetics-code/secure-env
+Author: Mohamed Ndiaye
+Author-email: Votre Nom <votre.email@exemple.com>
+Maintainer-email: Votre Nom <votre.email@exemple.com>
+License: MIT
+Project-URL: Homepage, https://github.com/votrenom/secure-env
+Project-URL: Documentation, https://github.com/votrenom/secure-env#readme
+Project-URL: Repository, https://github.com/votrenom/secure-env.git
+Project-URL: Bug Reports, https://github.com/votrenom/secure-env/issues
+Project-URL: Changelog, https://github.com/votrenom/secure-env/blob/main/CHANGELOG.md
+Keywords: environment,variables,encryption,security,configuration,secrets
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Security :: Cryptography
+Classifier: Topic :: System :: Systems Administration
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: cryptography>=3.4.0
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: pytest-cov>=2.0; extra == "dev"
+Requires-Dist: black>=21.0; extra == "dev"
+Requires-Dist: flake8>=3.8; extra == "dev"
+Requires-Dist: mypy>=0.910; extra == "dev"
+Requires-Dist: twine>=3.0; extra == "dev"
+Requires-Dist: wheel>=0.36; extra == "dev"
+Requires-Dist: build>=0.7; extra == "dev"
+Provides-Extra: test
+Requires-Dist: pytest>=6.0; extra == "test"
+Requires-Dist: pytest-cov>=2.0; extra == "test"
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
+# =============================================================================
+# README.md
+# =============================================================================
+# 🔐 Secure-Env
+
+A simple and secure way to manage environment variables with AES encryption in Python.
+
+[![PyPI version](https://badge.fury.io/py/secure-env.svg)](https://badge.fury.io/py/secure-env)
+[![Python Support](https://img.shields.io/pypi/pyversions/secure-env.svg)](https://pypi.org/project/secure-env/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/votrenom/secure-env/workflows/Tests/badge.svg)](https://github.com/votrenom/secure-env/actions)
+
+## 🚀 Why Secure-Env?
+
+Many Python projects store sensitive information like passwords and API keys in plain text within `.env` files or directly in code. **This is a security risk!**
+
+**Secure-Env** solves this by:
+- 🔒 **Encrypting sensitive data** with AES-256 encryption
+- 📁 **Working with standard .env files** with encrypted values
+- 🔑 **Using a master key** for encryption/decryption
+- 🎯 **Providing a simple API** that's easy to integrate
+
+## 📦 Installation
+
+```bash
+pip install secure-env
+```
+
+## 🏃‍♂️ Quick Start
+
+```python
+from secure_env import Secrets
+
+# Initialize with a master key
+secrets = Secrets(master_key="your-master-key-here")
+
+# Store encrypted secrets
+secrets.set("DATABASE_PASSWORD", "SuperSecretPassword123!")
+secrets.set("API_KEY", "sk-1234567890abcdef")
+
+# Your .env file now contains:
+# DATABASE_PASSWORD=ENC(gAAAAABh...)
+# API_KEY=ENC(gAAAAABh...)
+
+# Retrieve and decrypt secrets
+db_password = secrets.get("DATABASE_PASSWORD")
+api_key = secrets.get("API_KEY")
+
+print(f"DB Password: {db_password}")  # SuperSecretPassword123!
+print(f"API Key: {api_key}")          # sk-1234567890abcdef
+```
+
+## 🛠️ Features
+
+### ✅ Basic Operations
+
+```python
+from secure_env import Secrets
+
+secrets = Secrets(master_key="my-secret-key")
+
+# Set encrypted values
+secrets.set("SECRET_KEY", "my-secret-value")
+secrets.set("DATABASE_URL", "postgresql://user:pass@localhost/db")
+
+# Set plain text values (not encrypted)
+secrets.set("DEBUG", "true", encrypt=False)
+
+# Get values (automatically decrypted)
+secret = secrets.get("SECRET_KEY")
+db_url = secrets.get("DATABASE_URL")
+debug = secrets.get("DEBUG")
+
+# Get with default values
+timeout = secrets.get("TIMEOUT", default=30)
+```
+
+### 🔑 Master Key from Environment
+
+```python
+import os
+
+# Set master key in environment variable
+os.environ['SECURE_ENV_MASTER_KEY'] = 'your-master-key'
+
+# Initialize without explicit master key
+secrets = Secrets()  # Uses SECURE_ENV_MASTER_KEY automatically
+```
+
+### 📋 Key Management
+
+```python
+# List all keys and their encryption status
+keys_info = secrets.list_keys()
+print(keys_info)
+# {'SECRET_KEY': True, 'DEBUG': False}  # True = encrypted
+
+# Delete a key
+secrets.delete("OLD_KEY")
+
+# Check if key exists
+if "API_KEY" in secrets.list_keys():
+    print("API key is set")
+```
+
+### 🔄 Advanced Features
+
+```python
+# Export all variables to os.environ (decrypted)
+secrets.export_to_os_environ()
+
+# Reload from file
+secrets.reload()
+
+# Change master key (re-encrypts all encrypted variables)
+secrets.change_master_key("new-master-key")
+```
+
+## 🔐 Security Features
+
+- **AES-256 Encryption**: Uses industry-standard encryption
+- **PBKDF2 Key Derivation**: Secure key generation from master password
+- **Safe File Operations**: Atomic writes with backup/restore on failure
+- **No Plain Text Exposure**: Encrypted values never stored in plain text
+
+## 📁 File Format
+
+Your `.env` file will look like this:
+
+```bash
+# Secure Environment Variables
+# Generated by secure-env package
+
+DEBUG=true
+SECRET_KEY=ENC(gAAAAABh_9x2K8L5vV6K2oJ3cE4gH7yP1qR9sT3uA2dF6kN8mL0pX9z...)
+DATABASE_PASSWORD=ENC(gAAAAABh_8y3L9M6wW7L3pK4dF5hI8zQ2rS0tU4vB3eG7lO9nM1qY0a...)
+API_KEY=ENC(gAAAAABh_7z4M0N7xX8M4qL5eG6iJ9aR3sT1uU5wC4fH8mP0oN2rZ1b...)
+```
+
+## 🛡️ Best Practices
+
+1. **Keep your master key secure**:
+   ```python
+   # ❌ Don't hardcode in source
+   secrets = Secrets(master_key="hardcoded-key")
+   
+   # ✅ Use environment variable
+   secrets = Secrets()  # Reads from SECURE_ENV_MASTER_KEY
+   ```
+
+2. **Use different .env files for different environments**:
+   ```python
+   # Development
+   secrets = Secrets(env_file='.env.dev')
+   
+   # Production  
+   secrets = Secrets(env_file='.env.prod')
+   ```
+
+3. **Don't commit your master key**:
+   ```bash
+   # Add to .gitignore
+   .env
+   .env.local
+   .env.*.local
+   ```
+
+## 🚨 Error Handling
+
+```python
+from secure_env import Secrets, SecureEnvError, InvalidKeyError, DecryptionError
+
+try:
+    secrets = Secrets(master_key="wrong-key")
+    value = secrets.get("ENCRYPTED_VALUE")
+except InvalidKeyError:
+    print("Invalid master key provided")
+except DecryptionError:
+    print("Failed to decrypt value - wrong key or corrupted data")
+except SecureEnvError as e:
+    print(f"General secure-env error: {e}")
+```
+
+## 🧪 Development
+
+```bash
+# Clone the repository
+git clone https://github.com/votrenom/secure-env.git
+cd secure-env
+
+# Install in development mode
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run tests with coverage
+pytest --cov=secure_env --cov-report=html
+
+# Format code
+black secure_env tests examples
+
+# Type checking
+mypy secure_env
+
+# Linting
+flake8 secure_env tests examples
+```
+
+## 🖥️ Command Line Interface
+
+Secure-env provides a powerful CLI for managing encrypted environment variables from the terminal.
+
+### Installation & Setup
+
+```bash
+# After installing the package
+pip install secure-env
+
+# The 'secure-env' command is now available
+secure-env --help
+```
+
+### Quick Start
+
+```bash
+# 1. Initialize a new secure environment
+secure-env init --generate-key
+# Outputs a master key - save it securely!
+
+# 2. Set your master key
+export SECURE_ENV_MASTER_KEY='generated-key-here'
+
+# 3. Add encrypted variables
+secure-env set DATABASE_URL 'postgresql://user:pass@localhost/db'
+secure-env set API_SECRET 'sk-1234567890abcdef'
+
+# 4. Add plain text variables
+secure-env set DEBUG true --no-encrypt
+
+# 5. List all variables
+secure-env list
+```
+
+### All Commands
+
+#### Initialize Environment
+```bash
+# Create new .env with random master key
+secure-env init --generate-key
+
+# Create new .env with existing master key
+secure-env init
+```
+
+#### Manage Variables
+```bash
+# Set encrypted variable (prompt for value)
+secure-env set SECRET_KEY
+
+# Set encrypted variable with value
+secure-env set DB_PASSWORD 'my-secret'
+
+# Set plain text variable
+secure-env set DEBUG true --no-encrypt
+
+# Get variable value
+secure-env get SECRET_KEY
+
+# Delete variable
+secure-env delete OLD_KEY
+
+# List all variables
+secure-env list
+
+# List with values
+secure-env list --show-values
+```
+
+#### Import/Export
+```bash
+# Export as shell variables
+secure-env export --format env
+# Output: export DB_PASSWORD="my-secret"
+
+# Export as JSON
+secure-env export --format json
+
+# Export as .env format (decrypted)
+secure-env export --format dotenv
+
+# Import from file
+secure-env import backup.env
+```
+
+#### Security Operations
+```bash
+# Check file integrity
+secure-env check
+
+# Rotate master key with new random key
+secure-env rotate-key --generate-new
+
+# Rotate to specific key
+secure-env rotate-key --new-key 'new-master-key'
+```
+
+### Advanced Usage
+
+#### Using Different .env Files
+```bash
+# Work with specific env file
+secure-env -f .env.production list
+secure-env -f .env.staging set API_URL 'https://staging.api.com'
+```
+
+#### Scripting & Automation
+```bash
+# Quiet mode for scripts
+secure-env get SECRET_KEY --quiet
+
+# No prompts (fail if missing)
+secure-env set KEY value --no-prompt
+
+# JSON output for parsing
+secure-env list --format json
+```
+
+#### Integration with Shell
+```bash
+# Source variables into current shell
+eval $(secure-env export --format env)
+
+# Use in scripts
+DB_PASSWORD=$(secure-env get DB_PASSWORD --quiet)
+```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `SECURE_ENV_MASTER_KEY` | Master key for encryption (recommended) |
+
+### Examples
+
+#### Development Workflow
+```bash
+# Setup
+secure-env init --generate-key
+export SECURE_ENV_MASTER_KEY='generated-key'
+
+# Development
+secure-env set DB_DEV_URL 'postgresql://localhost/myapp_dev'
+secure-env set DEBUG true --no-encrypt
+
+# Load into environment
+eval $(secure-env export --format env)
+python manage.py runserver
+```
+
+#### Production Deployment
+```bash
+# On production server
+export SECURE_ENV_MASTER_KEY='production-master-key'
+secure-env set DB_URL 'postgresql://prod-server/myapp'
+secure-env set SECRET_KEY 'production-secret-key'
+
+# Start application with secrets
+eval $(secure-env export --format env) && python app.py
+```
+
+#### Backup & Migration
+```bash
+# Backup (exports decrypted values)
+secure-env export --format dotenv > backup.env
+
+# Migrate to new master key
+secure-env rotate-key --generate-new
+
+# Import to different environment
+secure-env -f .env.new import backup.env
+```
+
+## 📝 Examples
+
+Check out the [examples/](examples/) directory for more usage examples:
+
+- [Basic Usage](examples/basic_usage.py)
+- [Django Integration](examples/django_example.py)
+- [Flask Integration](examples/flask_example.py)
+- [CLI Usage](examples/cli_example.py)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [cryptography](https://cryptography.io/) library
+- Inspired by the need for simple, secure environment variable management
+- Thanks to all contributors and users of this package
+
+## 📞 Support
+
+- 📧 Email: votre.email@exemple.com
+- 🐛 Issues: [GitHub Issues](https://github.com/votrenom/secure-env/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/votrenom/secure-env/discussions)
+
+---
+
+**Made with ❤️ for the Python community**
