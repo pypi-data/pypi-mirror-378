@@ -1,0 +1,166 @@
+# HeySol API Client
+
+[![PyPI version](https://badge.fury.io/py/heysol-api-client.svg)](https://pypi.org/project/heysol-api-client/)
+[![Python versions](https://img.shields.io/pypi/pyversions/heysol-api-client.svg)](https://pypi.org/project/heysol-api-client/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A comprehensive Python client for the HeySol API with MCP protocol support, memory management, and CLI tools.
+
+## Features
+
+- 🚀 **Full API Coverage**: Complete HeySol API endpoints
+- 🔐 **Authentication**: API key and Bearer token support
+- 📝 **Memory Management**: Ingest, search, and manage memory spaces
+- 🛡️ **Error Handling**: Robust exception hierarchy with retries
+- 📊 **Rate Limiting**: Built-in throttling and rate limiting
+- 🖥️ **CLI Interface**: Command-line tools for all operations
+- 📚 **Type Hints**: Full type annotation support
+- 🧪 **Well Tested**: Comprehensive test suite
+
+## Installation
+
+```bash
+pip install heysol-api-client
+```
+
+For development:
+```bash
+pip install -e ".[dev]"
+```
+
+## Quick Start
+
+1. **Get your API key** from [HeySol Core](https://core.heysol.ai/settings/api)
+2. **Set environment variable**:
+   ```bash
+   export HEYSOL_API_KEY="your-api-key-here"
+   ```
+3. **Try the quick start**:
+   ```bash
+   python quick_start.py
+   ```
+
+### Basic Usage
+
+```python
+from heysol import HeySolClient
+
+# Initialize client
+client = HeySolClient(api_key="your-api-key")
+
+# Create a space
+space_id = client.create_space("Research", "Clinical data")
+
+# Ingest data
+client.ingest("New treatment shows promise", space_id=space_id)
+
+# Search
+results = client.search("treatment", space_ids=[space_id])
+print(results["episodes"])
+
+client.close()
+```
+
+### CLI Usage
+
+```bash
+# Profile
+heysol-client profile get
+
+# Spaces
+heysol-client spaces list
+heysol-client spaces create "My Space" --description "Data space"
+
+# Memory operations
+heysol-client memory ingest "Clinical data" --space-id <space-id>
+heysol-client memory search "cancer research" --limit 10
+
+# Logs
+heysol-client logs list --status success
+heysol-client logs delete-by-source "source-name" --confirm
+```
+
+## Configuration
+
+Set environment variables:
+```bash
+export HEYSOL_API_KEY="your-key"
+export HEYSOL_BASE_URL="https://core.heysol.ai/api/v1"
+export HEYSOL_SOURCE="my-app"
+```
+
+Or use a config file:
+```python
+from heysol import HeySolConfig
+config = HeySolConfig.from_file("config.json")
+client = HeySolClient(config=config)
+```
+
+## API Reference
+
+### Core Methods
+
+**Memory Operations:**
+- `ingest(message, space_id=None)` - Add data to memory
+- `search(query, space_ids=None, limit=10)` - Search memories
+- `search_knowledge_graph(query, space_id=None)` - Graph search
+
+**Space Operations:**
+- `get_spaces()` - List all spaces
+- `create_space(name, description="")` - Create new space
+- `update_space(space_id, name=None, description=None)` - Update space
+- `delete_space(space_id, confirm=False)` - Delete space
+
+**Log Operations:**
+- `get_ingestion_logs(space_id=None, limit=100)` - Get logs
+- `check_ingestion_status(run_id=None)` - Check status
+
+**Webhook Operations:**
+- `register_webhook(url, events=None, secret="")` - Create webhook
+- `list_webhooks(space_id=None)` - List webhooks
+
+## Error Handling
+
+```python
+from heysol import HeySolError, AuthenticationError
+
+try:
+    result = client.search("query")
+except AuthenticationError:
+    print("Check your API key")
+except HeySolError as e:
+    print(f"API error: {e}")
+```
+
+## Examples & Documentation
+
+- **Interactive Notebooks**: `quick_start_python.ipynb`, `quick_start_cli.ipynb`
+- **Code Examples**: See `examples/` directory
+- **Full Documentation**: `docs/API_DOCUMENTATION.md`
+
+## Testing
+
+```bash
+pytest                    # Run all tests
+pytest --cov=heysol      # With coverage
+pytest -m "unit"         # Unit tests only
+```
+
+## Development
+
+```bash
+git clone https://github.com/heysol/heysol-python-client.git
+cd heysol-python-client
+pip install -e ".[dev]"
+pre-commit install
+```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Support
+
+- 📧 **Email**: dev@heysol.ai
+- 📖 **Docs**: https://docs.heysol.ai/api-reference
+- 🐛 **Issues**: https://github.com/heysol/heysol-python-client/issues
