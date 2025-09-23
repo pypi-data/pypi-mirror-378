@@ -1,0 +1,192 @@
+Metadata-Version: 2.4
+Name: mimo-llm
+Version: 0.1.3
+Summary: A language model fine-tuned for code and conversation.
+Home-page: https://github.com/eurocybersecurite/Mimo-llm
+Author: ABDESSEMED Mohamed
+Author-email: mohamed.abdessemed@eurocybersecurite.fr
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: transformers>=4.35
+Requires-Dist: datasets>=2.14
+Requires-Dist: accelerate>=0.22
+Requires-Dist: bitsandbytes>=0.41
+Requires-Dist: peft>=0.4.0
+Requires-Dist: torch>=2.1
+Requires-Dist: git-lfs
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# 🚀 Mimo Language Model
+
+Mimo est un modèle de langage AI pour exceller à la fois en **génération de code** et en **conversations naturelles**.  
+Il est issu d'un mélange de datasets puissants.
+
+![Mimo](https://raw.githubusercontent.com/eurocybersecurite/Mimo-llm/main/assets/mimo.png)
+
+
+---
+
+## ✨ Points forts de Mimo
+
+- 🔧 **Optimisé pour le code** : génération fiable de scripts Python, JS, etc.  
+- 💬 **Excellente conversation** : réponses naturelles et contextualisées.  
+- ⚡ **Compatibilité multiplateforme** : fonctionne sur Mac, PC et VSCode.  
+- 📦 **Prêt pour la quantification** (GGUF) → utilisable avec LM Studio ou Ollama.  
+
+---
+
+## 📦 Installation
+
+Clonez le dépôt et installez les dépendances dans un environnement virtuel :
+
+```bash
+# Cloner le dépôt
+git clone https://github.com/eurocybersecurite/Mimo-llm.git
+cd Mimo-llm
+
+# Créer et activer un environnement virtuel (recommandé)
+python3 -m venv .venv
+source .venv/bin/activate  # Sur Linux/macOS
+# Ou sur Windows : .\.venv\Scripts\activate
+
+# Installer les dépendances
+pip install -r requirements.txt
+```
+
+⚠️ Assurez-vous d’avoir `git-lfs` installé pour gérer les poids du modèle.
+
+---
+
+## 🔑 Configuration
+
+Avant toute utilisation, configurez votre **Hugging Face Token** :
+
+```bash
+export HF_TOKEN="votre_token_hugging_face"
+```
+(Remplacez `"votre_token_hugging_face"` par votre véritable token.)
+
+---
+
+## 🏋️ Fine-tuning
+
+Lancez le fine-tuning avec :
+
+```bash
+python fine_tune_mimo.py
+```
+
+**IMPORTANT :** Remplacez `example.jsonl` par votre propre fichier de dataset avant d'exécuter ce script. Le fichier `example.jsonl` contient quelques exemples fictifs à des fins de démonstration.
+
+- Utilise vos données perso (`example.jsonl`)  
+- Combine un sous-ensemble du dataset public `mosaicml/instruct-v3`  
+- Sauvegarde les poids et tokenizer dans `./Mimo`  
+
+---
+
+## 🧑‍💻 Exemples d’utilisation
+
+### Génération de code
+
+```python
+# Assurez-vous que le modèle et le tokenizer sont chargés correctement
+# Exemple d'inférence pour la génération de code
+prompt_code = "Écris une fonction Python pour calculer la somme des éléments d'une liste."
+inputs_code = tokenizer(prompt_code, return_tensors="pt").to(model.device)
+
+with torch.no_grad():
+    outputs_code = model.generate(
+        **inputs_code,
+        max_new_tokens=100,
+        pad_token_id=tokenizer.eos_token_id
+    )
+generated_code = tokenizer.decode(outputs_code[0], skip_special_tokens=True)
+print("--- Génération de Code ---")
+print(generated_code)
+```
+
+### Conversation
+
+```python
+# Exemple d'inférence pour la conversation
+prompt_conversation = "Quelle est la meilleure façon d'apprendre une nouvelle langue ?"
+inputs_conversation = tokenizer(prompt_conversation, return_tensors="pt").to(model.device)
+
+with torch.no_grad():
+    outputs_conversation = model.generate(
+        **inputs_conversation,
+        max_new_tokens=50,
+        pad_token_id=tokenizer.eos_token_id
+    )
+generated_conversation = tokenizer.decode(outputs_conversation[0], skip_special_tokens=True)
+print("\n--- Génération de Conversation ---")
+print(generated_conversation)
+```
+
+---
+
+## 📊 Performances comparatives
+
+| Modèle                          | Code (Python) | Conversation | Mémoire requise |
+|---------------------------------|---------------|--------------|-----------------|
+| GPT-Neo 1.3B                    | ⭐⭐            | ⭐⭐           | ~12 Go          |
+| DeepSeek-Qwen-1.5B (base)       | ⭐⭐⭐           | ⭐⭐⭐          | ~10 Go          |
+| **Mimo-1.5B (fine-tuned)**      | ⭐⭐⭐⭐          | ⭐⭐⭐⭐         | ~8 Go (quantisé) |
+
+➡️ **Mimo surpasse la version de base** sur les benchmarks internes (code + QA).
+
+![Mimo Performance](https://raw.githubusercontent.com/eurocybersecurite/Mimo-llm/main/assets/mimo_conv_code.png)
+
+---
+
+## 📂 Structure du dépôt
+
+```
+Mimo/
+├── README.md
+├── assets/mimo.png
+├── mohamed.jsonl
+├── fine_tune_mimo.py
+├── requirements.txt
+└── .gitignore
+```
+
+---
+
+## 🛠️ Intégration dans VSCode
+
+1. Clonez le dépôt :  
+   ```bash
+   git clone https://github.com/votre-utilisateur/mimo-llm.git
+   cd mimo-llm
+   ```
+2. Installez les dépendances :  
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Exécutez soit :  
+   - `fine_tune_mimo.py` → pour l’entraînement  
+   - un script d’inférence personnalisé  
+
+⚡ Vous pouvez aussi utiliser Mimo dans **LM Studio** en important la version quantisée GGUF ou autre Format.
+
+---
+
+## 📧 Auteur
+
+- **Nom** : ABDESSEMED Mohamed  
+- **Entreprise** : Eurocybersecurite  
+- **Contact** : mohamed.abdessemed@eurocybersecurite.fr
