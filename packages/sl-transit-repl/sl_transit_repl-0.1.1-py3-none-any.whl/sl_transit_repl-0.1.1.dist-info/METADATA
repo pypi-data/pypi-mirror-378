@@ -1,0 +1,245 @@
+Metadata-Version: 2.4
+Name: sl-transit-repl
+Version: 0.1.1
+Summary: A REPL for querying real time departure data for Stockholm's public transit system (SL) via Trafiklab APIs.
+Project-URL: Homepage, https://github.com/abonhomme/sl_transit_repl
+Project-URL: Repository, https://github.com/abonhomme/sl_transit_repl.git
+Project-URL: Issues, https://github.com/abonhomme/sl_transit_repl/issues
+Author-email: Arjumand Bonhomme <841604+abonhomme@users.noreply.github.com>
+License-Expression: MIT
+License-File: LICENSE
+Keywords: SL,metro,pendeltåg,stockholm,storstockholms lokaltrafik,subway,t-bana,tbana,trafiklab,transit,tunnelbana
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Utilities
+Requires-Python: >=3.11
+Requires-Dist: prompt-toolkit>=3.0.52
+Requires-Dist: requests>=2.32.5
+Requires-Dist: rich>=14.1.0
+Requires-Dist: unidecode>=1.4.0
+Provides-Extra: dev
+Requires-Dist: pytest-cov>=6.0.0; extra == 'dev'
+Requires-Dist: pytest>=8.0.0; extra == 'dev'
+Requires-Dist: ruff>=0.8.0; extra == 'dev'
+Description-Content-Type: text/markdown
+
+# SL Transit REPL
+
+A command-line tool for querying real time departure data from Stockholm's public transit system (SL) using [Trafiklab](https://www.trafiklab.se/) APIs.
+
+I made this primarily as a compliment to an [xbar](https://xbarapp.com/) plugin I made to keep the next bus time for my closest stops in my menu bar. Link to plugin coming soon.
+![SL Transit REPL](./docs/images/demo-frejgatan.png)
+
+**Two modes of operation:**
+- **Interactive REPL** with auto-completion and command history
+- **Single-query mode** for scripting and automation
+
+This is **not** intended as library/wrapper for programmatically accessing the Trafiklab APIs.
+
+## Features
+
+### 🚇 **Departure Queries**
+- Get real-time departure information for any transit stop
+- Filter by line, direction, transport mode, and forecast window
+
+### 🔍 **Site Lookup**
+- Find transit stops by ID or name search
+- Fuzzy name matching with diacritic support (åäö → aao); also searches aliases and alternative names
+
+## Installation
+
+### Install from PyPI
+```bash
+pip install sl-transit-repl
+```
+After installation, you can use the `sl-repl` command from anywhere (assuming the environment where sl-transit-repl is installed is active).
+
+### Install from Source
+```bash
+git clone https://github.com/abonhomme/sl-transit-repl.git
+cd sl-transit-repl
+pip install -e .
+```
+
+### Setup
+The tool automatically creates an application directory (`~/.sl_transit_repl`) and downloads site data on first use.
+
+## Usage
+
+### Command Line Mode & REPL
+To access the REPL run the command with no arguments; otherwise, pass a single argument (in quotes if necessary) and it will output the result and exit.
+
+**After installation:**
+```bash
+# Get help
+sl-repl --help
+
+# Basic departure lookup
+sl-repl "1002"
+
+# Departure lookup with filters
+sl-repl "1002 line:17 direction:1"
+
+# Site lookup by name
+sl-repl "lookup:name central"
+
+# Site lookup by ID
+sl-repl "lookup:id 1002"
+
+# Custom app directory
+sl-repl --app-dir ~/my_transit_data "1002"
+```
+
+**From source (development):**
+```bash
+python -m src.sl_transit_repl "1002"
+python -m src.sl_transit_repl "lookup:name central"
+```
+
+### Commands
+
+#### Departure Queries
+```bash
+# Basic departure lookup
+1002
+
+# Filter by line (Green line)
+1002 line:17
+
+# Filter by direction and line
+1002 line:17 direction:1
+
+# Filter by transport mode
+1002 transport:BUS
+
+# Set forecast window (default: 60 minutes)
+1002 forecast:30
+
+# Show direction numbers in output
+1002 show_numbers:true
+
+# Debug mode (show HTTP headers)
+1002 debug:true
+
+
+# Find site by ID
+lookup:id 1002
+
+# Find sites by name (fuzzy search)
+lookup:name odenplan
+lookup:name central
+lookup:name åkeshov
+```
+
+### Example Sessions
+
+#### Command Line Mode
+```bash
+# Quick departure check
+$ sl-repl "1002 forecast:5"
+
+Site: Centralen (1002)
+┌──────┬───────────┬──────────────┬───────────┬──────────┬──────────┬──────────┐
+│ Line │ Transport │ Direction    │ Scheduled │ Expected │ Status   │ Platform │
+├──────┼───────────┼──────────────┼───────────┼──────────┼──────────┼──────────┤
+│ 19   │ METRO     │ Hässelby str │ 21:28     │ 21:28    │ ATSTOP   │ 1        │
+│ 14   │ METRO     │ Fruängen     │ 21:29     │ 21:29    │ EXPECTED │ 2        │
+└──────┴───────────┴──────────────┴───────────┴──────────┴──────────┴──────────┘
+
+# Site search
+$ sl-repl "lookup:name odenplan"
+
+Sites matching 'odenplan'
+┌──────┬───────────┬─────────┬──────────────┬──────────────────┐
+│   ID │ Name      │ Aliases │ Abbreviation │ Coordinates      │
+├──────┼───────────┼─────────┼──────────────┼──────────────────┤
+│ 9302 │ Odenplan  │         │ ODE          │ 59.3428, 18.0496 │
+└──────┴───────────┴─────────┴──────────────┴──────────────────┘
+```
+
+#### Interactive REPL Mode
+```
+$ sl-repl
+
+SL Transport REPL
+Examples:
+  1002                      (departure query: just site ID)
+  1002 line:17 direction:1  (departure query: with line and direction)
+  lookup:id 1002            (site lookup: find site by ID)
+  lookup:name odenplan      (site lookup: find sites by name)
+
+Enter 'quit' to exit
+Use ↑/↓ arrows to access command history
+
+Enter query: 1002 line:17
+[Results displayed...]
+
+Enter query: quit
+```
+![SL Transit REPL](./docs/images/demo-centralen1.png)
+![SL Transit REPL](./docs/images/demo-centralen2.png)
+
+## Configuration
+### Time Thresholds
+- **Departure Forecast Duration**: 60 minutes (default)
+- **Warning Threshold**: 15 minutes (highlights urgent departures)
+- **Delay Threshold**: 5 minutes (highlights significant delays)
+
+## API Integration
+
+Uses official data from SL via the [sites and depatures APIs](https://www.trafiklab.se/api/our-apis/sl/transport/) from [Trafiklab](https://www.trafiklab.se/). No API key needed for these APIs, so try to be respectful in your usage 😄.
+
+## Class Usage
+
+The tool is built around the `SLTransitREPL` class and thus _could_ be imported for use in other scripts. Not exactly the intended usage, but knock yourself out.
+
+```python
+from sl_transit_repl import SLTransitREPL
+
+# Create REPL instance with default app directory
+repl = SLTransitREPL()
+
+# Or create REPL instance with custom app directory
+repl = SLTransitREPL(app_dir="~/custom_transit_data")
+
+# Run interactive session
+repl.run()
+
+# Execute single queries programmatically
+success = repl.execute_query("1002 line:17")
+success = repl.execute_query("lookup:name central")
+
+# Or use individual methods programmatically
+site = repl._find_site_by_id(1002)
+sites = repl._find_sites_by_substring("central")
+```
+
+## Files & Directory Structure
+
+The application creates a hidden directory in your home folder:
+
+```
+~/.sl_transit_repl/           # Main application directory
+├── cache/                    # Cached API data
+│   └── sites.json           # Site data with fetch timestamps
+└── .repl_history            # Command history for auto-completion
+```
+
+### File Descriptions
+
+- **`~/.sl_transit_repl/cache/sites.json`**: Cached site data from SL API with metadata including:
+  - Site information (names, IDs, coordinates, aliases)
+  - Fetch timestamp for cache validation (24-hour expiry)
+  - Version information for future compatibility
+
+- **`~/.sl_transit_repl/.repl_history`**: Command history for the interactive REPL session
+  - Enables ↑/↓ arrow key navigation through previous commands
+  - Persists between sessions
+
+- **Configuration**: Line colors, transport modes, and time thresholds are defined as class constants in the source code
