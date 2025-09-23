@@ -1,0 +1,1013 @@
+Metadata-Version: 2.4
+Name: mysingle
+Version: 0.4.33
+Summary: Common library for MySingle services
+Author-email: Dan Kim <daniel@mysingle.io>
+Requires-Python: >=3.12
+Requires-Dist: beanie>=1.25.0
+Requires-Dist: fastapi>=0.116.1
+Requires-Dist: httpx>=0.25.0
+Requires-Dist: motor>=3.5.0
+Requires-Dist: prometheus-client>=0.19.0
+Requires-Dist: pydantic-settings>=2.2.1
+Requires-Dist: pydantic>=2.7.0
+Requires-Dist: pydantic[email]>=2.7.0
+Provides-Extra: build
+Requires-Dist: build>=1.0.0; extra == 'build'
+Requires-Dist: twine>=4.0.0; extra == 'build'
+Provides-Extra: dev
+Requires-Dist: mypy>=1.17.0; extra == 'dev'
+Requires-Dist: pre-commit>=3.0.0; extra == 'dev'
+Requires-Dist: pytest-asyncio>=0.24.0; extra == 'dev'
+Requires-Dist: pytest-cov>=4.0.0; extra == 'dev'
+Requires-Dist: pytest>=8.4.1; extra == 'dev'
+Requires-Dist: ruff>=0.4.0; extra == 'dev'
+Description-Content-Type: text/markdown
+
+# MySingle
+
+MySingle 플랫폼을 위한 통합 Python 라이브러리 - 인증/인가, RBAC, 가드레일, 베이스 컴포넌트를 제공합니다.
+
+[![Build Status](https://github.com/Br0therDan/mysingle-pack/workflows/Build%20and%20Publish/badge.svg)](https://github.com/Br0therDan/mysingle-pack/actions)
+[![PyPI version](https://badge.fury.io/py/mysingle.svg)](https://badge.fury.io/py/mysingle)
+[![Python Version](https://img.shields.io/pypi/pyversions/mysingle.svg)](https://pypi.org/project/mysingle/)
+
+## 🚀 설치 및 기본 사용법
+
+### 설치
+
+```bash
+pip install mysingle
+# 또는
+uv add mysingle
+```
+
+### 기본 사용 예제
+
+```python
+from mysingle import BaseDoc, BaseResponseSchema, UnifiedIAMClient
+from mysingle.rbac import require_permission, audit_log
+from mysingle.exceptions import PermissionDeniedError, ValidationError
+
+# MongoDB 도큐먼트 모델
+class UserDocument(BaseDoc):
+    username: str
+    email: str
+
+    class Settings:
+        name = "users"
+        indexes = [("email", 1)]
+
+# API 응답 스키마
+class UserResponse(BaseResponseSchema):
+    username: str
+    email: str
+
+# IAM 클라이언트 사용
+iam = UnifiedIAMClient()
+user_info = await iam.verify_token(token)
+```
+
+## 📦 주요 기능
+
+### 🏗️ FastAPI 앱 팩토리 (`create_fastapi_app`)
+
+모든 미들웨어와 설정이 통합된 FastAPI 앱을 자동 생성합니다.
+
+```python
+from mysingle import create_fastapi_app
+
+# 기본 설정으로 앱 생성
+app = create_fastapi_app(
+    title="My Service",
+    version="1.0.0",
+    enable_auth=True,         # 인증 미들웨어 활성화
+    enable_prometheus=True,   # 모니터링 활성화
+    enable_cors=True,         # CORS 설정
+    public_paths=["/health", "/docs"]  # 인증 제외 경로
+)
+
+# 고급 설정
+app = create_fastapi_app(
+    title="Advanced Service",
+    description="상세한 서비스 설명",
+    version="2.0.0",
+
+    # 보안 설정
+    enable_auth=True,
+    enable_security_headers=True,
+
+    # 모니터링 설정
+    enable_prometheus=True,
+    enable_health_check=True,
+
+    # CORS 설정
+    enable_cors=True,
+    cors_origins=["https://app.mysingle.io"],
+    cors_methods=["GET", "POST", "PUT", "DELETE"],
+
+    # 공개 경로 (인증 불필요)
+    public_paths=[
+        "/health",
+        "/metrics",
+        "/docs",
+        "/openapi.json"
+    ]
+)
+
+# 앱 팩토리는 다음을 자동 설정합니다:
+# - Authentication 미들웨어 (JWT 토큰 검증)
+# - Tenant isolation 미들웨어 (멀티테넌트 격리)
+# - Prometheus metrics 미들웨어 (성능 모니터링)
+# - CORS 미들웨어 (크로스오리진 요청)
+# - Security headers 미들웨어 (보안 헤더)
+# - Exception handlers (통합 에러 처리)
+# - Health check endpoint (/health)
+```
+
+### 🔐 통합 IAM 클라이언트 (`UnifiedIAMClient`)
+
+MySingle IAM 서비스와의 모든 상호작용을 담당합니다.
+
+```python
+from mysingle import UnifiedIAMClient, get_iam_client, close_global_iam_client
+
+# 클라이언트 생성 방법들
+# 1. 직접 생성
+iam = UnifiedIAMClient(
+    base_url="http://iam-service:8002",
+    timeout=30.0,
+    max_retries=3
+)
+
+# 2. 글로벌 싱글톤 사용 (권장)
+iam = await get_iam_client()
+
+# 인증 관련
+login_response = await iam.login(UserLogin(email="user@example.com", password="password"))
+user_info = await iam.verify_token(token)
+refresh_response = await iam.refresh_token(refresh_token)
+await iam.logout(token)
+
+# 권한 확인
+permission_result = await iam.check_permission(
+    user_id="user123",
+    resource="ledger:journals",
+    action="create",
+    tenant_id="tenant456"
+)
+
+# 배치 권한 확인
+permissions = [
+    {"resource": "ledger:journals", "action": "read"},
+    {"resource": "ledger:accounts", "action": "write"}
+]
+results = await iam.batch_check_permissions("user123", permissions, "tenant456")
+
+# 사용자 관리
+user = await iam.get_user("user123", auth_token)
+current_user = await iam.get_current_user(auth_token)
+updated_user = await iam.update_user("user123", UserUpdate(name="New Name"), auth_token)
+
+# 세션 관리
+sessions = await iam.get_user_sessions(auth_token=auth_token)
+current_session = await iam.get_current_session(auth_token)
+await iam.deactivate_session("session123", auth_token)
+await iam.deactivate_all_sessions(auth_token)
+
+# 리소스 정리
+await iam.close()
+
+# 글로벌 클라이언트 정리
+await close_global_iam_client()
+```
+
+### 👥 RBAC 시스템 (`mysingle.rbac`)
+
+함수 레벨에서 권한 확인과 감사 로깅을 제공합니다.
+
+```python
+from mysingle.rbac import require_permission, audit_log
+
+# 권한 확인 데코레이터 (FastAPI 외부에서)
+@require_permission("ledger:journals", "create")
+async def create_journal_logic(request: Request, data: JournalCreate):
+    # 자동으로 사용자 권한을 확인하고 캐싱
+    return await journal_service.create(data)
+
+# 감사 로깅 데코레이터
+@audit_log("create", "journals")
+async def create_journal(request: Request, data: JournalCreate):
+    # 모든 작업을 자동으로 감사 추적에 기록
+    return await journal_service.create(data)
+
+# 두 데코레이터 함께 사용
+@require_permission("ledger:journals", "create")
+@audit_log("create", "journals")
+async def secure_create_journal(request: Request, data: JournalCreate):
+    return await journal_service.create(data)
+```
+
+### 🛡️ 가드레일 시스템 (`mysingle.guardrails`)
+
+FastAPI 의존성 주입을 통한 포괄적인 보안 가드레일 시스템을 제공합니다.
+
+#### 주요 컴포넌트
+
+- **🔐 권한 확인**: JWT 토큰 검증 + RBAC 권한 확인 + 멀티레이어 캐싱
+- **🚦 Rate Limiting**: 사용자/테넌트별 요청 빈도 제한 및 모니터링
+- **🛡️ PII 보호**: 개인정보 자동 감지 및 마스킹 (이메일, 전화번호, 주민번호 등)
+- **📋 감사 로깅**: 모든 보안 이벤트 추적 및 규정 준수
+
+#### 기본 사용법
+
+```python
+from mysingle.guardrails import (
+    require_permission,  # 권한 확인
+    get_tenant_id,       # 테넌트 ID 추출
+    RateLimiter,         # Rate Limiting
+    mask_pii_quick,      # 빠른 PII 마스킹
+    PIIMasker,           # 고급 PII 보호
+    AuditLogger          # 감사 로깅
+)
+
+# FastAPI 라우터에서 가드레일 사용
+@router.post("/journals")
+async def create_journal(
+    data: JournalCreate,
+    # 권한 확인 가드레일
+    _auth: None = Depends(require_permission("ledger:journals", "create")),
+    # 테넌트 ID 추출
+    tenant_id: str = Depends(get_tenant_id)
+):
+    # 입력 데이터에서 PII 자동 마스킹
+    safe_data = mask_pii_quick(str(data))
+    return await journal_service.create(safe_data, tenant_id)
+
+# Rate Limiting 설정
+limiter = RateLimiter(GuardrailConfig(
+    enable_rate_limiting=True,
+    default_rate_limit=1000,  # 시간당 1000회
+    tenant_rate_limit={
+        "premium": 5000,
+        "basic": 500
+    }
+))
+
+# PII 마스킹 예시
+original = "홍길동의 이메일은 hong@example.com, 전화번호는 010-1234-5678입니다"
+masked = mask_pii_quick(original)
+# 결과: "홍길동의 이메일은 [EMAIL], 전화번호는 [PHONE_KR]입니다"
+```
+
+#### 📖 상세 가이드
+
+가드레일 시스템의 모든 기능과 고급 사용법은 **[가드레일 상세 가이드](src/mysingle/guardrails/README.md)**를 참조하세요.
+
+- 🔐 [권한 확인 및 인증](src/mysingle/guardrails/README.md#1-권한-확인-시스템)
+- 🚦 [Rate Limiting 설정](src/mysingle/guardrails/README.md#2-rate-limiting-시스템)
+- 🛡️ [PII 보호 및 마스킹](src/mysingle/guardrails/README.md#3-pii-보호-시스템)
+- 📋 [감사 로깅 시스템](src/mysingle/guardrails/README.md#4-감사-로깅-시스템)
+- 🔧 [고급 설정 및 커스터마이징](src/mysingle/guardrails/README.md#고급-설정)
+- 🧪 [테스트 및 모니터링](src/mysingle/guardrails/README.md#테스트)
+
+### 📄 베이스 모델 시스템
+
+#### BaseDoc (MongoDB 도큐먼트)
+
+```python
+from mysingle import BaseDoc
+
+class UserDocument(BaseDoc):
+    username: str
+    email: str
+    full_name: Optional[str] = None
+
+    class Settings:
+        name = "users"  # MongoDB 컬렉션명
+        indexes = [
+            ("email", 1),              # 단일 인덱스
+            ("tenant_id", "email"),    # 복합 인덱스
+            ("created_at", -1)         # 내림차순 인덱스
+        ]
+
+# BaseDoc이 자동 제공하는 필드들:
+# - tenant_id: Optional[str] = None      # 멀티테넌트 격리
+# - created_at: datetime                 # 생성 시간 (UTC)
+# - updated_at: Optional[datetime]       # 수정 시간
+# - idempotency_key: Optional[str]       # 중복 요청 방지
+```
+
+#### BaseResponseSchema (API 응답)
+
+```python
+from mysingle import BaseResponseSchema
+
+class UserResponse(BaseResponseSchema):
+    username: str
+    email: str
+    full_name: Optional[str] = None
+
+# BaseResponseSchema가 자동 제공하는 필드들:
+# - id: PydanticObjectId               # MongoDB ObjectId
+# - tenant_id: Optional[str]           # 테넌트 ID
+# - created_at: Optional[datetime]     # 생성 시간
+# - updated_at: Optional[datetime]     # 수정 시간
+
+# JSON 응답 예시:
+# {
+#   "id": "507f1f77bcf86cd799439011",
+#   "username": "john_doe",
+#   "email": "john@example.com",
+#   "tenant_id": "tenant123",
+#   "created_at": "2024-01-15T10:30:00Z"
+# }
+```
+
+#### BaseCRUDService (서비스 레이어)
+
+```python
+from mysingle import BaseCRUDService, create_crud_router
+
+# CRUD 서비스 직접 사용
+crud_service = BaseCRUDService(
+    model=UserDocument,
+    resource_name="users"
+)
+
+# 기본 CRUD 작업
+user = await crud_service.create(
+    data={"username": "john", "email": "john@example.com"},
+    tenant_id="tenant123"
+)
+
+users = await crud_service.find_many(
+    filters={"active": True},
+    tenant_id="tenant123",
+    page=1,
+    size=20
+)
+
+# FastAPI 라우터 자동 생성
+user_router = create_crud_router(
+    model=UserDocument,
+    create_schema=UserCreate,
+    update_schema=UserUpdate,
+    response_schema=UserResponse,
+    resource_name="users",
+    tags=["Users"]
+)
+
+app.include_router(user_router, prefix="/api/v1/users")
+```
+
+### ⚠️ 예외 처리 시스템
+
+예외는 별도 모듈에서 import하여 사용합니다.
+
+```python
+from mysingle.exceptions import (
+    # 일반 API 예외
+    APIError,
+    ValidationError,
+    NotFoundError,
+    ConflictError,
+    InternalServerError,
+
+    # RBAC 관련 예외
+    PermissionDeniedError,
+    RBACError,
+    RBACTimeoutError,
+    RBACServiceUnavailableError,
+
+    # 예외 핸들러
+    register_exception_handlers,
+    http_exception_handler,
+    api_error_handler,
+    general_exception_handler
+)
+
+# FastAPI 앱에 예외 핸들러 등록
+app = FastAPI()
+register_exception_handlers(app)
+
+# 수동 예외 처리
+try:
+    permission_result = await iam.check_permission(user_id, resource, action)
+    if not permission_result.allowed:
+        raise PermissionDeniedError("권한이 없습니다")
+except RBACTimeoutError:
+    raise HTTPException(status_code=503, detail="권한 확인 서비스 응답 시간 초과")
+except RBACServiceUnavailableError:
+    raise HTTPException(status_code=503, detail="권한 확인 서비스 사용 불가")
+
+# 커스텀 예외 발생
+raise APIError(
+    status_code=400,
+    error="INVALID_REQUEST",
+    message="잘못된 요청입니다",
+    details={"field": "email", "issue": "invalid format"}
+)
+```
+
+### 🔧 설정 관리 (`CommonSettings`)
+
+```python
+from mysingle import CommonSettings, settings
+
+# 글로벌 설정 객체 사용
+print(f"Service: {settings.SERVICE_NAME}")
+print(f"Environment: {settings.ENVIRONMENT}")
+print(f"MongoDB URL: {settings.MONGODB_URL}")
+
+# 커스텀 설정 클래스
+class MyServiceSettings(CommonSettings):
+    custom_feature_enabled: bool = True
+    api_rate_limit: int = 1000
+
+my_settings = MyServiceSettings()
+```
+
+### 📊 로깅 시스템
+
+```python
+from mysingle import setup_logging, get_logger
+
+# 로깅 시스템 초기화
+setup_logging(
+    service_name="my-service",
+    log_level="INFO",
+    enable_json=True,      # 구조화된 JSON 로그
+    enable_correlation=True # 요청 추적 ID
+)
+
+# 로거 사용
+logger = get_logger(__name__)
+
+logger.info("서비스 시작됨", extra={"version": "1.0.0"})
+logger.error("데이터베이스 연결 실패", extra={"error": str(e)})
+
+# 자동 로그 컨텍스트 (미들웨어를 통해)
+# - request_id: 요청별 고유 ID
+# - tenant_id: 테넌트 ID
+# - user_id: 사용자 ID
+# - endpoint: API 엔드포인트
+# - method: HTTP 메서드
+```
+
+### 🗄️ 데이터베이스 유틸리티
+
+```python
+from mysingle import init_mongo, get_database_name, get_redis_url
+
+# MongoDB 초기화
+await init_mongo(
+    connection_string="mongodb://localhost:27017",
+    database_name="my_service_db"
+)
+
+# 테넌트별 데이터베이스명 생성
+db_name = get_database_name("my_service", tenant_id="tenant123")
+# 결과: "my_service_tenant123"
+
+# Redis URL 생성
+redis_url = get_redis_url()
+# 환경변수에서 REDIS_URL 또는 기본값 반환
+```
+
+## 🏗️ 완전한 서비스 예제
+
+```python
+from fastapi import FastAPI, Depends, HTTPException
+from mysingle import (
+    create_fastapi_app, BaseDoc, BaseResponseSchema,
+    UnifiedIAMClient, setup_logging, init_mongo
+)
+from mysingle.rbac import require_permission, audit_log
+from mysingle.guardrails import get_tenant_id, rate_limit
+from mysingle.exceptions import PermissionDeniedError
+
+# 1. 로깅 설정
+setup_logging(service_name="example-service")
+
+# 2. FastAPI 앱 생성 (모든 미들웨어 포함)
+app = create_fastapi_app(
+    title="Example Service",
+    version="1.0.0",
+    enable_auth=True,
+    enable_prometheus=True,
+    public_paths=["/health", "/docs"]
+)
+
+# 3. 데이터 모델
+class ItemDocument(BaseDoc):
+    name: str
+    description: str
+    price: float
+
+    class Settings:
+        name = "items"
+        indexes = [("tenant_id", "name")]
+
+class ItemResponse(BaseResponseSchema):
+    name: str
+    description: str
+    price: float
+
+# 4. API 엔드포인트
+@app.post("/items", response_model=ItemResponse)
+async def create_item(
+    data: dict,
+    # 가드레일들
+    tenant_id: str = Depends(get_tenant_id),
+    _auth: None = Depends(require_permission("items", "create")),
+    _rate: None = Depends(rate_limit(max_calls=100, window_seconds=3600))
+):
+    # 비즈니스 로직
+    item = ItemDocument(**data, tenant_id=tenant_id)
+    await item.save()
+    return ItemResponse.model_validate(item, from_attributes=True)
+
+# 5. 함수 레벨 권한 확인 + 감사 로깅
+@require_permission("items", "delete")
+@audit_log("delete", "item")
+async def delete_item_logic(request, item_id: str):
+    # 자동 권한 확인 + 감사 로깅
+    item = await ItemDocument.get(item_id)
+    if not item:
+        raise HTTPException(404, "Item not found")
+    await item.delete()
+    return {"message": "Item deleted"}
+
+# 6. 앱 시작 시 초기화
+@app.on_event("startup")
+async def startup():
+    await init_mongo()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
+## 🧪 개발 및 테스트
+
+### 개발 환경 설정
+
+```bash
+# 의존성 설치
+uv sync --dev
+
+# 개발용 패키지 설치
+uv add --dev pytest pytest-asyncio pytest-cov
+
+# Pre-commit 훅 설정
+uv run pre-commit install
+```
+
+### 테스트 실행
+
+```bash
+# 전체 테스트
+uv run pytest
+
+# 커버리지 포함
+uv run pytest --cov=src/mysingle --cov-report=html
+
+# 특정 테스트
+uv run pytest tests/test_rbac.py -v
+```
+
+### 코드 품질 검사
+
+```bash
+# 린팅 및 포맷팅
+uv run ruff check .
+uv run ruff format .
+
+# 타입 체크
+uv run mypy src/mysingle
+
+# 보안 스캔
+uv run bandit -r src/mysingle
+```
+
+## 📚 라이센스
+
+MIT License - 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+
+## 🤝 기여하기
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📞 지원
+
+- 📧 Email: support@mysingle.io
+- 📖 Documentation: [docs.mysingle.io](https://docs.mysingle.io)
+- 🐛 Issues: [GitHub Issues](https://github.com/Br0therDan/mysingle-pack/issues)
+make dev-install     # Install dev dependencies
+make setup-hooks     # Setup git hooks
+
+# Quality checks
+make test           # Run tests
+make lint           # Run linting
+make format         # Format code
+make type-check     # Run type checking
+make quality-check  # Run all quality checks
+
+# Version management
+make version-current  # Show current version
+make version-patch   # Bump patch version
+make version-minor   # Bump minor version
+make version-major   # Bump major version
+
+# Publishing
+make publish-dry-run # Test build process
+make publish-test    # Publish to Test PyPI
+make publish         # Full publish to PyPI
+```
+
+### Enhanced Build System
+
+This package includes a sophisticated build and deployment system:
+
+```bash
+# Automatic version detection and publishing
+./scripts/build_publish_enhanced.sh
+
+# Manual version type specification
+./scripts/build_publish_enhanced.sh -t patch   # Bug fixes
+./scripts/build_publish_enhanced.sh -t minor   # New features
+./scripts/build_publish_enhanced.sh -t major   # Breaking changes
+
+# Development options
+./scripts/build_publish_enhanced.sh -d         # Dry run
+./scripts/build_publish_enhanced.sh -s         # Skip tests
+./scripts/build_publish_enhanced.sh -f         # Force publish
+```
+
+For detailed information, see [BUILD_GUIDE.md](BUILD_GUIDE.md).
+
+## 📚 Module Documentation
+
+### Unified IAM Client (`mysingle.iam`)
+
+```python
+from mysingle import UnifiedIAMClient
+
+# Initialize unified IAM client
+iam_client = UnifiedIAMClient()
+
+# Authentication
+user_info = await iam_client.verify_token(token)
+auth_response = await iam_client.login(username, password)
+
+# Authorization
+has_permission = await iam_client.check_permission(
+    user_id="user123",
+    resource="ledger:accounts",
+    action="read",
+    tenant_id="tenant456"
+)
+
+# User management
+users = await iam_client.get_users(tenant_id="tenant456")
+user = await iam_client.get_user("user123")
+```
+
+### RBAC System (`mysingle.rbac`)
+
+```python
+from mysingle.rbac import require_permission, audit_log
+from mysingle.exceptions import PermissionDeniedError, RBACTimeoutError
+
+# Function-level permission checking (for non-FastAPI functions)
+@require_permission("ledger:journals", "create")
+async def create_journal_logic(request: Request, data: JournalCreate):
+    # Automatically checks user permissions with caching
+    return await journal_service.create(data)
+
+# Audit logging for compliance
+@audit_log("create", "journals")
+async def create_journal(request: Request, data: JournalCreate):
+    # Automatically logs all operations for audit trail
+    return await journal_service.create(data)
+
+# Exception handling
+try:
+    await check_permission(user_id, resource, action)
+except PermissionDeniedError:
+    raise HTTPException(status_code=403, detail="권한이 없습니다")
+except RBACTimeoutError:
+    raise HTTPException(status_code=503, detail="권한 확인 서비스 응답 시간 초과")
+```
+
+### FastAPI Integration (`mysingle.guardrails`)
+
+```python
+from mysingle.guardrails import require_permission, get_tenant_id, get_current_user
+
+# FastAPI Dependencies (Recommended for FastAPI endpoints)
+@router.post("/journals")
+async def create_journal(
+    data: JournalCreate,
+    tenant_id: str = Depends(get_tenant_id),
+    current_user: UserInfo = Depends(get_current_user),
+    _auth: None = require_permission("ledger:journals", "create")
+):
+    """FastAPI 엔드포인트에서의 권한 확인 (권장 방식)"""
+    return await journal_service.create(data, tenant_id, current_user.id)
+```
+
+### Base Models (`mysingle.base`)
+
+```python
+from mysingle import BaseDoc, BaseResponseSchema
+
+# MongoDB document with tenant isolation
+class Account(BaseDoc):
+    code: str
+    name: str
+    account_type: str
+
+    class Settings:
+        name = "accounts"
+        indexes = [("code", 1), ("tenant_id", 1)]
+
+# API response schema
+class AccountResponse(BaseResponseSchema):
+    code: str
+    name: str
+    account_type: str
+    # tenant_id, created_at, updated_at automatically included
+```
+
+### Authentication Middleware (`mysingle.middleware`)
+
+```python
+from fastapi import FastAPI
+from mysingle.middleware import AuthMiddleware
+
+app = FastAPI()
+
+# Add authentication middleware with tenant isolation
+app.add_middleware(
+    AuthMiddleware,
+    public_paths=["/health", "/docs"],
+    tenant_isolation=True
+)
+```
+
+### Guardrails (`mysingle.guardrails`)
+
+```python
+from mysingle.guardrails import get_tenant_id, mask_pii, check_permission
+
+# Tenant isolation
+tenant_id = get_tenant_id(request)
+
+# Privacy protection
+safe_data = mask_pii(sensitive_data)
+
+# Permission validation
+is_authorized = check_permission(user_id, resource, action)
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# MySingle IAM Service
+IAM_SERVICE_URL=http://localhost:8002
+IAM_INTERNAL_URL=http://iam-service:8002  # Docker internal
+
+# Database
+MONGODB_URL=mongodb://localhost:27017
+DATABASE_NAME=mysingle
+
+# JWT Configuration
+JWT_SECRET_KEY=your-secret-key-here
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# Multi-tenant Configuration
+TENANT_ISOLATION_ENABLED=true
+DEFAULT_TENANT_ID=default
+
+# Security
+SECURITY_AUDIT_ENABLED=true
+RATE_LIMITING_ENABLED=true
+```
+
+### Configuration Class
+
+```python
+from mysingle.config import settings
+
+# Access configuration values
+print(settings.iam_service_url)
+print(settings.mongodb_url)
+print(settings.jwt_secret_key)
+print(settings.tenant_isolation_enabled)
+```
+
+## 🏗️ Architecture Integration
+
+### MySingle Platform Integration
+
+This package is designed to work seamlessly with the MySingle platform microservices:
+
+- **IAM Service** (`localhost:8002`): Authentication and user management
+- **RBAC Service** (`localhost:8010`): Centralized permission management
+- **Tenant Service** (`localhost:8001`): Multi-tenant subscription management
+- **Ledger Service** (`localhost:8006`): Financial/GL operations
+
+### Multi-Tenant SaaS Architecture
+
+```python
+# Automatic tenant isolation in all operations
+from mysingle import BaseDoc
+
+class Invoice(BaseDoc):
+    number: str
+    amount: float
+    # tenant_id automatically handled
+
+    class Settings:
+        name = "invoices"
+        indexes = [("number", 1), ("tenant_id", 1)]
+
+# FastAPI endpoint with automatic tenant isolation
+@require_permission("finance:invoices", "create")
+async def create_invoice(invoice_data: InvoiceCreate, request: Request):
+    # tenant_id extracted automatically from request
+    # permissions checked against tenant context
+    pass
+```
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+make test
+
+# Run with coverage
+uv run pytest --cov=src/mysingle --cov-report=html
+
+# Run specific test file
+uv run pytest tests/test_auth.py
+
+# Run with verbose output
+uv run pytest -v
+```
+
+## 🚀 Deployment
+
+### GitHub Actions CI/CD
+
+This package includes automated CI/CD with GitHub Actions:
+
+- **Quality Checks**: Automated testing, linting, and type checking on PRs
+- **Test PyPI**: Automatic deployment to Test PyPI from `develop` branch
+- **Production PyPI**: Automatic deployment to PyPI when tags are pushed
+- **GitHub Releases**: Automatic release creation with changelog
+
+### Manual Deployment
+
+```bash
+# Test deployment
+./scripts/build_publish_enhanced.sh -t patch
+
+# Production deployment (creates git tag)
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+## 🔄 Migration Guide
+
+### From Legacy Components
+
+If upgrading from previous MySingle components:
+
+```python
+# Before (legacy)
+from mysingle.auth import AuthClient
+from mysingle.rbac import RBACClient
+
+auth_client = AuthClient(auth_url)
+rbac_client = RBACClient(rbac_url)
+
+# After (unified)
+from mysingle import UnifiedIAMClient
+
+iam_client = UnifiedIAMClient()  # Auto-configured
+```
+
+### Breaking Changes (v2.0.0)
+
+- **Removed**: Separate `AuthClient` and `RBACClient` classes
+- **Replaced**: `SecurityUtils` → `UnifiedIAMClient`
+- **Updated**: All JWT handling moved to IAM service integration
+- **Enhanced**: Multi-tenant support is now mandatory
+
+## 📊 Project Structure
+
+```
+mysingle/
+├── src/mysingle/           # Main package
+│   ├── __init__.py        # Main exports (BaseDoc, UnifiedIAMClient, etc.)
+│   ├── app_factory.py     # FastAPI application factory
+│   ├── config.py          # Configuration management
+│   ├── exceptions.py      # Custom exceptions
+│   ├── logging.py         # Logging utilities
+│   ├── auth/              # Authentication utilities
+│   │   └── auth_utils.py  # Auth context management
+│   ├── base/              # Base classes and models
+│   │   ├── model.py       # BaseDoc for MongoDB
+│   │   └── schema.py      # BaseResponseSchema for APIs
+│   ├── iam/               # Unified IAM client
+│   │   ├── client.py      # UnifiedIAMClient implementation
+│   │   └── schemas.py     # IAM data schemas
+│   ├── rbac/              # RBAC decorators and utilities
+│   │   ├── decorators.py  # Permission decorators
+│   │   └── __init__.py    # RBAC exports
+│   ├── middleware/        # FastAPI middleware
+│   │   └── auth_middleware.py # Authentication middleware
+│   ├── guardrails/        # Security and privacy guardrails
+│   │   ├── tenant_isolation.py
+│   │   ├── privacy.py
+│   │   └── rate_limiting/
+│   └── crud_factory.py    # CRUD operation factory
+├── tests/                 # Comprehensive test suite
+│   ├── test_auth_middleware.py
+│   ├── test_guardrails.py
+│   ├── test_security.py
+│   └── test_import.py
+├── scripts/               # Build and development scripts
+└── pyproject.toml         # Modern Python project configuration
+```
+
+## 🤝 Contributing
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes and add tests**
+4. **Run quality checks**: `make quality-check`
+5. **Commit your changes**: `git commit -m 'feat: add amazing feature'`
+6. **Push to the branch**: `git push origin feature/amazing-feature`
+7. **Open a Pull Request**
+
+### Commit Message Convention
+
+We use conventional commits:
+
+- `feat:` New features
+- `fix:` Bug fixes
+- `docs:` Documentation changes
+- `style:` Code style changes
+- `refactor:` Code refactoring
+- `test:` Test-related changes
+- `chore:` Maintenance tasks
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation**: [BUILD_GUIDE.md](BUILD_GUIDE.md)
+- **Issues**: [GitHub Issues](https://github.com/your-org/mysingle/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/mysingle/discussions)
+
+## 🗺️ Roadmap
+
+### Completed (v2.0.0)
+- [x] Unified IAM client integration
+- [x] RBAC decorator system
+- [x] Multi-tenant base models
+- [x] Authentication middleware
+- [x] Comprehensive test suite
+
+### Upcoming (v2.1.0)
+- [ ] Enhanced audit logging with structured events
+- [ ] Advanced rate limiting with tenant-specific limits
+- [ ] Performance monitoring and metrics
+- [ ] Extended guardrails for data privacy compliance
+- [ ] Plugin system for custom extensions
+
+### Future (v3.0.0)
+- [ ] GraphQL API integration
+- [ ] Advanced caching strategies
+- [ ] Real-time event streaming
+- [ ] AI-powered security monitoring
+- [ ] Comprehensive documentation site
+
+---
+
+**Made with ❤️ by the MySingle team**
+
+*MySingle: Enterprise SaaS platform built for scale, security, and multi-tenancy*
