@@ -1,0 +1,1 @@
+uv run --python 3.13 --with machineconfig python -i -m machineconfig.scripts.python.cloud_manager $args
