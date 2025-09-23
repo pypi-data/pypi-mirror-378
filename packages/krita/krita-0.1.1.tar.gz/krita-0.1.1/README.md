@@ -1,0 +1,247 @@
+# Krita (कृत)
+
+**Sanskrit**: "made, created, formed" - the root of "Sanskrit" itself
+
+Generate synthetic datasets using LLMs from schemas and upload to Hugging Face.
+
+## Quick Start
+
+```bash
+pip install krita
+
+# Create a schema
+krita init-schema schema.yaml
+
+# Generate data
+krita generate schema.yaml --output dataset.json
+
+# Upload to Hugging Face
+krita upload dataset.json username/my-dataset
+```
+
+## Features
+
+- **Schema-driven generation**: Define your data structure with field types, constraints, and examples
+- **Multiple LLM providers**: OpenAI GPT, Anthropic Claude, and custom OpenAI-compatible endpoints
+- **Custom endpoint support**: Use any OpenAI-compatible API endpoint
+- **Automatic validation**: Ensures generated data matches your schema
+- **Hugging Face integration**: Direct upload to Hugging Face Hub with metadata
+- **Multiple formats**: JSON, JSONL, CSV, Parquet output
+- **CLI and Python API**: Use from command line or integrate into your code
+
+## Installation
+
+```bash
+pip install krita
+```
+
+## Python API
+
+**Note**: Install as `krita`, import as `synthetica`
+
+```python
+from synthetica import SyntheticDataGenerator, DataSchema, FieldType
+
+# Define schema
+schema = DataSchema(
+    name="customer_reviews",
+    description="Product reviews dataset",
+    num_samples=1000,
+    fields=[
+        {"name": "product", "type": FieldType.TITLE, "required": True},
+        {"name": "rating", "type": FieldType.NUMBER, "constraints": {"min": 1, "max": 5}},
+        {"name": "review", "type": FieldType.REVIEW, "required": True},
+        {"name": "reviewer", "type": FieldType.NAME, "required": True}
+    ]
+)
+
+# Generate data
+generator = SyntheticDataGenerator(llm_provider="openai")
+data = generator.generate(schema)
+
+# Upload to Hugging Face
+from synthetica import HuggingFaceUploader
+uploader = HuggingFaceUploader()
+uploader.upload_dataset(data, "username/customer-reviews")
+```
+
+## Custom AI Endpoints
+
+Use any OpenAI-compatible endpoint (Ollama, vLLM, custom deployments):
+
+```python
+from synthetica.paypal_llm import CustomOpenAIProvider
+from synthetica.generator import SyntheticDataGenerator
+
+# Create custom provider
+class CustomGenerator(SyntheticDataGenerator):
+    def __init__(self, endpoint_url, model_name, **kwargs):
+        self.llm = CustomOpenAIProvider(
+            endpoint_url=endpoint_url,
+            model=model_name,
+            api_key=kwargs.get('api_key'),
+            verify_ssl=kwargs.get('verify_ssl', True)
+        )
+        self.batch_size = kwargs.get('batch_size', 10)
+        self.max_retries = kwargs.get('max_retries', 3)
+
+# Use your custom endpoint
+generator = CustomGenerator(
+    endpoint_url="https://your-api.com/v1/chat/completions",
+    model_name="your-model-name",
+    verify_ssl=False  # For internal endpoints
+)
+
+data = generator.generate(schema)
+```
+
+### Using Custom Types
+
+```python
+from synthetica import SyntheticDataGenerator, DataSchema, FieldSchema, FieldType
+
+# Define schema with custom types
+schema = DataSchema(
+    name="healthcare_records",
+    description="Patient healthcare records",
+    num_samples=50,
+    fields=[
+        FieldSchema(name="patient_id", type=FieldType.UUID, required=True),
+        FieldSchema(name="name", type=FieldType.NAME, required=True),
+        FieldSchema(
+            name="diagnosis",
+            type="icd_diagnosis",  # Custom type
+            description="Primary diagnosis",
+            custom_type_definition="ICD-10 diagnosis with code and description",
+            examples=["E11.9 - Type 2 diabetes mellitus"],
+            required=True
+        ),
+        FieldSchema(
+            name="medication",
+            type=FieldType.CUSTOM,  # Using CUSTOM enum
+            description="Current medication",
+            custom_type_definition="Medication name, dosage, and frequency",
+            examples=["Metformin 500mg twice daily"],
+            required=False
+        )
+    ]
+)
+
+# Generate data with custom types
+generator = SyntheticDataGenerator(llm_provider="openai")
+data = generator.generate(schema)
+```
+
+## Schema Format
+
+```yaml
+name: "user_profiles"
+description: "User profile data"
+num_samples: 500
+context: "Generate diverse, realistic user profiles"
+fields:
+  - name: "id"
+    type: "uuid"
+    required: true
+  - name: "name"
+    type: "name"
+    required: true
+    examples: ["John Doe", "Jane Smith"]
+  - name: "email"
+    type: "email"
+    required: true
+  - name: "age"
+    type: "number"
+    constraints:
+      min: 18
+      max: 80
+  - name: "bio"
+    type: "description"
+    required: false
+```
+
+## Supported Field Types
+
+### Built-in Types
+- `text`, `name`, `email`, `phone`, `address`
+- `date`, `number`, `boolean`, `uuid`
+- `category`, `url`, `json`
+- `title`, `description`, `review`
+
+### Custom Types
+Define your own field types for specialized domains:
+
+```yaml
+fields:
+  - name: "medical_diagnosis"
+    type: "icd_diagnosis"  # Custom type name
+    description: "Medical diagnosis"
+    custom_type_definition: "ICD-10 diagnosis code with description (e.g., 'E11.9 - Type 2 diabetes')"
+    examples:
+      - "I10 - Essential hypertension"
+      - "E78.5 - Hyperlipidemia"
+
+  - name: "certification"
+    type: "custom"  # Use 'custom' enum value
+    description: "Professional certification"
+    custom_type_definition: "Professional certification with issuing body and expiration date"
+    examples:
+      - "AWS Solutions Architect - Valid until 2025-12-31"
+```
+
+## CLI Commands
+
+```bash
+# Initialize schema
+krita init-schema schema.yaml
+
+# Generate data
+krita generate schema.yaml --provider openai --output data.json
+
+# Upload to Hugging Face
+krita upload data.json username/dataset-name --description "My dataset"
+
+# List providers
+krita list-providers
+```
+
+## Configuration
+
+Set environment variables:
+```bash
+export OPENAI_API_KEY="your-key"
+export ANTHROPIC_API_KEY="your-key"
+export HF_TOKEN="your-token"
+```
+
+### Custom Endpoint Examples
+
+**Ollama (local):**
+```python
+generator = CustomGenerator(
+    endpoint_url="http://localhost:11434/v1/chat/completions",
+    model_name="llama3.1"
+)
+```
+
+**vLLM deployment:**
+```python
+generator = CustomGenerator(
+    endpoint_url="https://your-vllm-server.com/v1/chat/completions",
+    model_name="meta-llama/Llama-3.1-8B-Instruct",
+    api_key="your-api-key"
+)
+```
+
+**Internal enterprise endpoint:**
+```python
+generator = CustomGenerator(
+    endpoint_url="https://internal-ai.company.com/v1/chat/completions",
+    model_name="company-model-v1",
+    verify_ssl=False
+)
+```
+
+## License
+
+MIT
