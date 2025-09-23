@@ -1,0 +1,454 @@
+# MultiAgent Core
+
+Foundation framework with intelligent directory management for multi-agent development.
+
+## Installation
+
+### Recommended Installation (pipx)
+```bash
+# Linux/WSL/Mac (recommended - handles all environment issues automatically)
+pipx install multiagent-core
+```
+
+### Alternative Installation (pip)
+```bash
+# Windows or if pipx not available
+pip install multiagent-core
+```
+
+### Verification
+```bash
+# Check installation
+multiagent --version
+# Should show: multiagent, version 2.1.7
+```
+
+## Quick Start
+
+**Follow these steps in order for optimal integration:**
+
+### Step 1: Create Project with Spec-Kit
+```bash
+# Initialize with your preferred AI assistant
+specify init my-project --ai copilot   # GitHub Copilot (recommended)
+specify init my-project --ai claude    # Claude Code
+specify init my-project --ai cursor    # Cursor
+specify init my-project --ai windsurf  # Windsurf
+specify init my-project --ai gemini    # Gemini CLI
+
+cd my-project
+```
+
+### Step 2: Generate Initial Project Structure (Copilot)
+```bash
+# Have Copilot create package.json and basic project files based on your spec
+# This is CRITICAL - allows multiagent-core to detect your tech stack properly
+
+# In Copilot or your AI assistant, ask:
+# "Based on the spec in specs/001-*/spec.md, create a package.json with
+#  all the dependencies mentioned (Next.js, Supabase, Stripe, etc.)"
+```
+
+### Step 3: Add Multi-Agent Capabilities
+```bash
+# Install and initialize multiagent-core
+multiagent init
+
+# The system will:
+# ✅ Set up .claude/ directory with agents and commands
+# ✅ Add GitHub workflows and issue templates
+# ✅ Install git hooks for multi-agent workflow
+# ✅ Detect installed AI CLIs (Gemini, Qwen, Codex, etc.)
+# ✅ Recommend additional components
+```
+
+### Step 4: Add Components (As Needed)
+```bash
+# Add testing framework
+pipx install multiagent-testing
+python -m multiagent_testing.cli init
+
+# Add DevOps automation
+pipx install multiagent-devops
+python -m multiagent_devops.cli init
+
+# Add agent coordination (if multiple CLIs detected)
+pipx install multiagent-agentswarm
+```
+
+### Step 5: Verify Setup
+```bash
+# Check installation status
+multiagent status
+
+# Check available components
+multiagent upgrade
+```
+
+## Post-Application Setup
+
+When you run `multiagent init` in an **existing project**, you'll be prompted for:
+
+1. **Git Repository**: "Existing git repository detected. Use existing repository?" (usually Yes)
+2. **GitHub Integration**: "Create GitHub repository?" (if not already connected)  
+3. **Git Hooks**: "Install git hooks for multi-agent workflow?" (recommended Yes)
+
+The setup intelligently:
+- ✅ **Detects existing structure** from spec-kit and preserves it
+- ✅ **Injects agent templates** into existing `.claude/` directory
+- ✅ **Adds workflows** to existing `.github/workflows/` 
+- ✅ **Handles Docker** for consistent multi-agent environments
+- ✅ **Fixes WSL/Windows path issues** automatically
+- ✅ **Git ownership handling** for seamless WSL operation
+
+## Features
+
+- **Post-Spec-Kit Integration**: Designed to enhance existing applications, not replace them
+- **Intelligent Merging**: Preserves spec-kit structure while adding multi-agent capabilities
+- **Template Injection**: Detects existing `.claude/` and `.github/` directories and enhances them
+- **Foundation Pattern**: Single source of truth for Docker utilities across all components
+- **Interactive Setup**: Simple yes/no prompts, no complex flags
+- **Cross-Platform**: Automatic Docker detection and WSL/Windows path handling
+
+## Expected Directory Structure
+
+After running `multiagent init`, your project should have this structure:
+
+```
+your-project/
+├── .claude/                   # Claude Code agent configurations (project root)
+│   ├── agents/               # AI agent definitions
+│   ├── commands/             # Custom commands
+│   ├── hooks/                # Git hooks and scripts
+│   ├── scripts/              # Deployment and utility scripts
+│   ├── settings.json.backup  # Backup settings
+│   └── settings.local.json   # Local configuration
+├── .github/                   # GitHub workflows and templates
+│   ├── copilot-instructions.md # Copilot development guidelines
+│   └── workflows/            # GitHub Actions workflows
+│       └── version-control.yml # Semantic versioning workflow
+├── .multiagent/              # MultiAgent framework files (organized here)
+│   ├── config/              # Framework configuration files
+│   ├── core/                # Core framework modules
+│   ├── templates/           # Project templates
+│   ├── docs/                # Framework documentation
+│   ├── README.md            # Framework documentation
+│   └── .gitmessage          # Git commit message template
+├── .vscode/                 # VS Code settings (project root)
+│   └── settings.json        # Python interpreter and file exclusions
+├── .git/                    # Git repository (if initialized)
+│   └── hooks/               # Git hooks for professional workflow
+└── [your existing files]    # Your actual project code (preserved)
+```
+
+## Verification Commands
+
+To verify the installation worked correctly:
+
+```bash
+# Check main directories were created
+ls -la | grep "^\."
+# Should show: .claude/ .github/ .multiagent/ .vscode/
+
+# Verify framework structure and files
+ls -la .multiagent/
+# Should show: config/ core/ templates/ docs/ README.md .gitmessage
+
+# Check Claude Code setup
+ls -la .claude/
+# Should show: agents/ commands/ hooks/ scripts/ settings.json.backup settings.local.json
+
+# Check GitHub setup
+ls -la .github/
+# Should show: copilot-instructions.md workflows/
+
+# Check GitHub workflows
+ls -la .github/workflows/
+# Should show: version-control.yml
+
+# Verify CLI version matches
+multiagent --version
+# Should show: multiagent, version 2.1.7
+```
+
+**Important Notes:**
+- All framework files are organized under `.multiagent/` directory
+- User project files remain in the root and are never modified
+- Git hooks provide professional commit workflow guidance
+- VS Code settings ensure proper Python interpreter detection
+- Copilot instructions guide AI-assisted development (located in `.github/`)
+- GitHub workflows handle automatic semantic versioning
+- `.gitmessage` template ensures consistent commit formatting
+- `.claude/` directory contains pre-configured agents, commands, hooks, and scripts for Claude Code
+
+## Integration with Spec-Kit AI Assistants
+
+**Works seamlessly with any spec-kit AI choice:**
+
+| Spec-Kit Init | Multiagent-Core Enhancement |
+|---------------|----------------------------|
+| `specify init --ai claude` | Adds Claude Code subagents, enhances existing setup |
+| `specify init --ai copilot` | Adds Claude + Copilot orchestration workflows |
+| `specify init --ai cursor` | Adds multi-agent capabilities to Cursor projects |
+| `specify init --ai windsurf` | Enhances Windsurf projects with agent coordination |
+| `specify init --ai gemini` | Adds Claude + Gemini large context workflows |
+
+## Workflow
+
+### Proper Integration Order (IMPORTANT)
+
+1. **Spec-kit** creates your application foundation with chosen AI assistant
+2. **AI Assistant** (Copilot/Claude/etc.) generates package.json and project structure from spec content
+3. **Multiagent-core** detects existing structure and adds framework capabilities
+4. **Other components** (devops, agentswarm, testing) extend functionality
+5. **Everything works together** - original AI assistant + multi-agent coordination
+
+### Why Step 2 is Critical
+
+**Without package.json:** Core only detects basic project structure
+```bash
+# Limited detection
+Total Services: 1 (GitHub only)
+Generated .env.example: Basic variables only
+```
+
+**With package.json from spec:** Core detects full project type
+```bash
+# Better detection from package.json
+Project Type: web-app-nextjs with javascript
+Frameworks: nextjs, supabase, stripe, openai, tailwind
+```
+
+**Best Practice:** Always have your AI assistant create the initial project structure (package.json, basic files) based on your spec content BEFORE running multiagent-core init.
+
+## Component Strategy
+
+- **DevOps**: Detects spec-kit `tasks.md` and takes over CI/CD with our standards
+- **Testing**: **Enhances** existing tests (never skips), adds comprehensive automation
+## Example: Smart Environment Detection
+
+The framework automatically detects your project type and generates appropriate environment configurations:
+
+```bash
+# Run smart environment detection
+python3 -m multiagent_core.cli env-init  # WSL/Linux
+python -m multiagent_core.cli env-init   # Windows
+
+# Example output for a Next.js + Supabase + Stripe project:
+# Detected: web-app-nextjs project with javascript
+# Frameworks: nextjs, supabase, stripe, tailwind
+#
+# Environment files generated:
+#   • .env.example (for git repository)
+#   • .env.template (with example values)
+#
+# Interactive Configuration:
+#
+# Database Configuration
+#   SUPABASE_URL: https://your-project.supabase.co
+#   SUPABASE_ANON_KEY: your-anon-key-here
+#   SUPABASE_SERVICE_ROLE_KEY: your-service-role-key-here
+#
+# Payment Processing
+#   STRIPE_PUBLISHABLE_KEY: pk_test_...
+#   STRIPE_SECRET_KEY: sk_test_...
+#   STRIPE_WEBHOOK_SECRET: whsec_...
+#
+# AI Services
+#   OPENAI_API_KEY: sk-...
+#
+# Next Steps - Service Setup:
+#   1. Create a Supabase project at https://supabase.com
+#   2. Set up Stripe account at https://stripe.com
+#   3. Configure OpenAI API access
+#   4. Copy .env.template to .env and fill in your actual values
+```
+
+**Smart Detection Features:**
+- ✅ **Framework Detection**: Automatically identifies Next.js, React, Vue, Django, Flask, FastAPI, etc.
+- ✅ **Service Integration**: Detects Supabase, Firebase, Stripe, OpenAI, AWS, Azure integrations
+- ✅ **Interactive Prompts**: Guides you through required configuration for each detected service
+- ✅ **Validation**: Checks configuration validity and provides setup instructions
+- ✅ **Template Generation**: Creates both example and template files for different environments
+
+## Commands
+
+```bash
+# Interactive initialization with component recommendations
+python3 -m multiagent_core.cli init  # WSL/Linux
+python -m multiagent_core.cli init   # Windows
+
+# Smart environment detection and configuration
+python3 -m multiagent_core.cli detect                    # WSL/Linux
+python3 -m multiagent_core.cli env-detect               # WSL/Linux
+python3 -m multiagent_core.cli env-init                 # WSL/Linux
+python3 -m multiagent_core.cli env-init --interactive   # WSL/Linux
+python3 -m multiagent_core.cli env-validate             # WSL/Linux
+python3 -m multiagent_core.cli env-templates            # WSL/Linux
+
+python -m multiagent_core.cli detect                    # Windows
+python -m multiagent_core.cli env-detect               # Windows
+python -m multiagent_core.cli env-init                 # Windows
+python -m multiagent_core.cli env-init --interactive   # Windows
+python -m multiagent_core.cli env-validate             # Windows
+python -m multiagent_core.cli env-templates            # Windows
+
+# Health check with AI CLI detection
+python3 -m multiagent_core.cli doctor  # WSL/Linux
+python -m multiagent_core.cli doctor   # Windows
+
+# Show installation status
+python3 -m multiagent_core.cli status  # WSL/Linux
+python -m multiagent_core.cli status   # Windows
+
+# Check for package updates
+python3 -m multiagent_core.cli upgrade  # WSL/Linux
+python -m multiagent_core.cli upgrade   # Windows
+
+# Note: On some Linux systems, if upgrade fails with "externally-managed-environment":
+pip install --upgrade multiagent-core --break-system-packages
+
+# Show current configuration
+python3 -m multiagent_core.cli config-show  # WSL/Linux
+python -m multiagent_core.cli config-show   # Windows
+
+# Component management (legacy - components now installed automatically)
+python3 -m multiagent_core.cli uninstall component-name  # WSL/Linux
+python -m multiagent_core.cli uninstall component-name   # Windows
+```
+
+## Configuration
+
+### Environment Variables
+Copy `.env.example` to `.env` and customize:
+
+```bash
+# Core behavior
+DEBUG=false
+LOG_LEVEL=info
+MULTIAGENT_INTERACTIVE=true
+
+# GitHub integration
+GITHUB_TOKEN=your-github-token-here
+GITHUB_USERNAME=your-github-username
+
+# Docker settings
+FORCE_DOCKER=false
+DOCKER_TIMEOUT=60
+
+# Component defaults
+DEFAULT_INSTALL_DEVOPS=true
+DEFAULT_INSTALL_TESTING=true
+DEFAULT_INSTALL_AGENTSWARM=false
+
+# WSL/Windows support
+WSL_AUTO_CONVERT_PATHS=true
+```
+
+### Non-Interactive Mode
+```bash
+# Set environment variables for automation
+export MULTIAGENT_INTERACTIVE=false
+export DEFAULT_INSTALL_DEVOPS=true
+python3 -m multiagent_core.cli init  # WSL/Linux
+python -m multiagent_core.cli init   # Windows
+```
+
+## Foundation Pattern
+
+Multiagent-core provides Docker utilities that all other components use:
+
+```python
+# Other components import from core (no duplication)
+from multiagent_core.docker import check_docker, run_in_docker
+
+# Single source of truth for:
+# - Cross-platform Docker detection
+# - WSL/Windows path handling  
+# - Container orchestration
+# - Environment consistency
+```
+
+## CLI Detection
+
+The framework automatically detects available AI assistants:
+
+- **Gemini CLI**: For large context analysis
+- **Qwen CLI**: For local development  
+- **Codex CLI**: For AI-assisted coding
+- **GitHub Copilot**: Via GitHub CLI
+- **OpenAI CLI**: For OpenAI model access
+- **Claude Code**: Via current session
+
+This drives intelligent component recommendations and agent coordination.
+
+## Python Package Versioning & PyPI Publishing
+
+All multiagent components use **automatic semantic versioning** with PyPI publishing:
+
+### Available Packages
+```bash
+pip install multiagent-core       # Foundation framework (v2.1.7)
+pip install multiagent-devops     # DevOps automation (v2.1.0)  
+pip install multiagent-testing    # Testing framework (v1.0.0)
+pip install multiagent-agentswarm # Agent orchestration (v1.12.0)
+```
+
+### Automatic Publishing Workflow
+**Semantic commits trigger automatic releases:**
+
+```bash
+# Version bumps and PyPI publishing
+git commit -m "fix: Bug fix"           # Patch: 1.0.0 → 1.0.1
+git commit -m "feat: New feature"      # Minor: 1.0.0 → 1.1.0  
+git commit -m "feat!: Breaking change" # Major: 1.0.0 → 2.0.0
+git push  # Triggers GitHub Actions → semantic-release → PyPI
+```
+
+### Workflow Features
+- ✅ **Automatic versioning** in pyproject.toml files
+- ✅ **PyPI publishing** with PYPI_TOKEN authentication
+- ✅ **GitHub releases** with semantic-release notes
+- ✅ **Dependency management** between multiagent packages
+- ✅ **Professional commit accumulation** for rich release notes
+
+### For Solo Developers
+- **Single command setup**: `pipx install multiagent-core && multiagent init`
+- **Universal workflow**: Same quality standards across all project types
+- **Instant availability**: Published packages work immediately across projects
+- **No configuration drift**: Consistent automation everywhere
+
+## Troubleshooting
+
+### Ubuntu 24+ "Externally Managed Environment" Error
+```bash
+# Error: This environment is externally managed
+pip install multiagent-core --break-system-packages
+```
+
+### Version Mismatch Issues
+```bash
+# Clear pip cache and reinstall
+pip cache purge
+pip uninstall multiagent-core -y
+pip install multiagent-core --force-reinstall
+```
+
+### Git Hooks Not Installing
+```bash
+# Ensure you're in a git repository
+git init  # if not already initialized
+python3 -m multiagent_core.cli init
+```
+
+### Permission Issues
+```bash
+# Use user installation
+pip install --user multiagent-core
+# Or use pipx for isolated installation
+pipx install multiagent-core
+```
+
+---
+
+**Perfect for solo founders building diverse applications with AI-assisted development workflows.**
