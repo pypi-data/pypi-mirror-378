@@ -1,0 +1,428 @@
+# SmartDecision Python SDK
+
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![PyPI Version](https://img.shields.io/pypi/v/smartdecision-sdk.svg)](https://pypi.org/project/smartdecision-sdk/)
+
+A Python SDK for the SmartDecision AI-powered ensemble decision making API. This SDK provides a simple and intuitive interface for making ensemble decisions using multiple Large Language Models (LLMs) with democratic voting.
+
+## Features
+
+- 🤖 **Ensemble Decision Making**: Get decisions from multiple LLMs with majority voting
+- 🔐 **API Key Authentication**: Secure authentication with API keys
+- 📊 **Decision History**: Track and analyze your decision history
+- 🚀 **Async Support**: Both synchronous and asynchronous interfaces
+- 🛡️ **Comprehensive Error Handling**: Detailed error types and messages
+- 📈 **Statistics**: Get insights into your decision patterns
+- 🔧 **Type Safety**: Full type hints with Pydantic models
+- 🧪 **Well Tested**: Comprehensive test coverage
+
+## Installation
+
+```bash
+pip install smartdecision-sdk
+```
+
+## Quick Start
+
+```python
+from smartdecision_sdk import SmartDecisionClient
+
+# Initialize the client
+client = SmartDecisionClient(api_key="your-api-key-here")
+
+# Make an ensemble decision
+response = client.make_ensemble_decision(
+    question="What is the best programming language for web development?",
+    categories=["Python", "JavaScript", "TypeScript", "Go", "Rust"]
+)
+
+print(f"Final decision: {response.final_decision}")
+print(f"Individual responses: {response.individual_responses}")
+print(f"Vote counts: {response.vote_counts}")
+
+# Check ensemble status
+status = client.get_ensemble_status()
+print(f"Services ready: {status.ready}")
+print(f"Available services: {status.available_count}/{status.total_services}")
+
+# Clean up
+client.close()
+```
+
+## Usage Examples
+
+### Basic Usage
+
+```python
+from smartdecision_sdk import SmartDecisionClient
+
+client = SmartDecisionClient(api_key="your-api-key-here")
+
+try:
+    # Make a decision
+    response = client.make_ensemble_decision(
+        question="Should I invest in renewable energy stocks?",
+        categories=["Yes, invest", "No, avoid", "Wait and research more"]
+    )
+    
+    print(f"Decision: {response.final_decision}")
+    print(f"Consensus Score: {response.consensus_score:.2f}")
+    
+    # Show individual LLM responses
+    for vote in response.individual_responses:
+        print(f"{vote.llm_name}: {vote.response} (confidence: {vote.confidence:.2f})")
+        
+finally:
+    client.close()
+```
+
+### Async Usage
+
+```python
+import asyncio
+from smartdecision_sdk import SmartDecisionClient
+
+async def main():
+    client = SmartDecisionClient(api_key="your-api-key-here")
+    
+    try:
+        # Make decisions concurrently
+        tasks = [
+            client.make_ensemble_decision_async(
+                question="What is the best cloud provider?",
+                categories=["AWS", "Google Cloud", "Azure"]
+            ),
+            client.make_ensemble_decision_async(
+                question="Which database should I use?",
+                categories=["PostgreSQL", "MySQL", "MongoDB"]
+            )
+        ]
+        
+        responses = await asyncio.gather(*tasks)
+        
+        for i, response in enumerate(responses, 1):
+            print(f"Decision {i}: {response.final_decision}")
+            
+    finally:
+        await client.aclose()
+
+asyncio.run(main())
+```
+
+### Context Manager Usage
+
+```python
+from smartdecision_sdk import SmartDecisionClient
+
+# Automatic cleanup with context manager
+with SmartDecisionClient(api_key="your-api-key-here") as client:
+    response = client.make_ensemble_decision(
+        question="What is the best framework for APIs?",
+        categories=["FastAPI", "Django", "Flask", "Express.js"]
+    )
+    print(f"Decision: {response.final_decision}")
+
+# Async context manager
+async def async_example():
+    async with SmartDecisionClient(api_key="your-api-key-here").async_context() as client:
+        response = await client.make_ensemble_decision_async(
+            question="Which mobile framework to choose?",
+            categories=["React Native", "Flutter", "Xamarin", "Ionic"]
+        )
+        print(f"Decision: {response.final_decision}")
+```
+
+### Decision History and Statistics
+
+```python
+from smartdecision_sdk import SmartDecisionClient
+
+client = SmartDecisionClient(api_key="your-api-key-here")
+
+try:
+    # Get decision history
+    history = client.get_decision_history(limit=10)
+    print(f"Recent decisions: {len(history.decisions)}")
+    
+    for decision in history.decisions:
+        print(f"- {decision.question[:50]}... → {decision.ensemble_decision}")
+    
+    # Get statistics
+    stats = client.get_decision_statistics()
+    print(f"Total decisions made: {stats.total_decisions}")
+    print(f"Recent decisions: {stats.recent_decisions}")
+    
+finally:
+    client.close()
+```
+
+## API Reference
+
+### SmartDecisionClient
+
+The main client class for interacting with the SmartDecision API.
+
+#### Constructor
+
+```python
+SmartDecisionClient(
+    api_key: str,
+    base_url: str = "https://api.smartdecision.ai",
+    timeout: float = 30.0,
+    max_retries: int = 3,
+    headers: Optional[Dict[str, str]] = None
+)
+```
+
+**Parameters:**
+- `api_key`: Your SmartDecision API key (required)
+- `base_url`: Base URL for the API (default: https://api.smartdecision.ai)
+- `timeout`: Request timeout in seconds (default: 30.0)
+- `max_retries`: Maximum number of retries (default: 3)
+- `headers`: Additional headers to include in requests
+
+#### Methods
+
+##### `make_ensemble_decision(question, categories)`
+
+Make an ensemble decision using multiple LLMs.
+
+**Parameters:**
+- `question` (str): The question or prompt to send to the models
+- `categories` (List[str]): List of valid response options (minimum 2)
+
+**Returns:** `EnsembleDecisionResponse`
+
+##### `get_ensemble_status()`
+
+Get the status of ensemble LLM services.
+
+**Returns:** `EnsembleStatusResponse`
+
+##### `get_decision_history(limit=50, offset=0)`
+
+Get decision history for the authenticated user.
+
+**Parameters:**
+- `limit` (int): Maximum number of decisions to return (max: 100)
+- `offset` (int): Number of decisions to skip for pagination
+
+**Returns:** `DecisionHistoryResponse`
+
+##### `get_decision_statistics()`
+
+Get decision statistics for the authenticated user.
+
+**Returns:** `DecisionStatistics`
+
+##### `health_check()`
+
+Check the health of the API.
+
+**Returns:** `HealthResponse`
+
+### Response Models
+
+#### EnsembleDecisionResponse
+
+```python
+class EnsembleDecisionResponse:
+    ensemble_decision: str          # The final ensemble decision
+    vote_details: List[VoteDetail]  # Individual vote details from each LLM
+    total_votes: int               # Total number of votes received
+    consensus_score: float         # Consensus score (0.0 to 1.0)
+    
+    # Convenience properties
+    final_decision: str            # Alias for ensemble_decision
+    individual_responses: List[VoteDetail]  # Alias for vote_details
+    vote_counts: Dict[str, int]    # Vote counts for each response option
+```
+
+#### VoteDetail
+
+```python
+class VoteDetail:
+    llm_name: str      # Name of the LLM (e.g., "gpt-4o", "gemini-1.5-pro")
+    response: str      # The response from this LLM
+    confidence: float  # Confidence score (0.0 to 1.0)
+```
+
+## Error Handling
+
+The SDK provides specific exception types for different error scenarios:
+
+```python
+from smartdecision_sdk import (
+    SmartDecisionError,      # Base exception
+    AuthenticationError,     # Invalid API key
+    ValidationError,         # Invalid request data
+    RateLimitError,          # Rate limit exceeded
+    ConnectionError,         # Network/connection issues
+    APIError                # General API errors
+)
+
+try:
+    response = client.make_ensemble_decision(
+        question="What is the best programming language?",
+        categories=["Python", "JavaScript", "Go"]
+    )
+    
+except AuthenticationError as e:
+    print(f"Authentication failed: {e.message}")
+    
+except ValidationError as e:
+    print(f"Validation error: {e.message}")
+    
+except RateLimitError as e:
+    print(f"Rate limit exceeded: {e.message}")
+    
+except ConnectionError as e:
+    print(f"Connection error: {e.message}")
+    
+except APIError as e:
+    print(f"API error: {e.message}")
+    
+except SmartDecisionError as e:
+    print(f"SmartDecision error: {e.message}")
+```
+
+## Configuration
+
+### Environment Variables
+
+You can set your API key as an environment variable:
+
+```bash
+export SMARTDECISION_API_KEY="your-api-key-here"
+```
+
+Then initialize the client without specifying the API key:
+
+```python
+import os
+from smartdecision_sdk import SmartDecisionClient
+
+api_key = os.getenv("SMARTDECISION_API_KEY")
+if not api_key:
+    raise ValueError("SMARTDECISION_API_KEY environment variable is required")
+
+client = SmartDecisionClient(api_key=api_key)
+```
+
+### Custom Configuration
+
+```python
+client = SmartDecisionClient(
+    api_key="your-api-key-here",
+    base_url="https://api.smartdecision.ai",
+    timeout=60.0,  # Longer timeout for complex decisions
+    max_retries=5,  # More retries for reliability
+    headers={
+        "User-Agent": "my-app/1.0.0",
+        "X-Custom-Header": "custom-value"
+    }
+)
+```
+
+## Advanced Usage
+
+### Batch Processing
+
+```python
+import asyncio
+from smartdecision_sdk import SmartDecisionClient
+
+async def batch_decisions():
+    client = SmartDecisionClient(api_key="your-api-key-here")
+    
+    questions = [
+        {
+            "question": "What is the best programming language for data science?",
+            "categories": ["Python", "R", "Julia", "Scala"]
+        },
+        {
+            "question": "Which framework is best for web development?",
+            "categories": ["React", "Vue.js", "Angular", "Svelte"]
+        }
+    ]
+    
+    try:
+        # Process all questions concurrently
+        tasks = [
+            client.make_ensemble_decision_async(**q) for q in questions
+        ]
+        
+        responses = await asyncio.gather(*tasks)
+        
+        for i, response in enumerate(responses, 1):
+            print(f"Question {i}: {response.final_decision}")
+            
+    finally:
+        await client.aclose()
+
+asyncio.run(batch_decisions())
+```
+
+### Decision Analysis
+
+```python
+from collections import Counter
+from smartdecision_sdk import SmartDecisionClient
+
+client = SmartDecisionClient(api_key="your-api-key-here")
+
+try:
+    # Get decision history
+    history = client.get_decision_history(limit=50)
+    
+    # Analyze patterns
+    all_decisions = [d.ensemble_decision for d in history.decisions]
+    decision_counts = Counter(all_decisions)
+    
+    print("Most common decisions:")
+    for decision, count in decision_counts.most_common(5):
+        print(f"  {decision}: {count} times")
+    
+    # Analyze consensus scores
+    consensus_scores = [d.consensus_score for d in history.decisions]
+    avg_consensus = sum(consensus_scores) / len(consensus_scores)
+    print(f"Average consensus score: {avg_consensus:.2f}")
+    
+finally:
+    client.close()
+```
+
+## Examples
+
+Check out the `examples/` directory for more comprehensive examples:
+
+- `basic_usage.py` - Basic synchronous and asynchronous usage
+- `advanced_usage.py` - Advanced features like batch processing and monitoring
+- `error_handling.py` - Comprehensive error handling examples
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+- 📧 Email: contact@smartdecision.ai
+- 🐛 Issues: [GitHub Issues](https://github.com/smartdecision/smartdecision-python-sdk/issues)
+- 📚 Documentation: [https://docs.smartdecision.ai](https://docs.smartdecision.ai)
+
+## Changelog
+
+### 1.0.0 (2024-01-XX)
+
+- Initial release
+- Ensemble decision making with multiple LLMs
+- API key authentication
+- Decision history and statistics
+- Comprehensive error handling
+- Async support
+- Type safety with Pydantic models
