@@ -1,0 +1,340 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Centralized log aggregation to Log Archive account for Production
+
+Parameters:
+  LogArchiveAccountId:
+    Type: String
+    Description: Log Archive account ID from Control Tower (dynamically provided)
+
+  LogRetentionDays:
+    Type: Number
+    Default: 90
+    Description: Number of days to retain logs in CloudWatch
+    MinValue: 1
+    MaxValue: 3653
+
+  FilterPattern:
+    Type: String
+    Default: ''
+    Description: CloudWatch Logs filter pattern (empty for all logs)
+
+Resources:
+  # Role for CloudWatch Logs to assume
+  LogStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'CWLogsRole-${AWS::AccountId}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: !Sub 'logs.${AWS::Region}.amazonaws.com'
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudWatchLogsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Permission to create log streams in destination
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${LogArchiveAccountId}:log-group:*:log-stream:*'
+      Tags:
+        - Key: Purpose
+          Value: LogAggregation
+        - Key: ManagedBy
+          Value: StackSet
+
+  # Lambda role for log subscription manager
+  LogSubscriptionManagerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LogSubscriptionManagerRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LogSubscriptionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:PutSubscriptionFilter
+                  - logs:DeleteSubscriptionFilter
+                  - logs:DescribeSubscriptionFilters
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: !GetAtt LogStreamRole.Arn
+      Tags:
+        - Key: Purpose
+          Value: LogAggregation
+        - Key: ManagedBy
+          Value: StackSet
+
+  # Lambda function to manage log subscriptions
+  LogSubscriptionManager:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LogSubscriptionManager
+      Description: Automatically subscribe new log groups to central destination
+      Handler: index.handler
+      Runtime: python3.11
+      Timeout: 60
+      MemorySize: 256
+      Role: !GetAtt LogSubscriptionManagerRole.Arn
+      Environment:
+        Variables:
+          DESTINATION_ARN: !Sub 'arn:aws:logs:${AWS::Region}:${LogArchiveAccountId}:destination:CentralLogDestination'
+          ROLE_ARN: !GetAtt LogStreamRole.Arn
+          FILTER_PATTERN: !Ref FilterPattern
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+
+          logs = boto3.client('logs')
+
+          def handler(event, context):
+              """Subscribe log groups to central destination"""
+              print(f"Event: {json.dumps(event)}")
+
+              destination_arn = os.environ['DESTINATION_ARN']
+              role_arn = os.environ['ROLE_ARN']
+              filter_pattern = os.environ.get('FILTER_PATTERN', '')
+
+              # Handle CloudWatch Events for new log group creation
+              if 'detail' in event:
+                  detail = event['detail']
+                  if detail.get('eventName') == 'CreateLogGroup':
+                      log_group_name = detail['requestParameters']['logGroupName']
+                      subscribe_log_group(log_group_name, destination_arn, role_arn, filter_pattern)
+                      return
+
+              # Handle custom resource lifecycle
+              if 'RequestType' in event:
+                  request_type = event['RequestType']
+
+                  if request_type in ['Create', 'Update']:
+                      # Subscribe all existing log groups
+                      subscribe_all_log_groups(destination_arn, role_arn, filter_pattern)
+                  elif request_type == 'Delete':
+                      # Remove all subscriptions
+                      remove_all_subscriptions()
+
+                  # Send response to CloudFormation
+                  send_cfn_response(event, context, 'SUCCESS')
+                  return
+
+              # Default: subscribe all log groups (manual invocation)
+              subscribe_all_log_groups(destination_arn, role_arn, filter_pattern)
+
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Log subscriptions updated')
+              }
+
+          def subscribe_log_group(log_group_name, destination_arn, role_arn, filter_pattern):
+              """Subscribe a single log group to destination"""
+              try:
+                  # Skip Lambda function logs and subscription manager logs
+                  if '/aws/lambda/LogSubscriptionManager' in log_group_name:
+                      print(f"Skipping self: {log_group_name}")
+                      return
+
+                  # Skip Control Tower logs (already centralized)
+                  if 'aws-controltower' in log_group_name or '/aws/cloudtrail' in log_group_name:
+                      print(f"Skipping Control Tower log: {log_group_name}")
+                      return
+
+                  # Check if subscription already exists
+                  response = logs.describe_subscription_filters(
+                      logGroupName=log_group_name
+                  )
+
+                  if response['subscriptionFilters']:
+                      print(f"Subscription already exists for {log_group_name}")
+                      return
+
+                  # Create subscription
+                  logs.put_subscription_filter(
+                      logGroupName=log_group_name,
+                      filterName='CentralLogAggregation',
+                      filterPattern=filter_pattern,
+                      destinationArn=destination_arn,
+                      roleArn=role_arn
+                  )
+                  print(f"Subscribed {log_group_name} to central destination")
+
+              except Exception as e:
+                  print(f"Error subscribing {log_group_name}: {e}")
+
+          def subscribe_all_log_groups(destination_arn, role_arn, filter_pattern):
+              """Subscribe all log groups to destination"""
+              paginator = logs.get_paginator('describe_log_groups')
+
+              for page in paginator.paginate():
+                  for log_group in page['logGroups']:
+                      subscribe_log_group(
+                          log_group['logGroupName'],
+                          destination_arn,
+                          role_arn,
+                          filter_pattern
+                      )
+
+          def remove_all_subscriptions():
+              """Remove all subscription filters"""
+              paginator = logs.get_paginator('describe_log_groups')
+
+              for page in paginator.paginate():
+                  for log_group in page['logGroups']:
+                      try:
+                          response = logs.describe_subscription_filters(
+                              logGroupName=log_group['logGroupName']
+                          )
+
+                          for filter_info in response['subscriptionFilters']:
+                              if filter_info['filterName'] == 'CentralLogAggregation':
+                                  logs.delete_subscription_filter(
+                                      logGroupName=log_group['logGroupName'],
+                                      filterName='CentralLogAggregation'
+                                  )
+                                  print(f"Removed subscription from {log_group['logGroupName']}")
+                      except Exception as e:
+                          print(f"Error removing subscription: {e}")
+
+          def send_cfn_response(event, context, status):
+              """Send response to CloudFormation"""
+              import urllib3
+              http = urllib3.PoolManager()
+
+              response_body = {
+                  'Status': status,
+                  'Reason': f'See CloudWatch Log Stream: {context.log_stream_name}',
+                  'PhysicalResourceId': context.log_stream_name,
+                  'StackId': event['StackId'],
+                  'RequestId': event['RequestId'],
+                  'LogicalResourceId': event['LogicalResourceId']
+              }
+
+              json_response_body = json.dumps(response_body).encode('utf-8')
+
+              headers = {
+                  'content-type': '',
+                  'content-length': str(len(json_response_body))
+              }
+
+              try:
+                  http.request('PUT', event['ResponseURL'],
+                             body=json_response_body,
+                             headers=headers)
+              except Exception as e:
+                  print(f"Failed to send response: {e}")
+      Tags:
+        - Key: Purpose
+          Value: LogAggregation
+        - Key: ManagedBy
+          Value: StackSet
+
+  # CloudWatch Log Group for the Lambda
+  LogSubscriptionManagerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${LogSubscriptionManager}'
+      RetentionInDays: !Ref LogRetentionDays
+
+  # Custom resource to trigger initial subscription
+  InitialLogSubscription:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt LogSubscriptionManager.Arn
+      Version: '1.0'
+
+  # EventBridge rule to catch new log group creation
+  NewLogGroupRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: NewLogGroupCreated
+      Description: Trigger when new log groups are created
+      EventPattern:
+        source:
+          - aws.logs
+        detail-type:
+          - AWS API Call via CloudTrail
+        detail:
+          eventSource:
+            - logs.amazonaws.com
+          eventName:
+            - CreateLogGroup
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt LogSubscriptionManager.Arn
+          Id: LogSubscriptionManager
+
+  # Lambda permission for EventBridge
+  LogGroupRulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LogSubscriptionManager
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt NewLogGroupRule.Arn
+
+  # CloudWatch metric filter for errors
+  ErrorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: '[time, request_id, level = ERROR, ...]'
+      LogGroupName: !Ref LogSubscriptionManagerLogGroup
+      MetricTransformations:
+        - MetricName: LogAggregationErrors
+          MetricNamespace: LogAggregation
+          MetricValue: '1'
+          DefaultValue: 0
+
+  # CloudWatch alarm for errors
+  ErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: LogAggregation-Errors
+      AlarmDescription: Alert when log aggregation encounters errors
+      MetricName: LogAggregationErrors
+      Namespace: LogAggregation
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+Outputs:
+  LogStreamRoleArn:
+    Description: ARN of the log stream role
+    Value: !GetAtt LogStreamRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LogStreamRoleArn'
+
+  SubscriptionManagerFunctionName:
+    Description: Name of the subscription manager function
+    Value: !Ref LogSubscriptionManager
+    Export:
+      Name: !Sub '${AWS::StackName}-SubscriptionManagerFunction'
+
+  DestinationArn:
+    Description: Central log destination ARN
+    Value: !Sub 'arn:aws:logs:${AWS::Region}:${LogArchiveAccountId}:destination:CentralLogDestination'
+    Export:
+      Name: !Sub '${AWS::StackName}-DestinationArn'
