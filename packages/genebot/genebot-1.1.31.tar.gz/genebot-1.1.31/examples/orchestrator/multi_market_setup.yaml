@@ -1,0 +1,460 @@
+# Multi-Market Strategy Orchestrator Configuration
+#
+# This configuration is optimized for trading across multiple markets
+# (crypto and forex) with cross-market arbitrage opportunities.
+# It includes market-specific strategies and cross-market coordination.
+#
+# Key Features:
+# - Cross-market arbitrage strategies
+# - Market-specific risk management
+# - Currency correlation monitoring
+# - Time zone aware trading
+# - Multi-exchange connectivity
+
+orchestrator:
+  # Allocation Management - Custom allocation for multi-market
+  allocation:
+    method: "custom"
+    rebalance_frequency: "daily"
+    min_allocation: 0.01
+    max_allocation: 0.30
+    
+    # Custom allocation settings
+    custom:
+      algorithm: "MultiMarketAllocator"
+      parameters:
+        market_weights:
+          crypto: 0.60      # 60% crypto allocation
+          forex: 0.40       # 40% forex allocation
+        correlation_penalty: 0.2  # Reduce allocation for correlated assets
+        volatility_adjustment: true
+        liquidity_weighting: true
+    
+    # Market-aware rebalancing
+    rebalancing_constraints:
+      max_turnover: 0.30
+      min_time_between: "8h"
+      market_specific_limits:
+        crypto:
+          max_turnover: 0.40      # Higher turnover allowed in crypto
+          min_time_between: "4h"
+        forex:
+          max_turnover: 0.20      # Lower turnover in forex
+          min_time_between: "12h"
+
+  # Risk Management - Multi-market risk controls
+  risk:
+    # Portfolio-level risk limits
+    max_portfolio_drawdown: 0.10
+    max_strategy_correlation: 0.80
+    position_size_limit: 0.05
+    stop_loss_threshold: 0.02
+    max_concurrent_positions: 20
+    
+    # Market-specific exposure limits
+    max_market_exposure:
+      crypto: 0.70
+      forex: 0.50
+      
+    # Cross-market risk controls
+    cross_market_limits:
+      max_currency_exposure:
+        USD: 0.80     # Maximum USD exposure across all markets
+        EUR: 0.30     # Maximum EUR exposure
+        BTC: 0.40     # Maximum BTC exposure
+        ETH: 0.25     # Maximum ETH exposure
+      
+      correlation_limits:
+        crypto_forex: 0.60    # Max correlation between crypto and forex
+        major_pairs: 0.70     # Max correlation between major forex pairs
+        crypto_pairs: 0.75    # Max correlation between crypto pairs
+    
+    # Time zone aware risk management
+    timezone_risk:
+      enabled: true
+      reduced_limits_during:
+        - "asian_session"     # Reduce limits during Asian session
+      increased_limits_during:
+        - "london_new_york_overlap"  # Increase during major overlap
+
+  # Strategy Configuration - Multi-market strategies
+  strategies:
+    # Cross-Market Arbitrage - Primary multi-market strategy
+    - type: "CrossMarketArbitrageStrategy"
+      name: "crypto_forex_arbitrage"
+      enabled: true
+      allocation_weight: 2.0
+      markets: ["crypto", "forex"]
+      parameters:
+        currency_pairs:
+          - ["BTC/USD", "BTCUSD"]   # Crypto vs Forex BTC
+          - ["ETH/USD", "ETHUSD"]   # Crypto vs Forex ETH
+        min_spread: 0.001
+        max_execution_time: 5
+        hedge_ratio: 0.95
+        correlation_threshold: 0.85
+      risk_limits:
+        max_position_size: 0.08
+        stop_loss: 0.005
+        take_profit: 0.015
+      performance_requirements:
+        min_sharpe_ratio: 1.0
+        min_win_rate: 0.65
+        max_drawdown: 0.05
+
+    # Triangular Arbitrage - Crypto-specific
+    - type: "TriangularArbitrageStrategy"
+      name: "crypto_triangular_arb"
+      enabled: true
+      allocation_weight: 1.5
+      markets: ["crypto"]
+      parameters:
+        currency_triangles:
+          - ["BTC/USD", "ETH/USD", "ETH/BTC"]
+          - ["BTC/USD", "LTC/USD", "LTC/BTC"]
+        min_profit_threshold: 0.0008
+        max_execution_time: 3
+        slippage_tolerance: 0.0005
+      risk_limits:
+        max_position_size: 0.06
+        stop_loss: 0.003
+        take_profit: 0.012
+      performance_requirements:
+        min_sharpe_ratio: 1.2
+        min_win_rate: 0.75
+        max_drawdown: 0.04
+
+    # Forex Carry Trade - Forex-specific
+    - type: "ForexCarryTradeStrategy"
+      name: "multi_currency_carry"
+      enabled: true
+      allocation_weight: 1.3
+      markets: ["forex"]
+      parameters:
+        currency_pairs: ["AUD/JPY", "NZD/JPY", "GBP/JPY", "EUR/USD"]
+        min_interest_differential: 0.015
+        volatility_threshold: 0.012
+        trend_confirmation: true
+        rollover_optimization: true
+      risk_limits:
+        max_position_size: 0.04
+        stop_loss: 0.015
+        take_profit: 0.035
+      performance_requirements:
+        min_sharpe_ratio: 0.5
+        min_win_rate: 0.50
+        max_drawdown: 0.08
+
+    # Forex Session Strategy - Time-based forex
+    - type: "ForexSessionStrategy"
+      name: "global_forex_sessions"
+      enabled: true
+      allocation_weight: 1.1
+      markets: ["forex"]
+      parameters:
+        active_sessions: ["sydney", "tokyo", "london", "new_york"]
+        session_strategies:
+          sydney: ["AUD/USD", "NZD/USD"]
+          tokyo: ["USD/JPY", "EUR/JPY"]
+          london: ["GBP/USD", "EUR/USD"]
+          new_york: ["USD/CAD", "USD/CHF"]
+        volatility_threshold: 0.001
+        session_overlap_bonus: true
+      risk_limits:
+        max_position_size: 0.03
+        stop_loss: 0.012
+        take_profit: 0.025
+      performance_requirements:
+        min_sharpe_ratio: 0.4
+        min_win_rate: 0.45
+        max_drawdown: 0.07
+
+    # Crypto Momentum - Crypto-specific momentum
+    - type: "AdvancedMomentumStrategy"
+      name: "crypto_momentum"
+      enabled: true
+      allocation_weight: 1.2
+      markets: ["crypto"]
+      parameters:
+        assets: ["BTC/USD", "ETH/USD", "ADA/USD", "DOT/USD"]
+        lookback_period: 12
+        momentum_threshold: 0.02
+        acceleration_factor: 1.3
+        volatility_adjustment: true
+        market_cap_weighting: true
+      risk_limits:
+        max_position_size: 0.04
+        stop_loss: 0.018
+        take_profit: 0.045
+      performance_requirements:
+        min_sharpe_ratio: 0.6
+        min_win_rate: 0.48
+        max_drawdown: 0.10
+
+    # Multi-Market Mean Reversion
+    - type: "MeanReversionStrategy"
+      name: "multi_market_mean_reversion"
+      enabled: true
+      allocation_weight: 1.0
+      markets: ["crypto", "forex"]
+      parameters:
+        lookback_period: 25
+        std_dev_threshold: 2.2
+        mean_type: "exponential"
+        reversion_speed: 0.25
+        market_specific_params:
+          crypto:
+            std_dev_threshold: 2.5    # Higher threshold for crypto
+            reversion_speed: 0.3
+          forex:
+            std_dev_threshold: 1.8    # Lower threshold for forex
+            reversion_speed: 0.2
+      risk_limits:
+        max_position_size: 0.035
+        stop_loss: 0.015
+        take_profit: 0.030
+      performance_requirements:
+        min_sharpe_ratio: 0.35
+        min_win_rate: 0.42
+        max_drawdown: 0.08
+
+    # Correlation Trading Strategy
+    - type: "CorrelationTradingStrategy"
+      name: "cross_market_correlation"
+      enabled: true
+      allocation_weight: 1.4
+      markets: ["crypto", "forex"]
+      parameters:
+        asset_pairs:
+          - ["BTC/USD", "GOLD/USD"]     # Crypto vs commodity
+          - ["ETH/USD", "NASDAQ"]       # Crypto vs tech stocks
+          - ["EUR/USD", "DXY"]          # Forex vs dollar index
+        correlation_window: 30
+        correlation_threshold: 0.7
+        divergence_threshold: 0.02
+        reversion_expectation: 0.8
+      risk_limits:
+        max_position_size: 0.04
+        stop_loss: 0.012
+        take_profit: 0.028
+      performance_requirements:
+        min_sharpe_ratio: 0.5
+        min_win_rate: 0.50
+        max_drawdown: 0.07
+
+  # Monitoring and Alerting - Multi-market monitoring
+  monitoring:
+    performance_tracking: true
+    metrics_frequency: "1m"
+    data_retention: 365
+    
+    # Multi-market specific metrics
+    tracked_metrics:
+      - "total_return"
+      - "sharpe_ratio"
+      - "max_drawdown"
+      - "win_rate"
+      - "profit_factor"
+      - "volatility"
+      - "correlation"
+      - "market_exposure"
+      - "currency_exposure"
+      - "arbitrage_opportunities"
+    
+    # Market-specific alert thresholds
+    alert_thresholds:
+      drawdown: 0.07
+      correlation: 0.75
+      strategy_failure_rate: 0.25
+      performance_degradation: 0.30
+      position_size: 0.06
+      
+      # Multi-market specific alerts
+      cross_market_correlation: 0.65
+      currency_exposure: 0.75
+      arbitrage_spread_compression: 0.0005
+    
+    # Enhanced notifications for multi-market
+    notifications:
+      email:
+        enabled: true
+        smtp_server: "smtp.gmail.com"
+        smtp_port: 587
+        username: "${EMAIL_USERNAME}"
+        password: "${EMAIL_PASSWORD}"
+        recipients:
+          - "${TRADER_EMAIL}"
+          - "${MULTI_MARKET_ANALYST_EMAIL}"
+      
+      slack:
+        enabled: true
+        webhook_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#multi-market-trading"
+        
+      discord:
+        enabled: true
+        webhook_url: "${DISCORD_WEBHOOK_URL}"
+
+  # Optimization Settings - Multi-market optimization
+  optimization:
+    optimization_frequency: "weekly"
+    lookback_period: 30
+    optimization_method: "risk_adjusted_return"
+    min_performance_threshold: 0.0
+    
+    # Multi-market specific optimization
+    market_specific_optimization:
+      enabled: true
+      crypto:
+        optimization_frequency: "daily"    # More frequent for crypto
+        lookback_period: 21
+      forex:
+        optimization_frequency: "weekly"   # Less frequent for forex
+        lookback_period: 45
+    
+    # Strategy selection criteria
+    selection_criteria:
+      min_trades: 12
+      min_win_rate: 0.35
+      max_drawdown: 0.12
+      min_sharpe_ratio: 0.25
+      min_arbitrage_opportunities: 5      # For arbitrage strategies
+    
+    # Parameter optimization
+    parameter_optimization:
+      enabled: true
+      algorithm: "genetic"
+      frequency: "monthly"
+      
+      parameters:
+        CrossMarketArbitrageStrategy:
+          min_spread: [0.0005, 0.001, 0.0015, 0.002]
+          max_execution_time: [3, 5, 8, 10]
+        TriangularArbitrageStrategy:
+          min_profit_threshold: [0.0005, 0.0008, 0.001, 0.0012]
+        ForexCarryTradeStrategy:
+          min_interest_differential: [0.01, 0.015, 0.02, 0.025]
+
+  # Logging Configuration
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(market)s - %(message)s"
+    
+    file:
+      enabled: true
+      path: "logs/orchestrator_multi_market.log"
+      max_size: "100MB"
+      backup_count: 5
+    
+    # Market-specific logging
+    market_specific_logging:
+      crypto:
+        path: "logs/orchestrator_crypto.log"
+        level: "DEBUG"
+      forex:
+        path: "logs/orchestrator_forex.log"
+        level: "INFO"
+    
+    audit:
+      enabled: true
+      path: "logs/orchestrator_audit_multi_market.log"
+      include_decisions: true
+      include_allocations: true
+      include_risk_events: true
+      include_arbitrage_opportunities: true
+
+  # API Configuration
+  api:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8080
+    
+    authentication:
+      enabled: true
+      method: "bearer_token"
+      token: "${API_TOKEN}"
+    
+    # Multi-market specific endpoints
+    endpoints:
+      arbitrage_opportunities: true
+      cross_market_correlations: true
+      currency_exposures: true
+      market_sessions: true
+
+# Strategy Groups - Multi-market grouping
+strategy_groups:
+  arbitrage:
+    strategies:
+      - "crypto_forex_arbitrage"
+      - "crypto_triangular_arb"
+    max_group_allocation: 0.50
+    
+  carry_trade:
+    strategies:
+      - "multi_currency_carry"
+    max_group_allocation: 0.25
+    
+  momentum:
+    strategies:
+      - "crypto_momentum"
+    max_group_allocation: 0.30
+    
+  mean_reversion:
+    strategies:
+      - "multi_market_mean_reversion"
+    max_group_allocation: 0.25
+    
+  correlation_based:
+    strategies:
+      - "cross_market_correlation"
+    max_group_allocation: 0.30
+    
+  time_based:
+    strategies:
+      - "global_forex_sessions"
+    max_group_allocation: 0.20
+
+# Market Configuration
+markets:
+  crypto:
+    exchanges: ["binance", "coinbase", "kraken"]
+    primary_exchange: "binance"
+    backup_exchanges: ["coinbase", "kraken"]
+    trading_hours: "24/7"
+    
+  forex:
+    brokers: ["oanda", "interactive_brokers"]
+    primary_broker: "oanda"
+    backup_brokers: ["interactive_brokers"]
+    trading_hours:
+      start: "17:00 EST Sunday"
+      end: "17:00 EST Friday"
+
+# Cross-Market Settings
+cross_market:
+  # Currency correlation monitoring
+  correlation_monitoring:
+    enabled: true
+    update_frequency: "5m"
+    correlation_threshold: 0.8
+    
+  # Arbitrage opportunity detection
+  arbitrage_detection:
+    enabled: true
+    scan_frequency: "30s"
+    min_opportunity_size: 0.001
+    
+  # Cross-market risk management
+  risk_coordination:
+    enabled: true
+    shared_risk_budget: true
+    cross_market_hedging: true
+
+# Environment Variables Required:
+# EMAIL_USERNAME - SMTP username
+# EMAIL_PASSWORD - SMTP password
+# TRADER_EMAIL - Primary trader email
+# MULTI_MARKET_ANALYST_EMAIL - Multi-market analyst email
+# SLACK_WEBHOOK_URL - Slack webhook
+# DISCORD_WEBHOOK_URL - Discord webhook
+# API_TOKEN - API authentication token
