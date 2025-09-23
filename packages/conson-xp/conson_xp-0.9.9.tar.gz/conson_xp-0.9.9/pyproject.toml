@@ -1,0 +1,195 @@
+[project]
+name = "conson-xp"
+dynamic = []
+description = "XP Protocol Communication Tools"
+authors = [
+    { name = "ldvchosal", email = "ldvchosal@github.com" },
+]
+dependencies = [
+    "click>=8.0",
+    "click-help-colors>=0.9",
+    "pyyaml>=6.0",
+    "structlog>=22.0",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.0.0",
+    "HAP-python[QRCode]>=5.0.0",
+    "PyDispatcher>=2.0.5",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+version = "0.9.9"
+
+[project.license]
+file = "LICENSE"
+
+[project.urls]
+Homepage = "https://github.com/lduchosal/xp"
+"Bug Reports" = "https://github.com/lduchosal/xp/issues"
+Source = "https://github.com/lduchosal/xp"
+
+[project.scripts]
+xp = "xp.cli:cli"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=22.0",
+    "flake8>=5.0",
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+    "vulture>=2.14",
+    "httpx>=0.24.0",
+    "twine>=6.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
+python_classes = [
+    "Test*",
+]
+python_functions = [
+    "test_*",
+]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--cov=src/xp",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-fail-under=90",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "reverseproxy: marks tests as unit tests",
+]
+
+[tool.coverage.run]
+source = [
+    "src/xp",
+]
+omit = [
+    "tests/*",
+    "src/xp/__main__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.black]
+line-length = 88
+target-version = [
+    "py39",
+]
+include = "\\.pyi?$"
+extend-exclude = "/(\n  # directories\n  \\.eggs\n  | \\.git\n  | \\.hg\n  | \\.mypy_cache\n  | \\.tox\n  | \\.venv\n  | build\n  | dist\n)/\n"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+overrides = [
+    { module = "tests.*", disallow_untyped_defs = false },
+]
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.version]
+source = "file"
+path = "src/xp/__init__.py"
+
+[tool.pdm.scripts]
+test = "env PYTHONPATH=src python -m pytest tests/ -v --cov=src/xp --cov-report=term-missing"
+test-quick = "env PYTHONPATH=src python -m pytest tests/ --tb=no -q"
+test-ci = "env PYTHONPATH=src python -m pytest tests/ -v --cov=src/xp --cov-report=term-missing -m 'not reverseproxy'"
+test-unit = "env PYTHONPATH=src python -m pytest tests/unit/ -v"
+test-integration = "env PYTHONPATH=src python -m pytest tests/integration/ -v"
+test-cov = "env PYTHONPATH=src python -m pytest tests/ -v --cov=src/xp --cov-report=html --cov-report=term-missing"
+lint = "ruff check src/ tests/"
+lint-fix = "ruff check --fix src/ tests/"
+format = "black src/ tests/"
+format-check = "black --check src/ tests/"
+typecheck = "mypy src/"
+check = [
+    "lint",
+    "format-check",
+    "typecheck",
+    "test",
+]
+bump-version = "pdm bump -v patch"
+install = "pdm install"
+install-dev = "pdm install -G dev"
+clean = "rm -rf .coverage htmlcov/ .pytest_cache/ __pycache__/ src/xp/__pycache__/"
+upload = "python -m twine upload dist/* --verbose"
+publish = [
+    "clean",
+    "install",
+    "install-dev",
+    "bump-version",
+    "build",
+    "test",
+    "upload",
+]
+version-show = "python -c 'import xp; print(xp.__version__)'"
+version-patch = "pdm bump patch"
+version-minor = "pdm bump minor"
+version-major = "pdm bump major"
+
+[tool.vulture]
+exclude = [
+    "src/xp/cli",
+]
+ignore_decorators = [
+    "@click",
+]
+make_whitelist = true
+min_confidence = 80
+paths = [
+    "src",
+    "tests",
+]
+sort_by_size = true
+verbose = false
+
+[tool.pdm-bump]
+version-files = [
+    "src/xp/__init__.py:__version__",
+]
+
+[build-system]
+requires = [
+    "pdm-backend",
+]
+build-backend = "pdm.backend"
