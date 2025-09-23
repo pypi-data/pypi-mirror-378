@@ -1,0 +1,411 @@
+Metadata-Version: 2.4
+Name: hyra-client
+Version: 1.0.1
+Summary: A comprehensive Python SDK for the Hyra decentralized task marketplace
+Author-email: Hyra Network <dev@hyra.network>
+Maintainer-email: Hyra Network <dev@hyra.network>
+License: MIT
+Project-URL: Homepage, https://github.com/hyra-network/hyra-python-sdk
+Project-URL: Documentation, https://docs.hyra.network
+Project-URL: Repository, https://github.com/hyra-network/hyra-python-sdk
+Project-URL: Bug Tracker, https://github.com/hyra-network/hyra-python-sdk/issues
+Project-URL: Discord, https://discord.gg/hyra
+Keywords: hyra,blockchain,ai,tasks,marketplace,zkp,zero-knowledge-proof
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: web3>=7.0.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: zkp-rust-client
+Requires-Dist: requests>=2.28.2
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: flake8; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Dynamic: license-file
+
+# Hyra Python SDK
+
+[![PyPI version](https://badge.fury.io/py/hyra-sdk.svg)](https://badge.fury.io/py/hyra-sdk)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A comprehensive Python SDK for interacting with the **Hyra decentralized task marketplace**, featuring AI model integration, ZKP (Zero-Knowledge Proof) verification, and automated task management.
+
+## 🚀 Features
+
+- 🤖 **AI Model Integration**: Access to multiple AI models through the Hyra marketplace
+- 🔐 **ZKP Verification**: Built-in Zero-Knowledge Proof generation for task verification
+- 🎯 **Smart Task Routing**: Automatic selection of the best available tasks
+- 💰 **Reward System**: Earn cryptocurrency for completing tasks
+- 📊 **Real-time Statistics**: Monitor global and personal task statistics
+- 🛡️ **Type Safety**: Comprehensive type hints for better development experience
+- 🔧 **Easy Setup**: Multiple private key configuration options
+
+## 📦 Installation
+
+```bash
+pip install hyra-sdk
+```
+
+## ⚡ Quick Start
+
+### 1. Set up your private key
+
+```bash
+# Option 1: Environment variable (recommended)
+export PRIVATE_KEY=your_private_key_here
+
+# Option 2: .env file
+echo "PRIVATE_KEY=your_private_key_here" > .env
+
+# Option 3: Inline environment variable
+PRIVATE_KEY=your_private_key_here python your_script.py
+```
+
+### 2. Basic usage
+
+```python
+from hyra_sdk import HyraClient
+
+# Initialize client
+client = HyraClient()
+
+# Claim a task
+task = client.claim_task()
+print(f"Task ID: {task['task_id']}")
+print(f"Model: {task['model_name']}")
+print(f"Input: {task['input_data']}")
+
+# Submit the task result
+result = "Your AI-generated response here"
+submit_hash = client.submit_task(
+    task['task_id'], 
+    result, 
+    task['pool_address']
+)
+print(f"Submission hash: {submit_hash}")
+```
+
+## 📚 API Reference
+
+### HyraClient
+
+Main client class for interacting with the Hyra task marketplace.
+
+#### Constructor
+
+```python
+HyraClient(private_key: Optional[str] = None, rpc_url: Optional[str] = None)
+```
+
+**Parameters:**
+
+- `private_key`: Wallet private key (optional, can use environment variables)
+- `rpc_url`: Blockchain RPC URL (defaults to Hyra testnet)
+
+#### Core Methods
+
+##### `claim_task() -> Dict[str, Union[int, str, bool, None]]`
+
+Claim a task from the marketplace. Returns existing active task if available, otherwise claims a new one.
+
+**Returns:**
+
+```python
+{
+    "task_id": int,           # Unique task identifier
+    "reward": int,            # Reward amount in wei
+    "deadline": int,          # Unix timestamp when task expires
+    "assigned_to": str,       # User address assigned to task
+    "request_id": int,        # Inference request ID
+    "model_name": str,        # AI model name to use
+    "input_data": str,        # Task input/prompt
+    "pool_address": str,      # Task pool contract address
+    "tx_hash": str            # Transaction hash
+}
+```
+
+##### `submit_task(task_id: int, result: str, pool_address: str) -> str`
+
+Submit a completed task with ZKP proof for verification.
+
+**Parameters:**
+
+- `task_id`: ID of the task to submit
+- `result`: The task result/output
+- `pool_address`: Address of the task pool contract
+
+**Returns:**
+
+- Transaction hash of the submission
+
+##### `get_task_status() -> Dict[str, Union[int, str, bool]]`
+
+Get current user's task status.
+
+**Returns:**
+
+```python
+{
+    "active_pool": str,       # Active task pool address
+    "active_task_id": int,    # Active task ID
+    "deadline": int,          # Task deadline timestamp
+    "reward": int,            # Reward amount
+    "has_active_task": bool   # Whether user has active task
+}
+```
+
+##### `get_global_stats() -> Dict[str, Union[int, str, bool]]`
+
+Get global marketplace statistics.
+
+**Returns:**
+
+```python
+{
+    "total_pools": int,                    # Total task pools
+    "total_active_pools": int,             # Pools with available tasks
+    "total_available_tasks": int,          # Available tasks across all pools
+    "total_active_tasks": int,             # Tasks currently being worked on
+    "total_pending_tasks": int,            # Tasks pending submission
+    "total_processed_tasks": int,          # Completed tasks
+    "total_rewards_distributed": int       # Total rewards paid out
+}
+```
+
+##### `get_supported_models() -> List[Dict[str, Union[str, int, bool]]]`
+
+Get all available AI models.
+
+**Returns:**
+
+```python
+[
+    {
+        "modelId": int,                    # Model identifier
+        "modelName": str,                  # Human-readable name
+        "modelDescription": str,           # Model description
+        "modelPricingType": str,           # "fixed" or "dynamic"
+        "modelIsActive": bool,             # Whether model is active
+        "modelCreatedAt": int,             # Creation timestamp
+        "modelTokenPrice": int             # Price per token in wei
+    }
+]
+```
+
+##### `get_all_task_pools() -> List[str]`
+
+Get all task pool addresses.
+
+**Returns:**
+
+- List of task pool contract addresses
+
+## 💡 Examples
+
+### Complete Task Workflow
+
+```python
+from hyra_sdk import HyraClient
+
+client = HyraClient()
+
+# Check if you have an active task
+status = client.get_task_status()
+if status['has_active_task']:
+    print(f"You have an active task: {status['active_task_id']}")
+    # Submit your current task first
+    submit_hash = client.submit_task(
+        status['active_task_id'], 
+        "your_result", 
+        status['active_pool']
+    )
+    print(f"Task submitted: {submit_hash}")
+
+# Claim a new task
+task = client.claim_task()
+print(f"New task: {task['task_id']}")
+print(f"Model: {task['model_name']}")
+print(f"Input: {task['input_data']}")
+
+# Process the task (your AI logic here)
+result = process_ai_task(task['input_data'], task['model_name'])
+
+# Submit the result
+submit_hash = client.submit_task(
+    task['task_id'], 
+    result, 
+    task['pool_address']
+)
+print(f"Task completed: {submit_hash}")
+```
+
+### Monitor Marketplace Statistics
+
+```python
+from hyra_sdk import HyraClient
+
+client = HyraClient()
+
+# Get global statistics
+stats = client.get_global_stats()
+print(f"Total pools: {stats['total_pools']}")
+print(f"Available tasks: {stats['total_available_tasks']}")
+print(f"Total rewards distributed: {stats['total_rewards_distributed']}")
+
+# Get supported models
+models = client.get_supported_models()
+for model in models:
+    print(f"Model: {model['modelName']}")
+    print(f"Price: {model['modelTokenPrice']} wei per token")
+    print(f"Active: {model['modelIsActive']}")
+```
+
+### Error Handling
+
+```python
+from hyra_sdk import HyraClient
+
+client = HyraClient()
+
+try:
+    task = client.claim_task()
+    # Process task...
+    result = client.submit_task(task['task_id'], "result", task['pool_address'])
+    print(f"Success: {result}")
+except Exception as e:
+    print(f"Error: {e}")
+    # Common errors:
+    # - "UserHasActiveTask" - You already have an active task
+    # - "NoAvailableTask" - No tasks available
+    # - "TaskDeadlinePassed" - Task deadline has passed
+```
+
+## 🔧 Configuration
+
+### Private Key Setup
+
+The SDK supports multiple ways to provide your private key:
+
+1. **Environment Variable** (Recommended):
+
+   ```bash
+   export PRIVATE_KEY=your_private_key_here
+   ```
+
+2. **Alternative Environment Variables**:
+
+   ```bash
+   export WALLET_PRIVATE_KEY=your_private_key_here
+   # or
+   export HYRA_PRIVATE_KEY=your_private_key_here
+   ```
+
+3. **Constructor Parameter**:
+
+   ```python
+   client = HyraClient(private_key="your_private_key_here")
+   ```
+
+4. **.env File**:
+
+   ```bash
+   echo "PRIVATE_KEY=your_private_key_here" > .env
+   ```
+
+### RPC Configuration
+
+```python
+# Use custom RPC endpoint
+client = HyraClient(rpc_url="https://your-rpc-endpoint.com")
+```
+
+## 🛡️ Security
+
+- **Private Key Security**: Never commit private keys to version control
+- **Environment Variables**: Use environment variables for production deployments
+- **ZKP Verification**: All task submissions are verified using Zero-Knowledge Proofs
+- **Smart Contract Integration**: Direct interaction with audited smart contracts
+
+## 📊 Type Safety
+
+The SDK includes comprehensive type hints for better development experience:
+
+```python
+from hyra_sdk import HyraClient
+from typing import Dict, Any
+
+client = HyraClient()
+
+# Type hints provide better IDE support
+task: Dict[str, Any] = client.claim_task()
+submit_hash: str = client.submit_task(task['task_id'], "result", task['pool_address'])
+```
+
+## 🚨 Error Handling
+
+The SDK provides detailed error messages for common scenarios:
+
+| Error | Description | Solution |
+|-------|-------------|----------|
+| `UserHasActiveTask` | You already have an active task | Submit your current task first |
+| `NoAvailableTask` | No tasks available in any pool | Wait for new tasks or check back later |
+| `TaskDeadlinePassed` | Task deadline has expired | Claim a new task |
+| `TaskNotCompleted` | Task not completed yet | Complete the task before submitting |
+| `InsufficientBalance` | Insufficient wallet balance | Add funds to your wallet |
+
+## 🔗 Network Information
+
+- **Testnet RPC**: `https://rpc-testnet.hyra.network`
+- **Mainnet RPC**: `https://rpc.hyra.network` (coming soon)
+- **Chain ID**: TBD
+- **Native Token**: HYRA
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📞 Support
+
+- **Documentation**: [https://docs.hyra.network](https://docs.hyra.network)
+- **Discord**: [https://discord.gg/hyra](https://discord.gg/hyra)
+- **GitHub Issues**: [https://github.com/hyra-network/hyra-python-sdk/issues](https://github.com/hyra-network/hyra-python-sdk/issues)
+
+## 🏗️ Architecture
+
+The Hyra SDK interacts with several smart contracts:
+
+- **Task Pool Factory**: Manages task pool creation
+- **Task Pool Router**: Routes tasks to optimal pools
+- **Pool Viewer**: Provides task and pool information
+- **Model Registry**: Manages AI model information
+
+## 🔄 Workflow
+
+1. **Initialize** the client with your private key
+2. **Claim** a task from the marketplace
+3. **Process** the task using the specified AI model
+4. **Submit** the result with ZKP proof
+5. **Earn** rewards for completed tasks
+
+---
+
+**Built with ❤️ by the Hyra team**
