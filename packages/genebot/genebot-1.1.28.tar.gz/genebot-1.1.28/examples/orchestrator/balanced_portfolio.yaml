@@ -1,0 +1,400 @@
+# Balanced Portfolio Strategy Orchestrator Configuration
+#
+# This configuration provides a balanced approach between risk and return,
+# suitable for most traders. It combines multiple allocation methods and
+# includes a diverse mix of strategies across different market conditions.
+#
+# Key Features:
+# - Moderate risk limits (8% max drawdown)
+# - Risk parity allocation for balanced risk distribution
+# - Mix of trend-following, mean-reversion, and arbitrage strategies
+# - Adaptive rebalancing based on market conditions
+# - Comprehensive monitoring with reasonable alert thresholds
+
+orchestrator:
+  # Allocation Management - Risk parity for balanced risk
+  allocation:
+    method: "risk_parity"
+    rebalance_frequency: "daily"
+    min_allocation: 0.02      # Minimum 2% per strategy
+    max_allocation: 0.20      # Maximum 20% per strategy
+    
+    # Risk parity settings
+    risk_parity:
+      risk_metric: "volatility"
+      lookback_period: 45     # 45-day risk calculation
+      target_risk_contribution: "equal"
+      
+    # Balanced rebalancing
+    rebalancing_constraints:
+      max_turnover: 0.25      # Moderate turnover
+      min_time_between: "12h" # Minimum 12 hours between rebalances
+      min_allocation_change: 0.01  # 1% minimum change threshold
+
+  # Risk Management - Moderate risk tolerance
+  risk:
+    # Portfolio-level risk limits
+    max_portfolio_drawdown: 0.08    # 8% maximum drawdown
+    max_strategy_correlation: 0.75   # Moderate correlation limit
+    position_size_limit: 0.04       # 4% maximum position size
+    stop_loss_threshold: 0.015      # 1.5% stop loss
+    max_concurrent_positions: 15    # Moderate position count
+    
+    # Market exposure limits
+    max_market_exposure:
+      crypto: 0.60    # Balanced crypto exposure
+      forex: 0.50     # Balanced forex exposure
+      
+    # Emergency stop conditions
+    emergency_stop_conditions:
+      - "portfolio_drawdown_exceeded"
+      - "correlation_limit_exceeded"
+      - "strategy_failure_cascade"
+      - "market_volatility_spike"
+    
+    # Risk monitoring settings
+    monitoring:
+      correlation_period: 30        # 30-day correlation
+      drawdown_method: "peak_to_trough"
+      update_frequency: 180         # Update every 3 minutes
+      real_time_monitoring: true
+
+  # Strategy Configuration - Balanced mix of strategies
+  strategies:
+    # Moving Average Strategy - Core trend following
+    - type: "MovingAverageStrategy"
+      name: "ma_balanced"
+      enabled: true
+      allocation_weight: 1.0
+      markets: ["crypto", "forex"]
+      parameters:
+        short_period: 12
+        long_period: 26
+        signal_threshold: 0.008
+      risk_limits:
+        max_position_size: 0.03
+        stop_loss: 0.012
+        take_profit: 0.025
+      performance_requirements:
+        min_sharpe_ratio: 0.4
+        min_win_rate: 0.42
+        max_drawdown: 0.08
+
+    # RSI Strategy - Mean reversion component
+    - type: "RSIStrategy"
+      name: "rsi_balanced"
+      enabled: true
+      allocation_weight: 1.0
+      markets: ["crypto", "forex"]
+      parameters:
+        period: 14
+        oversold: 30
+        overbought: 70
+        signal_threshold: 0.008
+      risk_limits:
+        max_position_size: 0.03
+        stop_loss: 0.012
+        take_profit: 0.025
+      performance_requirements:
+        min_sharpe_ratio: 0.4
+        min_win_rate: 0.42
+        max_drawdown: 0.08
+
+    # Advanced Momentum Strategy - Growth component
+    - type: "AdvancedMomentumStrategy"
+      name: "momentum_balanced"
+      enabled: true
+      allocation_weight: 1.2
+      markets: ["crypto"]
+      parameters:
+        lookback_period: 15
+        momentum_threshold: 0.015
+        acceleration_factor: 1.2
+        volatility_adjustment: true
+      risk_limits:
+        max_position_size: 0.035
+        stop_loss: 0.015
+        take_profit: 0.035
+      performance_requirements:
+        min_sharpe_ratio: 0.5
+        min_win_rate: 0.45
+        max_drawdown: 0.10
+
+    # Cross Market Arbitrage - Stability component
+    - type: "CrossMarketArbitrageStrategy"
+      name: "cross_arb_balanced"
+      enabled: true
+      allocation_weight: 1.5
+      markets: ["crypto", "forex"]
+      parameters:
+        min_spread: 0.002
+        max_execution_time: 10
+        correlation_threshold: 0.85
+        hedge_ratio: 0.90
+      risk_limits:
+        max_position_size: 0.05
+        stop_loss: 0.008
+        take_profit: 0.020
+      performance_requirements:
+        min_sharpe_ratio: 0.8
+        min_win_rate: 0.60
+        max_drawdown: 0.06
+
+    # Multi-Indicator Strategy - Confirmation-based
+    - type: "MultiIndicatorStrategy"
+      name: "multi_balanced"
+      enabled: true
+      allocation_weight: 1.1
+      markets: ["crypto", "forex"]
+      parameters:
+        indicators: ["sma", "rsi", "macd", "bollinger"]
+        confirmation_required: 2
+        sma_period: 20
+        rsi_period: 14
+        macd_fast: 12
+        macd_slow: 26
+        macd_signal: 9
+        bollinger_period: 20
+        bollinger_std: 2.0
+      risk_limits:
+        max_position_size: 0.03
+        stop_loss: 0.012
+        take_profit: 0.030
+      performance_requirements:
+        min_sharpe_ratio: 0.4
+        min_win_rate: 0.48
+        max_drawdown: 0.08
+
+    # Forex Session Strategy - Time-based diversification
+    - type: "ForexSessionStrategy"
+      name: "forex_session_balanced"
+      enabled: true
+      allocation_weight: 0.9
+      markets: ["forex"]
+      parameters:
+        active_sessions: ["london", "new_york", "tokyo"]
+        volatility_threshold: 0.0015
+        trend_confirmation: true
+        session_overlap_bonus: true
+      risk_limits:
+        max_position_size: 0.025
+        stop_loss: 0.010
+        take_profit: 0.020
+      performance_requirements:
+        min_sharpe_ratio: 0.35
+        min_win_rate: 0.40
+        max_drawdown: 0.07
+
+    # Mean Reversion Strategy - Counter-trend component
+    - type: "MeanReversionStrategy"
+      name: "mean_reversion_balanced"
+      enabled: true
+      allocation_weight: 1.0
+      markets: ["crypto", "forex"]
+      parameters:
+        lookback_period: 20
+        std_dev_threshold: 2.0
+        mean_type: "simple"
+        reversion_speed: 0.2
+      risk_limits:
+        max_position_size: 0.03
+        stop_loss: 0.015
+        take_profit: 0.025
+      performance_requirements:
+        min_sharpe_ratio: 0.3
+        min_win_rate: 0.40
+        max_drawdown: 0.08
+
+    # ATR Volatility Strategy - Volatility-based
+    - type: "ATRVolatilityStrategy"
+      name: "atr_balanced"
+      enabled: true
+      allocation_weight: 1.0
+      markets: ["crypto"]
+      parameters:
+        atr_period: 14
+        volatility_multiplier: 2.0
+        breakout_threshold: 0.012
+        trend_filter: true
+      risk_limits:
+        max_position_size: 0.035
+        stop_loss: 0.018
+        take_profit: 0.040
+      performance_requirements:
+        min_sharpe_ratio: 0.4
+        min_win_rate: 0.42
+        max_drawdown: 0.10
+
+  # Monitoring and Alerting - Balanced monitoring
+  monitoring:
+    performance_tracking: true
+    metrics_frequency: "2m"     # 2-minute updates
+    data_retention: 270         # 9 months of data
+    
+    # Tracked metrics
+    tracked_metrics:
+      - "total_return"
+      - "sharpe_ratio"
+      - "max_drawdown"
+      - "win_rate"
+      - "profit_factor"
+      - "volatility"
+      - "correlation"
+      - "sortino_ratio"
+    
+    # Balanced alert thresholds
+    alert_thresholds:
+      drawdown: 0.06              # Alert at 6% drawdown
+      correlation: 0.70           # Alert at 70% correlation
+      strategy_failure_rate: 0.20 # Alert if 20% of strategies fail
+      performance_degradation: 0.30  # Alert on 30% performance drop
+      position_size: 0.045        # Alert if position > 4.5%
+    
+    # Notification channels
+    notifications:
+      email:
+        enabled: true
+        smtp_server: "smtp.gmail.com"
+        smtp_port: 587
+        username: "${EMAIL_USERNAME}"
+        password: "${EMAIL_PASSWORD}"
+        recipients:
+          - "${TRADER_EMAIL}"
+      
+      slack:
+        enabled: true
+        webhook_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#balanced-trading"
+
+  # Optimization Settings - Balanced optimization
+  optimization:
+    optimization_frequency: "bi-weekly"  # Every 2 weeks
+    lookback_period: 45                 # 45-day lookback
+    optimization_method: "sharpe_ratio"  # Risk-adjusted returns
+    min_performance_threshold: -0.02    # Allow minor underperformance
+    
+    # Strategy selection criteria
+    selection_criteria:
+      min_trades: 15              # Moderate minimum trades
+      min_win_rate: 0.35          # Moderate minimum win rate
+      max_drawdown: 0.12          # Moderate maximum drawdown
+      min_sharpe_ratio: 0.2       # Moderate minimum Sharpe ratio
+    
+    # Parameter optimization
+    parameter_optimization:
+      enabled: true
+      algorithm: "grid_search"    # Systematic optimization
+      frequency: "monthly"
+      
+      # Key parameters to optimize
+      parameters:
+        MovingAverageStrategy:
+          short_period: [10, 12, 15]
+          long_period: [20, 26, 30]
+        RSIStrategy:
+          period: [12, 14, 16]
+          oversold: [25, 30, 35]
+          overbought: [65, 70, 75]
+        AdvancedMomentumStrategy:
+          lookback_period: [10, 15, 20]
+          momentum_threshold: [0.01, 0.015, 0.02]
+
+  # Logging Configuration
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    
+    file:
+      enabled: true
+      path: "logs/orchestrator_balanced.log"
+      max_size: "75MB"
+      backup_count: 4
+    
+    console:
+      enabled: true
+      level: "INFO"
+    
+    audit:
+      enabled: true
+      path: "logs/orchestrator_audit_balanced.log"
+      include_decisions: true
+      include_allocations: true
+      include_risk_events: true
+
+  # API Configuration - Enabled with security
+  api:
+    enabled: true
+    host: "127.0.0.1"  # Local access only
+    port: 8080
+    
+    authentication:
+      enabled: true
+      method: "bearer_token"
+      token: "${API_TOKEN}"
+    
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 120
+
+# Strategy Groups - Balanced grouping
+strategy_groups:
+  trend_following:
+    strategies:
+      - "ma_balanced"
+      - "momentum_balanced"
+    max_group_allocation: 0.35    # Moderate trend allocation
+    
+  mean_reversion:
+    strategies:
+      - "rsi_balanced"
+      - "mean_reversion_balanced"
+    max_group_allocation: 0.30    # Moderate mean reversion
+    
+  multi_signal:
+    strategies:
+      - "multi_balanced"
+    max_group_allocation: 0.20    # Moderate multi-signal
+    
+  arbitrage:
+    strategies:
+      - "cross_arb_balanced"
+    max_group_allocation: 0.25    # Moderate arbitrage
+    
+  volatility_based:
+    strategies:
+      - "atr_balanced"
+    max_group_allocation: 0.20    # Moderate volatility
+    
+  time_based:
+    strategies:
+      - "forex_session_balanced"
+    max_group_allocation: 0.15    # Moderate time-based
+
+# Market Conditions Adaptation
+market_conditions:
+  # Adjust allocation based on market volatility
+  volatility_adjustment:
+    enabled: true
+    low_volatility:
+      threshold: 0.01
+      allocation_boost: 1.2       # Increase allocation in low vol
+    high_volatility:
+      threshold: 0.04
+      allocation_reduction: 0.8   # Reduce allocation in high vol
+  
+  # Adjust based on market trend
+  trend_adjustment:
+    enabled: true
+    strong_trend:
+      threshold: 0.02
+      trend_strategy_boost: 1.3   # Boost trend strategies
+    sideways_market:
+      threshold: 0.005
+      mean_reversion_boost: 1.2   # Boost mean reversion
+
+# Environment Variables Required:
+# EMAIL_USERNAME - SMTP username for email alerts
+# EMAIL_PASSWORD - SMTP password for email alerts
+# TRADER_EMAIL - Trader email address
+# SLACK_WEBHOOK_URL - Slack webhook for notifications
+# API_TOKEN - API authentication token

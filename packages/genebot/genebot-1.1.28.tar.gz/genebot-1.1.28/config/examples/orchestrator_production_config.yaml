@@ -1,0 +1,213 @@
+# Orchestrator Production Configuration
+# This configuration is optimized for live trading
+
+orchestrator:
+  # Allocation configuration
+  allocation:
+    method: "performance_based"  # Performance-based allocation for optimization
+    rebalance_frequency: "daily"
+    min_allocation: 0.01  # Minimum 1% allocation per strategy
+    max_allocation: 0.25  # Maximum 25% allocation per strategy
+    allocation_constraints:
+      # Custom constraints for different strategy types
+      high_risk_strategies: 0.15  # Max 15% for high-risk strategies
+      arbitrage_strategies: 0.40  # Max 40% for arbitrage strategies
+      forex_strategies: 0.30  # Max 30% for forex strategies
+  
+  # Risk management configuration
+  risk:
+    max_portfolio_drawdown: 0.10  # Maximum 10% portfolio drawdown
+    max_strategy_correlation: 0.75  # Strict correlation limits
+    position_size_limit: 0.05  # Maximum 5% position size
+    stop_loss_threshold: 0.02  # 2% stop loss threshold
+    emergency_stop_conditions:
+      - "max_drawdown_exceeded"
+      - "correlation_too_high"
+      - "strategy_failure_cascade"
+      - "market_volatility_spike"
+  
+  # Monitoring configuration
+  monitoring:
+    performance_tracking: true
+    alert_thresholds:
+      drawdown: 0.05  # Alert at 5% drawdown
+      correlation: 0.70  # Alert when correlation exceeds 70%
+      underperformance: -0.08  # Alert on 8% underperformance
+      volatility_spike: 2.0  # Alert on 2x normal volatility
+    notification_channels: ["email", "slack", "webhook"]
+  
+  # Strategy configurations
+  strategies:
+    # Crypto Strategies
+    - type: "MovingAverageStrategy"
+      name: "ma_crypto_short"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        short_period: 10
+        long_period: 20
+      symbols: ["BTC/USDT", "ETH/USDT", "BNB/USDT"]
+      timeframe: "1h"
+      markets: ["crypto"]
+    
+    - type: "RSIStrategy"
+      name: "rsi_crypto_oversold"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        period: 14
+        oversold: 30
+        overbought: 70
+      symbols: ["BTC/USDT", "ETH/USDT", "ADA/USDT", "DOT/USDT"]
+      timeframe: "4h"
+      markets: ["crypto"]
+    
+    - type: "MeanReversionStrategy"
+      name: "mean_reversion_crypto"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        lookback_period: 20
+        z_score_threshold: 2.0
+        min_volume_threshold: 1000000
+      symbols: ["BTC/USDT", "ETH/USDT"]
+      timeframe: "1h"
+      markets: ["crypto"]
+    
+    - type: "AdvancedMomentumStrategy"
+      name: "momentum_crypto"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        momentum_period: 14
+        signal_threshold: 0.02
+        volume_confirmation: true
+      symbols: ["BTC/USDT", "ETH/USDT", "BNB/USDT", "ADA/USDT"]
+      timeframe: "2h"
+      markets: ["crypto"]
+    
+    # Forex Strategies
+    - type: "ForexCarryTradeStrategy"
+      name: "carry_trade_majors"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        interest_rate_threshold: 0.005
+        volatility_threshold: 0.02
+      symbols: ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD"]
+      timeframe: "1d"
+      markets: ["forex"]
+    
+    - type: "ForexSessionStrategy"
+      name: "session_breakout"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        session_overlap_only: true
+        breakout_threshold: 0.001
+      symbols: ["EUR/USD", "GBP/USD", "USD/JPY"]
+      timeframe: "15m"
+      markets: ["forex"]
+    
+    # Cross-Market Arbitrage Strategies
+    - type: "CrossMarketArbitrageStrategy"
+      name: "crypto_forex_arbitrage"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        min_spread_threshold: 0.002
+        max_execution_time: 30
+        correlation_threshold: 0.8
+      symbols: ["BTC/USD", "EUR/USD"]
+      timeframe: "1m"
+      markets: ["crypto", "forex"]
+    
+    - type: "TriangularArbitrageStrategy"
+      name: "triangular_arbitrage"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        min_profit_threshold: 0.001
+        max_slippage: 0.0005
+      symbols: ["BTC/USDT", "ETH/BTC", "ETH/USDT"]
+      timeframe: "1m"
+      markets: ["crypto"]
+  
+  # Optimization configuration
+  optimization:
+    optimization_frequency: "weekly"  # Weekly optimization for stability
+    lookback_period: 30  # 30-day lookback for optimization
+    optimization_method: "sharpe_ratio"
+    min_performance_threshold: 0.0
+    optimization_constraints:
+      max_allocation_change: 0.05  # Max 5% allocation change per optimization
+      min_strategy_history: 14  # Minimum 14 days of history before optimization
+
+# Production-specific settings
+production:
+  dry_run: false  # Live trading enabled
+  log_level: "INFO"
+  enable_backtesting: false
+  enable_paper_trading: false
+  
+# Database configuration for production
+database:
+  database_type: "postgresql"
+  database_url: "${DATABASE_URL}"  # From environment variable
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+  echo: false
+
+# Logging configuration
+logging:
+  log_level: "INFO"
+  log_format: "standard"
+  log_file: "logs/orchestrator_prod.log"
+  max_file_size: 52428800  # 50MB
+  backup_count: 10
+  
+# Notification configuration
+notifications:
+  email:
+    enabled: true
+    smtp_server: "${SMTP_SERVER}"
+    smtp_port: 587
+    username: "${SMTP_USERNAME}"
+    password: "${SMTP_PASSWORD}"
+    from_email: "${NOTIFICATION_FROM_EMAIL}"
+    to_emails: ["${ADMIN_EMAIL}"]
+    use_tls: true
+  
+  slack:
+    enabled: true
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    channel: "#trading-alerts"
+    username: "TradingBot Orchestrator"
+  
+  webhook:
+    enabled: true
+    webhook_url: "${WEBHOOK_URL}"
+    headers:
+      Authorization: "Bearer ${WEBHOOK_TOKEN}"
+
+# Security configuration
+security:
+  api_key_rotation_days: 90
+  max_failed_attempts: 5
+  lockout_duration_minutes: 30
+  enable_2fa: true
+  
+# Performance monitoring
+performance:
+  enable_metrics_collection: true
+  metrics_retention_days: 365
+  enable_performance_alerts: true
+  benchmark_comparison: true
+  
+# Compliance configuration
+compliance:
+  enable_audit_logging: true
+  audit_log_retention_days: 2555  # 7 years
+  enable_trade_reporting: true
+  regulatory_reporting: true

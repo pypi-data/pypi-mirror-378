@@ -1,0 +1,239 @@
+# Unified Strategy Orchestration Configuration Template
+# This template provides a comprehensive configuration for the orchestration system
+
+orchestrator:
+  # Global orchestrator settings
+  max_concurrent_strategies: 20
+  signal_aggregation_method: "weighted_average"  # Options: weighted_average, majority_vote, confidence_weighted
+  conflict_resolution_method: "highest_confidence"  # Options: highest_confidence, latest_signal, weighted_combination
+  enable_dynamic_allocation: true
+  enable_strategy_auto_discovery: true
+
+  # Allocation management configuration
+  allocation:
+    method: "performance_based"  # Options: equal_weight, performance_based, risk_parity, custom
+    rebalance_frequency: "daily"  # Options: real_time, hourly, daily, weekly, monthly
+    min_allocation: 0.01  # Minimum allocation per strategy (1%)
+    max_allocation: 0.25  # Maximum allocation per strategy (25%)
+    rebalance_threshold: 0.05  # Minimum change to trigger rebalancing (5%)
+    lookback_period: 30  # Days to look back for performance calculation
+    
+    # Optional allocation constraints per strategy type
+    allocation_constraints:
+      MovingAverageStrategy:
+        min_allocation: 0.05
+        max_allocation: 0.20
+      RSIStrategy:
+        min_allocation: 0.02
+        max_allocation: 0.15
+
+  # Risk management configuration
+  risk:
+    max_portfolio_drawdown: 0.10  # Maximum portfolio drawdown (10%)
+    max_strategy_correlation: 0.80  # Maximum correlation between strategies
+    position_size_limit: 0.05  # Maximum position size per trade (5% of portfolio)
+    stop_loss_threshold: 0.02  # Stop loss threshold (2%)
+    var_confidence_level: 0.95  # Value at Risk confidence level
+    max_leverage: 1.0  # Maximum leverage allowed
+    correlation_lookback: 60  # Days to look back for correlation calculation
+    risk_free_rate: 0.02  # Annual risk-free rate for calculations
+    
+    # Emergency stop conditions
+    emergency_stop_conditions:
+      - "max_drawdown_exceeded"
+      - "correlation_limit_exceeded"
+      - "strategy_failure_cascade"
+
+  # Performance monitoring configuration
+  monitoring:
+    performance_tracking: true
+    real_time_metrics: true
+    reporting_frequency: "daily"  # Options: real_time, hourly, daily, weekly
+    metrics_retention_days: 365
+    enable_notifications: true
+    notification_channels: ["email", "log"]  # Options: email, slack, webhook, log
+    
+    # Alert thresholds
+    alert_thresholds:
+      drawdown: 0.05  # Alert when drawdown exceeds 5%
+      correlation: 0.75  # Alert when correlation exceeds 75%
+      performance_degradation: -0.10  # Alert when performance drops 10%
+      risk_limit_breach: 0.90  # Alert when risk limits are 90% utilized
+
+  # Optimization configuration
+  optimization:
+    optimization_frequency: "weekly"  # Options: daily, weekly, monthly
+    lookback_period: 30  # Days to look back for optimization
+    optimization_method: "sharpe_ratio"  # Options: sharpe_ratio, calmar_ratio, sortino_ratio, max_return, min_risk
+    min_performance_threshold: 0.0  # Minimum performance threshold for strategy inclusion
+    enable_parameter_optimization: false
+    optimization_constraints: {}
+
+  # Strategy configurations
+  strategies:
+    # Moving Average Strategies
+    - type: "MovingAverageStrategy"
+      name: "ma_short_term"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        short_period: 10
+        long_period: 20
+        market_types: ["crypto", "forex"]
+      risk_limits:
+        max_position_size: 0.03
+        stop_loss: 0.02
+      performance_thresholds:
+        min_sharpe_ratio: 0.5
+        max_drawdown: 0.08
+
+    - type: "MovingAverageStrategy"
+      name: "ma_medium_term"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        short_period: 20
+        long_period: 50
+        market_types: ["crypto", "forex"]
+      risk_limits:
+        max_position_size: 0.04
+        stop_loss: 0.025
+
+    # RSI Strategies
+    - type: "RSIStrategy"
+      name: "rsi_oversold"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        period: 14
+        oversold: 30
+        overbought: 70
+        market_types: ["crypto", "forex"]
+      risk_limits:
+        max_position_size: 0.03
+        stop_loss: 0.02
+
+    - type: "RSIStrategy"
+      name: "rsi_divergence"
+      enabled: true
+      allocation_weight: 0.8
+      parameters:
+        period: 21
+        oversold: 25
+        overbought: 75
+        enable_divergence: true
+        market_types: ["crypto"]
+
+    # Mean Reversion Strategy
+    - type: "MeanReversionStrategy"
+      name: "mean_reversion_crypto"
+      enabled: true
+      allocation_weight: 1.2
+      parameters:
+        lookback_period: 20
+        z_score_threshold: 2.0
+        market_types: ["crypto"]
+      risk_limits:
+        max_position_size: 0.025
+        stop_loss: 0.015
+
+    # Multi-Indicator Strategy
+    - type: "MultiIndicatorStrategy"
+      name: "multi_indicator_combined"
+      enabled: true
+      allocation_weight: 1.5
+      parameters:
+        indicators: ["rsi", "macd", "bollinger_bands"]
+        confirmation_threshold: 2
+        market_types: ["crypto", "forex"]
+      risk_limits:
+        max_position_size: 0.04
+        stop_loss: 0.02
+
+    # Advanced Momentum Strategy
+    - type: "AdvancedMomentumStrategy"
+      name: "momentum_breakout"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        momentum_period: 14
+        breakout_threshold: 0.02
+        market_types: ["crypto"]
+      risk_limits:
+        max_position_size: 0.035
+        stop_loss: 0.025
+
+    # ATR Volatility Strategy
+    - type: "ATRVolatilityStrategy"
+      name: "atr_volatility_adaptive"
+      enabled: true
+      allocation_weight: 0.9
+      parameters:
+        atr_period: 14
+        volatility_multiplier: 2.0
+        market_types: ["crypto", "forex"]
+
+    # ML Pattern Strategy
+    - type: "MLPatternStrategy"
+      name: "ml_pattern_recognition"
+      enabled: false  # Disabled by default due to computational requirements
+      allocation_weight: 1.3
+      parameters:
+        pattern_length: 20
+        confidence_threshold: 0.7
+        market_types: ["crypto"]
+
+    # Forex-specific strategies
+    - type: "ForexCarryTradeStrategy"
+      name: "carry_trade_major_pairs"
+      enabled: true
+      allocation_weight: 1.0
+      parameters:
+        currency_pairs: ["EURUSD", "GBPUSD", "USDJPY"]
+        interest_rate_threshold: 0.005
+        market_types: ["forex"]
+
+    - type: "ForexSessionStrategy"
+      name: "session_breakout"
+      enabled: true
+      allocation_weight: 0.8
+      parameters:
+        sessions: ["london", "new_york"]
+        breakout_threshold: 0.001
+        market_types: ["forex"]
+
+    - type: "ForexNewsStrategy"
+      name: "news_impact_trading"
+      enabled: false  # Requires news feed integration
+      allocation_weight: 1.1
+      parameters:
+        impact_threshold: "high"
+        time_window: 300  # 5 minutes
+        market_types: ["forex"]
+
+    # Cross-market arbitrage strategies
+    - type: "CrossMarketArbitrageStrategy"
+      name: "crypto_forex_arbitrage"
+      enabled: true
+      allocation_weight: 0.7
+      parameters:
+        markets: ["crypto", "forex"]
+        min_spread: 0.001
+        max_execution_time: 30
+
+    - type: "TriangularArbitrageStrategy"
+      name: "triangular_arbitrage"
+      enabled: true
+      allocation_weight: 0.6
+      parameters:
+        currency_triplets: [["USD", "EUR", "GBP"], ["USD", "JPY", "EUR"]]
+        min_profit_threshold: 0.0005
+
+    - type: "CryptoForexArbitrageStrategy"
+      name: "crypto_forex_spread"
+      enabled: true
+      allocation_weight: 0.8
+      parameters:
+        crypto_symbols: ["BTC", "ETH"]
+        forex_pairs: ["BTCUSD", "ETHUSD"]
+        min_spread: 0.002

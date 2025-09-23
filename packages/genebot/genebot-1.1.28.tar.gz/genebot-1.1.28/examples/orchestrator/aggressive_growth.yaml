@@ -1,0 +1,367 @@
+# Aggressive Growth Strategy Orchestrator Configuration
+#
+# This configuration is designed for experienced traders seeking higher returns
+# with higher risk tolerance. It uses performance-based allocation, shorter
+# rebalancing periods, and includes more aggressive strategies.
+#
+# Key Features:
+# - Higher risk limits (15% max drawdown)
+# - Performance-based allocation with daily rebalancing
+# - Larger position sizes and more concurrent positions
+# - Includes momentum and volatility strategies
+# - Advanced optimization features enabled
+
+orchestrator:
+  # Allocation Management - Performance-based for maximum returns
+  allocation:
+    method: "performance_based"
+    rebalance_frequency: "daily"
+    min_allocation: 0.01      # Allow very small allocations
+    max_allocation: 0.40      # Allow large allocations to winners
+    
+    # Performance-based settings
+    performance_based:
+      lookback_period: 14     # Shorter lookback for responsiveness
+      performance_metric: "total_return"  # Focus on absolute returns
+      min_performance_threshold: -0.05    # Allow some underperformance
+      decay_factor: 0.90      # Faster decay of old performance
+      smoothing_factor: 0.6   # Less smoothing for faster allocation changes
+    
+    # Aggressive rebalancing
+    rebalancing_constraints:
+      max_turnover: 0.50      # Allow high turnover
+      min_time_between: "4h"  # Minimum 4 hours between rebalances
+      min_allocation_change: 0.005  # Smaller threshold for changes
+
+  # Risk Management - Higher risk tolerance
+  risk:
+    # Portfolio-level risk limits
+    max_portfolio_drawdown: 0.15    # 15% maximum drawdown
+    max_strategy_correlation: 0.90   # Allow high correlation
+    position_size_limit: 0.08       # 8% maximum position size
+    stop_loss_threshold: 0.025      # 2.5% stop loss
+    max_concurrent_positions: 25    # Allow many positions
+    
+    # Market exposure limits
+    max_market_exposure:
+      crypto: 0.80    # High crypto exposure
+      forex: 0.60     # High forex exposure
+      
+    # Emergency stop conditions
+    emergency_stop_conditions:
+      - "portfolio_drawdown_exceeded"
+      - "strategy_failure_cascade"
+    
+    # Risk monitoring settings
+    monitoring:
+      correlation_period: 14        # Shorter correlation period
+      drawdown_method: "rolling_window"
+      update_frequency: 60          # Update every minute
+      real_time_monitoring: true
+
+  # Strategy Configuration - Aggressive and diverse strategies
+  strategies:
+    # Advanced Momentum Strategy
+    - type: "AdvancedMomentumStrategy"
+      name: "momentum_aggressive"
+      enabled: true
+      allocation_weight: 1.5    # Higher weight for momentum
+      markets: ["crypto", "forex"]
+      parameters:
+        lookback_period: 10     # Short lookback
+        momentum_threshold: 0.02
+        acceleration_factor: 1.5
+        volatility_adjustment: true
+      risk_limits:
+        max_position_size: 0.06
+        stop_loss: 0.02
+        take_profit: 0.05
+      performance_requirements:
+        min_sharpe_ratio: 0.5
+        min_win_rate: 0.45
+        max_drawdown: 0.12
+
+    # ATR Volatility Strategy
+    - type: "ATRVolatilityStrategy"
+      name: "atr_aggressive"
+      enabled: true
+      allocation_weight: 1.3
+      markets: ["crypto"]
+      parameters:
+        atr_period: 10
+        volatility_multiplier: 2.5
+        breakout_threshold: 0.015
+        trend_filter: false     # No trend filter for more signals
+      risk_limits:
+        max_position_size: 0.07
+        stop_loss: 0.025
+        take_profit: 0.06
+      performance_requirements:
+        min_sharpe_ratio: 0.4
+        min_win_rate: 0.40
+        max_drawdown: 0.15
+
+    # ML Pattern Strategy
+    - type: "MLPatternStrategy"
+      name: "ml_aggressive"
+      enabled: true
+      allocation_weight: 1.8    # High weight for ML
+      markets: ["crypto", "forex"]
+      parameters:
+        model_type: "xgboost"
+        features: ["price", "volume", "volatility", "momentum"]
+        lookback_window: 50
+        prediction_horizon: 5
+        confidence_threshold: 0.6
+      risk_limits:
+        max_position_size: 0.08
+        stop_loss: 0.03
+        take_profit: 0.08
+      performance_requirements:
+        min_sharpe_ratio: 0.6
+        min_win_rate: 0.50
+        max_drawdown: 0.12
+
+    # Cross Market Arbitrage
+    - type: "CrossMarketArbitrageStrategy"
+      name: "cross_arb_aggressive"
+      enabled: true
+      allocation_weight: 2.0    # Highest weight for arbitrage
+      markets: ["crypto", "forex"]
+      parameters:
+        min_spread: 0.001       # Lower minimum spread
+        max_execution_time: 5   # Fast execution required
+        correlation_threshold: 0.8
+        hedge_ratio: 0.95
+      risk_limits:
+        max_position_size: 0.10  # Large positions for arbitrage
+        stop_loss: 0.005        # Tight stop for arbitrage
+        take_profit: 0.015
+      performance_requirements:
+        min_sharpe_ratio: 1.0
+        min_win_rate: 0.70
+        max_drawdown: 0.05
+
+    # Triangular Arbitrage
+    - type: "TriangularArbitrageStrategy"
+      name: "triangular_arb_aggressive"
+      enabled: true
+      allocation_weight: 1.8
+      markets: ["crypto"]
+      parameters:
+        min_profit_threshold: 0.0005  # Lower threshold
+        max_execution_time: 3
+        currency_pairs: ["BTC/USD", "ETH/USD", "ETH/BTC"]
+      risk_limits:
+        max_position_size: 0.08
+        stop_loss: 0.003
+        take_profit: 0.01
+      performance_requirements:
+        min_sharpe_ratio: 1.5
+        min_win_rate: 0.80
+        max_drawdown: 0.03
+
+    # Forex Carry Trade
+    - type: "ForexCarryTradeStrategy"
+      name: "carry_aggressive"
+      enabled: true
+      allocation_weight: 1.2
+      markets: ["forex"]
+      parameters:
+        min_interest_differential: 0.01  # Lower threshold
+        volatility_threshold: 0.015
+        trend_confirmation: false        # No trend confirmation
+        rollover_optimization: true
+      risk_limits:
+        max_position_size: 0.06
+        stop_loss: 0.02
+        take_profit: 0.04
+      performance_requirements:
+        min_sharpe_ratio: 0.4
+        min_win_rate: 0.45
+        max_drawdown: 0.10
+
+    # Mean Reversion with tight parameters
+    - type: "MeanReversionStrategy"
+      name: "mean_reversion_aggressive"
+      enabled: true
+      allocation_weight: 1.0
+      markets: ["crypto", "forex"]
+      parameters:
+        lookback_period: 15     # Shorter lookback
+        std_dev_threshold: 1.5  # Lower threshold for more signals
+        mean_type: "exponential"
+        reversion_speed: 0.3
+      risk_limits:
+        max_position_size: 0.05
+        stop_loss: 0.02
+        take_profit: 0.04
+      performance_requirements:
+        min_sharpe_ratio: 0.3
+        min_win_rate: 0.40
+        max_drawdown: 0.08
+
+  # Monitoring and Alerting - High-frequency monitoring
+  monitoring:
+    performance_tracking: true
+    metrics_frequency: "1m"     # 1-minute updates
+    data_retention: 365         # 1 year of data
+    
+    # Tracked metrics
+    tracked_metrics:
+      - "total_return"
+      - "sharpe_ratio"
+      - "max_drawdown"
+      - "win_rate"
+      - "profit_factor"
+      - "volatility"
+      - "correlation"
+      - "alpha"
+      - "beta"
+    
+    # Aggressive alert thresholds
+    alert_thresholds:
+      drawdown: 0.10              # Alert at 10% drawdown
+      correlation: 0.85           # Alert at 85% correlation
+      strategy_failure_rate: 0.30 # Alert if 30% of strategies fail
+      performance_degradation: 0.40  # Alert on 40% performance drop
+      position_size: 0.09         # Alert if position > 9%
+    
+    # Notification channels
+    notifications:
+      email:
+        enabled: true
+        smtp_server: "smtp.gmail.com"
+        smtp_port: 587
+        username: "${EMAIL_USERNAME}"
+        password: "${EMAIL_PASSWORD}"
+        recipients:
+          - "${TRADER_EMAIL}"
+          - "${RISK_MANAGER_EMAIL}"
+      
+      slack:
+        enabled: true
+        webhook_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#aggressive-trading"
+      
+      webhook:
+        enabled: true
+        url: "${WEBHOOK_URL}"
+        headers:
+          Authorization: "Bearer ${WEBHOOK_TOKEN}"
+
+  # Optimization Settings - Aggressive optimization
+  optimization:
+    optimization_frequency: "weekly"   # Weekly optimization
+    lookback_period: 30               # 1-month lookback
+    optimization_method: "total_return"  # Focus on returns
+    min_performance_threshold: -0.10   # Allow underperformance
+    
+    # Strategy selection criteria
+    selection_criteria:
+      min_trades: 10              # Lower minimum trades
+      min_win_rate: 0.30          # Lower minimum win rate
+      max_drawdown: 0.20          # Higher maximum drawdown
+      min_sharpe_ratio: 0.1       # Lower minimum Sharpe ratio
+    
+    # Parameter optimization enabled
+    parameter_optimization:
+      enabled: true
+      algorithm: "bayesian"       # Advanced optimization
+      frequency: "monthly"
+      
+      # Parameters to optimize
+      parameters:
+        AdvancedMomentumStrategy:
+          lookback_period: [5, 10, 15, 20]
+          momentum_threshold: [0.01, 0.02, 0.03]
+        ATRVolatilityStrategy:
+          atr_period: [5, 10, 14, 20]
+          volatility_multiplier: [1.5, 2.0, 2.5, 3.0]
+        MLPatternStrategy:
+          lookback_window: [30, 50, 100]
+          confidence_threshold: [0.5, 0.6, 0.7, 0.8]
+
+  # Logging Configuration
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    
+    file:
+      enabled: true
+      path: "logs/orchestrator_aggressive.log"
+      max_size: "100MB"
+      backup_count: 5
+    
+    console:
+      enabled: true
+      level: "WARNING"  # Less console output
+    
+    structured:
+      enabled: true
+      format: "json"
+    
+    audit:
+      enabled: true
+      path: "logs/orchestrator_audit_aggressive.log"
+      include_decisions: true
+      include_allocations: true
+      include_risk_events: true
+
+  # API Configuration - Enabled for monitoring
+  api:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8080
+    
+    authentication:
+      enabled: true
+      method: "bearer_token"
+      token: "${API_TOKEN}"
+    
+    cors:
+      enabled: true
+      origins: ["http://localhost:3000", "https://dashboard.example.com"]
+    
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 200  # Higher rate limit
+
+# Strategy Groups - Aggressive grouping
+strategy_groups:
+  momentum:
+    strategies:
+      - "momentum_aggressive"
+      - "atr_aggressive"
+    max_group_allocation: 0.50    # High momentum allocation
+    
+  machine_learning:
+    strategies:
+      - "ml_aggressive"
+    max_group_allocation: 0.30    # Significant ML allocation
+    
+  arbitrage:
+    strategies:
+      - "cross_arb_aggressive"
+      - "triangular_arb_aggressive"
+    max_group_allocation: 0.60    # High arbitrage allocation
+    
+  carry_trade:
+    strategies:
+      - "carry_aggressive"
+    max_group_allocation: 0.25    # Moderate carry allocation
+    
+  mean_reversion:
+    strategies:
+      - "mean_reversion_aggressive"
+    max_group_allocation: 0.20    # Lower mean reversion allocation
+
+# Environment Variables Required:
+# EMAIL_USERNAME - SMTP username for email alerts
+# EMAIL_PASSWORD - SMTP password for email alerts
+# TRADER_EMAIL - Primary trader email address
+# RISK_MANAGER_EMAIL - Risk manager email address
+# SLACK_WEBHOOK_URL - Slack webhook for notifications
+# WEBHOOK_URL - Custom webhook URL for alerts
+# WEBHOOK_TOKEN - Authentication token for webhook
+# API_TOKEN - API authentication token
