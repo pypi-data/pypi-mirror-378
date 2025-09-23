@@ -1,0 +1,66 @@
+import tempfile
+from urllib.parse import urlencode
+
+from jupyterhub.tests.utils import async_requests, public_host
+from jupyterhub.utils import url_path_join
+from traitlets import Unicode, default
+
+from jupyterhub_moss import MOSlurmSpawner
+
+
+def request(
+    app,
+    method: str,
+    path: str,
+    data: dict | None = None,
+    cookies: dict | None = None,
+    **kwargs,
+):
+    """Send a GET or POST request on the hub
+
+    Similar to jupyterhub.tests.utils.get_page
+    """
+    if data is None:
+        data = {}
+
+    base_url = url_path_join(public_host(app), app.hub.base_url)
+    url = url_path_join(base_url, path)
+
+    if method == "POST":
+        if cookies is not None and "_xsrf" in cookies:
+            data["_xsrf"] = cookies["_xsrf"]
+        return async_requests.post(url, data=data, cookies=cookies, **kwargs)
+
+    assert method == "GET"
+    if data:  # Convert data to query string
+        url += f"?{urlencode(data)}"
+    return async_requests.get(url, cookies=cookies, **kwargs)
+
+
+class MOSlurmSpawnerMock(MOSlurmSpawner):
+    """MOSlurmSpawner with some overrides to mock some features.
+
+    Adapted from jupyterhub.tests.mocking.MockSpawner and
+    batchspawner.tests.test_spawner.BatchDummy
+    """
+
+    exec_prefix = Unicode("")
+    batch_submit_cmd = Unicode("cat > /dev/null; sleep 1")
+    batch_query_cmd = Unicode("echo PENDING")
+    batch_cancel_cmd = Unicode("echo STOP")
+
+    req_homedir = Unicode(help="The home directory for the user")
+
+    def __init__(self, *args, **kwargs):
+        self._tmpdir = tempfile.TemporaryDirectory()
+        super().__init__(*args, **kwargs)
+
+    @default("req_homedir")
+    def _default_req_homedir(self):
+        return f"/{self._tmpdir.name}/jupyterhub_moss_tests/{self.user.name}"
+
+    def user_env(self, env):
+        env["USER"] = self.user.name
+        env["HOME"] = self.req_homedir
+        env["SHELL"] = "/bin/bash"
+        return env
