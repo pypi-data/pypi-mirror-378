@@ -1,0 +1,420 @@
+
+%%%%%%%%%%% MACROS FOR DRAWING INTERVAL AND MESH PATTERNS %%%%%%%%%%%
+
+% Sub-macros
+\newcommand{\shadetheboxes}[1]{
+	\foreach \x/\y in {#1}
+      	\fill[pattern color = black!75, pattern=north east lines] (\x,\y) rectangle +(1,1);
+	}
+
+\newcommand{\shadetherects}[1]{
+	\foreach \x/\y/\xt/\yt in {#1}
+      	\fill[pattern color = black!75, pattern=north east lines] (\x,\y) rectangle (\xt,\yt);
+	}
+
+\newcommand{\drawthegrid}[1]{
+	\draw (0.01,0.01) grid (#1+0.99,#1+0.99);
+	}
+	
+\newcommand{\drawverticallines}[3]{
+	\foreach \x in {#2}
+		\draw[line width=#3] (\x+0.01,0.01) -- (\x+0.01,#1+0.99);
+	}
+
+\newcommand{\drawhorizontallines}[3]{
+	\foreach \y in {#2}
+		\draw[line width=#3] (0.01,\y+0.01) -- (#1+0.99,\y+0.01);
+	}
+	
+\newcommand{\drawtheclpattern}[1]{
+	\foreach \x/\y in {#1}
+      	\filldraw (\x,\y) circle (6pt);
+	}
+	
+\newcommand{\drawtheclpatternwhite}[1]{
+	\foreach \x/\y in {#1}
+      	\draw[fill=white] (\x,\y) circle (6pt);
+	}
+	
+\newcommand{\drawtheclpatternwhitebig}[1]{
+	\foreach \x/\y in {#1}
+		\draw[fill=white] (\x,\y) circle (11pt);
+	}
+	
+\newcommand{\drawspecialbox}[1]{
+	\foreach \x/\y/\z/\w/\A in {#1}
+		{
+       		\fill[color = white!100, opacity=1, rounded corners = 1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\draw[color = black, rounded corners = 1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\fill[black] (\x/2+\z/2,\y/2+\w/2) node {$\scriptstyle\A$};
+       	}
+    }
+    
+\newcommand{\drawspecialboxnomark}[1]{
+	\foreach \x/\y/\z/\w in {#1}
+		{
+       		\fill[color = white!100, opacity=1, rounded corners = 1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\draw[color = black, rounded corners = 1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       	}
+    }
+    
+\newcommand{\drawspecialboxthemark}[1]{
+	\foreach \x/\y/\z/\w/\A in {#1}
+		\fill[black] (\x/2+\z/2,\y/2+\w/2) node {$\scriptstyle\A$};
+    }
+    
+\newcommand{\onetwo}{\mpatternnl{scale=0.2}{2}{1/1,2/2}{}}		% the pattern 12 with no lines
+
+\newcommand{\drawspecialshadedbox}[1]{
+	\foreach \x/\y/\z/\w/\A in {#1}
+		{
+       		\fill[color = white!100, opacity=1, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\fill[pattern color = black!65, pattern=north east lines, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\draw[color = black, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\fill[black] (\x/2+\z/2,\y/2+\w/2) node {$\scriptstyle\A$};
+       	}
+    }
+	
+\newcommand{\drawsolidshadedbox}[1]{
+	\foreach \x/\y/\z/\w/\A in {#1}
+		{
+       		\fill[color = gray!50, opacity=1, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\draw[color = black, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\fill[black] (\x/2+\z/2,\y/2+\w/2) node {$\scriptstyle\A$};
+       	}
+    }
+
+\newcommand{\drawascendingrestrictions}[1]{
+	\foreach \x/\y/\z/\w in {#1}
+		{
+       		\fill[color = white!100, opacity=1, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\fill[pattern color = black!65, pattern=north east lines, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\draw[color = black, rounded corners=1.5pt] (\x+0.125,\y+0.125) rectangle (\z-0.125,\w-0.125);
+       		\fill[black] (\x/2+\z/2,\y/2+\w/2) node {\onetwo};
+       	}
+    }    
+
+\newcommand{\mpattern}[4]{										% mesh pattern for text
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  	\useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+	
+    \shadetheboxes{#4}
+    
+    \drawthegrid{#2}
+    
+    \drawtheclpattern{#3}
+    
+  \end{tikzpicture}}
+}
+
+\newcommand{\mpatternpic}[4]{										% mesh pattern
+	\scalebox{#1}
+	{  
+		\begin{tikzpicture}[baseline=(current bounding box.center)]
+		
+			\foreach \x/\y in {#4}
+				\fill[pattern color = black!65, pattern=north east lines] (\x,\y) rectangle +(1,1);
+
+			\drawthegrid{#2}
+			\drawtheclpattern{#3}
+		
+		\end{tikzpicture}
+	}
+}
+
+\newcommand{\mpatternnl}[4]{										% mesh pattern - nl
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  	\useasboundingbox (0.85,-0.1) rectangle (#2+1.4,#2+1.1);
+	
+    \shadetheboxes{#4}
+    
+    \drawtheclpattern{#3}
+    
+  \end{tikzpicture}}
+}
+
+\newcommand{\mpatternww}[5]{									% mesh pattern with white and black dots
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  	\useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+	
+    \shadetheboxes{#5}
+    
+    \drawthegrid{#2}
+    
+    \drawtheclpatternwhite{#4}
+    \drawtheclpattern{#3}
+    
+  \end{tikzpicture}}
+}
+
+\newcommand{\mpatternwwo}[6]{									% mesh pattern with white and black dots overlapping
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  \useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+  
+    \shadetheboxes{#6}
+    
+    \drawthegrid{#2}
+    
+    \drawtheclpatternwhite{#4}
+    \drawtheclpatternwhitebig{#5}
+    \drawtheclpattern{#3}
+    
+  \end{tikzpicture}}
+}
+
+\newcommand{\mmpattern}[5]{									% mesh patterns with a special box marked
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  \useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+    
+    \shadetheboxes{#4}
+    
+    \drawthegrid{#2}
+    
+    \drawspecialbox{#5}
+    
+    \drawtheclpattern{#3}
+
+  \end{tikzpicture}}
+}
+
+\newcommand{\mmpatternwwo}[7]{									% mesh pattern with white and black dots overlapping
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  \useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+    
+    \shadetheboxes{#6}
+    
+    \drawthegrid{#2}
+    
+    \drawspecialbox{#7}
+    
+    \drawtheclpatternwhite{#4}
+    \drawtheclpatternwhitebig{#5}
+    \drawtheclpattern{#3}
+    
+  \end{tikzpicture}}
+}
+
+\newcommand{\mmpatternloc}[6]{									% mesh patterns with a special box marked
+  \raisebox{0.6ex}{											% can control location of mark
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  \useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+    
+    \shadetheboxes{#4}
+    
+    \drawthegrid{#2}
+    
+    \drawspecialboxnomark{#5}
+    \drawspecialboxthemark{#6}
+    
+    \drawtheclpattern{#3}
+
+  \end{tikzpicture}}
+}
+
+\newcommand{\mmpatternwwoloc}[8]{									% mesh pattern with white and black dots overlapping
+  \raisebox{0.6ex}{												% can control location of mark
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  \useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+    
+    \shadetheboxes{#6}
+    
+    \drawthegrid{#2}
+    
+    \drawspecialboxnomark{#7}
+    \drawspecialboxthemark{#8}
+    
+    \drawtheclpatternwhite{#4}
+    \drawtheclpatternwhitebig{#5}
+    \drawtheclpattern{#3}
+    
+  \end{tikzpicture}}
+}
+
+\newcommand{\decpattern}[6]{									% decorated pattern
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  \useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+    
+    \shadetheboxes{#4}
+    
+    \drawthegrid{#2}
+       
+    \drawspecialbox{#5}
+    \drawspecialshadedbox{#6}
+    
+    \drawtheclpattern{#3}
+
+  \end{tikzpicture}}
+}
+
+\newcommand{\decpatternww}[8]{								% decorated pattern w white
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  \useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#2+1.1);
+    
+    \shadetheboxes{#6}
+    
+    \drawthegrid{#2}
+       
+    \drawspecialbox{#7}
+    \drawspecialshadedbox{#8}
+    
+    \drawtheclpatternwhite{#4}
+    \drawtheclpatternwhitebig{#5}
+    \drawtheclpattern{#3}
+
+  \end{tikzpicture}}
+}
+
+\newcommand{\mpatternlabelled}[5]{										% mesh pattern with labels for some boxes
+  \raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+    
+    \shadetheboxes{#4}
+    
+    \drawthegrid{#2}
+    
+    \drawtheclpattern{#3}
+    
+    \draw (0.5,0.5) -- (0.5,-0.5);
+    \fill[black] (0.5,-1) node {$\scriptstyle(0,0)$};
+    \draw (0.5,2.5) -- (0.5,4.5);
+    \fill[black] (0.5,5) node {$\scriptstyle(0,2)$};
+    \draw (1.5,2.5) -- (1.5,6);
+    \fill[black] (1.5,6.5) node {$\scriptstyle(1,2)$};
+    \draw (2.5,2.5) -- (2.5,4.5);
+    \fill[black] (2.5,5) node {$\scriptstyle(2,2)$};
+    
+  \end{tikzpicture}}
+}
+
+% #1: Scale
+% #2: Width
+% #3: Height
+% #4: Thick lines
+% #5: Normal lines
+% #6: Points
+% #7: Shades
+% #8: Ascending restrictions
+% #9: Markings
+\newcommandx{\descriptionpatt}[9][8={},9={}]
+{
+	\raisebox{0.6ex}{
+  \begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+  	\useasboundingbox (0.0,-0.1) rectangle (#2+1.4,#3+1.1);
+		
+		\shadetherects{#7}
+
+		\foreach \pos/\type in {#4}
+		{
+			\ifthenelse{\equal{\type}{v}}
+			{
+				\drawverticallines{#3}{\pos}{0.8pt}
+			}
+			{
+				\drawhorizontallines{#2}{\pos}{0.8pt}
+			}
+		}
+
+		\foreach \pos/\type in {#5}
+		{
+			\ifthenelse{\equal{\type}{v}}
+			{
+				\drawverticallines{#3}{\pos}{0.4pt}
+			}
+			{
+				\ifthenelse{\equal{\type}{d}}
+				{
+					\draw[densely dashed] (\pos,0) -- (\pos,#3+1);
+				}
+				{
+					\drawhorizontallines{#2}{\pos}{0.4pt}
+				}
+			}
+		}
+		
+		\drawascendingrestrictions{#8}
+		\drawspecialbox{#9}
+		
+		\foreach \x/\y/\type in {#6}
+		{
+			\ifthenelse{\equal{\type}{a}}
+			{
+				% Added point
+				\draw (\x,\y) circle (6pt);
+				\filldraw (\x,\y) circle (3pt);
+			}
+			{
+				% Pattern point
+				\filldraw (\x,\y) circle (5pt);
+			}
+		}
+    
+  \end{tikzpicture}}
+} 
+
+% #1: Scale
+% #2: Width
+% #3: Height
+% #4: Points
+% #5: Shades
+% #6: Markings
+% #7: Restrictive Decorations
+% #8: Containment Decorations
+\newcommand{\descpatt}[8]
+{
+	\begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+		\shadetherects{#5}
+		\draw (0.01,0.01) grid (#2+1-0.01,#3+1-0.01);
+		
+		\drawsolidshadedbox{#7}
+		\drawspecialbox{#6}
+		\drawspecialbox{#8}
+		\foreach \x/\y/\type in {#4}
+		{
+			\filldraw (\x,\y) circle (5pt);
+		}
+  \end{tikzpicture}
+} 
+
+
+% #1: Scale
+% #2: Width
+% #3: Height
+% #4: Points
+% #5: Shades
+% #6: Markings
+% #7: Restrictive Decorations
+% #8: Containment Decorations
+\newcommand{\descpatte}[8]
+{
+	\begin{tikzpicture}[scale=0.35, baseline=(current bounding box.center), #1]
+		\shadetherects{#5}
+		\draw (0.01,0.01) grid (#2+1-0.01,#3+1-0.01);
+		
+		\drawsolidshadedbox{#7}
+		\drawspecialbox{#6}
+		\drawspecialbox{#8}
+
+		\foreach \x/\y/\type in {#4}
+		{
+			\ifthenelse{\equal{\type}{s}}
+			{
+				% Special point
+				\draw (\x,\y) circle (6pt);
+				\filldraw (\x,\y) circle (3pt);
+			}
+			{
+				% Pattern point
+				\filldraw (\x,\y) circle (5pt);
+			}
+		}
+		
+  \end{tikzpicture}
+} 
