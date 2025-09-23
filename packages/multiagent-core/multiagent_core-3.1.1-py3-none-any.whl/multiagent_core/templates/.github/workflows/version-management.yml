@@ -1,0 +1,105 @@
+name: Core Framework Version Management
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  actions: read
+  checks: read
+  pull-requests: write
+
+jobs:
+  version-management:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install semantic-release dependencies
+      run: |
+        npm install --no-save \
+          semantic-release \
+          @semantic-release/changelog \
+          @semantic-release/git \
+          @semantic-release/github \
+          @semantic-release/exec
+
+    - name: Update VERSION file and create release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        # Create semantic-release config for project
+        cat > .releaserc.json << 'EOF'
+        {
+          "branches": ["main"],
+          "plugins": [
+            [
+              "@semantic-release/commit-analyzer",
+              {
+                "releaseRules": [
+                  {"type": "feat", "release": "minor"},
+                  {"type": "fix", "release": "patch"},
+                  {"type": "perf", "release": "patch"},
+                  {"breaking": true, "release": "major"},
+                  {"type": "docs", "release": false},
+                  {"type": "chore", "release": false},
+                  {"type": "ci", "release": false},
+                  {"type": "test", "release": false},
+                  {"type": "style", "release": false},
+                  {"type": "refactor", "release": false}
+                ]
+              }
+            ],
+            "@semantic-release/release-notes-generator",
+            [
+              "@semantic-release/exec",
+              {
+                "prepareCmd": "node -e \"const fs = require('fs'); const versionData = { version: '${nextRelease.version}', commit: process.env.GITHUB_SHA, build_date: new Date().toISOString(), build_type: 'production' }; fs.writeFileSync('VERSION', JSON.stringify(versionData, null, 2)); const pyproject = fs.readFileSync('pyproject.toml', 'utf8'); const updatedPyproject = pyproject.replace(/version = \\\".+\\\"/, 'version = \\\"${nextRelease.version}\\\"'); fs.writeFileSync('pyproject.toml', updatedPyproject);\"",
+                "publishCmd": "rm -rf dist/ && python -m pip install --upgrade pip build twine && python -m build && python -m twine upload dist/* --username __token__ --password $PYPI_TOKEN"
+              }
+            ],
+            [
+              "@semantic-release/git",
+              {
+                "assets": ["VERSION", "pyproject.toml"],
+                "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+              }
+            ],
+            "@semantic-release/github"
+          ]
+        }
+        EOF
+        
+        # Run semantic-release
+        npx semantic-release
+      continue-on-error: true
+
+    - name: Core framework version management complete
+      if: always()
+      run: |
+        echo "✅ MultiAgent Core framework version management workflow completed"
+        echo "📦 Current version: $(cat VERSION | jq -r .version 2>/dev/null || echo 'unknown')"
+        echo ""
+        echo "🚀 Framework uses semantic versioning with conventional commits"
+        echo "📖 Install/update with: pip install --upgrade multiagent-core"
+        echo "📦 Published to PyPI automatically on version bump"
