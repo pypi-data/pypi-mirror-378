@@ -1,0 +1,51 @@
+# MtbDb: Genomics Database Toolkit for Mycobacterium Tuberculosis
+
+MtbDb是一个专门为结核分枝杆菌（Mycobacterium Tuberculosis）基因组分析设计的Python工具包，提供了结核菌基因组数据库的高效查询和分析功能。
+
+## 功能特性
+
+- 🧬 结核菌基因组数据库查询
+- 📊 基因变异分析(TBVA)
+- 🔍 基因表达分析(TBGEA)
+- 📈 统计分析和可视化
+- 🔗 支持多种数据格式
+
+## 安装
+
+### 从TestPyPI安装
+```bash
+pip install -i https://test.pypi.org/simple/ MtbDb
+```
+
+### 从源码安装
+```bash
+git clone https://github.com/16627517673/mtbdb.git
+cd mtbdb
+pip install -e .
+```
+
+## 系统要求
+
+- Python >= 3.8
+- 依赖包：intervaltree, numpy, pandas, scipy, statsmodels
+
+## 快速开始
+
+```python
+import mtbdb
+
+# 基本使用示例
+# TODO: 添加具体的使用示例
+```
+
+## 许可证
+
+本项目采用 Apache License 2.0 许可证。详见 [LICENSE](LICENSE) 文件。
+
+## 作者
+
+HengyuZhou (zhouhengyu23@mails.ucas.ac.cn)
+
+## 项目主页
+
+https://github.com/16627517673/mtbdb
