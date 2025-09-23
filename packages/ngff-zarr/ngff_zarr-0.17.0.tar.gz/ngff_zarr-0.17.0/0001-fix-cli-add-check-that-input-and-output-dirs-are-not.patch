@@ -1,0 +1,56 @@
+From fe13bde39219914d4058d81eff34ee5c979fb588 Mon Sep 17 00:00:00 2001
+From: Matt McCormick <matt@fideus.io>
+Date: Mon, 22 Sep 2025 17:05:32 -0400
+Subject: [PATCH] fix(cli): add check that input and output dirs are not the
+ same
+
+---
+ py/ngff_zarr/cli.py | 10 +++++++++-
+ py/pixi.lock        |  2 +-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/py/ngff_zarr/cli.py b/py/ngff_zarr/cli.py
+index ed350cc..eb34754 100755
+--- a/py/ngff_zarr/cli.py
++++ b/py/ngff_zarr/cli.py
+@@ -272,15 +272,23 @@ def main():
+         help="Use the TensorStore library for I/O",
+     )
+ 
++
+     args = parser.parse_args()
+ 
++    # Check that input and output are not the same
++    if args.output:
++        output_path = Path(args.output).resolve()
++        input_paths = [Path(inp).resolve() for inp in args.input]
++        if any(output_path == inp for inp in input_paths):
++            parser.error("Input and output file/directory must not be the same.")
++
+     if args.memory_target:
+         config.memory_target = dask.utils.parse_bytes(args.memory_target)
+ 
+     if args.cache_dir:
+         cache_dir = Path(args.cache_dir).resolve()
+         if not cache_dir.exists():
+-            Path.makedirs(cache_dir, parents=True)
++            cache_dir.mkdir(parents=True, exist_ok=True)
+         config.cache_store = LocalStore(cache_dir, **zarr_kwargs)
+ 
+     console = Console()
+diff --git a/py/pixi.lock b/py/pixi.lock
+index 4f69f8a..ed2f90b 100644
+--- a/py/pixi.lock
++++ b/py/pixi.lock
+@@ -3528,7 +3528,7 @@ packages:
+   timestamp: 1738196177597
+ - pypi: ./
+   name: ngff-zarr
+-  version: 0.15.2
++  version: 0.16.1
+   sha256: 2411f274c91e5efd78524d45aa9f1c5de5727b0ba35455ca58fa3b6cbf8880bd
+   requires_dist:
+   - dask[array]
+-- 
+2.48.1
+
