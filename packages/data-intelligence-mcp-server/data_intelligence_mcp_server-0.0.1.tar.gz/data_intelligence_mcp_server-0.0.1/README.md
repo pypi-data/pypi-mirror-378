@@ -1,0 +1,283 @@
+# Data Intelligence MCP Server
+
+This project provides a modular, scalable Model Context Protocol (MCP) server designed for extensibility. It features a decorator-based registration system and a developer CLI to streamline the creation and management of new services and tools.
+
+
+```mermaid
+flowchart LR
+    github["data-intelligence-mcp Github"] -- publish --> registry
+    registry["PyPi registry"] -- pip install data-intelligence-mcp-server--> server
+    subgraph MCP Host
+        client["MCP Client"] <-- MCP/STDIO --> server("Data Intelligence MCP Server")
+    end
+    server -- HTTPS --> runtime("IBM Data Intelligence")
+    subgraph id["Services"]
+        runtime
+    end
+    client <-- MCP/HTTP --> server2("DI MCP Server") -- HTTPS --> runtime
+
+```
+---
+
+Table of Contents
+-----------------
+
+1. [Table of Contents](#table-of-contents)
+2. [Quick Install - PyPI](#quick-install---pypi)
+   - [Prerequisites](#prerequisites)
+   - [Installation](#installation)
+3. [Server]
+   - [Run Server in http]
+   - [Run server in https]
+3. [Client](#client)
+   - [Claude](#run-in-stdio-mode-from-claudecopilot)
+   - [Copilot](#run-in-http-mode-from-claudecopilot)
+   - [WatsonxOrchestrate](#run-in-http-mode-from-claudecopilot)
+5. [Configuration](#configuration)
+6. [Development](#development) *(Work in Progress)*
+
+---
+
+## Quick Install - PyPI
+
+### Prerequisites
+- Python 3.11 or higher
+
+### Installation
+
+#### Standard Installation
+
+Use pip/pip3 for standard installation with colon-separated tool names:
+```bash
+pip install data-intelligence-mcp-server
+```
+
+Tool names will follow the format: `data_product:attach_business_domain_to_data_product`
+
+#### WXO Mode Installation
+
+Install with WXO naming convention (underscores instead of colons):
+```bash
+pip install "data-intelligence-mcp-server[wxo]"
+```
+
+Or enable WXO mode with environment variable:
+```bash
+export DI_WXO_MODE=true
+pip install data-intelligence-mcp-server
+```
+
+Tool names will follow the format: `data_product_attach_business_domain_to_data_product`
+
+**WXO Mode Features:**
+- Replaces all colons (`:`) with underscores (`_`) in tool names
+- Maintains full functionality with alternative naming convention
+- Useful for integrations that prefer underscore-separated naming
+- Can be enabled via environment variable `DI_WXO_MODE=true`
+---
+
+## Server
+
+ If you have installed the data-intelligence-mcp-server locally on your host machine and want to connect from a client such as Claude, Copilot, or LMStudio, you can use the stdio mode as described in the examples under the Client
+ section.
+
+ The server can also be configured and run in http/https mode
+
+ ### HTTP
+ ```
+  data-intelligence-server
+ ```
+
+ ### HTTPS
+ Refere to SERVER_HTTPS.md for details https server configuration and setup.
+
+---
+## Client
+
+### Run in stdio mode from Claude/Copilot
+
+⚠️ **Check [Configuration](#configuration) section below for all available configuration options**
+
+Add the MCP server to your vscode copilot mcp configuration:
+```json
+{
+  "servers": {
+    "wxdi-mcp-server": {
+      "command": "data-intelligence-mcp-server",
+      "args": ["--transport", "stdio"],
+      "env": {
+         "DI_SERVICE_URL" : "https://api.dataplatform.dev.cloud.ibm.com",
+         "STDIO_AUTH_TOKEN" : "<bearer_token>"
+      }
+    }
+  }
+}
+```
+
+Add the MCP server to your claude desktop mcp config:
+```json
+{
+  "mcpServers": {
+    "wxdi-mcp-server": {
+      "command": "data-intelligence-mcp-server",
+      "args": ["--transport", "stdio"],
+      "env": {
+         "DI_SERVICE_URL" : "https://api.dataplatform.dev.cloud.ibm.com",
+         "STDIO_AUTH_TOKEN" : "<bearer_token>"
+      }
+    }
+  }
+}
+
+```
+### Run in http mode from Claude/Copilot
+
+For HTTP mode, you'll need to start the server separately and then configure your client to connect to it.
+
+#### Step 1: Start the MCP Server
+
+Run the server in HTTP mode:
+```bash
+data-intelligence-mcp-server --transport http --host 0.0.0.0 --port 3000
+```
+
+#### Step 2: Configure Claude Desktop
+
+Add the MCP server to your Claude Desktop configuration:
+```json
+{
+  "mcpServers": {
+    "wxdi-mcp-server": {
+      "url": "http://localhost:3000/mcp",
+      "env": {
+        "DI_SERVICE_URL": "https://api.dataplatform.dev.cloud.ibm.com",
+        "STDIO_AUTH_TOKEN": "<bearer_token>"
+      }
+    }
+  }
+}
+```
+
+#### Step 3: Configure VS Code Copilot
+
+Add the server to your VS Code Copilot MCP configuration:
+```json
+{
+  "servers": {
+    "wxdi-mcp-server": {
+      "url": "http://localhost:3000/mcp",
+      "env": {
+        "DI_SERVICE_URL": "https://api.dataplatform.dev.cloud.ibm.com",
+        "STDIO_AUTH_TOKEN": "<bearer_token>"
+      }
+    }
+  }
+}
+```
+
+⚠️ **Note:** HTTP mode allows multiple clients to connect to the same server instance, but requires the server to be running continuously.
+
+
+
+---
+
+## Configuration
+
+The MCP server can be configured using environment variables or a `.env` file. Copy `.env.example` to `.env` and modify the values as needed.
+
+### Server Settings
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `SERVER_HOST` | `0.0.0.0` | Server bind address |
+| `SERVER_PORT` | `3000` | Server port number |
+| `SERVER_TRANSPORT` | `http` | Transport protocol (`http` or `stdio`) |
+
+### Authentication Settings
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `STDIO_AUTH_TOKEN` | `None` | Bearer token for stdio mode (optional) |
+| `DI_APIKEY` | `None` | API key for authentication |
+| `DI_USERNAME` | `None` | Username (required when using API key for CPD) |
+| `ENV_MODE` | `SaaS` | Environment mode (`SaaS` or `CPD`) |
+
+### HTTP Client Settings
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `REQUEST_TIMEOUT_S` | `30` | HTTP request timeout in seconds |
+| `DI_SERVICE_URL` | `None` | Base URL for Watson Data Platform instance |
+
+### WXO Mode Settings
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `DI_WXO_MODE` | `false` | Enable WXO naming convention (replaces colons with underscores) |
+
+### SSL/TLS Configuration
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `SSL_VERIFY` | `true` | Enable/disable SSL certificate verification |
+| `AUTH_MODE` | `disabled` | Authentication mode (`disabled`, `bypass`, `jwt`, `cpd`) |
+| `AUTH_IAM_URL` | `None` | IAM service URL for JWT mode |
+| `AUTH_WKC_SERVICE_ID` | `None` | Base64 encoded credentials for CPD mode |
+| `AUTH_AUTO_ERROR` | `true` | Automatically return errors on auth failures |
+
+### SSL Certificate Modes
+
+The server supports different SSL certificate verification modes:
+
+- **`system_default`**: Use system CA certificate store (default)
+- **`custom_ca_bundle`**: Use custom CA certificate bundle file
+- **`client_cert`**: Client certificate authentication (mutual TLS)
+- **`disabled`**: Disable SSL certificate verification
+
+### Example Configurations
+
+#### Development Environment
+```bash
+# .env
+SERVER_TRANSPORT=http
+AUTH_MODE=disabled
+SSL_VERIFY=false
+DI_SERVICE_URL=https://your-dev-instance.cloud.ibm.com
+```
+
+#### Production Environment (SaaS)
+```bash
+# .env
+SERVER_TRANSPORT=stdio
+ENV_MODE=SaaS
+AUTH_MODE=jwt
+SSL_VERIFY=true
+DI_SERVICE_URL=https://your-prod-instance.cloud.ibm.com
+STDIO_AUTH_TOKEN=your-bearer-token-here
+```
+
+#### Production Environment (CPD)
+```bash
+# .env
+SERVER_TRANSPORT=stdio
+ENV_MODE=CPD
+AUTH_MODE=cpd
+SSL_VERIFY=true
+DI_SERVICE_URL=https://your-cpd-cluster.com
+DI_USERNAME=your-username
+DI_APIKEY=your-api-key
+```
+
+---
+
+## Development
+
+🚧 **Work in Progress**
+
+Development setup, contribution guidelines, and local development instructions will be documented here.
+
+### Coming Soon:
+- Local development environment setup
+- Contributing guidelines
+- Code style and testing requirements
+- Service and tool development guides
