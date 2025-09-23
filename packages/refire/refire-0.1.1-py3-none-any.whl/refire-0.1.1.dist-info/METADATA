@@ -1,0 +1,134 @@
+Metadata-Version: 2.3
+Name: refire
+Version: 0.1.1
+Summary: A flexible Python decorator for retrying functions upon failure with support for exponential backoff, jitter, and configurable retry policies.
+Keywords: retry,retries,decorator,backoff,exponential-backoff,jitter,resilience,fault-tolerance,error-handling,function-wrapper,reliability,utilities,developer-tools
+Author: Max Scheijen
+Author-email: Max Scheijen <maxscheijen@protonmail.com>
+License: Apache-2.0
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Utilities
+Classifier: Operating System :: OS Independent
+Requires-Dist: interrogate>=1.7.0 ; extra == 'dev'
+Requires-Dist: mypy>=1.17.1 ; extra == 'dev'
+Requires-Dist: pre-commit>=4.3.0 ; extra == 'dev'
+Requires-Dist: pytest>=8.4.2 ; extra == 'dev'
+Requires-Dist: pytest-cov>=7.0.0 ; extra == 'dev'
+Requires-Dist: ruff>=0.12.12 ; extra == 'dev'
+Maintainer: Max Scheijen
+Maintainer-email: Max Scheijen <maxscheijen@protonmail.com>
+Requires-Python: >=3.10
+Project-URL: Documentation, https://github.com/maxscheijen/refire
+Project-URL: Homepage, https://github.com/maxscheijen/refire
+Project-URL: Issues, https://github.com/maxscheijen/refire/issues
+Project-URL: Repository, https://github.com/maxscheijen/refire.git
+Provides-Extra: dev
+Description-Content-Type: text/markdown
+
+# refire
+
+A flexible Python decorator for retrying functions upon failure with support for exponential backoff, jitter, and configurable retry policies.
+
+## Features
+
+- Retry functions automatically when exceptions occur.
+- Configurable number of retries or infinite retries.
+- Adjustable initial delay and exponential backoff.
+- Optional maximum delay to cap wait times.
+- Support for random jitter to prevent retry storms (thundering herd problem).
+- Specify which exception types trigger retries.
+
+## Installation
+
+Install via pip:
+
+```bash
+pip install refire
+# or
+uv add refire
+```
+
+Or clone the repository:
+
+```bash
+git clone https://github.com/maxscheijen/refire.git
+cd refire
+pip install .
+# or
+uv sync
+```
+
+## Usage
+
+### Basic Example
+
+```python
+import random
+
+from refire import refire
+
+
+@refire(tries=5, delay=2, backoff=2, jitter=(0, 1))
+def flaky_function():
+    if random.random() < 0.7:
+        raise ValueError("Unlucky!")
+    return "Success!"
+
+result = flaky_function()
+print(result)  # "Success!" after several retries
+```
+
+### Custom Exception
+
+```python
+class CustomError(Exception):
+    pass
+
+@refire(exceptions=CustomError, tries=3, delay=1)
+def risky_function():
+    raise CustomError("Oops!")
+
+risky_function()
+```
+
+## Logging
+
+Retries are by default logged at WARNING level:
+
+```
+Caught ValueError: Unlucky!. Retrying in 2.00s (remaining=4)
+```
+
+## Development
+
+This project uses [uv](https://docs.astral.sh/uv/). To set up a local development environment:
+
+```bash
+# Clone the repository
+git clone https://github.com/maxscheijen/refire.git
+cd refire
+
+# Install dependencies (using uv)
+uv sync --extra dev
+
+# Or using pip
+pip install -e ".[dev]"
+```
+
+### Tests
+
+This project uses [pytest](https://docs.pytest.org/):
+
+```bash
+pytest
+```
