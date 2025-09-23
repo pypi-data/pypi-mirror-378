@@ -1,0 +1,471 @@
+# Arbitrage-Focused Strategy Orchestrator Configuration
+#
+# This configuration is specialized for arbitrage trading across multiple
+# markets and exchanges. It prioritizes low-risk, high-frequency arbitrage
+# opportunities with tight risk controls and fast execution.
+#
+# Key Features:
+# - Multiple arbitrage strategy types
+# - Ultra-low latency execution requirements
+# - Tight risk controls for arbitrage
+# - High-frequency rebalancing
+# - Specialized monitoring for arbitrage opportunities
+
+orchestrator:
+  # Allocation Management - Performance-based for arbitrage
+  allocation:
+    method: "performance_based"
+    rebalance_frequency: "hourly"    # High frequency for arbitrage
+    min_allocation: 0.005            # Allow very small allocations
+    max_allocation: 0.35             # Allow concentration in good opportunities
+    
+    # Performance-based settings optimized for arbitrage
+    performance_based:
+      lookback_period: 7             # Short lookback for arbitrage
+      performance_metric: "sharpe_ratio"  # Risk-adjusted returns
+      min_performance_threshold: 0.5     # High threshold for arbitrage
+      decay_factor: 0.85             # Fast decay for responsiveness
+      smoothing_factor: 0.4          # Less smoothing for quick adjustments
+    
+    # Aggressive rebalancing for arbitrage
+    rebalancing_constraints:
+      max_turnover: 0.80             # High turnover allowed
+      min_time_between: "1h"         # Hourly rebalancing
+      min_allocation_change: 0.002   # Very small change threshold
+
+  # Risk Management - Tight controls for arbitrage
+  risk:
+    # Portfolio-level risk limits (conservative for arbitrage)
+    max_portfolio_drawdown: 0.03     # Very low drawdown tolerance
+    max_strategy_correlation: 0.95   # Allow high correlation for arbitrage
+    position_size_limit: 0.10        # Larger positions for arbitrage
+    stop_loss_threshold: 0.005       # Very tight stops
+    max_concurrent_positions: 50     # Many small positions
+    
+    # Market exposure limits
+    max_market_exposure:
+      crypto: 0.90      # High crypto exposure for arbitrage
+      forex: 0.70       # High forex exposure
+      
+    # Arbitrage-specific risk controls
+    arbitrage_risk_controls:
+      max_execution_time: 10         # Maximum 10 seconds execution
+      min_spread_threshold: 0.0005   # Minimum spread to trade
+      max_slippage_tolerance: 0.0002 # Very low slippage tolerance
+      correlation_requirement: 0.90  # High correlation requirement
+      
+    # Emergency stop conditions
+    emergency_stop_conditions:
+      - "execution_latency_exceeded"
+      - "spread_compression"
+      - "correlation_breakdown"
+      - "exchange_connectivity_issues"
+
+  # Strategy Configuration - Arbitrage-focused strategies
+  strategies:
+    # Cross-Market Arbitrage - Primary strategy
+    - type: "CrossMarketArbitrageStrategy"
+      name: "crypto_exchange_arbitrage"
+      enabled: true
+      allocation_weight: 3.0         # Highest weight
+      markets: ["crypto"]
+      parameters:
+        exchange_pairs:
+          - ["binance", "coinbase"]
+          - ["binance", "kraken"]
+          - ["coinbase", "kraken"]
+        currency_pairs: ["BTC/USD", "ETH/USD", "LTC/USD", "ADA/USD"]
+        min_spread: 0.0008
+        max_execution_time: 5
+        hedge_ratio: 0.98            # Very high hedge ratio
+        correlation_threshold: 0.95
+        slippage_buffer: 0.0001
+      risk_limits:
+        max_position_size: 0.15      # Large positions for arbitrage
+        stop_loss: 0.002             # Very tight stop
+        take_profit: 0.008
+        max_holding_time: 300        # 5 minutes max holding
+      performance_requirements:
+        min_sharpe_ratio: 2.0        # Very high Sharpe requirement
+        min_win_rate: 0.80           # High win rate expected
+        max_drawdown: 0.02
+
+    # Triangular Arbitrage - Crypto-specific
+    - type: "TriangularArbitrageStrategy"
+      name: "crypto_triangular_arbitrage"
+      enabled: true
+      allocation_weight: 2.5
+      markets: ["crypto"]
+      parameters:
+        exchanges: ["binance", "coinbase"]
+        currency_triangles:
+          - ["BTC/USD", "ETH/USD", "ETH/BTC"]
+          - ["BTC/USD", "LTC/USD", "LTC/BTC"]
+          - ["ETH/USD", "ADA/USD", "ADA/ETH"]
+          - ["BTC/USD", "DOT/USD", "DOT/BTC"]
+        min_profit_threshold: 0.0005
+        max_execution_time: 3
+        slippage_tolerance: 0.0001
+        transaction_cost_buffer: 0.0002
+      risk_limits:
+        max_position_size: 0.12
+        stop_loss: 0.001
+        take_profit: 0.005
+        max_holding_time: 180        # 3 minutes max
+      performance_requirements:
+        min_sharpe_ratio: 2.5
+        min_win_rate: 0.85
+        max_drawdown: 0.015
+
+    # Crypto-Forex Arbitrage
+    - type: "CryptoForexArbitrageStrategy"
+      name: "crypto_forex_arbitrage"
+      enabled: true
+      allocation_weight: 2.0
+      markets: ["crypto", "forex"]
+      parameters:
+        crypto_forex_pairs:
+          - ["BTC/USD", "BTCUSD"]
+          - ["ETH/USD", "ETHUSD"]
+        crypto_exchanges: ["binance", "coinbase"]
+        forex_brokers: ["oanda", "interactive_brokers"]
+        min_spread: 0.001
+        max_execution_time: 8
+        hedge_ratio: 0.95
+        correlation_threshold: 0.90
+      risk_limits:
+        max_position_size: 0.10
+        stop_loss: 0.003
+        take_profit: 0.010
+        max_holding_time: 600        # 10 minutes max
+      performance_requirements:
+        min_sharpe_ratio: 1.5
+        min_win_rate: 0.75
+        max_drawdown: 0.03
+
+    # Statistical Arbitrage
+    - type: "StatisticalArbitrageStrategy"
+      name: "statistical_arbitrage"
+      enabled: true
+      allocation_weight: 1.8
+      markets: ["crypto", "forex"]
+      parameters:
+        asset_pairs:
+          - ["BTC/USD", "ETH/USD"]    # Crypto pair
+          - ["EUR/USD", "GBP/USD"]    # Forex major pair
+          - ["AUD/USD", "NZD/USD"]    # Forex commodity pair
+        lookback_period: 20
+        z_score_threshold: 2.0
+        correlation_threshold: 0.80
+        half_life_threshold: 5       # Mean reversion half-life
+        cointegration_test: true
+      risk_limits:
+        max_position_size: 0.08
+        stop_loss: 0.008
+        take_profit: 0.015
+        max_holding_time: 3600       # 1 hour max
+      performance_requirements:
+        min_sharpe_ratio: 1.2
+        min_win_rate: 0.65
+        max_drawdown: 0.04
+
+    # Latency Arbitrage
+    - type: "LatencyArbitrageStrategy"
+      name: "latency_arbitrage"
+      enabled: true
+      allocation_weight: 2.2
+      markets: ["crypto"]
+      parameters:
+        fast_exchanges: ["binance"]   # Low latency exchange
+        slow_exchanges: ["coinbase", "kraken"]  # Higher latency
+        latency_threshold: 50         # 50ms latency difference
+        price_movement_threshold: 0.0005
+        execution_window: 2           # 2 second execution window
+        currency_pairs: ["BTC/USD", "ETH/USD"]
+      risk_limits:
+        max_position_size: 0.06
+        stop_loss: 0.001
+        take_profit: 0.003
+        max_holding_time: 60         # 1 minute max
+      performance_requirements:
+        min_sharpe_ratio: 3.0        # Very high for latency arb
+        min_win_rate: 0.90
+        max_drawdown: 0.01
+
+    # Funding Rate Arbitrage
+    - type: "FundingRateArbitrageStrategy"
+      name: "funding_rate_arbitrage"
+      enabled: true
+      allocation_weight: 1.5
+      markets: ["crypto"]
+      parameters:
+        exchanges: ["binance", "bybit", "ftx"]
+        currency_pairs: ["BTC/USD", "ETH/USD"]
+        min_funding_rate_diff: 0.0001  # 0.01% minimum difference
+        funding_period: 8              # 8 hours funding period
+        hedge_with_spot: true
+        funding_rate_prediction: true
+      risk_limits:
+        max_position_size: 0.08
+        stop_loss: 0.005
+        take_profit: 0.012
+        max_holding_time: 28800      # 8 hours (funding period)
+      performance_requirements:
+        min_sharpe_ratio: 1.0
+        min_win_rate: 0.70
+        max_drawdown: 0.03
+
+    # Calendar Spread Arbitrage
+    - type: "CalendarSpreadArbitrageStrategy"
+      name: "calendar_spread_arbitrage"
+      enabled: true
+      allocation_weight: 1.3
+      markets: ["crypto"]
+      parameters:
+        exchanges: ["binance", "deribit"]
+        instruments:
+          - ["BTC-PERP", "BTC-0331"]   # Perpetual vs quarterly
+          - ["ETH-PERP", "ETH-0331"]
+        min_spread_threshold: 0.002
+        time_decay_factor: 0.1
+        volatility_adjustment: true
+      risk_limits:
+        max_position_size: 0.06
+        stop_loss: 0.008
+        take_profit: 0.020
+        max_holding_time: 86400      # 24 hours max
+      performance_requirements:
+        min_sharpe_ratio: 0.8
+        min_win_rate: 0.60
+        max_drawdown: 0.04
+
+  # Monitoring and Alerting - Arbitrage-specific monitoring
+  monitoring:
+    performance_tracking: true
+    metrics_frequency: "10s"         # Very high frequency
+    data_retention: 180              # 6 months
+    
+    # Arbitrage-specific metrics
+    tracked_metrics:
+      - "total_return"
+      - "sharpe_ratio"
+      - "max_drawdown"
+      - "win_rate"
+      - "profit_factor"
+      - "execution_latency"
+      - "spread_capture_rate"
+      - "opportunity_count"
+      - "slippage_cost"
+      - "transaction_costs"
+    
+    # Tight alert thresholds for arbitrage
+    alert_thresholds:
+      drawdown: 0.02               # Very low drawdown alert
+      execution_latency: 100       # 100ms latency alert
+      spread_compression: 0.0003   # Spread compression alert
+      slippage_exceeded: 0.0002    # Slippage alert
+      opportunity_drought: 60      # No opportunities for 60s
+      correlation_breakdown: 0.85  # Correlation below 85%
+    
+    # Real-time notifications for arbitrage
+    notifications:
+      email:
+        enabled: true
+        smtp_server: "smtp.gmail.com"
+        smtp_port: 587
+        username: "${EMAIL_USERNAME}"
+        password: "${EMAIL_PASSWORD}"
+        recipients:
+          - "${ARBITRAGE_TRADER_EMAIL}"
+          - "${TECH_SUPPORT_EMAIL}"
+      
+      slack:
+        enabled: true
+        webhook_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#arbitrage-alerts"
+        
+      webhook:
+        enabled: true
+        url: "${ARBITRAGE_WEBHOOK_URL}"
+        headers:
+          Authorization: "Bearer ${WEBHOOK_TOKEN}"
+        
+      sms:
+        enabled: true
+        provider: "twilio"
+        phone_numbers: ["${TRADER_PHONE}"]
+        critical_alerts_only: true
+
+  # Optimization Settings - Arbitrage optimization
+  optimization:
+    optimization_frequency: "daily"   # Daily optimization
+    lookback_period: 14              # Short lookback
+    optimization_method: "sharpe_ratio"
+    min_performance_threshold: 0.5   # High threshold
+    
+    # Arbitrage-specific optimization
+    arbitrage_optimization:
+      spread_threshold_optimization: true
+      execution_time_optimization: true
+      correlation_threshold_optimization: true
+      position_size_optimization: true
+    
+    # Strategy selection criteria
+    selection_criteria:
+      min_trades: 50               # High minimum trades
+      min_win_rate: 0.70           # High win rate requirement
+      max_drawdown: 0.05           # Low drawdown requirement
+      min_sharpe_ratio: 1.0        # High Sharpe requirement
+      max_execution_latency: 200   # 200ms max latency
+    
+    # Parameter optimization
+    parameter_optimization:
+      enabled: true
+      algorithm: "bayesian"
+      frequency: "weekly"
+      
+      parameters:
+        CrossMarketArbitrageStrategy:
+          min_spread: [0.0005, 0.0008, 0.001, 0.0012]
+          max_execution_time: [3, 5, 8]
+          hedge_ratio: [0.95, 0.98, 0.99]
+        TriangularArbitrageStrategy:
+          min_profit_threshold: [0.0003, 0.0005, 0.0008]
+          max_execution_time: [2, 3, 5]
+        StatisticalArbitrageStrategy:
+          z_score_threshold: [1.5, 2.0, 2.5]
+          lookback_period: [15, 20, 25]
+
+  # Logging Configuration - Detailed logging for arbitrage
+  logging:
+    level: "DEBUG"                   # Detailed logging
+    format: "%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s"
+    
+    file:
+      enabled: true
+      path: "logs/orchestrator_arbitrage.log"
+      max_size: "200MB"
+      backup_count: 10
+    
+    # Arbitrage-specific logging
+    arbitrage_logging:
+      opportunity_log: "logs/arbitrage_opportunities.log"
+      execution_log: "logs/arbitrage_executions.log"
+      latency_log: "logs/arbitrage_latency.log"
+      
+    audit:
+      enabled: true
+      path: "logs/orchestrator_audit_arbitrage.log"
+      include_decisions: true
+      include_allocations: true
+      include_risk_events: true
+      include_execution_details: true
+
+  # API Configuration - High performance API
+  api:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8080
+    
+    # High performance settings
+    workers: 4
+    max_connections: 1000
+    keepalive_timeout: 30
+    
+    authentication:
+      enabled: true
+      method: "bearer_token"
+      token: "${API_TOKEN}"
+    
+    # Arbitrage-specific endpoints
+    endpoints:
+      arbitrage_opportunities: true
+      execution_latency: true
+      spread_monitoring: true
+      correlation_tracking: true
+
+# Strategy Groups - Arbitrage grouping
+strategy_groups:
+  cross_market_arbitrage:
+    strategies:
+      - "crypto_exchange_arbitrage"
+      - "crypto_forex_arbitrage"
+    max_group_allocation: 0.60
+    
+  triangular_arbitrage:
+    strategies:
+      - "crypto_triangular_arbitrage"
+    max_group_allocation: 0.30
+    
+  statistical_arbitrage:
+    strategies:
+      - "statistical_arbitrage"
+    max_group_allocation: 0.25
+    
+  latency_arbitrage:
+    strategies:
+      - "latency_arbitrage"
+    max_group_allocation: 0.20
+    
+  funding_arbitrage:
+    strategies:
+      - "funding_rate_arbitrage"
+      - "calendar_spread_arbitrage"
+    max_group_allocation: 0.25
+
+# Exchange Configuration - Optimized for arbitrage
+exchanges:
+  binance:
+    api_key: "${BINANCE_API_KEY}"
+    api_secret: "${BINANCE_API_SECRET}"
+    sandbox: false
+    rate_limit: 1200              # High rate limit
+    timeout: 5000                 # 5 second timeout
+    
+  coinbase:
+    api_key: "${COINBASE_API_KEY}"
+    api_secret: "${COINBASE_API_SECRET}"
+    passphrase: "${COINBASE_PASSPHRASE}"
+    sandbox: false
+    rate_limit: 10
+    timeout: 10000
+    
+  kraken:
+    api_key: "${KRAKEN_API_KEY}"
+    api_secret: "${KRAKEN_API_SECRET}"
+    sandbox: false
+    rate_limit: 15
+    timeout: 15000
+
+# Arbitrage-Specific Settings
+arbitrage_settings:
+  # Execution optimization
+  execution:
+    parallel_execution: true
+    max_parallel_orders: 10
+    order_timeout: 5000
+    retry_attempts: 3
+    
+  # Opportunity detection
+  opportunity_detection:
+    scan_frequency: "1s"          # 1 second scanning
+    min_opportunity_size: 0.0005
+    max_opportunity_age: 10       # 10 seconds max age
+    
+  # Risk management
+  risk_management:
+    position_timeout: 300         # 5 minutes max position
+    correlation_monitoring: true
+    spread_monitoring: true
+    latency_monitoring: true
+
+# Environment Variables Required:
+# EMAIL_USERNAME, EMAIL_PASSWORD - Email configuration
+# ARBITRAGE_TRADER_EMAIL - Arbitrage trader email
+# TECH_SUPPORT_EMAIL - Technical support email
+# SLACK_WEBHOOK_URL - Slack notifications
+# ARBITRAGE_WEBHOOK_URL - Custom webhook
+# WEBHOOK_TOKEN - Webhook authentication
+# TRADER_PHONE - SMS notifications
+# API_TOKEN - API authentication
+# Exchange API credentials (BINANCE_*, COINBASE_*, KRAKEN_*)
