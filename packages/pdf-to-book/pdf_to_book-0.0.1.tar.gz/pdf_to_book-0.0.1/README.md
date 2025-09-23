@@ -1,0 +1,70 @@
+## pdf-to-book
+
+Lightweight Python package for converting a pdf into a print-ready book format. Takes in portrait orientation pdf file pages and puts two pages onto each side of paper. Handles imposition for easy ordering of pages after folding/cutting (2-up, duplex ready layout)
+
+### Features
+
+- Supports letter and A4 print paper sizes
+- Adjustable gutter and margin to account for space taken up by binding
+- Adjustable zoom level
+- Optional line between pages indicating where to fold/cut
+
+Install dependencies:
+
+```bash
+pip install PyMuPDF
+```
+
+Install pdf-to-book:
+
+```bash
+pip install pdf-to-book
+```
+
+### Quickstart
+
+If your python Scripts folder is included in PATH, you can directly call pdf-to-book as:
+
+```bash
+pdf-to-book input.pdf output.pdf
+```
+
+Alternatively you can call it via python:
+
+```bash
+python -m pdf_to_book input.pdf output.pdf
+```
+
+General usage
+
+```python
+usage: pdf-to-book [-h] [--paper PAPER] [--gutter-mm GUTTER_MM] [--margin-mm MARGIN_MM] [--zoom ZOOM] [--line] input output
+
+positional arguments:
+  input                 input PDF
+  output                output PDF (2-up, duplex-ready)
+
+options:
+  -h, --help            show this help message and exit
+  --paper PAPER         paper size: 'auto' (default), 'letter', or 'a4'
+  --gutter-mm GUTTER_MM
+                        inner gutter in mm (default 6 mm)
+  --margin-mm MARGIN_MM
+                        outer/top/bottom margin in mm (default 4 mm)
+  --zoom ZOOM           page zoom factor (e.g. 1.2 = 120%). Default 1.0
+  --line                draw vertical fold/cut guide line at center
+```
+
+### Example
+
+See the example folder for a conversion of the first four pages of Fyodor Dostoevsky's "Notes from the Underground"
+
+Here are screenshots resulting from the following command:
+
+```bash
+pdf-to-book --zoom 1.25 --line input.pdf output.pdf
+```
+
+![input.pdf](example/input.png "input.pdf")
+
+![output.pdf](example/output.png "output.pdf")
