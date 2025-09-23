@@ -1,0 +1,280 @@
+Metadata-Version: 2.4
+Name: custom-logger-pkg
+Version: 0.1.0
+Summary: Professional Object-Oriented Logger for Python - Enhanced logging with SOLID principles
+Author-email: Saman Naruee <samannaruee@gmail.com>
+Maintainer-email: Saman Naruee <samannaruee@gmail.com>
+License: MIT
+Project-URL: Homepage, https://github.com/Saman-naruee/Custom-Logger
+Project-URL: Documentation, https://custom-logger.readthedocs.io/
+Project-URL: Repository, https://github.com/Saman-naruee/Custom-Logger.git
+Project-URL: Issues, https://github.com/Saman-naruee/Custom-Logger/issues
+Project-URL: Changelog, https://github.com/Saman-naruee/Custom-Logger/blob/main/CHANGELOG.md
+Keywords: logging,logger,object-oriented,colorama,development
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: System :: Logging
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: colorama>=0.4.4
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: flake8; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: coverage; extra == "dev"
+Requires-Dist: sphinx; extra == "dev"
+Requires-Dist: sphinx-rtd-theme; extra == "dev"
+Dynamic: license-file
+
+# 🎯 Custom Logger Package
+
+[![PyPI version](https://badge.fury.io/py/custom-logger-pkg.svg)](https://badge.fury.io/py/custom-logger-pkg)
+[![Python versions](https://img.shields.io/pypi/pyversions/custom-logger-pkg.svg)](https://pypi.org/project/custom-logger-pkg/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**A Professional Object-Oriented Logger for Python** - Enhanced logging with SOLID principles and best practices. Perfect for Django applications, web services, and any Python project requiring sophisticated logging capabilities.
+
+## 🚀 Features
+
+- ✅ **Object-Oriented Design**: Built following SOLID principles and OOP best practices
+- ✅ **Multiple Log Levels**: DEBUG, INFO, WARNING, ERROR, CRITICAL, SUCCESS
+- ✅ **Colored Output**: Beautiful colored console output with colorama
+- ✅ **Caller Information**: Automatically track file names, line numbers, classes, and methods
+- ✅ **Configurable**: Flexible configuration system for different environments
+- ✅ **Extensible Architecture**: Easy to extend with custom handlers and formatters
+- ✅ **Singleton Pattern**: Global logger instance with easy access
+- ✅ **Type Safety**: Enum-based log levels prevent string-based errors
+- ✅ **Backward Compatible**: Drop-in replacement for simple logging needs
+- ✅ **Cross-Platform**: Works on Windows, macOS, and Linux
+
+## 📦 Installation
+
+### From PyPI (Recommended)
+```bash
+pip install custom-logger-pkg
+```
+
+### From Source
+```bash
+git clone https://github.com/your-username/custom-logger.git
+cd custom-logger
+pip install -e .
+```
+
+## 🏗️ Architecture
+
+The logger follows clean architecture principles:
+
+- **LogLevel**: Type-safe enumeration of log levels
+- **LoggerConfig**: Configuration management
+- **LogFormatter**: Message formatting logic
+- **LogHandler**: Abstract base for output handlers
+- **ConsoleLogHandler**: Console output implementation
+- **CallerInfo**: Caller information extraction
+- **CustomLogger**: Main logging class with singleton pattern
+
+## 📖 Usage
+
+### Basic Usage
+
+```python
+from custom_logger import info, debug, warning, error, success
+
+# Simple logging
+info("Application started successfully")
+debug("This is a debug message")
+warning("Something might be wrong")
+error("Something went wrong!")
+success("Operation completed successfully")
+```
+
+### Advanced OOP Usage
+
+```python
+from custom_logger import CustomLogger, LogLevel, LoggerConfig
+
+# Get singleton instance
+logger = CustomLogger.get_instance()
+
+# Object-oriented logging
+logger.info("System initialized")
+logger.debug("Debug information")
+logger.error("An error occurred")
+
+# Direct enum usage
+logger.log("Custom message", LogLevel.INFO)
+
+# Custom configuration
+config = LoggerConfig(
+    show_caller=True,
+    show_timestamp=True,
+    color_output=True,
+    level=LogLevel.DEBUG
+)
+logger = CustomLogger(config)
+logger.debug("This message includes caller info")
+```
+
+### Configuration Examples
+
+```python
+from custom_logger import LoggerConfig, LogLevel
+
+# Disable caller info, keep colors
+config = LoggerConfig(
+    show_caller=False,
+    show_timestamp=True,
+    color_output=True,
+    level=LogLevel.INFO
+)
+
+# Development mode - show everything
+dev_config = LoggerConfig(
+    show_caller=True,
+    show_timestamp=True,
+    color_output=True,
+    level=LogLevel.DEBUG
+)
+
+# Production mode - only important messages
+prod_config = LoggerConfig(
+    show_caller=False,
+    show_timestamp=True,
+    color_output=False,
+    level=LogLevel.WARNING
+)
+```
+
+### Custom Handler Example
+
+```python
+from custom_logger import LogHandler, LogLevel
+
+class FileLogHandler(LogHandler):
+    def __init__(self, filename):
+        self.filename = filename
+        self.file = open(filename, 'a')
+
+    def handle(self, formatted_message: str, level: LogLevel) -> None:
+        timestamp = datetime.now().isoformat()
+        self.file.write(f"[{timestamp}] {formatted_message}\n")
+        self.file.flush()
+
+    def close(self):
+        self.file.close()
+```
+
+## 🎨 Log Levels and Colors
+
+| Level | Color | Priority | Usage |
+|-------|-------|----------|--------|
+| DEBUG | Cyan | 10 | Detailed diagnostic information |
+| INFO | Green | 20 | General information messages |
+| SUCCESS | Bright Green | 25 | Success confirmation messages |
+| WARNING | Yellow | 30 | Warning messages |
+| ERROR | Red | 40 | Error messages |
+| CRITICAL | White on Red | 50 | Critical error messages |
+
+## 🧪 Testing
+
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run with coverage
+coverage run -m pytest
+coverage report -m
+
+# Lint code
+flake8 custom_logger/
+black custom_logger/
+mypy custom_logger/
+```
+
+## 🏭 Integration with Django
+
+This logger works seamlessly with Django:
+
+```python
+# In Django settings.py
+from custom_logger import CustomLogger
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'custom_logger': {
+            'class': 'logging.Handler',  # Custom handler implementation
+        },
+    },
+}
+
+# In Django views/models
+from custom_logger import info, error
+
+def my_view(request):
+    info("User accessed the view")
+    try:
+        # Some logic
+        success("Action completed successfully")
+    except Exception as e:
+        error(f"Error occurred: {e}")
+        raise
+```
+
+## 📋 Requirements
+
+- Python >= 3.7
+- colorama >= 0.4.4
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Run the test suite
+6. Submit a pull request
+
+## 🐛 Issues and Support
+
+- [Report Issues](https://github.com/Saman-naruee/Custom-Logger/issues)
+- [Discussions](https://github.com/Saman-naruee/Custom-Logger/discussions)
+- [Documentation](https://custom-logger.readthedocs.io/)
+
+## 📚 More Examples
+
+For more advanced examples and use cases, see the [examples/](examples/) directory.
+
+## 🎯 Best Practices
+
+1. **Use appropriate log levels**: Don't use ERROR for normal flow control
+2. **Configure for environment**: Different settings for development vs production
+3. **Consider performance**: DEBUG messages have minimal overhead but use sparingly in loops
+4. **Structure your messages**: Make them meaningful and searchable
+5. **Use structured logging**: Consider adding context and metadata
+
+---
+
+**Enjoy professional logging with clean OOP design!** 🚀
