@@ -1,0 +1,124 @@
+Metadata-Version: 2.4
+Name: frutsel
+Version: 0.17.13
+Summary: A copy-pastable, human readable, scalable database with an easy API.
+License: LGPL-3.0-or-later
+Author: maveobi
+Author-email: path-fanfare-canon@duck.com
+Requires-Python: >=3.8
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: 3.14
+Description-Content-Type: text/markdown
+
+# frutsel
+
+A copy-pastable, human readable, scalable database with an easy API.
+
+
+## Quickstart
+
+```shell
+pip install frutsel
+```
+
+```python
+from frutsel import FrutselDB
+
+with FrutselDB('/tmp/database.frutsel') as db:
+    db.put('oh hai')
+    for doc in db.get():
+        print(doc)
+```
+
+## Database file structure
+
+The main reasons why you would use frutsel are:
+
+- your data is stored in well-known data formats (JSON, xz, plain text)
+- concurrent write access is supported without needing a database server process
+
+These characteristics make frutsel attractive for use cases like:
+
+- Concurrently working on creating/expanding a dataset
+- Distributing your data to people who are cautious about propietary binary formats
+- Long term software agnostic backup storage
+
+In practice, a frutsel database looks like this:
+
+```
+database.frutsel
+├── data
+│   └── cc46fb1060004a261f1761a0cea1167ab14f6fd507fcedb17fd217a69221f37b
+├── frutsel.py
+└── meta
+    ├── 0a0e7c970cf17e5bce4944757e926325eb874cd225770f52566cadf75164f80f.json
+    ├── 18133ee431756a3421edad7c5cc63d6cdd73e1f332c63f447c57028679e443c2.json
+    ├── 335af29a3d5d0ff75da889c59798586d4e4c7f14a283cf74eeba8a004507f18b.json
+    ├── 6a9cff7bd332283f8a4b67c8f0e97d45a1d78450d461baad462c6878c26a5012.json
+    └── 77316d966ff84dea85d2c4b0c10eea4da48e5bfde78274e61aad0e7d9ff5c653.json
+```
+
+In the top level directory, there are two subdirectories. The _meta_ directory holds all relatively small data files. The filename extensions indicate the file format. You can read JSON files with your plain text editor, for instance _meta/335af29a3d5d0ff75da889c59798586d4e4c7f14a283cf74eeba8a004507f18b.json_ in our example holds:
+
+```json
+{"data":"oh hai"}
+```
+
+Large files are put in the _data_ directory. For each of these files there is still a JSON file in the _meta_ directory, but it only holds metadata. For the document contents, it refers to a _data_ file. In our example, _meta/18133ee431756a3421edad7c5cc63d6cdd73e1f332c63f447c57028679e443c2.json_ holds:
+
+```json
+{"datafile":"cc46fb1060004a261f1761a0cea1167ab14f6fd507fcedb17fd217a69221f37b"}
+```
+
+By relying on widespread formats and preferring plain text (so you could search your database using `grep`), frutsel helps to keep your data accessible even without the context of your application(s). In addition, the database stores a copy of [frutsel.py](frutsel.py). This is a single-file Python script implementing the frutsel DBMS, including a command line interface for basic database interaction.
+
+
+## Data recovery
+
+The main feature of frutsel is that your data will still be usable after all sorts of disaster scenarios. This section covers a few of those scenarios.
+
+
+### You have your application and your database, but you cannot get/update the frutsel library
+
+There's always a copy of the frutsel library inside the database. You can use it as a library without even moving the Python file, by adding three lines to your Python application:
+
+```python
+import sys
+db_path = '/tmp/database.frutsel'
+# Tell Python to look for modules in the database top-level directory.
+sys.path.append(db_path)
+
+# The frutsel library saved inside your database will be imported.
+from frutsel import FrutselDB
+
+with FrutselDB(db_path) as db:
+    db.put('oh hai')
+    for doc in db.get():
+        print(doc)
+```
+
+Without changing any code, you can of course also copy frutsel.py to your application's file location to rely on a relative import while recovering your data.
+
+Running frutsel.py as a script gives you a command line interface:
+
+```shell
+cd /tmp/database.frutsel
+python3 ./frutsel.py --help
+```
+
+### All else fails
+
+In the worst case scenario, at least your files will be in common, broadly understood and supported formats.
+
+To get you started with GNU `find` and `jq`:
+
+```shell
+find /tmp/database.frutsel/meta -type f -name '*.json' -exec sh -c "jq < {}" \;
+```
