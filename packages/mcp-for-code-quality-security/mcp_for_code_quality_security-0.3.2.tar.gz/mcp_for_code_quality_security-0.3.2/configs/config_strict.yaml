@@ -1,0 +1,136 @@
+# Strict configuration for MCP Code Scanner
+# This configuration enables all tools and enforces high standards
+
+# Tool selection - all available tools
+enabled_tools:
+  - ruff
+  - mypy
+  - bandit
+  - safety
+  - pylint
+  - black
+  - isort
+  - pytest
+  - coverage
+
+# Scan options
+include_tests: true
+auto_fix: false
+safe_fixes_only: true
+max_line_length: 88
+
+# Output options
+output_format: json
+show_source: true
+group_by_file: true
+
+# Strict severity filtering
+min_severity: warning  # Only show warnings and above
+exclude_rules: []
+
+# Performance settings
+parallel_execution: true
+timeout_seconds: 600  # Allow more time for comprehensive scanning
+
+# Tool-specific configurations
+tool_configs:
+  ruff:
+    target_version: py312
+    line_length: 88
+    select:
+      - ALL  # Enable all rules
+    ignore:
+      - E501   # line too long, handled by black
+      - D      # pydocstyle (too noisy for some projects)
+      - ANN    # flake8-annotations (optional)
+      - COM812 # trailing comma
+      - ISC001 # implicitly concatenated string literals
+    
+  mypy:
+    python_version: "3.12"
+    strict: true
+    warn_return_any: true
+    warn_unused_configs: true
+    disallow_untyped_defs: true
+    disallow_incomplete_defs: true
+    check_untyped_defs: true
+    disallow_untyped_decorators: true
+    no_implicit_optional: true
+    warn_redundant_casts: true
+    warn_unused_ignores: true
+    warn_no_return: true
+    warn_unreachable: true
+    strict_equality: true
+    
+  bandit:
+    exclude_dirs:
+      - tests
+    skips: []  # Don't skip any tests in strict mode
+    confidence: low
+    severity: low
+    
+  pylint:
+    disable:
+      - line-too-long  # Handled by black
+    max_line_length: 88
+    max_complexity: 10
+    max_args: 5
+    max_locals: 15
+    max_returns: 6
+    max_branches: 12
+    
+  black:
+    line_length: 88
+    target_version:
+      - py312
+    
+  isort:
+    profile: black
+    multi_line_output: 3
+    line_length: 88
+    check_untyped_defs: true
+    
+  pytest:
+    testpaths:
+      - tests
+    python_files:
+      - test_*.py
+    python_classes:
+      - Test*
+    python_functions:
+      - test_*
+    addopts:
+      - --strict-markers
+      - --strict-config
+      - -ra
+    markers:
+      - slow: marks tests as slow
+      - integration: marks tests as integration tests
+      
+  coverage:
+    source: 
+      - src
+    branch: true
+    fail_under: 80  # Require 80% coverage
+    show_missing: true
+    exclude_lines:
+      - pragma: no cover
+      - def __repr__
+      - raise AssertionError
+      - raise NotImplementedError
+      - if __name__ == .__main__.:
+
+# Quality gates - fail the scan if these thresholds are exceeded
+quality_gates:
+  max_critical_issues: 0
+  max_error_issues: 5
+  max_warning_issues: 20
+  min_coverage_percentage: 80
+  max_complexity: 10
+
+# Reporting options
+reporting:
+  include_metrics: true
+  include_trends: true
+  include_suggestions: true
+  generate_badge: true

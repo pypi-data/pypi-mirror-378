@@ -1,0 +1,125 @@
+# AI Security Scanner Configuration
+name: ai_security
+display_name: "AI/LLM Security Scanner"
+category: ai_security
+version: "1.0.0"
+description: "Detects security vulnerabilities in AI/ML applications"
+author: "MCP Security Team"
+priority: 1
+
+# Tool-specific settings
+enabled: true
+auto_fix_safe: false
+timeout: 90
+
+# AI frameworks to detect
+frameworks:
+  llm:
+    - openai
+    - anthropic
+    - langchain
+    - transformers
+    - huggingface
+  ml:
+    - torch
+    - tensorflow
+    - keras
+    - sklearn
+    - pytorch
+
+# Detection patterns
+patterns:
+  prompt_injection:
+    enabled: true
+    severity: critical
+    patterns:
+      - 'input.*\+.*prompt'
+      - 'user_input.*format\('
+      - 'f["\'].*{user.*}.*["\']'
+      - '\.completion\(.*user.*\)'
+
+  model_extraction:
+    enabled: true
+    severity: high
+    patterns:
+      - 'model\.state_dict\(\)'
+      - 'torch\.save\(model'
+      - 'model\.parameters\(\)'
+
+  unsafe_plugin_execution:
+    enabled: true
+    severity: critical
+    patterns:
+      - 'exec\(.*user'
+      - 'eval\(.*user'
+      - 'subprocess.*user'
+
+  insecure_model_storage:
+    enabled: true
+    severity: medium
+    patterns:
+      - 'torch\.save\([^,]*,\s*["\'][^"\']*\.pt["\']'
+      - 'joblib\.dump\(model'
+      - 'pickle\.dump\(model'
+
+# OWASP LLM mappings
+owasp_llm_mappings:
+  prompt_injection:
+    - framework: "owasp_llm_top10"
+      id: "LLM01"
+
+  model_extraction:
+    - framework: "owasp_llm_top10"
+      id: "LLM10"
+
+  training_data_poisoning:
+    - framework: "owasp_llm_top10"
+      id: "LLM03"
+
+  unsafe_plugin_execution:
+    - framework: "owasp_llm_top10"
+      id: "LLM07"
+
+# Remediation suggestions
+remediation:
+  prompt_injection:
+    - "Implement input validation and sanitization"
+    - "Use prompt templates instead of string concatenation"
+    - "Add output filtering and monitoring"
+
+  model_extraction:
+    - "Implement API rate limiting"
+    - "Add query monitoring and anomaly detection"
+    - "Use model access controls"
+
+  unsafe_plugin_execution:
+    - "Sandbox plugin execution environment"
+    - "Validate all plugin inputs"
+    - "Implement principle of least privilege"
+
+# Output format
+output:
+  format: json
+  include_remediation: true
+  include_framework_mapping: true
+
+# Integration examples
+integrations:
+  pre_commit:
+    - repo: local
+      hooks:
+        - id: ai-security
+          name: AI Security Scanner
+          entry: mcp-code-scanner scan --tool=ai_security
+          language: system
+          types: [python]
+
+  github_actions: |
+    - name: AI Security Scan
+      run: |
+        mcp-code-scanner scan . --tool=ai_security --format=json > ai_security_results.json
+
+  makefile: |
+    ai-security:
+        @echo "Running AI security scan..."
+        @mcp-code-scanner scan . --tool=ai_security

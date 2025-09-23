@@ -1,0 +1,94 @@
+# FastAPI Security Scanner Configuration
+name: fastapi_security
+display_name: "FastAPI Security Scanner"
+category: api_security
+version: "1.0.0"
+description: "Detects security vulnerabilities in FastAPI applications"
+author: "MCP Security Team"
+priority: 1
+
+# Tool-specific settings
+enabled: true
+auto_fix_safe: false
+timeout: 60
+
+# Detection patterns
+patterns:
+  sql_injection:
+    enabled: true
+    severity: critical
+    patterns:
+      - 'f["\'].*SELECT.*{.*}.*["\']'
+      - '\.execute\(["\'].*\+.*["\']'
+      - 'query\s*=.*\+'
+
+  nosql_injection:
+    enabled: true
+    severity: critical
+    patterns:
+      - '\.find\(\{.*\$.*\}\)'
+      - '\.find\(.*request\.'
+
+  ssti:
+    enabled: true
+    severity: critical
+    patterns:
+      - 'from_string\(.*request\.'
+      - 'Template\(.*request\.'
+
+  path_traversal:
+    enabled: true
+    severity: high
+    patterns:
+      - 'open\(.*\+'
+      - 'FileResponse\(.*\+'
+      - '\.\.\/'
+
+# OWASP mappings
+owasp_mappings:
+  sql_injection:
+    - framework: "owasp_top10_2021"
+      id: "A03"
+    - framework: "owasp_api_top10"
+      id: "API8"
+
+  nosql_injection:
+    - framework: "owasp_top10_2021"
+      id: "A03"
+    - framework: "owasp_api_top10"
+      id: "API8"
+
+  ssti:
+    - framework: "owasp_top10_2021"
+      id: "A03"
+
+  path_traversal:
+    - framework: "owasp_top10_2021"
+      id: "A01"
+
+# Output format
+output:
+  format: json
+  include_code_snippet: true
+  max_snippet_lines: 3
+
+# Integration examples
+integrations:
+  pre_commit:
+    - repo: local
+      hooks:
+        - id: fastapi-security
+          name: FastAPI Security Scanner
+          entry: mcp-code-scanner scan --tool=fastapi_security
+          language: system
+          types: [python]
+
+  github_actions: |
+    - name: FastAPI Security Scan
+      run: |
+        mcp-code-scanner scan . --tool=fastapi_security --format=sarif > results.sarif
+
+  makefile: |
+    fastapi-security:
+        @echo "Running FastAPI security scan..."
+        @mcp-code-scanner scan . --tool=fastapi_security
