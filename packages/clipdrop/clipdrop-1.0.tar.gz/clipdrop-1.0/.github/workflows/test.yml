@@ -1,0 +1,57 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Build Swift helper for tests
+      if: runner.os == 'macOS'
+      run: |
+        if [ -f scripts/build_swift.sh ]; then
+          echo "Building Swift helper for tests..."
+          bash scripts/build_swift.sh
+          echo "Swift helper built successfully"
+
+          # Verify the binary
+          if [ -f src/clipdrop/bin/clipdrop-transcribe-clipboard ]; then
+            file src/clipdrop/bin/clipdrop-transcribe-clipboard
+          else
+            echo "Warning: Swift helper not found after build"
+          fi
+        fi
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Run tests with pytest
+      run: |
+        pytest tests/ -v --tb=short
+
+    - name: Check code formatting with ruff
+      run: |
+        ruff check src/ tests/
+
+    - name: Test installation
+      run: |
+        pip install .
+        clipdrop --version
