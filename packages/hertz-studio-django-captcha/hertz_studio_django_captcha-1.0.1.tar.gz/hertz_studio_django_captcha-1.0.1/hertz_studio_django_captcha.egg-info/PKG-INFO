@@ -1,0 +1,237 @@
+Metadata-Version: 2.4
+Name: hertz_studio_django_captcha
+Version: 1.0.1
+Summary: 一个功能强大的Django验证码应用
+Home-page: http://hzgit.hzsystems.cn/hertz_studio_django/hertz_studio_django_captcha
+Author: yang kunhao
+Author-email: 563161210@qq.com
+License: MIT
+Project-URL: Bug Reports, http://hzgit.hzsystems.cn/hertz_studio_django/hertz_studio_django_captcha/issues
+Project-URL: Source, http://hzgit.hzsystems.cn/hertz_studio_django/hertz_studio_django_captcha
+Project-URL: Documentation, http://hzgit.hzsystems.cn/hertz_studio_django/hertz_studio_django_captcha#readme
+Keywords: django captcha verification security
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 3.0
+Classifier: Framework :: Django :: 3.1
+Classifier: Framework :: Django :: 3.2
+Classifier: Framework :: Django :: 4.0
+Classifier: Framework :: Django :: 4.1
+Classifier: Framework :: Django :: 4.2
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: Django>=5.0
+Requires-Dist: Pillow>=10.0.0
+Requires-Dist: redis>=5.0
+Requires-Dist: django-redis>=5.0
+Requires-Dist: requests>=2.25.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: license-file
+Dynamic: project-url
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# Hertz Studio Djngo Captcha
+
+一个功能强大的Django验证码应用，提供多种验证码类型和灵活的配置选项。
+
+## 功能特性
+
+- 🎨 **多种验证码类型**：支持数字、字母、混合验证码
+- 🔧 **高度可配置**：验证码长度、字体、颜色、干扰线等均可自定义
+- 🚀 **高性能**：支持Redis缓存，提升验证码生成和验证效率
+- 🛡️ **安全可靠**：内置防暴力破解机制，支持验证码过期时间设置
+- 📱 **响应式设计**：适配各种屏幕尺寸
+- 🔌 **易于集成**：简单的API接口，快速集成到现有Django项目
+
+## 安装
+
+### 使用pip安装
+
+```bash
+pip install hertz-studio-django-captcha
+```
+## 快速开始
+
+### 1. 添加到Django设置
+
+在你的Django项目的 `settings.py` 文件中添加：
+
+```python
+INSTALLED_APPS = [
+    # ... 其他应用
+    'hertz_studio_django_captcha',
+]
+
+# 验证码配置（可选）
+HERTZ_CAPTCHA_SETTINGS = {
+    'CAPTCHA_LENGTH': 4,  # 验证码长度
+    'CAPTCHA_TIMEOUT': 300,  # 验证码过期时间（秒）
+    'CAPTCHA_WIDTH': 120,  # 验证码图片宽度
+    'CAPTCHA_HEIGHT': 40,  # 验证码图片高度
+    'CAPTCHA_FONT_SIZE': 24,  # 字体大小
+    'USE_REDIS': True,  # 是否使用Redis缓存
+}
+
+# Redis配置（如果启用Redis）
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+```
+
+### 2. 配置URL路由
+
+在你的项目的 `urls.py` 文件中添加：
+
+```python
+from django.urls import path, include
+
+urlpatterns = [
+    # ... 其他URL配置
+    path('captcha/', include('hertz_studio_django_captcha.urls')),
+]
+```
+
+### 3. 运行数据库迁移
+
+```bash
+python manage.py migrate
+```
+
+### 4. 在模板中使用
+
+```html
+<!-- 在你的HTML模板中 -->
+<form method="post">
+    {% csrf_token %}
+    
+    <!-- 验证码图片 -->
+    <img src="{% url 'hertz_captcha:captcha_image' %}" alt="验证码" id="captcha-image">
+    
+    <!-- 刷新验证码按钮 -->
+    <button type="button" onclick="refreshCaptcha()">刷新验证码</button>
+    
+    <!-- 验证码输入框 -->
+    <input type="text" name="captcha" placeholder="请输入验证码" required>
+    
+    <button type="submit">提交</button>
+</form>
+
+<script>
+function refreshCaptcha() {
+    document.getElementById('captcha-image').src = 
+        "{% url 'hertz_captcha:captcha_image' %}?" + Math.random();
+}
+</script>
+```
+
+### 5. 在视图中验证
+
+```python
+from django.shortcuts import render
+from django.http import JsonResponse
+from hertz_studio_django_captcha.captcha_generator import HertzCaptchaGenerator
+
+
+def my_view(request):
+    if request.method == 'POST':
+        captcha_input = request.POST.get('captcha')
+        captcha_generator = HertzCaptchaGenerator()
+
+        if captcha_generator.verify_captcha(request, captcha_input):
+            # 验证码正确
+            return JsonResponse({'success': True, 'message': '验证成功'})
+        else:
+            # 验证码错误
+            return JsonResponse({'success': False, 'message': '验证码错误'})
+
+    return render(request, 'my_template.html')
+```
+
+## API接口
+
+### 获取验证码图片
+
+```
+GET /captcha/image/
+```
+
+返回验证码图片，同时在session中保存验证码值。
+
+### 验证验证码
+
+```python
+from hertz_studio_django_captcha.captcha_generator import HertzCaptchaGenerator
+
+generator = HertzCaptchaGenerator()
+is_valid = generator.verify_captcha(request, user_input)
+```
+
+## 配置选项
+
+| 配置项 | 默认值 | 说明 |
+|--------|--------|------|
+| `CAPTCHA_LENGTH` | 4 | 验证码长度 |
+| `CAPTCHA_TIMEOUT` | 300 | 验证码过期时间（秒） |
+| `CAPTCHA_WIDTH` | 120 | 验证码图片宽度 |
+| `CAPTCHA_HEIGHT` | 40 | 验证码图片高度 |
+| `CAPTCHA_FONT_SIZE` | 24 | 字体大小 |
+| `USE_REDIS` | False | 是否使用Redis缓存 |
+| `CAPTCHA_CHARS` | '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' | 验证码字符集 |
+
+## 依赖要求
+
+- Django >= 5.0
+- Pillow >= 10.0.0
+- redis >= 5.0 (可选，用于缓存)
+- django-redis >= 5.0 (可选，用于Redis集成)
+
+## 许可证
+
+本项目采用 MIT 许可证。详情请参阅 [LICENSE](LICENSE) 文件。
+
+## 作者
+
+- **Yang Kunhao** - [563161210@qq.com](mailto:563161210@qq.com)
+
+## 项目链接
+
+- **源码仓库**: [http://hzgit.hzsystems.cn/hertz_studio_django/hertz_studio_django_captcha](http://hzgit.hzsystems.cn/hertz_studio/hertz_server_django)
+- **问题反馈**: [http://hzgit.hzsystems.cn/hertz_studio_django/hertz_studio_django_captcha/issues](http://hzgit.hzsystems.cn/hertz_studio/hertz_server_django/issues)
+
+## 支持
+
+如果你在使用过程中遇到任何问题，请通过以下方式联系我们：
+
+- 邮箱：563161210@qq.com
+- 项目Issues：[提交问题](http://hzgit.hzsystems.cn/hertz_studio/hertz_server_django/issues)
+
+---
+
+**注意**: 本软件需要机器码验证才能安装使用。请联系作者获取安装权限。
