@@ -1,0 +1,145 @@
+# GEDCOM-X Python Toolkit (gedcom-x alpha 0.5.13)
+
+class-based Python implementation of the [GEDCOM-X data model](https://github.com/FamilySearch/gedcomx).  
+
+## ⚠️ Project Goals
+
+This project is currently in **alpha**.  
+While the core GEDCOM-X classes and serialization are functional, some features may not be fully implemented or may not behave exactly as expected.  
+
+  
+
+
+## Features
+
+| Feature                   | Implimentation Level |                  Description                  |
+|:--------------------------|:----------------------:|:----------------------------------------------:|
+| Class Based Gedcom-X      | Mostly Implimented     | Some types need to be completed (ex. 'Group') |
+| Gedcom-X Extensibility    | Mostly Implimented     | uses decorators and schema to register custom types/fields |
+| Gedcom-X Serialization    | Mostly Implimented     | JSON Only, edge case handling needs work|
+| Gedcom-X -> GEDCOM 5      |  *Not  Implimented*    | 
+| Gedcom 5 Read\Parse       | Mostly Implimented     | edge TAG abd extensions not fully implimented            |
+| Gedcom 5 Editing          | Partialy Implimented   | Editing at tag (element) level, with helper functions            |
+| Gedcom 5 Writing          | Fully  Implimented     |                                                              |
+| GEDCOM 5 -> Gedcom-X      | Mostly  Implimented    | edge TAG abd extensions not fully implimented
+| Gedcom-X -> GEDCOM 7      | *Not  Implimented*       | 
+| Gedcom 7 Read\Parse       | Mostly Implimented     | edge TAG abd extensions not fully implimented            |
+| Gedcom 7 Editing          | Partialy Implimented   | Editing at tag (element) level, with helper functions            |
+| Gedcom 7 Writing          | *Not  Implimented*       | Needs to be built using gx7 schema checks
+
+- Certain GEDCOM 5/7 tags are not yet mapped  (MAP, _DATE, _TEXT, _PHOTO, FSID, SSN) inlcuding most extended _TAGS
+- Some classes may be missing methods or fields  
+- Error handling and validation are still evolving  
+- Backward compatibility is **not guaranteed** until the first stable release
+
+### ✅ What You Can Do
+- Create and manipulate GEDCOM-X objects in Python  
+- Serialize and deserialize data to/from JSON  
+- Experimentally convert GEDCOM 5x & 7 files into GEDCOM-X JSON  
+- Extend GedcomX to handle new types or custom attributes  
+
+
+### ❌ What You Can’t Do (Yet)
+- Rely on complete coverage of all GEDCOM 5/7 tags  
+- Expect perfect compliance with the GEDCOM-X specification 
+- Serialize and deserialize data to/from XML   
+- Assume strong validation or error recovery on malformed input  
+- Use it as a drop-in replacement for production genealogy software  
+- Write GEDCOM-X to GEDCOM 5x / 7
+- Create Graphs from Genealogies
+
+Contributors and testers are welcome — feedback will help stabilize the library!
+
+---
+
+This library aims to provide:
+
+- Python classes for every GEDCOM-X type (Person, Fact, Source, etc.)
+- Extensibility, with current GEDCOM RS etc, extension built in
+- Serialization and Deserialization to/from GEDCOM-X JSON
+- Utilities to convert GEDCOM 5x & 7 GEDCOM Files into GEDCOM-X and back
+- Type-safe field definitions and extensibility hooks for future tags
+
+---
+
+## Features
+
+- **Complete GEDCOM-X Class Coverage**  
+  Each GEDCOM-X type is represented as a Python class with fields and types.
+
+- **Serialization / Deserialization**  
+  Centralized serialization/deserialization using schema that can register extended types and properties
+
+- **Type Checking & Enum Validation**  
+  Uses Python type hints and enums to ensure correct values (e.g. FactType, EventType, ConfidenceLevel).
+
+- **Composable / Nestable Classes**  
+  Nested objects (e.g. Person → Name → NameForm → TextValue) are constructed and validated recursively.
+
+- **GEDCOM 7 → GEDCOM-X Conversion**  
+  Experimental parser to read GEDCOM 7 files and convert them into structured GEDCOM-X JSON.
+
+---
+
+## Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/yourusername/gedcom-x.git
+cd gedcom-x
+pip install -r requirements.txt
+```
+or
+```
+pip install gedcom-x
+```
+---
+
+## Examples
+
+<details>
+
+<summary>Create a Person Gedcom-X Type</summary>
+
+```python
+import json
+from gedcomx import Person, Name, NameForm, TextValue
+
+person = Person(
+    id="P-123",
+    names=[Name(
+        nameForms=[NameForm(
+            fullText=TextValue(value="John Doe")
+        )]
+    )]
+)
+
+print(json.dumps(person._as_dict_,indent=4))
+```
+```text
+{
+    "id": "P-123",
+    "lang": "en",
+    "private": false,
+    "living": false,
+    "gender": {
+        "lang": "en",
+        "type": "http://gedcomx.org/Unknown"
+    },
+    "names": [
+        {
+            "lang": "en",
+            "nameForms": [
+                {
+                    "lang": "en",
+                    "fullText": {
+                        "lang": "en",
+                        "value": "John Doe"
+                    }
+                }
+            ]
+        }
+    ]
+}
+
