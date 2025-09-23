@@ -1,0 +1,215 @@
+[build-system]
+build-backend = "uv_build"
+requires = [ "uv-build>=0.8.0,<0.9" ]
+
+[project]
+name = "dgpy"
+version = "0.10.3"
+description = "Dynamic Graphics Python"
+license-files = ["LICENSE"]
+readme = "README.md"
+keywords = [ "dgi", "dgpy", "dgpylibs", "python3", "typed" ]
+authors = [
+  { name = "jesse", email = "jesse@dgi.com" },
+  { name = "dan", email = "dan@dgi.com" },
+]
+requires-python = ">=3.11"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: Other/Proprietary License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+dependencies = [
+  "aiopen>=0.8.0",
+  "asyncify>=0.12.0",
+  "fmts>=0.4.0",
+  "h5>=0.12.0",
+  "jsonbourne>=0.32.0",
+  "listless>=0.4.0",
+  "numpy>=1.23",
+  "pandas>=1.5.0",
+  "pydantic>=2.8.2",
+  "pyzmq>=26.2,<27",
+  "requires>=0.12.0",
+  "shellfish>=0.7.0",
+  "typing-extensions>=4.14.1",
+  "xarray>=2023.12",
+]
+
+optional-dependencies.all = [
+  "imageio>=2.35.1",
+]
+optional-dependencies.full = [
+  "imageio>=2.35.1",
+]
+
+[dependency-groups]
+dev = [
+  "anyio>=4.9.0",
+  "deepdiff>=7.0.1",
+  "hypothesis>=6.111.2",
+  "mypy>=1.17.1",
+  "nox>=2025.5.1",
+  "pytest>=8.4",
+  "pytest-asyncio>=1",
+  "rich>=14.0.0",
+  "types-python-dateutil>=2.9.0.20250516",
+]
+docs = [
+  "markdown-include>=0.8.1",
+  "mkdocs>=1.6.1",
+  "mkdocs-autorefs>=1.1,!=1.2",
+  "mkdocs-jupyter>=0.25",
+  "mkdocs-material>=9.5.34",
+  "mkdocstrings[python]>=0.25",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [ "src/dgpy" ]
+
+[tool.hatch.build.targets.sdist]
+include = [ "src/dgpy", "pyproject.toml", "README.md" ]
+
+# =============================================================================
+# /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+# =============================================================================
+#  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\
+# /  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \
+# =============================================================================
+# \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+# =============================================================================
+
+[tool.ruff]
+extend = "../ruff.toml"
+target-version = "py311"
+extend-exclude = [ "src/dgpy/legacy/*" ]
+lint.extend-select = [
+  "D",      # pydocstyle
+  "ERA001", # nuke commented out code
+  "G",      # more logging
+  "LOG",    # logging
+  "NPY201", # numpy2
+  "T201",   # print
+]
+lint.extend-ignore = [
+  "D101", #	undocumented-public-class	Missing docstring in public class
+  "D102", #	undocumented-public-method	Missing docstring in public method
+  "D103", #	undocumented-public-function	Missing docstring in public function
+  "D105", #	undocumented-magic-method	Missing docstring in magic method
+  "D415", #	missing-terminal-punctuation	First line should end with a period, question mark, or exclamation point
+  "D417", #	undocumented-param	Missing argument description in the docstring for {definition}: {name}
+]
+lint.per-file-ignores."*.ipynb" = [
+  "ERA001", # nuke commented out code
+  "F811",   # redefinition of unused variable fine in notebooks/docs
+  "T201",   # print
+]
+lint.per-file-ignores."tests/**/*.py" = [
+  "D100", #	undocumented-public-module	Missing docstring in public module
+  "D104", #	undocumented-public-package	Missing docstring in public package
+  "D106", #	undocumented-public-nested-class	Missing docstring in public nested class
+  "D200", #	unnecessary-multiline-docstring	One-line docstring should fit on one line
+  "D205", #	missing-blank-line-after-summary	1 blank line required between summary line and description
+  "D212", #	multi-line-summary-first-line	Multi-line docstring summary should start at the first line
+  "D403", #	first-word-uncapitalized	First word of the docstring should be capitalized: {} -> {}
+]
+# =============================================================================
+# /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+# =============================================================================
+#  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\  /\
+# /  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \
+# =============================================================================
+# \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+# =============================================================================
+
+lint.flake8-type-checking.runtime-evaluated-base-classes = [
+  "dgpy.dgpydantic.DgpyBaseModel",
+  "pydantic.BaseModel",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = [
+  # "--disable-warnings",
+  "--doctest-ignore-import-errors",
+  "--doctest-modules",
+  "--strict-config",
+  "--strict-markers",
+]
+xfail_strict = true
+filterwarnings = [
+  #    "error",
+  #    'ignore:"@coroutine" decorator is deprecated since Python 3\.8, use "async def" instead:DeprecationWarning',
+  #    "ignore::RuntimeWarning",
+  #    "ignore::pytest.PytestUnraisableExceptionWarning",
+  #    "ignore::DeprecationWarning"
+]
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  #  "asyncio",
+  "exe",
+  "aws",
+  "datatest",
+  "viewserver",
+  "pygrd",
+  "pygrdio",
+  "py2grdio",
+  "py3grdio",
+  "py2grd",
+  "py3grd",
+  "py3grdio",
+  "pyspace",
+  "pydat",
+  "dump",
+  "fs",
+  "dgio",
+  "aio",
+  "localdata",
+  "head",
+  "timeout",
+  "threegrid",
+  "mthreegrid",
+  "twogrid",
+  # dgi file type markers
+  "m2grd",
+  "m3grd",
+  "prod",
+  "path",
+  "pdat",
+  "dat",
+]
+testpaths = [ "tests", "integration" ]
+
+[tool.mypy]
+plugins = [ "pydantic.mypy" ]
+disallow_any_generics = false
+disallow_untyped_calls = false
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = false
+warn_return_any = false
+ignore_missing_imports = true
+implicit_reexport = false
+strict_equality = false
+show_error_codes = true
+#enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = true
+#enable_error_code = []
+
+#[tool.pydantic-mypy]
+#init_forbid_extra = true
+#init_typed = true
+#warn_required_dynamic_aliases = true
+#warn_untyped_fields = true
