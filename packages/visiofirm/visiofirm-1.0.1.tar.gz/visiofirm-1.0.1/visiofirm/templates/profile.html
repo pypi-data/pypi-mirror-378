@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<!-- Radial gradient background -->
+<div class="radial-background"></div>
+
+<style>
+    /* Radial gradient background */
+    .radial-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background:
+            radial-gradient(circle at 20% 30%, rgba(212, 255, 246, 0.8) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(142, 140, 250, 0.8) 0%, transparent 50%),
+            radial-gradient(circle at 40% 90%, rgba(192, 186, 255, 0.8) 0%, transparent 50%),
+            radial-gradient(circle at 70% 20%, rgba(187, 187, 187, 0.8) 0%, transparent 50%);
+        background-size: 200% 200%;
+        animation: moveBalls 20s ease infinite;
+        filter: blur(80px);
+        z-index: -1;
+    }
+
+    @keyframes moveBalls {
+        0% {
+            background-position: 0% 0%;
+        }
+        50% {
+            background-position: 100% 100%;
+        }
+        100% {
+            background-position: 0% 0%;
+        }
+    }
+
+    /* Profile container styling */
+    .profile-container {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 30px;
+        background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .profile-header h1 {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .avatar {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(45deg, #007bff, #00c4ff);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        font-weight: bold;
+        margin: 0 auto 20px;
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        transition: transform 0.3s ease;
+    }
+
+    .avatar:hover {
+        transform: scale(1.05);
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+        position: relative;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 1.1rem;
+        color: #34495e;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #dfe6e9;
+        border-radius: 8px;
+        font-size: 1rem;
+        color: #2d3436;
+        background-color: #fff;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-group input:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+        outline: none;
+    }
+
+    .save-btn {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        color: white;
+        font-size: 1.1rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .save-btn:hover {
+        background: linear-gradient(90deg, #0056b3, #003d82);
+        transform: translateY(-2px);
+    }
+
+    .save-btn:active {
+        transform: translateY(0);
+    }
+
+    .user-id {
+        font-size: 1rem;
+        color: #636e72;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+</style>
+
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>Your Profile</h1>
+        <p class="user-id"><strong>User ID:</strong> {{ user.id }}</p>
+        <div id="api-key-section" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+            <label for="api_key" style="display: block; font-weight: bold; margin-bottom: 5px;">API Key (for Python API)</label>
+            <input id="api_key" type="text" value="{{ user.api_key or 'Generate first API key' }}" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; background: #fff;">
+            <button id="regen-btn" style="margin-top: 10px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Regenerate API Key</button>
+            <p style="font-size: 0.9em; color: #6c757d; margin-top: 5px;">Copy this key for use in Python scripts (e.g., VF.login('your@email.com', 'your_api_key_here')). Regenerating invalidates the old one.</p>
+        </div>
+        <div class="avatar">
+            {{ user.first_name[0]|upper }}.{{ user.last_name[0]|upper }}
+        </div>
+    </div>
+    <form method="POST" action="/auth/profile">
+        <div class="form-group">
+            <label for="first_name">First Name</label>
+            <input id="first_name" name="first_name" type="text" value="{{ user.first_name }}" placeholder="First Name" required>
+        </div>
+        <div class="form-group">
+            <label for="last_name">Last Name</label>
+            <input id="last_name" name="last_name" type="text" value="{{ user.last_name }}" placeholder="Last Name" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" value="{{ user.email }}" placeholder="Email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">New Password (leave blank to keep current)</label>
+            <input id="password" name="password" type="password" placeholder="New Password">
+        </div>
+        <div class="form-group">
+            <label for="company">Company</label>
+            <input id="company" name="company" type="text" value="{{ user.company or '' }}" placeholder="Company">
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="regenerate_api_key"> Regenerate API Key on Save
+            </label>
+        </div>
+        <button type="submit" class="save-btn">Save Changes</button>
+    </form>
+</div>
+<script>
+fetch('/auth/profile_data')
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      const apiInput = document.getElementById('api_key');
+      apiInput.value = data.api_key || 'No API key generated';
+      apiInput.readOnly = true;
+    }
+  })
+  .catch(error => {
+    console.error('Error loading profile data:', error);
+  });
+
+document.getElementById('regen-btn').addEventListener('click', () => {
+  if (confirm('Regenerate API key? This will invalidate the current one.')) {
+    fetch('/auth/generate_api_key', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('api_key').value = data.api_key;
+          alert('New API key generated!');
+        } else {
+          alert('Failed to generate API key.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error regenerating API key.');
+      });
+  }
+});
+</script>
+{% endblock %}
