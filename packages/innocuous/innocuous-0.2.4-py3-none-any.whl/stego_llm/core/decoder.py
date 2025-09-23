@@ -1,0 +1,137 @@
+import logging
+from typing import Optional, Dict, Any
+from stego_llm.steganography import (
+    chunks_to_message,
+    find_acceptable_token,
+    pre_selection_filter,
+    post_selection_filter,
+    auto_accept_token,
+)
+from stego_llm.llm import (
+    create_llm_client,
+    get_token_probabilities,
+    logits_to_probabilities,
+)
+from .trace import _trace_decoding_step
+
+
+logger = logging.getLogger(__name__)
+
+
+def main_decode(
+    encoded_prompt: str,
+    initial_prompt: str,
+    chunk_size: int = 2,
+    num_logprobs: int = 100,
+    llm_path: Optional[str] = None,
+    llm_extra_args: Dict[str, Any] = {},
+) -> Optional[bytes]:
+    """Decodes a message hidden in a text.
+
+    This function extracts a hidden message from a text that was encoded
+    using steganography. It uses a language model to determine the likely
+    sequence of tokens that represent the hidden message.
+
+    Args:
+        encoded_prompt (str): The text containing the hidden message.
+        initial_prompt (str): The initial text used to start the encoding process.
+        chunk_size (int): The number of bits per chunk used for encoding.
+        num_logprobs (int): The number of token probabilities to consider.
+        llm_path (Optional[str]): The path to the language model file.
+            If None, the default model is used.
+        llm_extra_args (Optional Dict): additional args to pass to llama_cpp constructor.
+
+    Returns:
+        Optional[bytes]: The decoded message as bytes, or None if decoding fails.
+    """
+    llm = create_llm_client(model_path=llm_path, **llm_extra_args)
+    message_carrying_text = encoded_prompt[len(initial_prompt) :]
+    memo = {}
+
+    def solve(current_prompt, remaining_text):
+        if not remaining_text:
+            return []
+
+        state = (current_prompt, remaining_text)
+        if state in memo:
+            return memo[state]
+
+        toks = get_token_probabilities(
+            llm, prompt=current_prompt, num_output=num_logprobs
+        )
+        toks = logits_to_probabilities(toks)
+        _trace_decoding_step("tokens_processed", toks=toks)
+        toks = pre_selection_filter(toks)
+
+        accepted_tok = find_acceptable_token(toks)
+        if accepted_tok is not None:
+            if remaining_text.startswith(accepted_tok):
+                _trace_decoding_step("condition_found", condition="starts_with")
+                new_prompt = current_prompt + accepted_tok
+                new_remaining = remaining_text[len(accepted_tok) :]
+
+                result = solve(new_prompt, new_remaining)
+                memo[state] = result
+                return result
+            elif auto_accept_token(accepted_tok):
+                _trace_decoding_step("condition_found", condition="auto_accept_filled")
+                new_prompt = current_prompt + accepted_tok
+
+                result = solve(new_prompt, remaining_text)
+                memo[state] = result
+                return result
+            else:
+                _trace_decoding_step("condition_found", condition="no_match_at_all")
+                memo[state] = None
+                return None
+
+        toks = post_selection_filter(toks)
+        possible_matches = []
+
+        num_candidate_toks = 2**chunk_size
+        candidate_toks = list(toks.keys())
+
+        if len(candidate_toks) < num_candidate_toks:
+            logger.warning(
+                f"Not enough tokens after filtering. Have {len(candidate_toks)}, need {num_candidate_toks}"
+            )
+            num_candidate_toks = len(candidate_toks)
+
+        candidate_toks_slice = candidate_toks[:num_candidate_toks]
+
+        for i, token_str in enumerate(candidate_toks_slice):
+            if remaining_text.startswith(token_str):
+                possible_matches.append((i, token_str))
+
+        possible_matches.sort(key=lambda x: len(x[1]), reverse=True)
+
+        for decoded_int, token_str in possible_matches:
+            new_prompt = current_prompt + token_str
+            new_remaining = remaining_text[len(token_str) :]
+
+            result = solve(new_prompt, new_remaining)
+
+            if result is not None:
+                solution = [decoded_int] + result
+                memo[state] = solution
+                return solution
+            else:
+                _trace_decoding_step(
+                    "branch_deadend", possible_matches=possible_matches, state=state
+                )
+
+        memo[state] = None
+        return None
+
+    decoded_ints = solve(initial_prompt, message_carrying_text)
+
+    if decoded_ints is None:
+        _trace_decoding_step("decode_failed")
+        return None
+
+    _trace_decoding_step("decoding_complete", decoded_ints=decoded_ints)
+
+    decoded_msg = chunks_to_message(decoded_ints, chunk_size=chunk_size)
+    logger.info(f"decoded_msg: {decoded_msg}")
+
+    return decoded_msg
