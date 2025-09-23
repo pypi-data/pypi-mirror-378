@@ -1,0 +1,67 @@
+{% load helpers %}
+
+<div class="card">
+  <h5 class="card-header">
+    Assignments
+    {% if perms.netbox_firmware.change_firmware %}
+    <div class="card-actions">
+      <a href="{% url 'plugins:netbox_firmware:firmwareassignment_add' %}?firmware={{object.id}}" class="btn btn-primary">
+        Add Assignment
+      </a>
+    </div>
+    {% endif %}
+  </h5>
+
+  <div class="card-body">
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span>Total assignments</span>
+      <a href="{% url 'plugins:netbox_firmware:firmwareassignment_list' %}?firmware_id={{ object.pk }}">
+        {% if count %}
+          <span class="badge text-bg-primary rounded-pill">{{ count }}</span>
+        {% else %}
+          <span class="badge text-bg-light rounded-pill">&mdash;</span>
+        {% endif %}
+      </a>
+    </div>
+
+    {# Device types with clickable counts (only if there are any) #}
+    {% if device_type_counts %}
+    <div class="mt-3">
+      <h6 style="font-size: 1.03rem; font-weight: 500; margin-bottom: 0;">Device types</h6>
+      <hr style="margin-top: 4px; margin-bottom: 12px;">
+      <ul class="list-unstyled mb-0">
+        {% for row in device_type_counts %}
+          <li class="d-flex justify-content-between align-items-center mb-2">
+            <span>{{ row.device__device_type__model }}</span>
+            <a href="{% url 'plugins:netbox_firmware:firmwareassignment_list' %}?firmware_id={{ object.pk }}&device_type_id={{ row.device__device_type__id }}">
+              <span class="badge text-bg-primary rounded-pill">{{ row.count }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {# Module types with clickable counts (only if there are any) #}
+    {% if module_type_counts %}
+    <div class="mt-4">
+      <h6 style="font-size: 1.03rem; font-weight: 500; margin-bottom: 0;">Module types</h6>
+      <hr style="margin-top: 4px; margin-bottom: 12px;">
+      <ul class="list-unstyled mb-0">
+        {% for row in module_type_counts %}
+          <li class="d-flex justify-content-between align-items-center mb-2">
+            <span>{{ row.module__module_type__model }}</span>
+            <a href="{% url 'plugins:netbox_firmware:firmwareassignment_list' %}?firmware_id={{ object.pk }}&module_type_id={{ row.module__module_type__id }}">
+              <span class="badge text-bg-primary rounded-pill">{{ row.count }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <hr>
+
+  </div>
+</div>
