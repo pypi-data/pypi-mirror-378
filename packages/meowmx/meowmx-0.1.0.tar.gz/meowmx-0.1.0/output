@@ -1,0 +1,132 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.2, pytest-8.4.1, pluggy-1.6.0 -- /home/tim/Work/meowmx/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/tim/Work/meowmx
+configfile: pyproject.toml
+plugins: timeout-2.4.0
+collecting ... collected 3 items
+
+tests/test_save_and_load.py::test_save_and_load_events PASSED            [ 33%]
+tests/test_save_and_load.py::test_concurrent_save_check PASSED           [ 66%]
+tests/test_subs.py::test_subscriptions FAILED                            [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_subscriptions ______________________________
+
+meow = <meowmx.client.Client object at 0x72e1d7dacb90>
+
+    @pytest.mark.timeout(10)
+    def test_subscriptions(meow: meowmx.Client) -> None:
+        rname = _generate_slug()
+        aggregate_type = f"meowmx-st-{rname}"
+        event_types = [
+            "MeoxMxStOrderCreated",
+            "MeoxMxStOrderShipped",
+            "MeoxMxStOrderLost",
+            "MeoxMxStOrderFulfilled",
+        ]
+        writer = AggregateWriter(aggregate_type, event_types, percent_new=25, max_length=85)
+    
+        stop_signal = threading.Event()
+    
+        # imagine we have three workers:
+        # * one looks at all the events of an order, maybe to build a read model
+        # * one just cares about shipping
+        # * one only cares about tracking
+        worker_orders = Worker(f"meowmx-st-{rname}-orders", aggregate_type)
+        worker_shipped = Worker(f"meowmx-st-{rname}-shipped", aggregate_type)
+        worker_tracker = Worker(f"meowmx-st-{rname}-tracker", aggregate_type)
+    
+        # start the workers, each in a different thread
+    
+        errors_in_thread = None
+    
+        def worker1() -> None:
+            try:
+                worker_orders.start_subscription(meow, stop_signal)
+            except Exception as e:
+                print(f"ERROR IN THREAD: {e}")
+                nonlocal errors_in_thread
+                errors_in_thread = True
+                traceback.print_exc()
+    
+        def worker2() -> None:
+            try:
+                worker_shipped.start_subscription(meow, stop_signal)
+            except Exception as e:
+                print(f"ERROR IN THREAD: {e}")
+                nonlocal errors_in_thread
+                errors_in_thread = True
+                traceback.print_exc()
+    
+        def worker3() -> None:
+            try:
+                worker_tracker.start_subscription(meow, stop_signal)
+            except Exception as e:
+                print(f"ERROR IN THREAD: {e}")
+                nonlocal errors_in_thread
+                errors_in_thread = True
+                traceback.print_exc()
+    
+        t1 = threading.Thread(target=worker1)
+        t1.start()
+        t2 = threading.Thread(target=worker2)
+        t2.start()
+        t3 = threading.Thread(target=worker3)
+        t3.start()
+    
+        # Now write some number of events
+    
+        try:
+            event_count = 400
+            for i in range(event_count):
+                writer.write_event(meow)
+        except Exception as e:
+            print(f"ERROR IN MAIN THREAD: {e}")
+            traceback.print_exc()
+            errors_in_thread = True
+    
+    
+        # wait for the threads to be done processing them. This will hang
+        # if there's a bug!
+        if not errors_in_thread:
+            while (
+                worker_orders.seen_event_count < event_count
+                or worker_shipped.seen_event_count < event_count
+                or worker_tracker.seen_event_count < event_count
+            ):
+                if errors_in_thread:
+                    break
+                time.sleep(1)
+    
+        # Signal the worker threads to stop
+        stop_signal.set()
+    
+        t1.join()
+        t2.join()
+        t3.join()
+    
+>       assert not errors_in_thread
+E       assert not True
+
+tests/test_subs.py:224: AssertionError
+----------------------------- Captured stdout call -----------------------------
+ -> writing meowmx-st-stimulating-heavy-jackal-of-endurance - 96fd17d5-b799-4833-be92-a16e24d240cd - 0...
+ -> writing meowmx-st-stimulating-heavy-jackal-of-endurance - e826b52d-14b0-4aee-b749-5024f2e4664d - 0...
+ -> writing meowmx-st-stimulating-heavy-jackal-of-endurance - 96fd17d5-b799-4833-be92-a16e24d240cd - 1...
+ERROR IN MAIN THREAD: meowmx-st-stimulating-heavy-jackal-of-endurance - 96fd17d5-b799-4833-be92-a16e24d240cd did not match expected_version of 0
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "/home/tim/Work/meowmx/tests/test_subs.py", line 198, in test_subscriptions
+    writer.write_event(meow)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/tim/Work/meowmx/tests/test_subs.py", line 81, in write_event
+    recorded_events = meow.save_events(self._aggregate_type, aggregate_id, events)
+  File "/home/tim/Work/meowmx/src/meowmx/client.py", line 167, in save_events
+    raise ExpectedVersionFailure(
+        f"{aggregate_type} - {aggregate_id} did not match expected_version of {expected_version}"
+    )
+meowmx.client.ExpectedVersionFailure: meowmx-st-stimulating-heavy-jackal-of-endurance - 96fd17d5-b799-4833-be92-a16e24d240cd did not match expected_version of 0
+=========================== short test summary info ============================
+FAILED tests/test_subs.py::test_subscriptions - assert not True
+========================= 1 failed, 2 passed in 1.07s ==========================

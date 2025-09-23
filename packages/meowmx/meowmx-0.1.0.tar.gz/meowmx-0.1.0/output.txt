@@ -1,0 +1,855 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.2, pytest-8.4.1, pluggy-1.6.0 -- /home/tim/Work/meowmx/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/tim/Work/meowmx
+configfile: pyproject.toml
+plugins: timeout-2.4.0
+collecting ... collected 3 items
+
+tests/test_save_and_load.py::test_save_and_load_events PASSED            [ 33%]
+tests/test_save_and_load.py::test_concurrent_save_check FAILED           [ 66%]
+tests/test_subs.py::test_subscriptions FAILED                            [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_concurrent_save_check __________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7089c84b8e90>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7089c8434f50>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7089c8311ef0>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x7089c844f570>
+parameters = [('17309398-d83b-43b3-8915-bd8312539963', -1, 'meowmx-test')]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7089c8434f50>
+cursor = <sqlite3.Cursor object at 0x7089c8306e40>
+statement = 'INSERT INTO es_aggregate (id, version, aggregate_type) VALUES (?, ?, ?)'
+parameters = ('17309398-d83b-43b3-8915-bd8312539963', -1, 'meowmx-test')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7089c8311ef0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.OperationalError: no such table: es_aggregate
+
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+meow = <meowmx.client.Client object at 0x7089c8434910>
+
+    def test_concurrent_save_check(meow: meowmx.Client) -> None:
+        aggregate_type = "meowmx-test"
+        aggregate_id = str(uuid.uuid4())
+    
+        events = [
+            meowmx.NewEvent(
+                aggregate_id=aggregate_id,
+                event_type="MeowMxTestAggregateCreated",
+                json={
+                    "time": datetime.now().isoformat(),
+                },
+                version=0,
+            ),
+        ]
+>       recorded_events = meow.save_events("meowmx-test", aggregate_id, events)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_save_and_load.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/meowmx/client.py:166: in save_events
+    self._esp.create_aggregate_if_absent(
+src/meowmx/sqlalchemy/client.py:65: in create_aggregate_if_absent
+    session.execute(stmt)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:2365: in execute
+    return self._execute_internal(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:2251: in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/bulk_persistence.py:1306: in orm_execute_statement
+    result = conn.execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1419: in execute
+    return meth(
+.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7089c8434f50>
+cursor = <sqlite3.Cursor object at 0x7089c8306e40>
+statement = 'INSERT INTO es_aggregate (id, version, aggregate_type) VALUES (?, ?, ?)'
+parameters = ('17309398-d83b-43b3-8915-bd8312539963', -1, 'meowmx-test')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7089c8311ef0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: es_aggregate
+E       [SQL: INSERT INTO es_aggregate (id, version, aggregate_type) VALUES (?, ?, ?)]
+E       [parameters: ('17309398-d83b-43b3-8915-bd8312539963', -1, 'meowmx-test')]
+E       (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: OperationalError
+______________________________ test_subscriptions ______________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7089c84a5050>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7089c8437390>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7089c83bc590>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x7089c844e250>
+parameters = [('8ccc4bfb-df61-4c53-ab46-35a40c89af70', -1, 'meowmx-st-talented-almond-okapi-of-rain')]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7089c8437390>
+cursor = <sqlite3.Cursor object at 0x7089c72264c0>
+statement = 'INSERT INTO es_aggregate (id, version, aggregate_type) VALUES (?, ?, ?)'
+parameters = ('8ccc4bfb-df61-4c53-ab46-35a40c89af70', -1, 'meowmx-st-talented-almond-okapi-of-rain')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7089c83bc590>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.OperationalError: no such table: es_aggregate
+
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+meow = <meowmx.client.Client object at 0x7089c8437110>
+
+    @pytest.mark.timeout(60)
+    def test_subscriptions(meow: meowmx.Client) -> None:
+        rname = _generate_slug()
+        aggregate_type = f"meowmx-st-{rname}"
+        event_types = [
+            "MeoxMxStOrderCreated",
+            "MeoxMxStOrderShipped",
+            "MeoxMxStOrderLost",
+            "MeoxMxStOrderFulfilled",
+        ]
+        writer = AggregateWriter(aggregate_type, event_types, percent_new=25, max_length=85)
+    
+        stop_signal = threading.Event()
+    
+        # imagine we have three workers:
+        # * one looks at all the events of an order, maybe to build a read model
+        # * one just cares about shipping
+        # * one only cares about tracking
+        worker_orders = Worker(f"meowmx-st-{rname}-orders", aggregate_type)
+        worker_shipped = Worker(f"meowmx-st-{rname}-shipped", aggregate_type)
+        worker_tracker = Worker(f"meowmx-st-{rname}-tracker", aggregate_type)
+    
+        # start the workers, each in a different thread
+    
+        def worker1() -> None:
+            worker_orders.start_subscription(meow, stop_signal)
+    
+        def worker2() -> None:
+            worker_shipped.start_subscription(meow, stop_signal)
+    
+        def worker3() -> None:
+            worker_tracker.start_subscription(meow, stop_signal)
+    
+        t1 = threading.Thread(target=worker1)
+        t1.start()
+        t2 = threading.Thread(target=worker2)
+        t2.start()
+        t3 = threading.Thread(target=worker3)
+        t3.start()
+    
+        # Now write some number of events
+    
+        event_count = 400
+        for i in range(event_count):
+>           writer.write_event(meow)
+
+tests/test_subs.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_subs.py:79: in write_event
+    recorded_events = meow.save_events(self._aggregate_type, aggregate_id, events)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/meowmx/client.py:166: in save_events
+    self._esp.create_aggregate_if_absent(
+src/meowmx/sqlalchemy/client.py:65: in create_aggregate_if_absent
+    session.execute(stmt)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:2365: in execute
+    return self._execute_internal(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:2251: in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/bulk_persistence.py:1306: in orm_execute_statement
+    result = conn.execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1419: in execute
+    return meth(
+.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7089c8437390>
+cursor = <sqlite3.Cursor object at 0x7089c72264c0>
+statement = 'INSERT INTO es_aggregate (id, version, aggregate_type) VALUES (?, ?, ?)'
+parameters = ('8ccc4bfb-df61-4c53-ab46-35a40c89af70', -1, 'meowmx-st-talented-almond-okapi-of-rain')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7089c83bc590>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: es_aggregate
+E       [SQL: INSERT INTO es_aggregate (id, version, aggregate_type) VALUES (?, ?, ?)]
+E       [parameters: ('8ccc4bfb-df61-4c53-ab46-35a40c89af70', -1, 'meowmx-st-talented-almond-okapi-of-rain')]
+E       (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: OperationalError
+=============================== warnings summary ===============================
+tests/test_subs.py::test_subscriptions
+  /home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-1 (worker1)
+  
+  Traceback (most recent call last):
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+      self.dialect.do_execute(
+      ~~~~~~~~~~~~~~~~~~~~~~~^
+          cursor, str_statement, effective_parameters, context
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+      cursor.execute(statement, parameters)
+      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  sqlite3.OperationalError: no such table: es_event_subscription
+  
+  The above exception was the direct cause of the following exception:
+  
+  Traceback (most recent call last):
+    File "/home/tim/.local/share/uv/python/cpython-3.13.2-linux-x86_64-gnu/lib/python3.13/threading.py", line 1041, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/home/tim/.local/share/uv/python/cpython-3.13.2-linux-x86_64-gnu/lib/python3.13/threading.py", line 992, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/tim/Work/meowmx/tests/test_subs.py", line 156, in worker1
+      worker_orders.start_subscription(meow, stop_signal)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+    File "/home/tim/Work/meowmx/tests/test_subs.py", line 121, in start_subscription
+      meow.sub(
+      ~~~~~~~~^
+          self._sub_name,
+          ^^^^^^^^^^^^^^^
+      ...<4 lines>...
+          stop_signal=stop_signal,
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/src/meowmx/client.py", line 198, in sub
+      processed = self._handle_subscription_events(
+          subscription_name=subscription_name,
+      ...<2 lines>...
+          handler=handler,
+      )
+    File "/home/tim/Work/meowmx/src/meowmx/client.py", line 65, in _handle_subscription_events
+      self._esp.create_subscription_if_absent(session, subscription_name)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/tim/Work/meowmx/src/meowmx/sqlalchemy/client.py", line 78, in create_subscription_if_absent
+      session.execute(stmt)
+      ~~~~~~~~~~~~~~~^^^^^^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+      return self._execute_internal(
+             ~~~~~~~~~~~~~~~~~~~~~~^
+          statement,
+          ^^^^^^^^^^
+      ...<4 lines>...
+          _add_event=_add_event,
+          ^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+      result: Result[Any] = compile_state_cls.orm_execute_statement(
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          self,
+          ^^^^^
+      ...<4 lines>...
+          conn,
+          ^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/orm/bulk_persistence.py", line 1306, in orm_execute_statement
+      result = conn.execute(
+          statement, params or {}, execution_options=execution_options
+      )
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+      return meth(
+          self,
+          distilled_parameters,
+          execution_options or NO_OPTIONS,
+      )
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+      return connection._execute_clauseelement(
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          self, distilled_params, execution_options
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+      ret = self._execute_context(
+          dialect,
+      ...<8 lines>...
+          cache_hit=cache_hit,
+      )
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+      return self._exec_single_context(
+             ~~~~~~~~~~~~~~~~~~~~~~~~~^
+          dialect, context, statement, parameters
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+      self._handle_dbapi_exception(
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          e, str_statement, effective_parameters, cursor, context
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+      raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+      self.dialect.do_execute(
+      ~~~~~~~~~~~~~~~~~~~~~~~^
+          cursor, str_statement, effective_parameters, context
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+      cursor.execute(statement, parameters)
+      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: es_event_subscription
+  [SQL: INSERT INTO es_event_subscription (subscription_name, last_transaction_id, last_event_id) VALUES (?, ?, ?)]
+  [parameters: ('meowmx-st-talented-almond-okapi-of-rain-orders', 0, 0)]
+  (Background on this error at: https://sqlalche.me/e/20/e3q8)
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/test_subs.py::test_subscriptions
+  /home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-3 (worker3)
+  
+  Traceback (most recent call last):
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+      self.dialect.do_execute(
+      ~~~~~~~~~~~~~~~~~~~~~~~^
+          cursor, str_statement, effective_parameters, context
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+      cursor.execute(statement, parameters)
+      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  sqlite3.OperationalError: no such table: es_event_subscription
+  
+  The above exception was the direct cause of the following exception:
+  
+  Traceback (most recent call last):
+    File "/home/tim/.local/share/uv/python/cpython-3.13.2-linux-x86_64-gnu/lib/python3.13/threading.py", line 1041, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/home/tim/.local/share/uv/python/cpython-3.13.2-linux-x86_64-gnu/lib/python3.13/threading.py", line 992, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/tim/Work/meowmx/tests/test_subs.py", line 162, in worker3
+      worker_tracker.start_subscription(meow, stop_signal)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+    File "/home/tim/Work/meowmx/tests/test_subs.py", line 121, in start_subscription
+      meow.sub(
+      ~~~~~~~~^
+          self._sub_name,
+          ^^^^^^^^^^^^^^^
+      ...<4 lines>...
+          stop_signal=stop_signal,
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/src/meowmx/client.py", line 198, in sub
+      processed = self._handle_subscription_events(
+          subscription_name=subscription_name,
+      ...<2 lines>...
+          handler=handler,
+      )
+    File "/home/tim/Work/meowmx/src/meowmx/client.py", line 65, in _handle_subscription_events
+      self._esp.create_subscription_if_absent(session, subscription_name)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/tim/Work/meowmx/src/meowmx/sqlalchemy/client.py", line 78, in create_subscription_if_absent
+      session.execute(stmt)
+      ~~~~~~~~~~~~~~~^^^^^^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+      return self._execute_internal(
+             ~~~~~~~~~~~~~~~~~~~~~~^
+          statement,
+          ^^^^^^^^^^
+      ...<4 lines>...
+          _add_event=_add_event,
+          ^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+      result: Result[Any] = compile_state_cls.orm_execute_statement(
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          self,
+          ^^^^^
+      ...<4 lines>...
+          conn,
+          ^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/orm/bulk_persistence.py", line 1306, in orm_execute_statement
+      result = conn.execute(
+          statement, params or {}, execution_options=execution_options
+      )
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+      return meth(
+          self,
+          distilled_parameters,
+          execution_options or NO_OPTIONS,
+      )
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+      return connection._execute_clauseelement(
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          self, distilled_params, execution_options
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+      ret = self._execute_context(
+          dialect,
+      ...<8 lines>...
+          cache_hit=cache_hit,
+      )
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+      return self._exec_single_context(
+             ~~~~~~~~~~~~~~~~~~~~~~~~~^
+          dialect, context, statement, parameters
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+      self._handle_dbapi_exception(
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          e, str_statement, effective_parameters, cursor, context
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+      raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+      self.dialect.do_execute(
+      ~~~~~~~~~~~~~~~~~~~~~~~^
+          cursor, str_statement, effective_parameters, context
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+      cursor.execute(statement, parameters)
+      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: es_event_subscription
+  [SQL: INSERT INTO es_event_subscription (subscription_name, last_transaction_id, last_event_id) VALUES (?, ?, ?)]
+  [parameters: ('meowmx-st-talented-almond-okapi-of-rain-tracker', 0, 0)]
+  (Background on this error at: https://sqlalche.me/e/20/e3q8)
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/test_subs.py::test_subscriptions
+  /home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-2 (worker2)
+  
+  Traceback (most recent call last):
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+      self.dialect.do_execute(
+      ~~~~~~~~~~~~~~~~~~~~~~~^
+          cursor, str_statement, effective_parameters, context
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+      cursor.execute(statement, parameters)
+      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  sqlite3.OperationalError: no such table: es_event_subscription
+  
+  The above exception was the direct cause of the following exception:
+  
+  Traceback (most recent call last):
+    File "/home/tim/.local/share/uv/python/cpython-3.13.2-linux-x86_64-gnu/lib/python3.13/threading.py", line 1041, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/home/tim/.local/share/uv/python/cpython-3.13.2-linux-x86_64-gnu/lib/python3.13/threading.py", line 992, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/tim/Work/meowmx/tests/test_subs.py", line 159, in worker2
+      worker_shipped.start_subscription(meow, stop_signal)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+    File "/home/tim/Work/meowmx/tests/test_subs.py", line 121, in start_subscription
+      meow.sub(
+      ~~~~~~~~^
+          self._sub_name,
+          ^^^^^^^^^^^^^^^
+      ...<4 lines>...
+          stop_signal=stop_signal,
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/src/meowmx/client.py", line 198, in sub
+      processed = self._handle_subscription_events(
+          subscription_name=subscription_name,
+      ...<2 lines>...
+          handler=handler,
+      )
+    File "/home/tim/Work/meowmx/src/meowmx/client.py", line 65, in _handle_subscription_events
+      self._esp.create_subscription_if_absent(session, subscription_name)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/tim/Work/meowmx/src/meowmx/sqlalchemy/client.py", line 78, in create_subscription_if_absent
+      session.execute(stmt)
+      ~~~~~~~~~~~~~~~^^^^^^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+      return self._execute_internal(
+             ~~~~~~~~~~~~~~~~~~~~~~^
+          statement,
+          ^^^^^^^^^^
+      ...<4 lines>...
+          _add_event=_add_event,
+          ^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+      result: Result[Any] = compile_state_cls.orm_execute_statement(
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          self,
+          ^^^^^
+      ...<4 lines>...
+          conn,
+          ^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/orm/bulk_persistence.py", line 1306, in orm_execute_statement
+      result = conn.execute(
+          statement, params or {}, execution_options=execution_options
+      )
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+      return meth(
+          self,
+          distilled_parameters,
+          execution_options or NO_OPTIONS,
+      )
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+      return connection._execute_clauseelement(
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          self, distilled_params, execution_options
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+      ret = self._execute_context(
+          dialect,
+      ...<8 lines>...
+          cache_hit=cache_hit,
+      )
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+      return self._exec_single_context(
+             ~~~~~~~~~~~~~~~~~~~~~~~~~^
+          dialect, context, statement, parameters
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+      self._handle_dbapi_exception(
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          e, str_statement, effective_parameters, cursor, context
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+      raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+      self.dialect.do_execute(
+      ~~~~~~~~~~~~~~~~~~~~~~~^
+          cursor, str_statement, effective_parameters, context
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/home/tim/Work/meowmx/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+      cursor.execute(statement, parameters)
+      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: es_event_subscription
+  [SQL: INSERT INTO es_event_subscription (subscription_name, last_transaction_id, last_event_id) VALUES (?, ?, ?)]
+  [parameters: ('meowmx-st-talented-almond-okapi-of-rain-shipped', 0, 0)]
+  (Background on this error at: https://sqlalche.me/e/20/e3q8)
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_save_and_load.py::test_concurrent_save_check - sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: es_aggregate
+[SQL: INSERT INTO es_aggregate (id, version, aggregate_type) VALUES (?, ?, ?)]
+[parameters: ('17309398-d83b-43b3-8915-bd8312539963', -1, 'meowmx-test')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+FAILED tests/test_subs.py::test_subscriptions - sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: es_aggregate
+[SQL: INSERT INTO es_aggregate (id, version, aggregate_type) VALUES (?, ?, ?)]
+[parameters: ('8ccc4bfb-df61-4c53-ab46-35a40c89af70', -1, 'meowmx-st-talented-almond-okapi-of-rain')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+=================== 2 failed, 1 passed, 3 warnings in 0.30s ====================
