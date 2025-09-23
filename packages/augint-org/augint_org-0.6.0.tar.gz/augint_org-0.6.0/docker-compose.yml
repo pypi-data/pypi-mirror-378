@@ -1,0 +1,87 @@
+services:
+  # Main development container with Claude Code installed
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_DIR: ${COMPOSE_PROJECT_NAME:-current-project}
+    image: ${COMPOSE_PROJECT_NAME:-project}:dev
+    container_name: ${COMPOSE_PROJECT_NAME:-project}-dev
+    ports:
+      # Container dev servers (separate from host dev servers to avoid conflicts)
+#      - "${AI_CONTAINER_NODE_PORT:-5178}:5173"    # Container Vite -> host 5178
+#      - "${AI_CONTAINER_API_PORT:-9004}:9000"     # Container SAM -> host 9004
+      - "5678"                                     # Debugger port
+      - "8000"                                     # Alternative port
+#      - "8931:8931"                                # Playwright MCP server
+    volumes:
+      # Mount project at root's project directory to maintain CLAUDE.md hierarchy
+      - type: bind
+        source: .
+        target: /root/projects/${COMPOSE_PROJECT_NAME:-current-project}
+        consistency: delegated
+      - ~/.codex:/root/.codex:rw
+      # Claude configuration for root
+      - ~/.claude:/root/.claude
+      - ~/.claude.json:/root/.claude.json
+      - ~/projects/CLAUDE.md:/root/projects/CLAUDE.md:ro
+      # Git and SSH configuration for root
+      - ~/.ssh:/root/.ssh:ro
+      - ~/.gitconfig:/root/.gitconfig.windows:ro
+      # AWS credentials for root (writable for SSO cache)
+      - ~/.aws:/root/.aws
+      # Poetry cache for performance
+      - poetry-cache:/root/.cache/pypoetry
+      # Docker socket for SAM build --use-container
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Pass through AWS credentials if set
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_PAGER=
+      # GitHub token for MCP integration
+      - GH_TOKEN=${GH_TOKEN:-}
+      - GITHUB_TOKEN=${GH_TOKEN:-}
+      # Brave Search API key for MCP integration
+      - BRAVE_API_KEY=${BRAVE_API_KEY:-}
+      # for claude --dangerously-skip-permissions in a sandboxed environment
+      - IS_SANDBOX=1
+      # Start Playwright MCP server in standalone mode
+      - START_PLAYWRIGHT_MCP=1
+    working_dir: /root/projects/${COMPOSE_PROJECT_NAME:-current-project}
+    # Run as root to avoid Windows/WSL2 permission issues
+    # user: "1000:1000"  # Commented out - running as root
+    # Keep container running
+    command: tail -f /dev/null
+    stdin_open: true
+    tty: true
+    # Chrome/Playwright stability improvements
+    shm_size: '2gb'  # Increase shared memory for Chrome (default 64MB is too small)
+    init: true       # Use init to prevent zombie Chrome processes
+
+  # LocalStack for AWS services emulation
+  localstack:
+    image: localstack/localstack:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-project}-localstack
+    ports:
+      - "4566:4566"              # LocalStack main endpoint
+      - "4510-4559:4510-4559"    # External service ports
+    environment:
+      - SERVICES=dynamodb,s3,lambda,sqs,sns
+      - DEBUG=${DEBUG:-0}
+      - DATA_DIR=/tmp/localstack/data
+      - LAMBDA_EXECUTOR=docker
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - localstack-data:/tmp/localstack
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  # Named volumes for better performance
+  poetry-cache:
+    driver: local
+  localstack-data:
+    driver: local
