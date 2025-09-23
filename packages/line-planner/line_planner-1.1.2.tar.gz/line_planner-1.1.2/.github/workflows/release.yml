@@ -1,0 +1,179 @@
+name: Build and Release LinePlanner
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:  # 允许手动触发
+
+permissions:
+  contents: write
+  id-token: write  # 用于PyPI可信发布
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整的Git历史，确保标签可见
+        
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+        
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install build twine setuptools-scm[toml]
+        uv sync --dev
+        
+    - name: Verify Git and version info
+      run: |
+        echo "Current Git tag: ${{ github.ref_name }}"
+        echo "Git tags:"
+        git tag --list
+        echo "Package version detection:"
+        python -c "from setuptools_scm import get_version; print(f'Detected version: {get_version()}')"
+        
+    - name: Run tests
+      run: |
+        echo "Testing LinePlanner functionality..."
+        # 测试主要功能
+        echo '{"kml_file":"test.kml","line_spacing":25,"rotation_angle":0,"save_dir":"./test_output"}' | uv run python interface.py
+        echo "✅ 基本功能测试通过"
+        
+    - name: Build package
+      run: |
+        echo "Building package..."
+        python -m build
+        echo "Build artifacts:"
+        ls -la dist/
+        
+    - name: Verify package metadata
+      run: |
+        echo "Checking package distribution..."
+        python -m twine check dist/*
+        echo "Package contents:"
+        python -c "
+        import tarfile
+        import glob
+        for f in glob.glob('dist/*.tar.gz'):
+            print(f'Contents of {f}:')
+            with tarfile.open(f, 'r:gz') as tar:
+                tar.list()
+        "
+        
+    - name: Test local installation
+      run: |
+        echo "Testing local installation..."
+        python -m pip install dist/*.whl
+        python -c "
+        import line_planner
+        print(f'Installed version: {line_planner.__version__}')
+        print('Installation test passed!')
+        "
+    
+    - name: Publish to PyPI
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        # skip-existing: true
+        
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: LinePlanner ${{ github.ref_name }}
+        body: |
+          ## 🎉 LinePlanner ${{ github.ref_name }} 发布
+          
+          ### 📦 安装方式
+          
+          ```bash
+          # 从PyPI安装
+          pip install line-planner==${{ github.ref_name }}
+          
+          # 或者安装最新版本  
+          pip install line-planner
+          
+          # 使用uv安装（推荐）
+          uv add line-planner
+          ```
+          
+          ### 🚀 使用方法
+          
+          #### 标准输入模式（推荐）：
+          ```bash
+          # 直接JSON配置
+          echo '{"kml_file":"boundary.kml","line_spacing":25,"rotation_angle":0,"save_dir":"./output"}' | python interface.py
+          
+          # 通过配置文件
+          echo "config.json" | python interface.py
+          ```
+          
+          #### Python API使用：
+          ```python
+          from line_planner import StandalonePlanner, StandaloneBoundaryParser
+          
+          # 解析KML边界
+          parser = StandaloneBoundaryParser()
+          lats, lons = parser.parse_kml_coordinates("boundary.kml")
+          
+          # 规划航线
+          planner = StandalonePlanner()
+          turn_points = planner.plan_flight_lines(
+              boundary_lats=lats,
+              boundary_lons=lons,
+              line_spacing=25.0,
+              rotation_angle=0.0
+          )
+          ```
+          
+          ### 📋 主要功能
+          - ✅ SIF设备专用航线规划
+          - ✅ 蛇形路径自动优化
+          - ✅ 高精度WGS84坐标系统
+          - ✅ 内置可视化生成
+          - ✅ 多格式输出（JSON/PNG/LOG）
+          - ✅ 极简化架构，易于维护
+          
+          ### 🎯 项目特点
+          - **简化架构**: 删除复杂API，专注独立实现
+          - **标准输入**: 通过JSON配置驱动
+          - **一键运行**: interface.py统一入口
+          - **内置可视化**: 自动生成航线图像
+          
+          ### 🔗 相关链接
+          - 🐛 [问题反馈](https://github.com/1034378361/LinePlanner/issues)
+          - 💬 [讨论区](https://github.com/1034378361/LinePlanner/discussions)
+          - 📖 [项目文档](https://github.com/1034378361/LinePlanner/blob/main/CLAUDE.md)
+          
+          ### 📊 配置文件示例
+          
+          ```json
+          {
+            "kml_file": "boundary.kml",
+            "line_spacing": 25,
+            "rotation_angle": 0,
+            "save_dir": "./output"
+          }
+          ```
+          
+          ---
+          
+          **完整更新信息:** 请查看项目的 [Git提交历史](https://github.com/1034378361/LinePlanner/commits)
+        files: |
+          dist/*
+        draft: false
+        prerelease: false
