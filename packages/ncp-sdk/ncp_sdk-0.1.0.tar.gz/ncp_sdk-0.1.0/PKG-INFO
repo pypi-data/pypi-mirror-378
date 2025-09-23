@@ -1,0 +1,138 @@
+Metadata-Version: 2.4
+Name: ncp-sdk
+Version: 0.1.0
+Summary: Network Copilot SDK for AI agent development
+Home-page: https://aviznetworks.com
+Author: Aviz Networks
+Author-email: Aviz Networks <support@aviznetworks.com>
+Maintainer-email: Aviz Networks <support@aviznetworks.com>
+Keywords: ai,agents,llm,tools,ncp,network-copilot
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic<3.0.0,>=2.0.0
+Requires-Dist: click>=8.0.0
+Requires-Dist: requests>=2.28.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: typing-extensions>=4.0.0
+Requires-Dist: toml>=0.10.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: isort>=5.12.0; extra == "dev"
+Requires-Dist: flake8>=6.0.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"
+Requires-Dist: pre-commit>=3.0.0; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: mkdocs>=1.5.0; extra == "docs"
+Requires-Dist: mkdocs-material>=9.0.0; extra == "docs"
+Requires-Dist: mkdocstrings[python]>=0.24.0; extra == "docs"
+Dynamic: author
+Dynamic: home-page
+Dynamic: requires-python
+
+# NCP SDK
+
+**Network Copilot SDK for AI agent development**
+
+The NCP SDK enables developers to create and deploy custom agents and tools on the NCP platform with full type safety and development support.
+
+## Features
+
+- 🤖 **Agent Development**: Create sophisticated AI agents with custom tools
+- 🔧 **Type Safety**: Full Python type definitions for IDE support  
+- 📦 **Easy Packaging**: Package agents for deployment with one command
+- 🚀 **Simple Deployment**: Deploy to NCP platform instances
+- 🛠️ **CLI Tools**: Complete command-line interface for development workflow
+- 🔍 **Validation**: Comprehensive project and package validation
+
+## Quick Start
+
+### Installation
+
+```bash
+pip install git+https://github.com/AvizNetworks/ncp-sdk.git
+```
+
+### Create a New Project
+
+```bash
+# Initialize new project
+ncp init my-agent-project
+cd my-agent-project
+```
+
+### Create Your First Agent
+
+Edit `agents/main_agent.py`:
+
+```python
+from ncp import Agent, tool, ModelConfig
+
+@tool
+def get_weather(city: str) -> str:
+    """Get current weather for a city."""
+    return f"Weather in {city}: Sunny, 22°C"
+
+@tool
+def calculate_tip(bill: float, percentage: float = 15.0) -> dict:
+    """Calculate tip amount and total."""
+    tip = bill * (percentage / 100)
+    return {
+        "bill": bill,
+        "tip": tip, 
+        "total": bill + tip,
+        "percentage": percentage
+    }
+
+# Create your agent
+my_agent = Agent(
+    name="HelperBot",
+    description="A helpful assistant with weather and calculation tools",
+    instructions="Help users with weather information and calculations. Be friendly and accurate.",
+    tools=[get_weather, calculate_tip],
+    llm_config=ModelConfig(
+        model="gpt-4-turbo",
+        api_key="your-api-key-here"
+    )
+)
+```
+
+## CLI Commands
+
+### Project Management
+
+```bash
+# Create new project
+ncp init my-project
+```
+
+### Packaging and Deployment
+
+```bash
+# Package project
+ncp package . --output my-project.ncp
+
+# Deploy package
+ncp deploy my-project.ncp --platform https://ncp.example.com
+```
+
+## Development Workflow
+
+1. **Initialize**: `ncp init my-project`
+2. **Setup**: `ncp setup --dev` 
+3. **Develop**: Edit agents and tools
+4. **Validate**: `ncp validate .`
+5. **Package**: `ncp package .`
+6. **Deploy**: `ncp deploy my-project.ncp`
