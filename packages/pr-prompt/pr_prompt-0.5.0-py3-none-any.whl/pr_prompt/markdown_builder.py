@@ -1,0 +1,138 @@
+from dataclasses import dataclass
+from typing import Optional
+
+from git import Diff, DiffIndex
+
+from .utils import (
+    DiffFile,
+    FileFilter,
+    GitClient,
+    build_file_tree,
+    get_markdown_content,
+)
+
+
+@dataclass
+class MarkdownSection:
+    title: str
+    content: str = ""
+    heading_level: int = 2
+
+    def render(self) -> str:
+        """Render the section as markdown."""
+        heading = "#" * self.heading_level
+        if self.content:
+            return f"{heading} {self.title}\n\n{self.content}"
+        return f"{heading} {self.title}"
+
+
+class MarkdownBuilder:
+    """Builds structured markdown prompts for pull request."""
+
+    def __init__(self, git_client: GitClient) -> None:
+        self.git_client = git_client
+        self.sections: list[MarkdownSection] = []
+
+    def add_instructions(self, instructions: str) -> None:
+        self.sections.append(
+            MarkdownSection(title="Instructions", content=instructions)
+        )
+
+    def add_metadata(
+        self,
+        *,
+        include_commit_messages: bool,
+        pr_title: Optional[str],
+        pr_description: Optional[str],
+    ) -> None:
+        """Add PR metadata section."""
+        content_parts = []
+
+        content_parts.append(f"**Repository:** {self.git_client.get_repo_name()}")
+
+        content_parts.append(
+            f"**Branch:** `{self.git_client.head_ref}` -> `{self.git_client.base_ref}`"
+        )
+
+        if pr_title:
+            content_parts.append(f"**Title:** {pr_title}")
+
+        if pr_description:
+            content_parts.append(f"**Description:**\n\n{pr_description}")
+
+        if include_commit_messages:
+            commit_messages = self.git_client.get_commit_messages()
+            commits_text = "\n".join(f"- {msg}" for msg in commit_messages)
+            content_parts.append(f"**Commits:**\n{commits_text}")
+
+        self.sections.append(
+            MarkdownSection(
+                title="Pull Request Details",
+                content="\n\n".join(content_parts),
+            )
+        )
+
+    def add_context_files(self, context_patterns: list[str]) -> None:
+        """Add a context files section with a main heading and sub-headings for each file."""
+        if not context_patterns:
+            return
+
+        all_files = self.git_client.list_files(self.git_client.head_ref)
+        context_file_paths = FileFilter.match(all_files, context_patterns)
+
+        if not context_file_paths:
+            return
+
+        self.sections.append(MarkdownSection(title="Context Files"))
+        for file_path in context_file_paths:
+            content = self.git_client.get_file_content(
+                self.git_client.head_ref, file_path
+            )
+            content_md = get_markdown_content(file_path, content)
+            self.sections.append(
+                MarkdownSection(
+                    title=f"File: `{file_path}`",
+                    content=content_md,
+                    heading_level=3,
+                )
+            )
+
+    def add_changed_files(self, diff_index: DiffIndex[Diff]) -> None:
+        """Add changed files in a tree format."""
+        files = [
+            path
+            for diff in diff_index
+            if (path := diff.b_path or diff.a_path) is not None
+        ]
+        file_tree = build_file_tree(files) if files else "No files changed"
+
+        self.sections.append(
+            MarkdownSection(
+                title="Changed Files",
+                content=f"```\n{file_tree}\n```",
+            )
+        )
+
+    def add_file_diffs(self, file_diffs: dict[str, DiffFile]) -> None:
+        """Add file diffs with individual headings for each file."""
+        self.sections.append(MarkdownSection(title="File diffs"))
+
+        for file_path, diff_file in file_diffs.items():
+            content = f"```diff\n{diff_file.content}\n```"
+
+            self.sections.append(
+                MarkdownSection(
+                    title=f"{diff_file.change_type} `{file_path}`",
+                    content=content,
+                    heading_level=3,
+                )
+            )
+
+    def build(self) -> str:
+        """Build the final prompt."""
+        if not self.sections:
+            return ""
+
+        prompt_parts = [section.render() for section in self.sections]
+
+        return "\n\n".join(prompt_parts)
