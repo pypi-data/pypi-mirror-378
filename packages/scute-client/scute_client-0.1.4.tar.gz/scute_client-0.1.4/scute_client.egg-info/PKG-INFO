@@ -1,0 +1,151 @@
+Metadata-Version: 2.4
+Name: scute-client
+Version: 0.1.4
+Summary: Python client for Scute API
+Author-email: Triangle Empire <dev@triangleempire.com>
+License: MIT
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: requests>=2.28.0
+Dynamic: license-file
+
+# Scute Python Client
+
+A Python client for the [Scute API](https://scute.io), with built-in support for authentication, users, devices, and tokens.  
+Includes ready-to-use integration with Django REST Framework.
+
+---
+
+# Quickstart
+
+### 🚀 Installation
+
+```bash
+pip install scute-client
+```
+
+### ⚙️ Configuration
+
+Add your Scute credentials to Django settings.py:
+```
+SCUTE_APP_ID = "your_app_id"
+SCUTE_APP_SECRET = "your_app_secret"
+```
+
+ Initialize the client:
+```
+from django.conf import settings
+from scute_client import ScuteClient
+
+scute = ScuteClient(
+    app_id=settings.SCUTE_APP_ID,
+    app_secret=settings.SCUTE_APP_SECRET,
+)
+```
+
+### 🔑 Django REST Framework Integration
+
+First, ensure your User model has a sid (Scute ID) field.
+This field is required to link your local users with Scute users.
+
+Example User model:
+
+```
+# users/models.py
+
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class User(AbstractUser):
+    # Store Scute ID returned from Scute API
+    sid = models.CharField(max_length=255, unique=True, null=True, blank=True)
+
+    def __str__(self):
+        return self.username
+```
+Create a custom authentication class:
+
+```
+# authentication.py
+
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+from users.models import User
+
+
+class ScuteAuthentication(BaseAuthentication):
+    keyword = "Scute"
+
+    def authenticate(self, request):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith(self.keyword):
+            return None
+
+        token = auth_header.split(f"{self.keyword} ")[1]
+
+        try:
+            user_data = scute.auth.get_current_user(token)
+        except Exception as e:
+            raise AuthenticationFailed(f"Invalid token: {str(e)}")
+
+        sid = user_data.get("id")
+        if not sid:
+            raise AuthenticationFailed("No user ID found in Scute response")
+
+        user = User.objects.filter(sid=sid).first()
+        if not user:
+            raise AuthenticationFailed("User not found")
+
+        if not user.is_active:
+            raise AuthenticationFailed("Inactive user")
+
+        return user, token
+```
+
+Enable it in settings.py:
+```
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "path.to.authentication.ScuteAuthentication",
+    ],
+}
+```
+
+
+## 📖 Usage Examples
+### Create a user
+```
+identifier = "user@example.com"  # or phone number
+scute_user = scute.users.create_user(identifier)
+print(scute_user)
+```
+### Delete a user
+```
+scute.users.delete_user(user.sid, request.token)
+```
+
+### Get a user by ID
+```
+user = scute.users.get_user_by_id("scute_user_id")
+print(user)
+```
+
+### List all users
+```
+for scute_user in scute.users.list_all_users():
+    print(scute_user["id"], scute_user["email"])
+```
+
+### 🛠 Error Handling
+
+All API errors raise APIRequestError:
+
+```
+from scute_client.exceptions import APIRequestError
+
+try:
+    user = scute.users.get_user_by_id("invalid_id")
+except APIRequestError as e:
+    print(f"Error: {e.status_code} - {e.message}")
+```
