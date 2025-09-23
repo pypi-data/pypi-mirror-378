@@ -1,0 +1,246 @@
+Metadata-Version: 2.4
+Name: secrets_sdk
+Version: 0.1.0
+Summary: In-process Canonical Secret URI client with PEP enforcement and Vault providers
+Author: EmpowerNow
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: hvac>=2.1.0
+Requires-Dist: tenacity>=8.2.3
+Requires-Dist: cachetools>=5.3.3
+Provides-Extra: dev
+Requires-Dist: pytest>=8.2.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.23.8; extra == "dev"
+
+## Secrets SDK (Python)
+
+### Overview
+Secrets SDK is a lightweight, provider‑agnostic client for resolving Canonical Secret URIs in-process with the same enforcement model used by CRUDService:
+- Canonical URI parsing and tenant‑mount guard
+- PEP grants with sender‑binding, anti‑replay, and negative caching
+- Provider strategies for OpenBao/HashiCorp KVv2 (version‑pinned reads, deleted/destroyed typing, optional response wrapping)
+- Optional non‑leaky audits using short `resource_ref`
+
+Optimized for service‑to‑service use with zero network hop to CRUDService. When you need a gateway, call CRUDService’s `/api/secrets/value` instead.
+
+### Design goals
+- Reuse CRUDService’s PEP semantics and provider behaviors 1:1 where practical
+- Strong typing and small public API surface
+- Minimal required configuration; sensible defaults
+- No plaintext secret leakage (logs/metrics/OTEL)
+
+Non‑goals
+- Managing secret values at rest (creation/rotation workflows live in services that own policy)
+- Exposing HTTP routes (that’s CRUDService’s role)
+
+---
+
+## Architecture
+
+```
+secrets_sdk/
+  __init__.py
+  context.py                 # ExecutionContext helpers
+  errors.py                  # Typed exceptions
+  secret_uri.py              # Canonical URI parser/normalizer
+  audit.py                   # Pluggable audit publisher (Kafka/no-op)
+  vault_client.py            # Public client (PEP + strategies)
+  grants/
+    __init__.py
+    grant_cache.py           # In-memory grants, negative cache, anti-replay
+  services/
+    __init__.py
+    secret_policy_service.py # PDP facade (real or local dev)
+  vault_strategies/
+    __init__.py
+    base_vault_strategy.py   # Common interface
+    openbao_vault_strategy.py
+    hashicorp_vault_strategy.py
+```
+
+### Public API (typed)
+```python
+class VaultClient:
+    def __init__(self, *, enable_kafka: bool | None = None) -> None: ...
+    async def get_credentials(self, canonical_uri: str, ctx: ExecutionContext | None = None) -> dict | str: ...
+    def get_credentials_sync(self, canonical_uri: str, ctx: ExecutionContext | None = None) -> dict | str: ...
+
+class ExecutionContext:
+    subject: str | None
+    aud: list[str] | None
+    token_jti: str | None
+    cnf_jkt: str | None
+    mtls_thumbprint: str | None
+    issuer: str | None
+    client_id: str | None
+    correlation_id: str | None
+    workflow_run_id: str | None
+    node_id: str | None
+    system_id: str | None
+    @staticmethod
+    def from_fastapi_request(request) -> "ExecutionContext": ...
+    @staticmethod
+    def from_headers(headers: dict[str, str]) -> "ExecutionContext": ...
+
+class SecretURI:
+    @staticmethod
+    def parse(pointer: str, tenant_id: str, allowed_mounts: list[str]) -> "SecretURI": ...
+    def to_canonical(self) -> str: ...
+```
+
+### Behavior (PEP flow)
+1. Parse → Canonicalize → Tenant mount guard (`SecretURI.parse`)
+2. Build grant key `(subject, tenant_id, canonical_uri, "execute", cnf_binding)`
+3. Check negative cache; fetch/issue grant via `SecretPolicyService` on miss
+4. Enforce audience (`SECRETS_AUDIENCE`), JTI anti‑replay, sender binding drift → `BindingDriftError`
+5. Increment grant uses atomically; on exceed → deny
+6. Provider read (KVv2 with optional `version=`); map deleted/destroyed to typed errors
+7. Optional response wrapping (obligation); unwrap in client only
+8. Publish non‑leaky audit (if enabled) with `resource_ref`, kv version, decision metadata
+
+---
+
+## Configuration
+
+Required (env)
+- `VAULT_URL` (e.g., http://openbao:8200)
+- `VAULT_TOKEN`
+- `VAULT_TIMEOUT` (e.g., 30)
+- `VAULT_VERIFY_SSL` ("true"|"false")
+- `TENANT_ID` (e.g., dev)
+- `TENANT_ALLOWED_MOUNTS` (comma list; e.g., secret)
+- `SECRET_TENANT_SALT` (HMAC key for `resource_ref`, non‑leaky)
+
+Optional
+- `GRANT_TTL_DEFAULT` (default 300)
+- `GRANT_MAX_USES_DEFAULT` (default 1)
+- `NEGATIVE_CACHE_TTL_S` (default 5)
+- `ANTI_REPLAY_TTL_S` (default 300)
+- `SECRETS_AUDIENCE` (default `crud.secrets`)
+- Audits: `ENABLE_KAFKA_PRODUCER`, `KAFKA_BOOTSTRAP_SERVERS`, `KAFKA_TOPIC_PREFIX`, `AUDIT_SAMPLE_CACHE_HIT_N`
+
+Dependencies
+- `hvac`, `tenacity`, `cachetools`
+- Optional: `opentelemetry-api`, Kafka publisher (platform producer or aiokafka wrapper)
+
+---
+
+## Usage
+
+### Async example (FastAPI)
+```python
+from secrets_sdk.vault_client import VaultClient
+from secrets_sdk.context import ExecutionContext
+
+client = VaultClient()
+
+async def handler(request):
+    ctx = ExecutionContext.from_fastapi_request(request)
+    uri = "openbao+kv2://secret/myapp/api#token?version=3"
+    payload = await client.get_credentials(uri, ctx)
+    token = payload["token"]  # fragment returns scalar under key
+    return token
+```
+
+### Sync helper
+```python
+from secrets_sdk.vault_client import VaultClient
+token = VaultClient().get_credentials_sync("openbao+kv2://secret/app/api#token", ctx=None)
+```
+
+### Compose snippet (service embedding the SDK)
+```yaml
+environment:
+  - VAULT_URL=http://openbao:8200
+  - VAULT_TOKEN=root
+  - VAULT_TIMEOUT=30
+  - VAULT_VERIFY_SSL=False
+  - TENANT_ID=dev
+  - TENANT_ALLOWED_MOUNTS=secret
+  - SECRET_TENANT_SALT=override-in-secure-env
+  - GRANT_TTL_DEFAULT=300
+  - GRANT_MAX_USES_DEFAULT=1
+  # optional audits
+  - ENABLE_KAFKA_PRODUCER=true
+  - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+  - KAFKA_TOPIC_PREFIX=crud
+```
+
+---
+
+## Errors (typed)
+```python
+from secrets_sdk.errors import (
+  SecretURIError,
+  AuthzDeniedError, PDPUnavailableError,
+  BindingDriftError,
+  SecretVersionDeleted, SecretVersionDestroyed,
+  ProviderError,
+)
+```
+
+---
+
+## Testing strategy
+- Unit: URI canonicalization (invalid encodings, empty segments, mid‑path `*`, duplicate params), tenant mount mismatches
+- Grant cache: negative cache TTL+jitter, atomic `max_uses=1`, JTI replay window
+- Providers: KVv2 pinned `version` ok; soft‑deleted → `SecretVersionDeleted`; destroyed → `SecretVersionDestroyed`; metadata present
+- PEP integration: audience check, binding drift, PDP outage behavior (honor existing grant only)
+- Audit: `resource_ref` present; cache‑hit sampling honored; no secret values logged
+
+---
+
+## Roadmap & Developer To‑Do
+
+Milestone M0 — Repo scaffolding
+1. Create package skeleton and pyproject.toml (name `secrets_sdk`) with dependencies (hvac, tenacity, cachetools)
+2. Add CI (lint, type check, unit tests), Python 3.11/3.12 matrix
+
+Milestone M1 — Core parsing and types
+3. Implement `secret_uri.py` with error taxonomy and canonicalization rules (provider[+engine], no `%2F` or `..`, no empty segments, unique+sorted query, mid‑path `*` denied; tenant guard)
+4. Implement `errors.py` with typed exceptions
+5. Add unit tests: `tests/secret_uri/test_canonicalization.py`
+
+Milestone M2 — Grants and PDP facade
+6. Implement `grants/grant_cache.py` (TTL grants, negative cache, JTI replay, per‑key asyncio lock)
+7. Implement `services/secret_policy_service.py` with `authorize_use` and `authorize_batch` (local‑dev mode first; wire to real PDP later)
+8. Tests: `tests/services/test_grants_and_binding.py` (audience, binding drift, jti, outage)
+
+Milestone M3 — Provider strategies
+9. Add `vault_strategies/base_vault_strategy.py` interface
+10. Implement `openbao_vault_strategy.py` (KVv2 read with optional `version`, version deleted/destroyed typing, metadata helpers, optional wrap/unwrap)
+11. Implement `hashicorp_vault_strategy.py` (parity with OpenBao, ensure pinned version support)
+12. Tests: `tests/providers/test_kvv2_versions.py`
+
+Milestone M4 — Vault client (PEP) and audits
+13. Implement `vault_client.py` (PEP flow, audience/enforcement, negative cache, wrap handling)
+14. Implement `audit.py` publisher interface (no‑op + Kafka/platform producer adapter) with cache‑hit sampling env `AUDIT_SAMPLE_CACHE_HIT_N`
+15. Tests: `tests/client/test_vault_client_flow.py` (happy path, deny, replay, binding drift)
+
+Milestone M5 — Context and integration helpers
+16. Implement `context.py` with framework adapters (`from_fastapi_request`, `from_headers`)
+17. OTEL optional spans around provider calls and PEP; scrub sensitive attributes
+18. Docs: integration guide for FastAPI and plain services
+
+Milestone M6 — Packaging & examples
+19. Add examples under `examples/fastapi_app` and `examples/sync_script`
+20. Publish internal wheel; version `0.1.0`
+
+Stretch (post‑0.1)
+21. Batch authorization helper for bulk preflight (execute‑style)
+22. Pluggable L2 grant cache (for `max_uses>1`)
+23. mTLS binding extraction helpers
+24. Live‑reload of tenant mount map
+
+---
+
+## Build & Test
+```bash
+pip install -e .[dev]
+pytest -q
+```
+
+## Contributing
+- Open an issue with context and proposed changes
+- Keep public API minimal and typed; add tests with each feature
+- Avoid logging any secret values; redact headers and payloads
