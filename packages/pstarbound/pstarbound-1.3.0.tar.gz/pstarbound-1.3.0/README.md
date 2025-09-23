@@ -1,0 +1,401 @@
+# py-starbound
+
+Python utilities for Starbound files, plus shipworld rendering and mod generation.
+
+## File & data formats
+
+See [FORMATS.md](./FORMATS.md) for technical details on Starbound’s formats (BTreeDB5, SBAsset6, SBVJ01, SBON, worlds).
+
+## Installation
+
+- Recommended (editable):
+  - Core only:
+
+```bash
+python -m pip install -e .
+```
+
+  - With image features (Pillow) for render/modgen and related tests:
+
+```bash
+python -m pip install -e '.[ship]'
+```
+
+## CLI commands (pystarbound)
+
+### CLI examples
+
+- Extract a .pak/.modpak to a directory
+
+```bash
+pystarbound export /Starbound/assets/packed.pak -d assets
+```
+
+- Print world region info (tiles or entities)
+
+```bash
+# Pretty-print tiles for the region containing the player spawn
+pystarbound region "/Starbound/storage/universe/-382912739_-582615456_-73870035_3.world"
+
+# Print a specific region and value (e.g., liquid_pressure)
+pystarbound region --value-index=12 \
+  "/Starbound/storage/universe/-382912739_-582615456_-73870035_3.world" 69 27
+
+# Print entities in a region
+pystarbound region --entities \
+  "/Starbound/storage/universe/-382912739_-582615456_-73870035_3.world" 69 27
+```
+
+- World selection workflow (preview → requires → extract)
+
+```bash
+# Preview a player-built area by seed/flood-fill, with padding
+pystarbound world-preview /path/to/world.world -o preview.png \
+  --assets "/path/to/vanilla:/path/to/mods" \
+  --seed 123,456 --seed-mode any --pad 2
+
+# See which mods are required for that selection
+pystarbound world-requires /path/to/world.world --json \
+  --assets "/path/to/vanilla:/path/to/mods" \
+  --seed 123,456 --pad 2 --objects --objects-only-known
+
+# Extract the same selection as an installable mod, with objects and BYOS
+pystarbound world-extract /path/to/world.world -o out/mod/export \
+  --assets "/path/to/vanilla:/path/to/mods" \
+  --seed 123,456 --pad 2 \
+  --objects --objects-only-known --byos
+```
+
+- Publish a directory to .pak
+
+```bash
+pystarbound publish ./folder -o out.pak \
+  --only 'assets/*' --exclude '*.skip' --strip-prefix 'assets' \
+  --metadata meta.json --meta author=py-starbound
+```
+
+- Export packaged assets:
+
+```bash
+# List only
+pystarbound export --list /path/to/packed.pak
+# Extract
+pystarbound export /path/to/packed.pak -d out/dir
+```
+
+- Publish directory to .pak:
+
+```bash
+pystarbound publish ./folder -o out.pak \
+  --only 'assets/*' --exclude '*.skip' --strip-prefix 'assets' \
+  --metadata meta.json --meta author=py-starbound
+```
+
+- Verify package integrity:
+
+```bash
+pystarbound verify out.pak
+```
+
+- Versioned JSON:
+
+```bash
+pystarbound vjson-dump input.sbvj01 -o out.json
+pystarbound vjson-make in.json -o out.sbvj01
+# Edit: deep-merge a JSON patch and set/append fields
+pystarbound vjson-edit in.sbvj01 --patch patch.json --set 'identity.name="Beta"' \
+  --append 'tags="t1"' --append 'tags="t2"' -o out_edited.sbvj01
+```
+
+- Render shipworld to PNG (requires extras [ship]):
+
+```bash
+pystarbound render /path/to/file.shipworld --assets '/path/to/vanilla:/path/to/mods' -o ship.png
+```
+
+- World preview: layers, dungeon overlays, legend (requires extras [ship]):
+
+```bash
+# Only foreground, draw dungeon bounding boxes and labels, and write a legend of material colors used
+pystarbound world-preview /path/to/world.world -o preview.png \
+  --assets '/path/to/vanilla:/path/to/mods' \
+  --layers fg --overlay-dungeons --overlay-dungeon-labels \
+  --legend legend.json
+```
+
+- Export selection to a Tiled-like JSON (experimental):
+
+```bash
+# Export a cropped area as a Tiled-like JSON with material IDs stored in CSV tile layers
+pystarbound world-export-tiled /path/to/world.world \
+  --rect 100,200,200,260 --pad 2 -o out/map.json
+```
+
+- Workshop: list and sync (no login required):
+
+```bash
+# List installed Workshop items (JSON)
+pystarbound workshop list --json
+
+# Dry-run sync of contents.pak into Starbound/mods
+pystarbound workshop sync --dry-run
+
+# Symlink (or copy if not supported)
+pystarbound workshop sync --link
+```
+
+- Workshop: prepare/pack/verify modsets:
+
+```bash
+# Prepare a filtered modset (by IDs)
+pystarbound workshop prepare --out-dir ./modset --ids 12345,67890
+
+# Prepare by title substrings (case-insensitive) listed in a file (one per line)
+pystarbound workshop prepare --out-dir ./modset --titles-file titles.txt
+
+# Prepare with glob patterns on id/title
+pystarbound workshop prepare --out-dir ./modset --only 'X-*' --exclude '*old*'
+
+# Pack a prepared directory into a .pak
+pystarbound workshop pack --dir ./modset -o modset.pak
+
+# Verify all .pak files in a directory
+pystarbound workshop verify --dir ./modset --json
+```
+
+- Generate a mod from a shipworld (requires extras [ship]):
+
+```bash
+pystarbound modgen /path/to/file.shipworld \
+  --assets '/path/to/vanilla:/path/to/mods' \
+  -o out/mod/export \
+  [--background-overlay] [--objects [--objects-only-known] [--objects-log-unknown path.json]] \
+  [--material-map material_map.json]
+```
+
+- World selection preview (PNG):
+
+```bash
+pystarbound world-preview /path/to/world.world -o preview.png \
+  --assets '/path/to/vanilla:/path/to/mods' \
+  [--dungeon-id N | --rect x0,y0,x1,y1 | --seed x,y [--seed-mode any|fg|bg]] [--pad 2] [--textured] [--no-crop]
+```
+
+- Extract a structure from a planet/world:
+
+```bash
+pystarbound world-extract /path/to/world.world \
+  --assets '/path/to/vanilla:/path/to/mods' \
+  -o out/mod/export \
+  [--dungeon-id N | --rect x0,y0,x1,y1 | --seed x,y [--seed-mode any|fg|bg] [--seed-connectivity four|eight]] [--pad 2] \
+  [--background-overlay] [--objects [--objects-only-known] [--objects-log-unknown path.json]] \
+  [--object-map objects.json] [--materials-include 1,2,3] [--materials-exclude 12345] \
+  [--objects-include name1,name2] [--objects-exclude 'glob*'] [--blocks-position x,y] \
+  [--requires-into-metadata] [--report report.json] [--pack] [--pack-out out.pak]
+```
+
+- Batch export dungeons by id or by size:
+
+```bash
+# Specific dungeon ids
+pystarbound world-extract /path/to/world.world -o out/mod/export \
+  --assets "/path/to/vanilla:/path/to/mods" \
+  --dungeon-ids 12,17,33 --pack
+
+# Top 3 dungeons by tile count (min 500 tiles)
+pystarbound world-extract /path/to/world.world -o out/mod/export \
+  --assets "/path/to/vanilla:/path/to/mods" \
+  --top-dungeons 3 --min-tiles 500 --pack --combined-patch combined_universe_server.config.patch
+```
+
+- List dungeons present in a world (optionally with bounding boxes):
+
+```bash
+pystarbound world-dungeons /path/to/world.world [--bbox] [--json] [--min-tiles 100]
+```
+
+- Analyze required mods for a selection (no export):
+
+```bash
+pystarbound world-requires /path/to/world.world \
+  --assets '/path/to/vanilla:/path/to/mods' \
+  [--dungeon-id N | --rect x0,y0,x1,y1 | --seed x,y [--seed-mode any|fg|bg]] [--pad 2] \
+  [--objects [--objects-only-known]] [--json]
+```
+
+### Assets roots
+- Use your OS path separator when passing multiple roots to `--assets`:
+  - macOS/Linux: `:`
+  - Windows: `;`
+
+Examples:
+
+```bash
+# macOS/Linux
+--assets "/path/to/vanilla:/path/to/mods"
+```
+
+```powershell
+# Windows (PowerShell/cmd)
+--assets "C:\Starbound\assets;C:\Starbound\mods"
+```
+
+- When you pass a directory root to `--assets`, any `.pak` files inside it are automatically scanned. Material names and `mapColor` are read from `.pak` as well, so previews and `blockKey` naming work for `.pak`-only mods. Provenance (`world-requires` and `requires.json`) also includes `.pak` mods discovered under those directories.
+
+### Notes
+- Mod id default: when `--mod-id` is omitted, it is derived from the world filename (sanitized to `[a-z0-9_-]`).
+- Previews: `--textured` now reads texture paths from each material’s `.material` (renderParameters.texture) and loads from both directories and `.pak` files when available. It falls back to mapColor when textures are missing.
+- `--no-crop` renders the full world extents (default behavior crops to nonzero tiles).
+- Textures are not bundled; Starbound renders installed materials at runtime.
+- Unknown materials:
+  - Provide assets roots with `--assets`
+  - Or map manually via `--material-map` with a JSON mapping, for example:
+
+```json
+{"12345": "modid:materialName"}
+```
+
+## Testing
+
+```bash
+# All tests
+pytest -q
+
+# Single file
+pytest tests/test_cli_publish_export.py -q
+
+# Single test
+pytest tests/test_cli_publish_export.py::test_publish_export_roundtrip -q
+```
+
+Note: Image-related tests require Pillow via extras:
+
+```bash
+python -m pip install -e '.[ship]'
+```
+
+## Build (PEP 517 via setuptools)
+
+```bash
+python -m pip install -U build
+python -m build
+```
+
+Artifacts are written to dist/.
+
+### Running from source (without install)
+
+- Detect Starbound installation (Steam paths):
+
+```bash
+pystarbound detect-install --json
+```
+
+If you prefer not to install during development, invoke the CLI via the module entrypoint. Ensure you set PYTHONPATH to include src/:
+
+```bash
+PYTHONPATH=src python3 -m starbound.cli <command> [options]
+# examples
+PYTHONPATH=src python3 -m starbound.cli export --list /path/to/packed.pak
+PYTHONPATH=src python3 -m starbound.cli region /path/to/world.world --entities
+```
+
+## Using the Python package
+
+### Example: Reading a player file
+
+```python
+import starbound
+
+with open('player/11475cedd80ead373c19a91de2e2c4d3.player', 'rb') as fh:
+    player = starbound.read_sbvj01(fh)
+    print('Hello, {}!'.format(player.data['identity']['name']))
+```
+
+### Example: World files (fast with mmap)
+
+```python
+import mmap, starbound
+
+with open('universe/43619853_198908799_-9440367_6_3.world', 'rb') as fh:
+    mm = mmap.mmap(fh.fileno(), 0, access=mmap.ACCESS_READ)
+    world = starbound.World(mm)
+    world.read_metadata()
+
+    print('World size: {}×{}'.format(world.width, world.height))
+    x, y = world.metadata['playerStart']
+    print('Player spawns at ({}, {})'.format(x, y))
+
+    # Regions consist of 32×32 tiles.
+    rx, ry = int(x) // 32, int(y) // 32
+    print('An entity:', world.get_entities(rx, ry)[0])
+```
+
+### Example: Easy access to various world attributes
+
+```python
+import starbound
+
+# Assume 'world' from the example above
+info = world.info
+print('World Name:', info.name)
+print('World Description:', info.description)
+print('World Coordinates:', info.coords)
+```
+
+### Example: Getting assets from packed.pak
+
+```python
+import starbound
+
+with open('assets/packed.pak', 'rb') as fh:
+    package = starbound.SBAsset6(fh)
+    print(package.get('/lighting.config'))
+```
+
+### Example: Finding an entity by UUID/ID
+
+Many entities (flags, mech beacons, quest markers, etc.) have UUIDs or IDs the game uses to locate them. You can use World.get_entity_uuid_coords to locate the tile coordinates quickly when the index is present:
+
+```python
+import mmap, starbound
+
+with open('universe/43619853_198908799_-9440367_6_3.world', 'rb') as fh:
+    mm = mmap.mmap(fh.fileno(), 0, access=mmap.ACCESS_READ)
+    world = starbound.World(mm)
+    world.read_metadata()
+
+mechbeacon_coords = world.get_entity_uuid_coords('mechbeacon')
+if mechbeacon_coords:
+    print('Mech beacon at', mechbeacon_coords)
+else:
+    print('No mech beacon in level!')
+```
+
+### Example: Modifying SBVJ01 files (players, client contexts)
+
+```python
+import starbound
+
+with open('player/420ed511f83b3760dead42a173339b3e.player', 'r+b') as fh:
+    player = starbound.read_sbvj01(fh)
+
+    old_name = player.data['identity']['name']
+    new_name = old_name[::-1]  # example transform
+    player.data['identity']['name'] = new_name
+    print('Updating name: {} -> {}'.format(old_name, new_name))
+
+    # Rewrite file with updated data
+    fh.seek(0)
+    starbound.write_sbvj01(fh, player)
+    fh.truncate()
+```
+
+## Credits
+- Core: Blixt
+- Contributions and enhancements: Xytronix
+
+## License
+
+[MIT License](./LICENSE)
+
