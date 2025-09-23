@@ -1,0 +1,763 @@
+Metadata-Version: 2.4
+Name: pyass-genz
+Version: 2025.1.0
+Summary: The definitive Gen-Z & internet slang library for Python. Vibes > verbs.
+Home-page: https://github.com/Zer0C0d3r/pyass-genz
+Author: Zer0C0d3r
+Author-email: Zer0C0d3r <odin.coder77@proton.me>
+License: MIT
+Project-URL: Homepage, https://github.com/Zer0C0d3r/pyass-genz
+Project-URL: Repository, https://github.com/Zer0C0d3r/pyass-genz
+Project-URL: Documentation, https://github.com/Zer0C0d3r/pyass-genz/blob/main/README.md
+Keywords: slang,genz,tiktok,meme,internet,vibes,translator,quiz
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Sociology
+Classifier: Topic :: Games/Entertainment
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: typer>=0.9.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: fastapi>=0.100.0
+Requires-Dist: uvicorn>=0.23.0
+Requires-Dist: aiohttp>=3.8.0
+Requires-Dist: fuzzywuzzy>=0.18.0
+Requires-Dist: python-levenshtein>=0.21.0; platform_system != "Windows"
+Provides-Extra: ml
+Requires-Dist: sentence-transformers>=2.2.0; extra == "ml"
+Requires-Dist: scikit-learn>=1.2.0; extra == "ml"
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: mypy>=1.4; extra == "dev"
+Requires-Dist: httpx>=0.24.0; extra == "dev"
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
+# pyass🍑 — The Modern Gen-Z & Internet Slang Python Library
+
+---
+
+## Table of Contents
+
+1. [What is pyass?](#what-is-pyass)
+2. [Features](#features)
+3. [Installation](#installation)
+4. [Quickstart](#quickstart)
+5. [CLI Usage](#cli-usage)
+6. [Python API Usage](#python-api-usage)
+7. [Advanced Usage](#advanced-usage)
+8. [Developer Guide](#developer-guide)
+9. [Architecture](#architecture)
+10. [Data Model](#data-model)
+11. [Testing](#testing)
+12. [Contributing](#contributing)
+13. [FAQ](#faq)
+14. [License](#license)
+15. [Acknowledgements](#acknowledgements)
+
+---
+
+## What is pyass?
+
+**pyass🍑** is the ultimate Python library and CLI for Gen-Z, TikTok, and internet slang. It’s built for developers, meme lords, linguists, and anyone who wants to vibe with the latest language trends. Use it to define, search, translate, and quiz on slang, or integrate it into bots, web apps, and more.
+
+**Why pyass?**
+
+- Massive, curated, and community-driven slang database (88k+ entries)
+- Modern Python: async, type-annotated, Pydantic-powered
+- CLI, Python API, and REST API (FastAPI)
+- Extensible: add your own slang, plugins, or engines
+- Fun, fast, and ready for real-world use
+
+---
+
+## Features
+
+- **CLI & Python API**: Use from your terminal or import in any Python project
+- **Translation Engine**: Turn boring English into pure Gen-Z chaos
+- **Quizzer**: Test your slang IQ with adaptive quizzes
+- **Mood/Persona Engine**: Get slang by vibe, mood, or persona
+- **Data-backed**: Ships with a huge, up-to-date JSON slang DB
+- **Extensible**: Add your own slang, update from the cloud, or contribute
+- **FastAPI Integration**: Run a REST API for your app or service
+- **Rich Output**: Beautiful CLI output with colors, emojis, and panels
+- **Testing Suite**: Pytest-based, robust, and easy to extend
+
+---
+
+## Installation
+
+pyass🍑 requires Python 3.10+ and works best in a virtual environment.
+
+```bash
+# Clone the repo
+git clone https://github.com/Zer0C0d3r/pyass.git
+cd pyass
+
+# Install in editable mode (recommended for devs)
+pip install -e .
+
+# Or install from PyPI (coming soon)
+# pip install pyass
+```
+
+---
+
+## Quickstart
+
+```bash
+# Show CLI help
+pyass --help
+
+# Define a slang term
+pyass define rizz
+
+# Translate a phrase
+pyass translate "This is good" --intensity 1.0
+
+# Take a quiz
+pyass quiz
+```
+
+Or use it in Python:
+
+```python
+from pyass import get_slang_db, Translator
+
+
+entry = db.get("rizz")
+print(entry.term, entry.definition)
+
+translator = Translator()
+print(translator.translate("I am tired", tone="dramatic", intensity=1.0))
+```
+
+---
+
+## CLI Usage
+
+The CLI is built with [Typer](https://typer.tiangolo.com/) for a modern, discoverable UX.
+
+### Help & Commands
+
+```bash
+pyass --help
+pyass define --help
+pyass translate --help
+```
+
+### Defining Slang
+
+```bash
+pyass define rizz
+```
+
+Output:
+
+```
+📝 rizz
+Definition: Charisma, charm, or the ability to attract a romantic partner.
+Era: 2023Q2 | Region: Global | Platform: TikTok
+Vibe tags: ['flirt', 'charisma', 'dating']
+Popularity: 97
+Related: ['w rizz', 'unspoken rizz']
+```
+
+### Translating Text
+
+```bash
+pyass translate "This is so cool!" --tone meme --intensity 1.0
+```
+
+Output:
+
+```
+🗣️  Original: This is so cool!
+✨ Translated: This is so slay! (or: This is so iconic!)
+```
+
+### Random Slang
+
+```bash
+pyass random --count 3
+pyass random --persona sigma --region US --platform TikTok
+```
+
+### Quizzing Yourself
+
+```bash
+pyass quiz --questions 5 --adaptive
+```
+
+Output:
+
+```
+Q1: What does "mid" mean?
+a) Amazing
+b) Average, not great
+c) Expensive
+d) Secret
+Your answer: b
+Correct! 🎉
+...
+Final Score: 4/5
+```
+
+### Updating the Database
+
+```bash
+pyass update
+```
+
+### Searching Slang
+
+```bash
+pyass search --term_contains "sus" --min_popularity 50 --vibe_tags meme
+```
+
+---
+
+## Python API Usage
+
+### Loading the Slang Database
+
+```python
+from pyass import get_slang_db
+db = get_slang_db()
+print(f"Loaded {len(db.entries)} slang terms!")
+```
+
+### Looking Up a Term
+
+```python
+entry = db.get("rizz")
+if entry:
+		print(entry.term, entry.definition)
+else:
+		print("Term not found!")
+```
+
+### Advanced Search
+
+```python
+from pyass.core.models import SlangFilter
+filter = SlangFilter(term_contains="sus", min_popularity=50, vibe_tags=["meme"])
+results = db.search(filter)
+for entry in results:
+		print(entry.term, entry.definition)
+```
+
+### Translating Text
+
+```python
+from pyass.engines.translator import Translator
+translator = Translator()
+text = "That party was good and funny!"
+slangified = translator.translate(text, tone="meme", intensity=1.0)
+print(slangified)
+```
+
+### Quizzing in Python
+
+```python
+from pyass.engines.quizzer import Quizzer
+quizzer = Quizzer()
+score = quizzer.quiz(num_questions=3)
+print(f"Your score: {score}")
+```
+
+### Using the FastAPI Server
+
+```bash
+uvicorn pyass.api.rest:app --port 8000
+```
+
+Then visit [http://localhost:8000/docs](http://localhost:8000/docs) for interactive API docs.
+
+---
+
+## Advanced Developer Recipes
+
+### 1. Building a Custom Slang-Powered Discord Bot
+
+```python
+import discord
+from pyass.engines.translator import Translator
+
+intents = discord.Intents.default()
+client = discord.Client(intents=intents)
+translator = Translator()
+
+@client.event
+async def on_message(message):
+	if message.author.bot:
+		return
+	if message.content.startswith("!slang "):
+		text = message.content[7:]
+		slangified = translator.translate(text, tone="meme", intensity=1.0)
+		await message.channel.send(f"Slangified: {slangified}")
+
+client.run("YOUR_BOT_TOKEN")
+```
+
+### 2. Creating a RESTful Slang Microservice
+
+```python
+from fastapi import FastAPI, Query
+from pyass.engines.translator import Translator
+
+app = FastAPI()
+translator = Translator()
+
+@app.get("/slangify")
+async def slangify(text: str = Query(...), tone: str = "meme", intensity: float = 1.0):
+	return {"result": translator.translate(text, tone=tone, intensity=intensity)}
+
+# Run with: uvicorn myservice:app --port 8080
+```
+
+### 3. Batch Processing Text Files for Slangification
+
+```python
+from pyass.engines.translator import Translator
+
+translator = Translator()
+with open("input.txt") as fin, open("output.txt", "w") as fout:
+	for line in fin:
+		slangified = translator.translate(line.strip(), tone="casual", intensity=0.7)
+		fout.write(slangified + "\n")
+```
+
+### 4. Extending the Database with a Custom Script
+
+```python
+import json
+from pyass.core.slangdb import get_slang_db
+
+db = get_slang_db()
+new_entry = {
+	"term": "based af",
+	"definition": "Extremely authentic or unapologetically true to oneself.",
+	"era": "2024Q1",
+	"region": "Global",
+	"platform": "Twitter",
+	"vibe_tags": ["authentic", "real"],
+	"popularity_score": 90,
+	"audio_reference": None,
+	"is_offensive": False,
+	"related_terms": ["based", "fr"]
+}
+with open("src/pyass/data/user_custom.json") as f:
+	data = json.load(f)
+data.append(new_entry)
+with open("src/pyass/data/user_custom.json", "w") as f:
+	json.dump(data, f, indent=2)
+# Now reload the DB in your app
+db.reload()
+```
+
+### 5. Customizing the CLI with Your Own Commands
+
+You can fork or extend `src/pyass/cli/commands.py` to add your own Typer commands. Example:
+
+```python
+import typer
+from pyass import get_slang_db
+
+app = typer.Typer()
+
+@app.command()
+def stats():
+	"""Show slang DB statistics"""
+	db = get_slang_db()
+	print(f"Total slang terms: {len(db.entries)}")
+	print(f"Most popular: {max(db.entries, key=lambda e: e.popularity_score).term}")
+
+if __name__ == "__main__":
+	app()
+```
+
+---
+
+## In-Depth API Documentation
+
+### SlangDB API
+
+#### `get_slang_db()`
+
+Returns a singleton instance of the slang database. Loads all slang entries from JSON files and provides search, lookup, and reload methods.
+
+**Methods:**
+
+- `get(term: str) -> SlangEntry | None`: Look up a slang term by name.
+- `search(filter: SlangFilter) -> List[SlangEntry]`: Search for slang entries matching filter criteria.
+- `reload()`: Reloads the slang database from disk.
+- `random(count=1, **filters) -> List[SlangEntry]`: Get random slang entries, optionally filtered.
+
+#### Example:
+
+```python
+db = get_slang_db()
+entry = db.get("rizz")
+results = db.search(SlangFilter(term_contains="sus", min_popularity=50))
+db.reload()
+```
+
+### Translator API
+
+#### `Translator`
+
+Translates English text into Gen-Z slang using the slang database and configurable tone/intensity.
+
+**Methods:**
+
+- `translate(text: str, tone: str = "casual", intensity: float = 1.0) -> str`: Translate text to slang.
+
+#### Example:
+
+```python
+from pyass.engines.translator import Translator
+translator = Translator()
+print(translator.translate("That was funny!", tone="meme", intensity=1.0))
+```
+
+### Quizzer API
+
+#### `Quizzer`
+
+Provides interactive quizzes for slang learning/testing.
+
+**Methods:**
+
+- `quiz(num_questions: int = 5, adaptive: bool = False) -> int`: Run a quiz and return the score.
+
+#### Example:
+
+```python
+from pyass.engines.quizzer import Quizzer
+quizzer = Quizzer()
+score = quizzer.quiz(num_questions=3, adaptive=True)
+print(f"Score: {score}")
+```
+
+### REST API (FastAPI)
+
+The REST API exposes all major features via HTTP endpoints. See `/docs` when running the server for full OpenAPI docs.
+
+**Key Endpoints:**
+
+- `GET /define?term=rizz`: Get definition and metadata for a slang term.
+- `GET /translate?text=hello+world`: Translate text to slang.
+- `GET /random?count=3`: Get random slang terms.
+- `GET /quiz?questions=5`: Start a quiz session.
+
+#### Example (with `requests`):
+
+```python
+import requests
+resp = requests.get("http://localhost:8000/define", params={"term": "rizz"})
+print(resp.json())
+```
+
+---
+
+## Advanced Usage
+
+### Adding Custom Slang
+
+Edit `src/pyass/data/user_custom.json`:
+
+```json
+[
+  {
+    "term": "vibe check",
+    "definition": "A spontaneous assessment of someone's mood or energy.",
+    "era": "2022Q3",
+    "region": "Global",
+    "platform": "TikTok",
+    "vibe_tags": ["mood", "energy"],
+    "popularity_score": 85,
+    "audio_reference": null,
+    "is_offensive": false,
+    "related_terms": ["vibes", "energy"]
+  }
+]
+```
+
+### Customizing Configuration
+
+```python
+from pyass.core.config import PyAssConfig
+config = PyAssConfig.get()
+config.default_platform = "Twitter"
+config.save()
+```
+
+### Async Usage
+
+```python
+from fastapi import FastAPI
+from pyass.engines.translator import Translator
+app = FastAPI()
+translator = Translator()
+@app.get("/slangify")
+async def slangify(text: str):
+		return {"result": translator.translate(text)}
+```
+
+### Integrating with Other Frameworks
+
+```python
+import discord
+from pyass.engines.translator import Translator
+client = discord.Client()
+translator = Translator()
+@client.event
+async def on_message(message):
+		if message.content.startswith("!slang "):
+				text = message.content[7:]
+				slangified = translator.translate(text)
+				await message.channel.send(slangified)
+```
+
+---
+
+## Developer Guide
+
+### Project Structure
+
+```
+pyass/
+├── src/pyass/
+│   ├── __init__.py
+│   ├── core/
+│   │   ├── models.py
+│   │   ├── slangdb.py
+│   │   ├── config.py
+│   │   └── cache.py
+│   ├── engines/
+│   │   ├── translator.py
+│   │   ├── quizzer.py
+│   │   ├── mood_engine.py
+│   │   └── search.py
+│   ├── cli/
+│   │   ├── commands.py
+│   │   └── theme.py
+│   ├── api/
+│   │   ├── rest.py
+│   │   └── async_client.py
+│   ├── data/
+│   │   ├── base_slang.json
+│   │   └── user_custom.json
+│   └── utils/
+├── tests/
+├── scripts/
+├── docs/
+└── setup.py, pyproject.toml
+```
+
+### Code Style & Best Practices
+
+- Use modern Python (3.10+), type hints, and f-strings
+- All models use [Pydantic](https://docs.pydantic.dev/) for validation
+- CLI is built with [Typer](https://typer.tiangolo.com/)
+- API is built with [FastAPI](https://fastapi.tiangolo.com/)
+- Tests use [pytest](https://docs.pytest.org/)
+
+### Example: Adding a New CLI Command
+
+Edit `src/pyass/cli/commands.py`:
+
+```python
+@app.command()
+def stats():
+		"""Show slang DB statistics"""
+		db = get_slang_db()
+		print(f"Total slang terms: {len(db.entries)}")
+		print(f"Most popular: {max(db.entries, key=lambda e: e.popularity_score).term}")
+```
+
+### Example: Adding a New Slang Field
+
+Edit `src/pyass/core/models.py`:
+
+```python
+class SlangEntry(BaseModel):
+		# ...existing fields...
+		meme_origin: Optional[str] = None  # New field!
+```
+
+Update the DB JSON and reload.
+
+### Example: Writing a Test
+
+Edit `tests/test_slangdb.py`:
+
+```python
+def test_get_known_term():
+		db = get_slang_db()
+		entry = db.get("rizz")
+		assert entry is not None
+		assert entry.term == "rizz"
+```
+
+---
+
+## Architecture
+
+### Main Modules
+
+- `core/models.py`: Pydantic models for slang entries and filters
+- `core/slangdb.py`: Loads, indexes, and searches the slang database
+- `engines/translator.py`: Translates English to Gen-Z slang
+- `engines/quizzer.py`: Quiz logic for CLI and API
+- `cli/commands.py`: Typer CLI app and commands
+- `api/rest.py`: FastAPI app for REST endpoints
+- `data/`: JSON slang DBs (base and user custom)
+
+### Data Flow
+
+1. CLI/API calls into `slangdb` or `translator`
+2. `slangdb` loads and indexes JSON data, returns `SlangEntry` objects
+3. `translator` uses slang mappings and DB to transform text
+4. `quizzer` pulls random terms and checks answers
+5. `config` and `cache` provide settings and performance
+
+### Extensibility Points
+
+- Add new CLI commands in `cli/commands.py`
+- Add new API endpoints in `api/rest.py`
+- Add new engines in `engines/`
+- Add new slang fields in `core/models.py` and update DB
+- Add new data sources in `data/`
+
+---
+
+## Data Model
+
+The slang database is a JSON file with entries matching the `SlangEntry` Pydantic model:
+
+```python
+class SlangEntry(BaseModel):
+		term: str
+		definition: str
+		era: str  # Format: YYYYQn, e.g., '2023Q4'
+		region: str
+		platform: str
+		vibe_tags: List[str]
+		popularity_score: int  # 0-100
+		audio_reference: Optional[str] = None
+		is_offensive: bool = False
+		related_terms: List[str] = []
+```
+
+**Example entry:**
+
+```json
+{
+  "term": "rizz",
+  "definition": "Charisma, charm, or the ability to attract a romantic partner.",
+  "era": "2023Q2",
+  "region": "Global",
+  "platform": "TikTok",
+  "vibe_tags": ["flirt", "charisma", "dating"],
+  "popularity_score": 97,
+  "audio_reference": null,
+  "is_offensive": false,
+  "related_terms": ["w rizz", "unspoken rizz"]
+}
+```
+
+---
+
+## Testing
+
+### Running Tests
+
+```bash
+pytest tests/ -xvs
+```
+
+### Writing a Test
+
+```python
+def test_translate_funny():
+		from pyass.engines.translator import Translator
+		translator = Translator()
+		result = translator.translate("That was funny!", tone="meme", intensity=1.0)
+		assert "funny" not in result  # Should be replaced
+```
+
+### Test Coverage
+
+```bash
+pytest --cov=src/pyass tests/
+```
+
+---
+
+## Contributing
+
+We love PRs! To contribute:
+
+1. Fork and branch from `main`
+2. Make your changes (code, slang, docs, tests)
+3. Add/modify tests in `tests/`
+4. Run `pytest tests/ -xvs` to verify
+5. Open a PR with a clear description
+   See [docs/contributing.md](docs/contributing.md) for full guidelines.
+
+---
+
+## FAQ
+
+**Q: How do I add my own slang?**
+A: Edit `src/pyass/data/user_custom.json` and reload the DB.
+
+**Q: How do I run the API server?**
+A: `uvicorn pyass.api.rest:app --port 8000`
+
+**Q: How do I update the slang DB?**
+A: Use the CLI `update` command or run the updater script.
+
+**Q: Is this library SFW?**
+A: Mostly, but slang is real-world. Use responsibly.
+
+**Q: Can I use pyass🍑 in production?**
+A: Yes! It’s tested, type-safe, and ready for real apps.
+
+**Q: How do I contribute?**
+A: See [Contributing](#contributing) and [docs/contributing.md](docs/contributing.md).
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE)
+
+---
+
+## Acknowledgements
+
+- Built by [Zer0C0d3r](https://github.com/Zer0C0d3r) and the pyass🍑 community
+- Inspired by TikTok, Twitter, Discord, and the ever-evolving internet
+- Thanks to all contributors, meme lords, and slang scholars
+
+---
+
+> pyass🍑 is built for the culture. If you vibe, star the repo and spread the slang!
+> **pyass** is built for the culture — and for you. Dive in, vibe out, and make your Python projects as fresh as the FYP.
