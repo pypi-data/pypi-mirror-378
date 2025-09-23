@@ -1,0 +1,246 @@
+# Conservative Strategy Orchestrator Configuration
+# 
+# This configuration is designed for beginners or risk-averse traders.
+# It uses conservative risk limits, equal weight allocation, and proven strategies.
+#
+# Key Features:
+# - Low risk limits (5% max drawdown)
+# - Equal weight allocation across strategies
+# - Weekly rebalancing to reduce transaction costs
+# - Conservative position sizing
+# - Comprehensive monitoring and alerts
+
+orchestrator:
+  # Allocation Management - Equal weight for simplicity
+  allocation:
+    method: "equal_weight"
+    rebalance_frequency: "weekly"
+    min_allocation: 0.05      # Minimum 5% per strategy
+    max_allocation: 0.15      # Maximum 15% per strategy
+    
+    # Rebalancing constraints to reduce turnover
+    rebalancing_constraints:
+      max_turnover: 0.10      # Maximum 10% portfolio turnover
+      min_time_between: "24h" # Minimum 24 hours between rebalances
+      min_allocation_change: 0.02  # Only rebalance if change > 2%
+
+  # Risk Management - Conservative limits
+  risk:
+    # Portfolio-level risk limits
+    max_portfolio_drawdown: 0.05    # 5% maximum drawdown
+    max_strategy_correlation: 0.70   # Limit strategy correlation
+    position_size_limit: 0.02       # 2% maximum position size
+    stop_loss_threshold: 0.01       # 1% stop loss
+    max_concurrent_positions: 8     # Limit number of positions
+    
+    # Market exposure limits
+    max_market_exposure:
+      crypto: 0.40    # Maximum 40% in crypto
+      forex: 0.30     # Maximum 30% in forex
+      
+    # Emergency stop conditions
+    emergency_stop_conditions:
+      - "portfolio_drawdown_exceeded"
+      - "correlation_limit_exceeded"
+      - "strategy_failure_cascade"
+    
+    # Risk monitoring settings
+    monitoring:
+      correlation_period: 30        # 30-day correlation calculation
+      drawdown_method: "peak_to_trough"
+      update_frequency: 300         # Update every 5 minutes
+      real_time_monitoring: true
+
+  # Strategy Configuration - Proven, stable strategies
+  strategies:
+    # Moving Average Strategy - Trend following
+    - type: "MovingAverageStrategy"
+      name: "ma_conservative"
+      enabled: true
+      allocation_weight: 1.0
+      markets: ["crypto", "forex"]
+      parameters:
+        short_period: 20      # Longer periods for stability
+        long_period: 50
+        signal_threshold: 0.005  # Conservative threshold
+      risk_limits:
+        max_position_size: 0.015
+        stop_loss: 0.008
+        take_profit: 0.020
+      performance_requirements:
+        min_sharpe_ratio: 0.3
+        min_win_rate: 0.40
+        max_drawdown: 0.06
+
+    # RSI Strategy - Mean reversion
+    - type: "RSIStrategy"
+      name: "rsi_conservative"
+      enabled: true
+      allocation_weight: 1.0
+      markets: ["crypto", "forex"]
+      parameters:
+        period: 21            # Longer period for stability
+        oversold: 25          # More extreme levels
+        overbought: 75
+        signal_threshold: 0.005
+      risk_limits:
+        max_position_size: 0.015
+        stop_loss: 0.008
+        take_profit: 0.020
+      performance_requirements:
+        min_sharpe_ratio: 0.3
+        min_win_rate: 0.40
+        max_drawdown: 0.06
+
+    # Multi-Indicator Strategy - Confirmation-based
+    - type: "MultiIndicatorStrategy"
+      name: "multi_conservative"
+      enabled: true
+      allocation_weight: 1.0
+      markets: ["crypto"]
+      parameters:
+        indicators: ["sma", "rsi", "macd"]
+        confirmation_required: 2  # Require 2 indicators to agree
+        sma_period: 30
+        rsi_period: 21
+        macd_fast: 12
+        macd_slow: 26
+        macd_signal: 9
+      risk_limits:
+        max_position_size: 0.015
+        stop_loss: 0.008
+        take_profit: 0.025
+      performance_requirements:
+        min_sharpe_ratio: 0.3
+        min_win_rate: 0.45
+        max_drawdown: 0.06
+
+    # Forex Session Strategy - Time-based
+    - type: "ForexSessionStrategy"
+      name: "forex_session_conservative"
+      enabled: true
+      allocation_weight: 0.8    # Lower weight for forex
+      markets: ["forex"]
+      parameters:
+        active_sessions: ["london", "new_york"]  # Major sessions only
+        volatility_threshold: 0.002
+        trend_confirmation: true
+      risk_limits:
+        max_position_size: 0.012
+        stop_loss: 0.006
+        take_profit: 0.015
+      performance_requirements:
+        min_sharpe_ratio: 0.25
+        min_win_rate: 0.40
+        max_drawdown: 0.05
+
+  # Monitoring and Alerting - Comprehensive monitoring
+  monitoring:
+    performance_tracking: true
+    metrics_frequency: "5m"     # 5-minute updates
+    data_retention: 180         # 6 months of data
+    
+    # Tracked metrics
+    tracked_metrics:
+      - "total_return"
+      - "sharpe_ratio"
+      - "max_drawdown"
+      - "win_rate"
+      - "profit_factor"
+      - "volatility"
+      - "correlation"
+    
+    # Conservative alert thresholds
+    alert_thresholds:
+      drawdown: 0.03              # Alert at 3% drawdown
+      correlation: 0.65           # Alert at 65% correlation
+      strategy_failure_rate: 0.15 # Alert if 15% of strategies fail
+      performance_degradation: 0.25  # Alert on 25% performance drop
+      position_size: 0.025        # Alert if position > 2.5%
+    
+    # Notification channels
+    notifications:
+      email:
+        enabled: true
+        smtp_server: "smtp.gmail.com"
+        smtp_port: 587
+        username: "${EMAIL_USERNAME}"
+        password: "${EMAIL_PASSWORD}"
+        recipients:
+          - "${TRADER_EMAIL}"
+      
+      slack:
+        enabled: false  # Disabled by default
+        webhook_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#trading-alerts"
+
+  # Optimization Settings - Conservative optimization
+  optimization:
+    optimization_frequency: "monthly"  # Less frequent optimization
+    lookback_period: 60               # 2-month lookback
+    optimization_method: "sharpe_ratio"
+    min_performance_threshold: 0.0
+    
+    # Strategy selection criteria
+    selection_criteria:
+      min_trades: 20              # Require sufficient trade history
+      min_win_rate: 0.35          # Minimum 35% win rate
+      max_drawdown: 0.08          # Maximum 8% drawdown
+      min_sharpe_ratio: 0.2       # Minimum Sharpe ratio
+    
+    # Parameter optimization (disabled for conservative setup)
+    parameter_optimization:
+      enabled: false              # Disable parameter optimization
+
+  # Logging Configuration
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    
+    file:
+      enabled: true
+      path: "logs/orchestrator_conservative.log"
+      max_size: "50MB"
+      backup_count: 3
+    
+    console:
+      enabled: true
+      level: "INFO"
+    
+    audit:
+      enabled: true
+      path: "logs/orchestrator_audit_conservative.log"
+      include_decisions: true
+      include_allocations: true
+      include_risk_events: true
+
+  # API Configuration - Disabled for security
+  api:
+    enabled: false              # Disable API for conservative setup
+
+# Strategy Groups - Organize strategies by type
+strategy_groups:
+  trend_following:
+    strategies:
+      - "ma_conservative"
+    max_group_allocation: 0.20    # Maximum 20% in trend following
+    
+  mean_reversion:
+    strategies:
+      - "rsi_conservative"
+    max_group_allocation: 0.20    # Maximum 20% in mean reversion
+    
+  multi_signal:
+    strategies:
+      - "multi_conservative"
+    max_group_allocation: 0.20    # Maximum 20% in multi-signal
+    
+  time_based:
+    strategies:
+      - "forex_session_conservative"
+    max_group_allocation: 0.15    # Maximum 15% in time-based
+
+# Environment Variables Required:
+# EMAIL_USERNAME - SMTP username for email alerts
+# EMAIL_PASSWORD - SMTP password for email alerts  
+# TRADER_EMAIL - Email address to receive alerts
