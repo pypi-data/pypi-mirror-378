@@ -1,0 +1,10 @@
+if __name__ == "__main__":
+    print("Hello world")
+    print("Hello 123")
+    print("Pi is 3.14159")
+    print("There are +365 days in -1 year, 01337 & -01337")
+    print("List 1: [1, 2, 3, 4, 5]")
+    print("List 2: [1, -3., .5, -7.0, 9e9, -1e-11], hurray!")
+    print("A hex string: 676f6f64206d6f726e696e6721")
+    inp = input("Enter anything -> ")
+    print(f"Your entered \"{inp}\"!")
