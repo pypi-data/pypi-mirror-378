@@ -1,0 +1,248 @@
+# BILLI Image Format Library
+
+A flexible Python library for creating and handling custom image formats with support for various compression algorithms and customizable file extensions. Features the innovative BILLI format for efficient image storage.
+
+## Features
+
+- **Custom Image Formats**: Create your own image formats with custom signatures and extensions
+- **BILLI Format**: Built-in support for the BILLI format with JPEG compression
+- **Metadata Removal**: Automatically strips all metadata from images during encoding
+- **Flexible Extensions**: Use any file extension you want (`.billi`, `.myformat`, `.compressed`, etc.)
+- **Batch Processing**: Process multiple images at once
+- **Compression Stats**: Detailed compression statistics and ratios
+- **Quality Control**: Adjustable quality settings (1-100)
+
+## Installation
+
+```bash
+pip install billi-image
+```
+
+## Quick Start
+
+```python
+from image_format_library import encode, decode, get_info
+
+# Encode an image to BILLI format
+stats = encode('billi', 'input.jpg', 'output.billi', quality=85)
+print(f"Compression ratio: {stats['compression_ratio']:.2f}:1")
+
+# Decode back to regular image
+decode('billi', 'output.billi', 'decoded.jpg')
+
+# Get file information
+info = get_info('billi', 'output.billi')
+print(f"Dimensions: {info['width']}x{info['height']}")
+```
+
+## Advanced Usage
+
+### Using the Library Class
+
+```python
+from image_format_library import ImageFormatLibrary
+
+# Create library with custom extension
+library = ImageFormatLibrary('myformat')
+
+# Encode with custom settings
+stats = library.encode('billi', 'image.png', 'image.myformat', quality=90)
+
+# Batch process a folder
+from image_format_library import batch_encode
+batch_encode('/path/to/images', format_name='billi', quality=80, extension='compressed')
+```
+
+### Custom Extensions
+
+```python
+from image_format_library import ImageFormatLibrary
+
+# Use any extension you want
+library = ImageFormatLibrary('awesome')
+library.encode('billi', 'input.jpg', 'output.awesome')
+
+# Change extension later
+library.set_extension('cool')
+library.encode('billi', 'input2.jpg', 'output2.cool')
+```
+
+## API Reference
+
+### Main Functions
+
+#### `encode(format_name, input_path, output_path, quality=85, extension='billi')`
+
+Encode an image to the specified format.
+
+**Parameters:**
+- `format_name` (str): Format to use (currently supports 'billi')
+- `input_path` (str): Path to input image
+- `output_path` (str): Path for output file
+- `quality` (int): Quality setting 1-100, default 85
+- `extension` (str): File extension to use, default 'billi'
+
+**Returns:**
+- `dict`: Encoding statistics including compression ratio and file sizes
+
+#### `decode(format_name, input_path, output_path, extension='billi')`
+
+Decode a file back to a regular image.
+
+**Parameters:**
+- `format_name` (str): Format to decode (currently supports 'billi')
+- `input_path` (str): Path to encoded file
+- `output_path` (str): Path for decoded image
+- `extension` (str): Expected file extension, default 'billi'
+
+**Returns:**
+- `dict`: Decoding information including dimensions and quality
+
+#### `get_info(format_name, file_path, extension='billi')`
+
+Get information about an encoded file without decoding it.
+
+**Parameters:**
+- `format_name` (str): Format of the file
+- `file_path` (str): Path to the file
+- `extension` (str): Expected file extension
+
+**Returns:**
+- `dict`: File information including dimensions, quality, and file size
+
+#### `batch_encode(folder_path, format_name='billi', quality=85, extension='billi')`
+
+Encode all supported images in a folder.
+
+**Parameters:**
+- `folder_path` (str): Path to folder containing images
+- `format_name` (str): Format to use for encoding
+- `quality` (int): Quality setting for encoding
+- `extension` (str): File extension for output files
+
+### ImageFormatLibrary Class
+
+The main class for handling multiple format types and custom extensions.
+
+```python
+library = ImageFormatLibrary(custom_extension='billi')
+
+# Available methods:
+library.encode(format_name, input_path, output_path, quality=85, extension=None)
+library.decode(format_name, input_path, output_path, extension=None)
+library.get_info(format_name, file_path)
+library.get_supported_formats()
+library.set_extension(extension)
+```
+
+## Supported Input Formats
+
+The library can encode from these image formats:
+- JPEG (.jpg, .jpeg)
+- PNG (.png)
+- BMP (.bmp)
+- TIFF (.tiff)
+- WebP (.webp)
+
+## BILLI Format Specification
+
+The BILLI format uses a simple 19-byte header followed by JPEG-compressed image data:
+
+```
+Bytes 0-4:   Signature "BILLI"
+Byte 5:      Version (1)
+Bytes 6-9:   Width (32-bit unsigned int, little-endian)
+Bytes 10-13: Height (32-bit unsigned int, little-endian)
+Byte 14:     Quality (8-bit unsigned int)
+Bytes 15-18: Data size (32-bit unsigned int, little-endian)
+Bytes 19+:   JPEG image data
+```
+
+## Examples
+
+### Basic Usage
+
+```python
+import image_format_library as ifl
+
+# Simple encode/decode
+stats = ifl.encode('billi', 'photo.jpg', 'photo.billi', quality=95)
+ifl.decode('billi', 'photo.billi', 'photo_decoded.jpg')
+
+# Check what formats are supported
+formats = ifl.get_supported_formats()
+print(f"Supported formats: {formats}")
+```
+
+### Batch Processing
+
+```python
+from image_format_library import batch_encode
+
+# Process all images in a directory
+batch_encode(
+    folder_path='/path/to/photos',
+    format_name='billi',
+    quality=85,
+    extension='compressed'
+)
+```
+
+### Custom File Extensions
+
+```python
+from image_format_library import ImageFormatLibrary
+
+# Create library with custom extension
+lib = ImageFormatLibrary('myext')
+
+# All operations will use .myext extension
+lib.encode('billi', 'input.jpg', 'output')  # Creates output.myext
+lib.decode('billi', 'output.myext', 'decoded.jpg')
+
+# Change extension on the fly
+lib.set_extension('data')
+lib.encode('billi', 'input2.jpg', 'output2')  # Creates output2.data
+```
+
+## Error Handling
+
+The library provides clear error messages for common issues:
+
+```python
+try:
+    ifl.encode('billi', 'nonexistent.jpg', 'output.billi')
+except FileNotFoundError:
+    print("Input file not found")
+
+try:
+    ifl.decode('billi', 'corrupted.billi', 'output.jpg')
+except ValueError as e:
+    print(f"Invalid file format: {e}")
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Changelog
+
+### Version 1.0.0
+- Initial release
+- BILLI format support
+- Custom file extensions
+- Batch processing
+- Comprehensive API
+
+## Requirements
+
+- Python ≥ 3.7
+- Pillow ≥ 8.0.0
+
+## Support
+
+If you encounter any issues or have questions, please file an issue on the GitHub repository.
