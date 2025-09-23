@@ -1,0 +1,254 @@
+Metadata-Version: 2.1
+Name: vitool
+Version: 1.0.12
+Summary: A simple tools.
+Home-page: https://github.com/stepvg/vitool
+Author: stepvg
+Author-email: vyac.st@gmail.com
+License: GPLv3
+Project-URL: Homepage, https://github.com/stepvg/vitool
+Project-URL: Source, https://github.com/stepvg/vitool
+Project-URL: Bug Tracker, https://github.com/stepvg/vitool/issues
+Project-URL: Documentation, https://github.com/stepvg/vitool#readme
+Keywords: vitool,timer,profiling,logging,download,http,file extraction,archives,utils,timeit
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: System :: Monitoring
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Software Development :: Quality Assurance
+Classifier: Topic :: Utilities
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: requests>=2
+Requires-Dist: tqdm
+
+# vitool
+
+`vitool` is a Python toolkit that provides utilities for 
+- working with remote files, including downloading, caching, extracting archives, 
+- and lightweight control utilities,
+- and logging, profiling, and control helpers.
+
+---
+
+## `rfile.py` — File Downloading and Extraction Utilities
+
+`vitool/rfile.py` is a Python utility module for **downloading, caching and extracting remote files**.
+It supports plain HTTP/HTTPS, Yandex Disk shared links, and automatic extraction of archives ( **.zip**, **.tar.***, etc.).
+
+---
+
+### ✨ Features
+
+- ✅ Download files from URLs with progress bar.
+- ✅ Automatic extraction of **.zip** and **.tar.*** archives
+- ✅ Convenient handling of existing files (skip or redownload)
+- ✅ Verbose logging with optional quiet mode
+- ✅ Cookie and proxy support via **requests.Session**
+
+---
+
+## 📦 Installation
+
+```bash
+pip install vitool
+```
+
+---
+
+### 📖 Example Usage
+
+#### 📦 Functions
+
+`download(url, path="", extract_to=True, redownload=False, quiet=False, https=None)`
+Download a file from `url` to local `path`.
+- If `extract_to=True`, automatically extracts archives.
+- If `extract_to=False`, just downloads the file.
+- If a path is provided in `extract_to`, extracts there.
+
+**Returns:** Path to the downloaded or extracted file/directory.
+
+```python
+from vitool import rfile
+
+# Download and extract an archive
+rfile.download( "https://example.com/data.zip", path="./downloads" )
+```
+
+---
+
+#### 📦 Classes
+
+`Extract(file_path, extract_path=None, reextract=False, quiet=False)`
+Utility for extracting archives.
+- `file_path`: Path to the archive file.
+- `extract_path`: Directory to extract into; defaults to same directory.
+- `reextract`: Whether to overwrite existing files.
+- `quiet`: Suppress progress / info output.
+Supports `.zip` and `.tar.*` formats.
+
+---
+
+`Https(user_agent=None, use_cookies=True, proxy=None, https=None)`
+Wrapper around `requests.Session` with extras.
+- `user_agent`: Custom User-Agent string; if None, defaults to Firefox.
+- `use_cookies`: Whether to use persistent cookies stored on disk.
+- `proxy`: Optional proxy server (applies to both HTTP and HTTPS).
+- `https`: If another Https instance is provided, clone its session.
+If `https` is given, the session and cookie settings are copied.
+Otherwise, a new requests.Session is created.
+
+---
+
+## `ctrl.py` — Control Utilities
+
+`vitool/ctrl.py` provides small but useful utilities for batching iterables and scheduling events with timers.
+
+---
+
+### ✨ Features
+
+- ✅ Generate overlapping or sliding batches from any iterable  
+- ✅ Schedule periodic, delayed, or one-time events  
+- ✅ Simple API for enabling/disabling timers  
+- ✅ Support for callbacks triggered at the right time  
+
+---
+
+### 📖 Example Usage
+
+#### 📦 Functions
+
+`batched(iterable, length, stride=1, start=0, stop=None)`
+Generate overlapping batches of fixed length from an iterable.
+
+```python
+from vitool import ctrl
+
+# Create overlapping batches
+for batch in ctrl.batched(range(10), length=4, stride=2, start=1, stop=10):
+    print(tuple(batch))
+# Output: (1, 2, 3, 4), (3, 4, 5, 6), (5, 6, 7, 8)
+```
+
+---
+
+#### 📦 Classes
+
+`Timer(seconds=0)`
+A simple timer class for scheduling periodic or delayed events.
+
+Main methods:
+- `disable()`
+	disable the timer
+- `alarm(event_timestamp)`
+	set timer to trigger at specific time
+- `wake_up(in_seconds)`
+	trigger after a delay
+- `every(seconds)`
+	set periodic timer
+- `on_time(callback=None, *args, **kwargs)`
+	check if timer is due and run callback
+
+```python
+from vitool import ctrl
+import time
+
+# Run a callback every 2 seconds
+def hello():
+    print("Hello, world!")
+
+count = 5
+timer = ctrl.Timer(2)
+while count:
+    if timer.on_time(hello):
+        count -= 1			# every 2 seconds
+    time.sleep(0.1)
+timer.disable()
+```
+
+---
+
+## `profiling.py` — Logging & Profiling Utilities
+
+`vitool/profiling.py` contains decorators and helper classes for logging function calls, measuring execution time, and controlling verbosity.
+
+---
+
+### ✨ Features
+
+- ✅ Log function arguments and results with customizable formatting  
+- ✅ Measure execution time with decorators or context managers  
+- ✅ Control logging verbosity (quiet/verbose modes)  
+- ✅ Integration with standard `logging`  
+
+---
+
+### 📖 Example Usage
+
+#### 📦 Classes
+
+`Timeit(callback=None, target="Target", format=...)`
+Context manager for measuring execution time.
+
+`ArgsResFunc(callback=print, args_format=..., result_format=...)`
+A decorator that logs function arguments and results.
+
+`TimeitFunc(callback=print, format=..., timeit_format=...)`
+Decorator class to measure execution time of functions.
+
+```python
+import logging
+from vitool import profiling as pfl
+
+logger = logging.getLogger(__name__)
+
+@pfl.ArgsResFunc()
+@pfl.TimeitFunc()
+def add(a, b):
+    return a + b
+
+with pfl.Timeit(logger.warning, target=add, format='{self.target} ran for {self.elapsed:.6f} s.'):
+    add(2, 3)
+
+# Output:
+# __main__.add[(2, 3), {}]
+# __main__.add ran for 0.0001 ms.
+# __main__.add -> 5
+# <function add at 0x7f5187b45620> ran for 0.000036 s.
+```
+
+---
+
+`Verbose(logger, logging_format=...)`
+Helper class to control logging verbosity.
+
+```python
+import logging
+from vitool import profiling as pfl
+
+logger = logging.getLogger("demo")
+verbose = pfl.Verbose(logger)
+
+with verbose.quiet(False):
+	logger.info("This is visible")
+logger.info("This is hidden")
+
+# Output:
+# 2025-09-23 02:55:57,406 [INFO:demo] - This is visible
+```
+
+---
+
+## 🚀 Running Tests
+
+Run all unit tests with verbose output:
+
+```bash
+python -m unittest -v
+```
+
+---
+
+
