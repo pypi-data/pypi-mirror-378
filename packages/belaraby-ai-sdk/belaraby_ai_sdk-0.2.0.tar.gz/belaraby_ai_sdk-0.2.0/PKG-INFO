@@ -1,0 +1,602 @@
+Metadata-Version: 2.4
+Name: belaraby-ai-sdk
+Version: 0.2.0
+Summary: BelArabyAI SDK - A Python SDK for creating and managing AI Workers
+Project-URL: Homepage, https://belaraby.ai
+Project-URL: Documentation, https://docs.belaraby.ai
+Project-URL: Repository, https://github.com/rhkiswani/BelArabyAI-python-sdk
+Project-URL: Issues, https://github.com/rhkiswani/BelArabyAI-python-sdk/issues
+Author-email: BelArabyAI Team <support@belaraby.ai>
+License: MIT License
+        
+        Copyright (c) 2025 BelArabyAI Team
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+License-File: LICENSE
+Keywords: agent,ai,automation,llm,mcp,worker
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.11
+Requires-Dist: defusedxml>=0.7.1
+Requires-Dist: fastmcp>=2.10.6
+Requires-Dist: httpx>=0.28.1
+Requires-Dist: pydantic>=2.0.0
+Provides-Extra: dev
+Requires-Dist: black>=23.0.0; extra == 'dev'
+Requires-Dist: isort>=5.12.0; extra == 'dev'
+Requires-Dist: mypy>=1.0.0; extra == 'dev'
+Requires-Dist: pytest-asyncio>=0.21.0; extra == 'dev'
+Requires-Dist: pytest-cov>=4.0.0; extra == 'dev'
+Requires-Dist: pytest>=7.0.0; extra == 'dev'
+Requires-Dist: python-dotenv>=1.0.0; extra == 'dev'
+Requires-Dist: ruff>=0.1.0; extra == 'dev'
+Description-Content-Type: text/markdown
+
+# BelArabyAI SDK
+
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
+[![PyPI version](https://badge.fury.io/py/belaraby-ai-sdk.svg)](https://badge.fury.io/py/belaraby-ai-sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.belaraby.ai)
+
+A comprehensive Python SDK that enables you to create, manage, and interact with autonomous AI Workers on [BelArabyAI](https://belaraby.ai). Build powerful AI applications with built-in tools for file operations, web search, image processing, data analysis, and more.
+
+## 🌟 Features
+
+- **🤖 Autonomous AI Workers** - Create intelligent agents that can perform complex tasks
+- **🛠️ Built-in Tools** - 9 powerful AgentPress tools for common operations
+- **🔌 Custom MCP Tools** - Integrate your own tools via Model Context Protocol
+- **💬 Conversation Management** - Handle multi-turn conversations with context
+- **📊 Data Analysis** - Built-in tools for data collection, analysis, and visualization
+- **🖼️ Image Processing** - Analyze and edit images with AI
+- **🌐 Web Operations** - Search the web, browse websites, and deploy applications
+- **⚡ Real-time Streaming** - Stream responses in real-time for better UX
+- **🔒 Production Ready** - Comprehensive error handling and robust architecture
+
+## 🚀 What You Can Build
+
+- **Content Creation Bots** - Automated writing, research, and content generation
+- **Data Analysis Pipelines** - Automated data collection, processing, and reporting
+- **Development Assistants** - Code generation, debugging, and deployment automation
+- **Customer Support Agents** - Intelligent chatbots with file and web access
+- **Research Assistants** - Automated research with web search and data analysis
+- **Image Processing Workflows** - Automated image analysis and editing
+- **Business Intelligence** - Automated reporting and data visualization
+
+## 📦 Installation
+
+### From PyPI (Recommended)
+
+```bash
+pip install belaraby-ai-sdk
+```
+
+### From GitHub (Development)
+
+```bash
+pip install "belaraby-ai-sdk @ git+https://github.com/rhkiswani/BelArabyAI-python-sdk"
+```
+
+Or using uv:
+
+```bash
+uv add belaraby-ai-sdk
+```
+
+## 🔧 Quick Start
+
+### Basic Usage
+
+```python
+import asyncio
+from belaraby_ai_sdk import BelArabyAI, AgentPressTools
+
+async def main():
+    # Initialize the client
+    client = BelArabyAI(api_key="your-api-key")
+
+    # Create an agent with built-in tools
+    agent = await client.Agent.create(
+        name="My Assistant",
+        system_prompt="You are a helpful AI assistant.",
+        mcp_tools=[AgentPressTools.SB_FILES_TOOL, AgentPressTools.WEB_SEARCH_TOOL],
+        allowed_tools=["sb_files_tool", "web_search_tool"]
+    )
+
+    # Create a conversation thread
+    thread = await client.Thread.create("My Conversation")
+
+    # Run the agent
+    run = await agent.run("Hello, how are you?", thread)
+
+    # Stream the response
+    stream = await run.get_stream()
+    async for chunk in stream:
+        print(chunk, end="")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Using Custom MCP Tools
+
+```python
+import asyncio
+from belaraby_ai_sdk import BelArabyAI, MCPTools
+
+async def main():
+    # Initialize custom MCP tools
+    weather_tools = MCPTools(
+        endpoint="http://localhost:4000/mcp/",
+        name="weather-service",
+        allowed_tools=["get_weather", "get_forecast"]
+    )
+    await weather_tools.initialize()
+
+    # Initialize the client
+    client = BelArabyAI(api_key="your-api-key")
+
+    # Create an agent with custom tools
+    agent = await client.Agent.create(
+        name="Weather Assistant",
+        system_prompt="You are a weather assistant that can provide weather information.",
+        mcp_tools=[weather_tools],
+        allowed_tools=["get_weather", "get_forecast"]
+    )
+
+    # Create a conversation thread
+    thread = await client.Thread.create()
+
+    # Run the agent
+    run = await agent.run("What's the weather like today?", thread)
+
+    # Stream the response
+    stream = await run.get_stream()
+    async for chunk in stream:
+        print(chunk, end="")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Managing Conversations
+
+```python
+import asyncio
+from belaraby_ai_sdk import BelArabyAI, AgentPressTools
+
+async def main():
+    client = BelArabyAI(api_key="your-api-key")
+
+    # Create an agent
+    agent = await client.Agent.create(
+        name="File Assistant",
+        system_prompt="You can help with file operations.",
+        mcp_tools=[AgentPressTools.SB_FILES_TOOL]
+    )
+
+    # Create a thread
+    thread = await client.Thread.create("File Operations")
+
+    # Add multiple messages
+    await thread.add_message("Create a new file called 'hello.txt'")
+    
+    # Run the agent
+    run1 = await agent.run("Create a new file called 'hello.txt'", thread)
+    
+    # Stream the first response
+    stream1 = await run1.get_stream()
+    async for chunk in stream1:
+        print(chunk, end="")
+    
+    print("\n" + "="*50 + "\n")
+    
+    # Add another message
+    await thread.add_message("Now write 'Hello, World!' to the file")
+    
+    # Run the agent again
+    run2 = await agent.run("Now write 'Hello, World!' to the file", thread)
+    
+    # Stream the second response
+    stream2 = await run2.get_stream()
+    async for chunk in stream2:
+        print(chunk, end="")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## 🔑 Environment Setup
+
+1. Get your API key from [https://belaraby.ai/settings/api-keys](https://belaraby.ai/settings/api-keys)
+2. Set it as an environment variable:
+
+```bash
+export BELARABYAI_API_KEY="your-api-key-here"
+```
+
+Or use it directly in your code:
+
+```python
+client = BelArabyAI(api_key="your-api-key-here")
+```
+
+## 🛠️ Available Tools
+
+### Built-in AgentPress Tools
+
+- `AgentPressTools.SB_FILES_TOOL` - Read, write, and edit files
+- `AgentPressTools.SB_SHELL_TOOL` - Execute shell commands
+- `AgentPressTools.SB_DEPLOY_TOOL` - Deploy web applications
+- `AgentPressTools.SB_EXPOSE_TOOL` - Expose local services to the internet
+- `AgentPressTools.SB_VISION_TOOL` - Analyze and understand images
+- `AgentPressTools.BROWSER_TOOL` - Browse websites and interact with web pages
+- `AgentPressTools.WEB_SEARCH_TOOL` - Search the web for information
+- `AgentPressTools.SB_IMAGE_EDIT_TOOL` - Edit and manipulate images
+- `AgentPressTools.DATA_PROVIDERS_TOOL` - Access structured data from various providers
+
+### Custom MCP Tools
+
+You can also use custom MCP (Model Context Protocol) tools by providing an HTTP endpoint:
+
+```python
+custom_tools = MCPTools(
+    endpoint="http://your-mcp-server:4000/mcp/",
+    name="your-service",
+    allowed_tools=["tool1", "tool2"]  # Optional: filter specific tools
+)
+await custom_tools.initialize()
+```
+
+## 📖 Documentation
+
+- **[Getting Started Guide](GETTING_STARTED.md)** - Quick start tutorial
+- **[API Reference](API_REFERENCE.md)** - Complete API documentation
+- **[Examples Guide](examples/README.md)** - Comprehensive examples
+
+## 📚 Examples
+
+The SDK comes with comprehensive examples covering various use cases:
+
+### 🎯 Basic Examples
+
+- **[basic_usage.py](examples/basic_usage.py)** - Simple agent creation and execution
+- **[demo_basic_usage.py](examples/demo_basic_usage.py)** - Interactive demo without API key
+- **[error_handling.py](examples/error_handling.py)** - Comprehensive error handling patterns
+
+### 🔧 Tool-Specific Examples
+
+- **[file_operations_example.py](examples/file_operations_example.py)** - File system operations
+- **[web_search_example.py](examples/web_search_example.py)** - Web search and browsing
+- **[image_processing_example.py](examples/image_processing_example.py)** - Image analysis and editing
+- **[data_analysis_example.py](examples/data_analysis_example.py)** - Data collection and analysis
+- **[mcp_tools_example.py](examples/mcp_tools_example.py)** - Custom MCP tool integration
+
+### 🚀 Advanced Examples
+
+- **[advanced_agent_management.py](examples/advanced_agent_management.py)** - Multiple agent management
+- **[conversation_management.py](examples/conversation_management.py)** - Thread and message management
+- **[development_workflow_example.py](examples/development_workflow_example.py)** - Full development pipeline
+- **[integration_example.py](examples/integration_example.py)** - External service integration
+
+### 🛠️ Utility Examples
+
+- **[kv.py](examples/kv.py)** - Local key-value store for agent/thread IDs
+- **[mcp_server.py](examples/mcp_server.py)** - Sample MCP server implementation
+
+### Running Examples
+
+```bash
+# Clone the repository
+git clone https://github.com/rhkiswani/BelArabyAI-python-sdk.git
+cd BelArabyAI-python-sdk
+
+# Install dependencies
+pip install -e .
+
+# Set your API key
+export BELARABYAI_API_KEY="your-api-key-here"
+
+# Run examples
+python examples/basic_usage.py
+python examples/file_operations_example.py
+python examples/data_analysis_example.py
+```
+
+## 🧪 Testing
+
+Run the test suite:
+
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run tests with coverage
+pytest --cov=ba --cov-report=html
+
+# Run specific test categories
+pytest tests/test_agent.py -v
+pytest tests/test_thread.py -v
+pytest tests/test_tools.py -v
+```
+
+## 📚 API Reference
+
+### BelArabyAI Client
+
+```python
+client = BelArabyAI(api_key="your-key", api_url="https://belaraby.ai")
+```
+
+### Agent Management
+
+```python
+# Create an agent
+agent = await client.Agent.create(
+    name="Agent Name",
+    system_prompt="System prompt",
+    mcp_tools=[...],  # List of tools
+    allowed_tools=[...]  # Optional: filter tools
+)
+
+# Get an existing agent
+agent = await client.Agent.get("agent-id")
+
+# Update an agent
+await agent.update(
+    name="New Name",
+    system_prompt="New prompt",
+    mcp_tools=[...],
+    allowed_tools=[...]
+)
+```
+
+### Thread Management
+
+```python
+# Create a thread
+thread = await client.Thread.create("Thread Name")
+
+# Get an existing thread
+thread = await client.Thread.get("thread-id")
+
+# Delete a thread
+await client.Thread.delete("thread-id")
+
+# Add a message to thread
+message_id = await thread.add_message("Hello!")
+
+# Delete a message
+await thread.delete_message("message-id")
+
+# Get all messages
+messages = await thread.get_messages()
+
+# Get agent runs
+runs = await thread.get_agent_runs()
+```
+
+### Agent Execution
+
+```python
+# Run an agent
+run = await agent.run("Your prompt", thread)
+
+# Stream the response
+stream = await run.get_stream()
+async for chunk in stream:
+    print(chunk, end="")
+```
+
+## 🔧 Best Practices
+
+### Error Handling
+
+Always wrap your agent operations in try-catch blocks:
+
+```python
+try:
+    agent = await client.Agent.create(
+        name="My Agent",
+        system_prompt="You are helpful.",
+        mcp_tools=[AgentPressTools.SB_FILES_TOOL]
+    )
+except Exception as e:
+    print(f"Failed to create agent: {e}")
+    # Handle error appropriately
+```
+
+### Resource Management
+
+Use context managers for proper cleanup:
+
+```python
+async with client:
+    agent = await client.Agent.create(...)
+    thread = await client.Thread.create(...)
+    # Your operations here
+# Automatic cleanup when exiting context
+```
+
+### Performance Optimization
+
+- **Stream responses** for better user experience
+- **Reuse agents** instead of creating new ones for each task
+- **Batch operations** when possible
+- **Handle rate limits** gracefully
+
+### Security Considerations
+
+- **Never commit API keys** to version control
+- **Use environment variables** for sensitive data
+- **Validate user inputs** before passing to agents
+- **Implement proper authentication** for production apps
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### 1. Authentication Errors
+```
+❌ Authentication required. Please check your API key.
+```
+**Solution:** Verify your API key is correct and active at [https://belaraby.ai/settings/api-keys](https://belaraby.ai/settings/api-keys)
+
+#### 2. Agent Limit Exceeded
+```
+❌ Maximum of 2 agents allowed for your current plan.
+```
+**Solution:** Upgrade your plan or delete unused agents
+
+#### 3. Model Access Issues
+```
+❌ Your current subscription plan does not include access to anthropic/claude-sonnet-4-20250514
+```
+**Solution:** Upgrade your plan or configure agents to use available models
+
+#### 4. MCP Connection Failures
+```
+❌ Client failed to connect: All connection attempts failed
+```
+**Solution:** Ensure your MCP server is running on the specified endpoint
+
+#### 5. Import Errors
+```
+❌ ModuleNotFoundError: No module named 'belaraby_ai_sdk'
+```
+**Solution:** Install the package: `pip install belaraby-ai-sdk`
+
+### Debug Mode
+
+Enable debug logging for detailed error information:
+
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Your BelArabyAI code here
+```
+
+### Getting Help
+
+1. **Check the examples** - Most common use cases are covered
+2. **Read the error messages** - They often contain helpful guidance
+3. **Enable debug logging** - Get detailed information about failures
+4. **Check your plan limits** - Ensure you have sufficient quota
+
+## 🚀 Production Deployment
+
+### Environment Setup
+
+```bash
+# Production environment variables
+export BELARABYAI_API_KEY="your-production-key"
+export BELARABYAI_API_URL="https://belaraby.ai"
+export LOG_LEVEL="INFO"
+```
+
+### Docker Deployment
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+CMD ["python", "your_app.py"]
+```
+
+### Monitoring
+
+- **Monitor API usage** and rate limits
+- **Log agent performance** and response times
+- **Track error rates** and failure patterns
+- **Set up alerts** for critical failures
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+### Development Setup
+
+```bash
+# Fork and clone the repository
+git clone https://github.com/your-username/BelArabyAI-python-sdk.git
+cd BelArabyAI-python-sdk
+
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run linting
+ruff check .
+black --check .
+```
+
+### Contribution Guidelines
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Make your changes** with proper tests
+4. **Run the test suite** (`pytest`)
+5. **Commit your changes** (`git commit -m 'Add amazing feature'`)
+6. **Push to the branch** (`git push origin feature/amazing-feature`)
+7. **Open a Pull Request**
+
+### Code Style
+
+- Follow **PEP 8** guidelines
+- Use **type hints** for all functions
+- Write **comprehensive tests** for new features
+- Update **documentation** for API changes
+- Use **descriptive commit messages**
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **📖 Documentation**: [https://docs.belaraby.ai](https://docs.belaraby.ai)
+- **💬 Discord Community**: [https://discord.gg/qAncfHmYUm](https://discord.gg/qAncfHmYUm) - Join our community for discussions, help, and updates
+- **🐛 Issues**: [https://github.com/rhkiswani/BelArabyAI-python-sdk/issues](https://github.com/rhkiswani/BelArabyAI-python-sdk/issues)
+- **💬 GitHub Discussions**: [https://github.com/rhkiswani/BelArabyAI-python-sdk/discussions](https://github.com/rhkiswani/BelArabyAI-python-sdk/discussions)
+- **📧 Email**: support@belaraby.ai
+- **💼 Enterprise**: enterprise@belaraby.ai
+
+## 🙏 Acknowledgments
+
+- Built with ❤️ by the BelArabyAI team
+- Powered by advanced AI models and cutting-edge technology
+- Special thanks to our community contributors and beta testers
