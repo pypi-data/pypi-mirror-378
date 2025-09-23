@@ -1,0 +1,224 @@
+Metadata-Version: 2.4
+Name: math-mcp-learning-server
+Version: 0.1.0
+Summary: Educational MCP server demonstrating FastMCP best practices - Complete learning guide with contributing guidelines and roadmap for Model Context Protocol development
+Author-email: Hugues Clouâtre <hugues+mcp@linux.com>
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/huguesclouatre/math-mcp-server
+Project-URL: Repository, https://github.com/huguesclouatre/math-mcp-server
+Project-URL: Issues, https://github.com/huguesclouatre/math-mcp-server/issues
+Project-URL: Documentation, https://github.com/huguesclouatre/math-mcp-server#readme
+Project-URL: Contributing, https://github.com/huguesclouatre/math-mcp-server/blob/main/CONTRIBUTING.md
+Project-URL: Future Improvements, https://github.com/huguesclouatre/math-mcp-server/blob/main/FUTURE_IMPROVEMENTS.md
+Keywords: mcp,math,calculator,learning,fastmcp,tutorial,education
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Education
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: Topic :: Documentation
+Classifier: Environment :: Console
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: mcp>=1.14.1
+Requires-Dist: pydantic>=2.11.9
+Dynamic: license-file
+
+# Math MCP Server
+
+A simple Model Context Protocol (MCP) server for mathematical operations. This project serves as a learning example demonstrating MCP fundamentals and best practices.
+
+## Features
+
+- **Safe Expression Evaluation**: Securely evaluate mathematical expressions with enhanced error handling
+- **Educational Annotations**: Responses include difficulty levels and learning metadata
+- **Statistical Analysis**: Calculate mean, median, mode, standard deviation, and variance
+- **Financial Calculations**: Compound interest calculations with formatted output
+- **Unit Conversions**: Length, weight, and temperature conversions
+- **Security Logging**: Monitor and log potentially dangerous expression attempts
+- **Type Safety**: Full Pydantic validation for inputs and structured content responses
+- **Comprehensive Testing**: 100% test pass rate with security and edge case coverage
+
+## Available Tools
+
+### 1. `calculate`
+Safely evaluate mathematical expressions with support for basic operations and math functions.
+
+**Examples:**
+```
+2 + 3 * 4          → 14
+sqrt(16)          → 4.0
+sin(3.14159/2)    → 1.0
+abs(-5)           → 5.0
+```
+
+### 2. `statistics`
+Perform statistical calculations on lists of numbers.
+
+**Operations:** `mean`, `median`, `mode`, `std_dev`, `variance`
+
+**Example:**
+```json
+{
+  "numbers": [1, 2, 3, 4, 5],
+  "operation": "mean"
+}
+```
+
+### 3. `compound_interest`
+Calculate compound interest for investments.
+
+**Example:**
+```json
+{
+  "principal": 1000,
+  "rate": 0.05,
+  "time": 5,
+  "compounds_per_year": 12
+}
+```
+
+### 4. `convert_units`
+Convert between different units of measurement.
+
+**Supported unit types:**
+- **Length**: mm, cm, m, km, in, ft, yd, mi
+- **Weight**: g, kg, oz, lb
+- **Temperature**: c, f, k (Celsius, Fahrenheit, Kelvin)
+
+## Installation
+
+### Prerequisites
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/) package manager
+
+### Setup
+```bash
+# Clone the repository
+git clone https://github.com/huguesclouatre/math-mcp-server.git
+cd math-mcp-server
+
+# Install dependencies
+uv sync
+
+# Run tests
+uv run pytest tests/ -v
+
+# Start the MCP server
+uv run math-mcp-server
+```
+
+## Development
+
+### Project Structure
+```
+math-mcp-server/
+├── src/math_mcp/
+│   ├── __init__.py
+│   └── server.py          # Main MCP server implementation
+├── tests/
+│   └── test_math_operations.py
+├── pyproject.toml         # Project configuration
+└── README.md
+```
+
+### Adding New Tools
+
+1. Define input/output models with Pydantic
+2. Add `@mcp.tool()` decorated function
+3. Implement tool logic with proper validation
+4. Add corresponding tests
+
+### Security Considerations
+
+The `calculate` tool uses restricted `eval()` with:
+- Whitelist of allowed characters and functions
+- Restricted global scope (only `math` module and `abs`)
+- No access to dangerous built-ins or imports
+
+## Usage with Claude Desktop
+
+Add to your Claude Desktop configuration:
+
+```json
+{
+  "mcpServers": {
+    "math": {
+      "command": "uv",
+      "args": ["run", "math-mcp-server"],
+      "cwd": "/path/to/math-mcp-server"
+    }
+  }
+}
+```
+
+## Example Interactions
+
+### Basic Calculation
+```
+User: Calculate 15% tip on $84.50
+Assistant: [uses calculate tool with "84.50 * 0.15"]
+Result: 12.675
+```
+
+### Statistical Analysis
+```
+User: What's the average of these test scores: 85, 92, 78, 96, 88?
+Assistant: [uses statistics tool with numbers=[85,92,78,96,88], operation="mean"]
+Mean: 87.8
+```
+
+### Investment Planning
+```
+User: If I invest $5000 at 4.5% annually, compounded monthly, what will it be worth in 10 years?
+Assistant: [uses compound_interest tool]
+Principal: $5000.00
+Final Amount: $7814.17
+Total Interest: $2814.17
+```
+
+## Learning Objectives
+
+This project demonstrates:
+- MCP protocol implementation with Python
+- Safe code execution patterns
+- Input validation with Pydantic
+- Comprehensive error handling
+- Testing strategies for MCP servers
+- Professional Python project structure
+
+## Contributing
+
+We welcome contributions! This project follows a **fast & minimal** philosophy while maintaining educational value and professional standards.
+
+**Quick Start for Contributors:**
+1. Fork the repository
+2. Set up development environment: `uv sync`
+3. Create feature branch: `git checkout -b feature/your-feature`
+4. Make changes and add tests
+5. Run quality checks: `uv run pytest && uv run mypy src/ && uv run ruff check`
+6. Submit a pull request
+
+**📋 For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md)**
+
+Includes:
+- Development workflow and Git practices
+- Code standards and security requirements
+- Testing procedures and quality assurance
+- Architecture guidelines and best practices
+
+## License
+
+MIT License - see LICENSE file for details
+
+## Next Steps
+
+This basic math MCP can be extended with:
+- Matrix operations
+- Graphing capabilities
+- Advanced statistical functions
+- Financial modeling tools
+- Integration with external APIs
