@@ -1,0 +1,197 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv.workspace]
+members = [".", "scripts"]
+
+[project]
+name = "importobot"
+version = "0.1.0"
+description = "Automated test framework converter for migrating test cases from Zephyr, JIRA/Xray, and TestLink to Robot Framework format with bulk processing capabilities"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "BSD-2-Clause"
+authors = [
+    {name = "athola", email = "noreply@github.com"}
+]
+maintainers = [
+    {name = "athola", email = "noreply@github.com"}
+]
+keywords = ["testing", "automation", "robot-framework", "test-conversion", "zephyr", "jira", "xray", "testlink"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Utilities",
+    "Environment :: Console",
+    "Natural Language :: English",
+    "Typing :: Typed",
+]
+
+dependencies = [
+    "robotframework>=6.0.0",
+    "robotframework-seleniumlibrary>=6.0.0",
+    "robotframework-sshlibrary>=3.8.0",
+    "robotframework-requests>=0.9.4",
+    "robotframework-databaselibrary>=1.2.4",
+    "psutil>=7.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/athola/importobot"
+"Repository" = "https://github.com/athola/importobot"
+"Bug Tracker" = "https://github.com/athola/importobot/issues"
+"Documentation" = "https://github.com/athola/importobot/wiki"
+"Changelog" = "https://github.com/athola/importobot/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+viz = [
+    "matplotlib>=3.10.6",
+]
+analytics = [
+    "numpy>=2.2.6",
+]
+data = [
+    "pandas>=2.0.0",
+]
+demo = [
+    "matplotlib>=3.10.6",
+    "numpy>=2.2.6",
+    "pandas>=2.0.0",
+]
+all = [
+    "matplotlib>=3.10.6",
+    "numpy>=2.2.6",
+    "pandas>=2.0.0",
+]
+
+[project.scripts]
+importobot = "importobot.__main__:main"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "coverage>=7.0.0",
+    "ruff>=0.1.0",
+    "pylint>=2.17.0",
+    "pycodestyle>=2.11.0",
+    "pydocstyle>=6.3.0",
+    "black>=23.0.0",
+    "pyyaml>=6.0.0",
+    "mypy>=1.0.0",
+    "ty",
+    "types-PyYAML",
+    "types-psutil>=7.0.0.20250822",
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "detect-secrets>=1.5.0",
+    "bandit>=1.7.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["scripts*", "importobot_scripts*"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose"
+]
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "C",    # flake8-comprehensions
+    "B",    # flake8-bugbear
+]
+extend-ignore = [
+    "E501", # Line too long (handled by ruff format)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pylint]
+rcfile = "pylintrc"
+ignore = [".venv"]
+
+[tool.black]
+exclude = '''
+/(?:
+    \.venv
+)/
+'''
+
+
+
+[tool.pycodestyle]
+max-line-length = 88
+
+[tool.pydocstyle]
+match-dir = "^(?!.venv).*"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+explicit_package_bases = true
+namespace_packages = true
+mypy_path = "./src:./scripts/src"
+files = ["./src", "./tests"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "scripts.tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "robot"
+ignore_missing_imports = true
+ignore_errors = true
+
+
+[tool.ty.environment]
+root = ["./src", "./tests", "./scripts/src", "./scripts/tests"]
+extra-paths = ["./src", "./tests", "./scripts/src", "./scripts/tests"]
+
+[tool.ty.rules]
+unresolved-import = "ignore"
