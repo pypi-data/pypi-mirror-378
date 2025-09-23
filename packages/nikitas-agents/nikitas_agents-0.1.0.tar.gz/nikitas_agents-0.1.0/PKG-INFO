@@ -1,0 +1,172 @@
+Metadata-Version: 2.4
+Name: nikitas-agents
+Version: 0.1.0
+Summary: Provider-agnostic wrappers around OpenAI and Mistral SDKs to power LLM-based agents in games or simulations.
+Author-email: Nikita Dmitrieff <nikita@example.com>
+License: MIT License
+        
+        Copyright (c) 2024 Nikita Dmitrieff
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Project-URL: Homepage, https://github.com/NikitaDmitrieff/nikitas-agents
+Project-URL: Repository, https://github.com/NikitaDmitrieff/nikitas-agents
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: python-dotenv>=1.0
+Requires-Dist: openai>=1.0
+Requires-Dist: mistralai>=0.3
+Dynamic: license-file
+
+# nikitas-agents
+
+Provider-agnostic wrappers around OpenAI and Mistral SDKs to power LLM-based agents in games or simulations.
+
+## Installation
+
+This package is currently distributed straight from GitHub:
+
+```bash
+pip install git+https://github.com/NikitaDmitrieff/nikitas-agents.git
+```
+
+## Quick Start
+
+```python
+from nikitas_agents.agents import BaseAgent
+
+agent = BaseAgent(
+    name="Strategist",
+    description="Keeps track of board state",
+    provider="openai",
+    model="gpt-4o-mini",
+)
+
+reply = agent.invoke("Give me one word hint.")
+print(reply)
+```
+
+Set `OPENAI_API_KEY` or `MISTRAL_API_KEY` in your environment before invoking agents.
+
+## Features
+
+- **Multi-provider support**: Works with both OpenAI and Mistral APIs
+- **Model validation**: Ensures you're using supported models for each provider
+- **Environment-based configuration**: Automatically loads API keys from environment variables
+- **Flexible prompting**: Support for both system and user prompts with customizable parameters
+
+## Supported Providers and Models
+
+### OpenAI
+- gpt-4o-mini
+- gpt-4o
+- gpt-4-turbo
+- gpt-4
+- gpt-3.5-turbo
+
+### Mistral
+- mistral-small-latest
+- mistral-medium-latest
+- mistral-large-latest
+- mistral-tiny
+- open-mistral-7b
+- open-mixtral-8x7b
+- open-mixtral-8x22b
+
+## Usage
+
+### Basic Agent Creation
+
+```python
+from nikitas_agents import BaseAgent
+
+# Create an OpenAI agent
+openai_agent = BaseAgent(
+    name="Assistant",
+    description="A helpful assistant",
+    provider="openai",
+    model="gpt-4o-mini"
+)
+
+# Create a Mistral agent
+mistral_agent = BaseAgent(
+    name="Strategist", 
+    description="A strategic thinking agent",
+    provider="mistral",
+    model="mistral-small-latest"
+)
+```
+
+### Advanced Usage
+
+```python
+response = agent.invoke(
+    user_prompt="What's the best strategy for this situation?",
+    system_prompt="You are an expert game strategist",
+    temperature=0.7,
+    max_output_tokens=512,
+    timeout=30.0
+)
+```
+
+### Provider and Model Validation
+
+```python
+from nikitas_agents import schema
+
+# Check supported providers
+providers = schema.supported_providers()
+print(providers)  # {'openai', 'mistral'}
+
+# Check supported models for a provider
+models = schema.supported_models('openai')
+print(models)  # {'gpt-4o-mini', 'gpt-4o', ...}
+
+# Validate a provider/model combination
+validated_model = schema.validate_model('openai', 'gpt-4o-mini')
+```
+
+## Environment Setup
+
+Create a `.env` file in your project root:
+
+```
+OPENAI_API_KEY=your_openai_api_key_here
+MISTRAL_API_KEY=your_mistral_api_key_here
+```
+
+Or set environment variables directly:
+
+```bash
+export OPENAI_API_KEY="your_openai_api_key_here"
+export MISTRAL_API_KEY="your_mistral_api_key_here"
+```
+
+## Development
+
+To contribute to this project:
+
+1. Clone the repository
+2. Install in development mode: `pip install -e .`
+3. Run tests: `python -m pytest tests/`
+
+## License
+
+MIT License - see LICENSE file for details.
